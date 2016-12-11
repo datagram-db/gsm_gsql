@@ -236,7 +236,6 @@ public class Filler {
         public Mutable(T val) {
             this.val = val;
         }
-
         public T val;
     }
 
@@ -251,7 +250,12 @@ public class Filler {
 
 
     public void matchMeta(Mutable<String> mutable,Object objToCompile,MetaEnv contextVarName) {
-        mutable.val = mutable.val.replaceAll("\\!\\!context\\!\\!",contextVarName.contextVarName);
+        try {
+            mutable.val = mutable.val.replaceAll("\\!\\!context\\!\\!", contextVarName.contextVarName);
+        } catch (Exception e) {
+            System.err.println(contextVarName.contextVarName);
+            System.exit(1);
+        }
         String toret = mutable.val;
         for (GroupMatcher m : Match.regex("\\!\\!([^\\!]+)\\!\\!").allWith(mutable.val)) {
             String elem = m.fromGroupsGet(1);
@@ -301,9 +305,9 @@ public class Filler {
             stack.push(tmp.indexOf("!(")+2);
             while (!stack.isEmpty()) {
                 int pos = stack.peek();
-                //System.out.println(pos+" pos value…");
                 int newColl, newClose;
                 boolean right = true;
+
                 //Getting the most inner parenthesis for matching purposes
                 while ((newColl = tmp.indexOf("!(",pos))<(newClose = tmp.indexOf(")!",pos)) && newColl>0) {
                     right = false;
@@ -311,49 +315,43 @@ public class Filler {
                     pos = newColl+2;
                 }
 
-                if (right) {
-                    stack.pop();
-                }
+                if (right) stack.pop();
 
                 //For the most inner, getting the most outer
-                newColl = newClose;
                 while (!stack.isEmpty()) {
                     newClose = tmp.indexOf(")!",newClose)+2;
                     pos = stack.pop();
                 }
-                if (!right) {
-                    newClose -= 2;
-                    //System.out.println(pos+" value now.");
-                    Printer.Registering(tmp, pos, newClose);
-                }
-                //Registering(tmp,pos,newClose,true);
+                //Printer.Registering(tmp, pos, newClose);
+                if (!right) newClose -= 2;
+
                 String toOp = tmp.substring(pos,newClose);
                 String result = "";
-                if (toOp.contains(",")) {
-                    Mutable<String> command = new Mutable<>(toOp.substring(0,toOp.indexOf(',')));
-                    context = commandWithContext(command);
+                Mutable<String> mutOp;
+                boolean multi = toOp.contains(",");
+
+                if (multi) {
+                    mutOp = new Mutable<>(toOp.substring(0,toOp.indexOf(',')));
                     toOp = toOp.substring(toOp.indexOf(',')+1);
                     metaData = parseToOp(toOp);
-                    if (context!=null)
-                        objToCompile = this.env.get(menv.var_to_type.get(context));
-                    //Object objToCompile = context == null ? obj : this.env.get(menv.var_to_type.get(context));
-                    Mutable<String> s = new Mutable<>(compile(command.val,objToCompile,menv.pass(context).pass(false)));
-                    matchMeta(s,objToCompile,menv.pass(context));
-                    result = s.val;
+                } else {
+                     mutOp = new Mutable<>(toOp);
+                }
+
+                context = commandWithContext(mutOp);
+                if (context!=null) objToCompile = this.env.get(menv.var_to_type.get(context));
+                Mutable<String> s = new Mutable<>(compile(mutOp.val,objToCompile,menv.pass(context).pass(false)));
+                matchMeta(s,objToCompile,menv.pass(context));
+                result = s.val;
+
+                if (multi) {
                     for (Map.Entry<String,MetaCommandInit> x : metaData.entrySet()) {
                         result = result.replace("!!"+x.getKey()+"!!",x.getValue().value);
                     }
                     metaData = null;
-                } else {
-                    Mutable<String> mutOp = new Mutable<>(toOp);
-                    context = commandWithContext(mutOp);
-                    if (context!=null)
-                        objToCompile = this.env.get(menv.var_to_type.get(context));
-                    //Object objToCompile = context == null ? obj : this.env.get(menv.var_to_type.get(context));
-                    Mutable<String> s = new Mutable<>(compile(mutOp.val,objToCompile,menv.pass(context).pass(false)));
-                    matchMeta(s,objToCompile,menv.pass(context));
-                    result = s.val;
                 }
+
+
                 StringBuffer sb = new StringBuffer(tmp);
                 tmp = sb.replace(pos-2,newClose+2,result).toString();
             }
@@ -363,7 +361,7 @@ public class Filler {
         if (menv.inMeta && tmp.contains("!!")) {
             Mutable<String> meta = new Mutable<>(tmp);
             if (menv.contextVarName==null) {
-
+                menv.contextVarName = context;
             }
             matchMeta(meta,obj,menv);
             tmp = meta.val;
@@ -413,7 +411,9 @@ public class Filler {
         System.out.println(f.compile("primary",geno));
 
         //Pass the internal type of the array
-        //System.out.println(f.compile("serialize_vector(mutable)",f.env.get("string")));
+        System.out.println(f.compile("serialize_vector(mutable)",f.env.get("string")));
+
+
 
         /*
 
