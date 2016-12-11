@@ -1,0 +1,29 @@
+__attribute__((always_inline)) native(uint) serialize_vector_of_@@ofType@@(std::vector<@@nativeType@@>& v, FILE* file) {
+    !(outputsize_init,
+        outputsize=vserlen)!
+    native(uint) vsize = v.size(); //^vsize : uint^
+    !(writefixed context=vsize,
+        outputsize=vserlen,
+        file=file)!
+    !(vector_foreach,
+        vector=v,
+        statement{
+            //^x : @@name@@^
+            !(writefixed context=x,
+                outputsize=vserlen,
+                file=file)!
+        }
+    )!
+    !(vector_foreach,
+            vector=v,
+            statement{
+                //^x : @@name@@^
+                !(writefixed context=x,
+                    outputsize=vserlen,
+                    file=file)!
+            }
+    )!
+    !(outputsize_return,
+        outputsize=vserlen,
+        file=file)!
+}

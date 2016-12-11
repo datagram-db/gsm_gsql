@@ -1,0 +1,40 @@
+{
+    "array": {
+        "mutable": true,
+        "name": "std::vector<@@>"
+    },
+    "int": {
+        "mutable": false,
+        "name": "int_fast32_t",
+        "size": 4
+    },
+    "long": {
+        "mutable": false,
+        "name": "int_fast64_t",
+        "size": 8
+    },
+    "short": {
+        "mutable": false,
+        "name": "uint_fast8_t",
+        "size": 1
+    },
+    "string": {
+        "mutable": true,
+        "name": "std::string"
+    },
+    "uint": {
+        "mutable": false,
+        "name": "uint_fast32_t",
+        "size": 4
+    },
+    "ulong": {
+        "mutable": false,
+        "name": "uint_fast64_t",
+        "size": 8
+    },
+    "ushort": {
+        "mutable": false,
+        "name": "uint_fast8_t",
+        "size": 1
+    }
+}
