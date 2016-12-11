@@ -281,6 +281,7 @@ public class Filler {
     }
 
     public String compile(String arg, Object obj, MetaEnv menv) {
+
         //Prehistoric basic working
         String tmp =  nativeReplace(choice(arg,obj));
 
@@ -290,7 +291,7 @@ public class Filler {
         //Obtaining the annotations of the native types that have to be used at the meta level
         boolean prevInMeta = menv.inMeta;
         menv.inMeta = true;
-        Object objToCompile = obj;
+
         String context = menv.contextVarName;
 
         Match.regex("//\\^([^\\^]+) : ([^\\^]+)\\^").with(tmp).forEachRemaining(
@@ -339,7 +340,9 @@ public class Filler {
                 }
 
                 context = commandWithContext(mutOp);
+                Object objToCompile = obj;
                 if (context!=null) objToCompile = this.env.get(menv.var_to_type.get(context));
+
                 Mutable<String> s = new Mutable<>(compile(mutOp.val,objToCompile,menv.pass(context).pass(false)));
                 matchMeta(s,objToCompile,menv.pass(context));
                 result = s.val;

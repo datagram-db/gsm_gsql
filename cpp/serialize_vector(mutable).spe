@@ -8,8 +8,8 @@ __attribute__((always_inline)) native(uint) serialize_vector_of_@@ofType@@(std::
     !(vector_foreach,
         vector=v,
         statement{
-            //^x : @@name@@^
-            !(writefixed context=x,
+            native(uint) xsize = x.size(); //^xsize : uint^
+            !(writefixed context=xsize,
                 outputsize=vserlen,
                 file=file)!
         }
