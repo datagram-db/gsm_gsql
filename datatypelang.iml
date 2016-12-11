@@ -14,5 +14,10 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.6.3" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.6.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.6.3" level="project" />
+    <orderEntry type="library" name="Maven: com.google.guava:guava:20.0" level="project" />
+    <orderEntry type="library" name="Maven: com.google.guava:guava-collections:r03" level="project" />
+    <orderEntry type="library" name="Maven: com.google.guava:guava-annotations:r03" level="project" />
+    <orderEntry type="library" name="Maven: com.google.guava:guava-primitives:r03" level="project" />
+    <orderEntry type="library" name="Maven: com.google.guava:guava-base:r03" level="project" />
   </component>
 </module>

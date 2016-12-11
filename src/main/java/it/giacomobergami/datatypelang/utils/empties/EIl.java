@@ -1,4 +1,6 @@
-package it.giacomobergami.datatypelang.utils;
+package it.giacomobergami.datatypelang.utils.empties;
+
+import it.giacomobergami.datatypelang.utils.empties.EIt;
 
 import java.util.Iterator;
 

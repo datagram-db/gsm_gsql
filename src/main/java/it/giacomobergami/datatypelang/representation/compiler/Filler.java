@@ -3,7 +3,7 @@ package it.giacomobergami.datatypelang.representation.compiler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import it.giacomobergami.datatypelang.MyUtils;
+import it.giacomobergami.datatypelang.utils.ForFiles;
 import it.giacomobergami.datatypelang.representation.NativeType;
 import it.giacomobergami.datatypelang.representation.Type;
 import it.giacomobergami.datatypelang.representation.TypeEnvironment;
@@ -11,23 +11,20 @@ import it.giacomobergami.datatypelang.representation.compiler.metacommands.MetaC
 import it.giacomobergami.datatypelang.representation.compiler.metacommands.MetaCommandType;
 import it.giacomobergami.datatypelang.representation.compiler.metacommands.MetaEnv;
 import it.giacomobergami.datatypelang.representation.compiler.metacommands.Statement;
-import it.giacomobergami.datatypelang.representation.compiler.utils.GroupMatcher;
-import it.giacomobergami.datatypelang.representation.compiler.utils.Match;
-import it.giacomobergami.datatypelang.representation.compiler.utils.NotPresentException;
-import it.giacomobergami.datatypelang.representation.compiler.utils.Printer;
-import it.giacomobergami.datatypelang.utils.Accum;
-import it.giacomobergami.datatypelang.utils.EIl;
-import it.giacomobergami.datatypelang.utils.OnExcpt;
-import it.giacomobergami.datatypelang.utils.ToStream;
+import it.giacomobergami.datatypelang.utils.Streams;
+import it.giacomobergami.datatypelang.utils.regex.GroupMatcher;
+import it.giacomobergami.datatypelang.utils.regex.Match;
+import it.giacomobergami.datatypelang.utils.regex.NotPresentException;
+import it.giacomobergami.datatypelang.utils.funcs.Accum;
+import it.giacomobergami.datatypelang.utils.empties.EIl;
+import it.giacomobergami.datatypelang.utils.funcs.OnExcpt;
+import it.giacomobergami.datatypelang.utils.funcs.ToStream;
 import it.giacomobergami.datatypelang.utils.Pair;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -64,7 +61,7 @@ public class Filler {
             if (fi.isFile()) {
                 String name = fi.getName();
                 if (name.endsWith(".spe")) {
-                    file_to_content.put(fi.getName().replace(".spe", ""), MyUtils.fileToString(fi.getAbsolutePath()));
+                    file_to_content.put(fi.getName().replace(".spe", ""), ForFiles.toString(fi));
                 } else if (name.equals("native.json")) {
                     try {
                         HashMap<String, JSONElem> map = mapper.readValue(new File(fi.getAbsolutePath()), mapType);
@@ -153,7 +150,7 @@ public class Filler {
                 if (!val.endsWith("s")) {
                     toret = toret.replace("@@"+val+"@@",choice(mask,attributes));
                 } else {
-                    Iterable it = new OnExcpt<String,Iterable>(val).as(
+                    Iterable it = new OnExcpt<>(val).as(
                             y-> (Iterable)attributes.getClass().getField(y).get(attributes),
                             y -> new EIl<>()
                     );
@@ -187,7 +184,7 @@ public class Filler {
                                 }
                                 return true;
                             };
-                    Stream<Object> stream = StreamSupport.stream(Spliterators.spliteratorUnknownSize(it.iterator(), Spliterator.ORDERED), false);
+                    Stream<Object> stream = Streams.toStream(it.iterator());
                     if (isCond) {
                         if (stream.anyMatch(toSelect)) {
                             sb.append(choice(toCatch,attributes));
@@ -334,7 +331,7 @@ public class Filler {
                 if (multi) {
                     mutOp = new Mutable<>(toOp.substring(0,toOp.indexOf(',')));
                     toOp = toOp.substring(toOp.indexOf(',')+1);
-                    metaData = parseToOp(toOp);
+                    metaData = parseToOp(toOp, menv.pass());
                 } else {
                      mutOp = new Mutable<>(toOp);
                 }
@@ -372,7 +369,7 @@ public class Filler {
         return tmp;
     }
 
-    private HashMap<String,MetaCommandInit> parseToOp(String toOp) {
+    private HashMap<String,MetaCommandInit> parseToOp(String toOp,MetaEnv me) {
         HashMap<String,MetaCommandInit> toret = new HashMap<>();
         String sArr[] = toOp.split("statement\\{");
         String statement = null;
@@ -397,7 +394,7 @@ public class Filler {
             toret.put(key,new MetaCommandInit(MetaCommandType.SingleVariable,value));
         }
         if (statement!=null) {
-            toret.put("statement",new MetaCommandInit( MetaCommandType.CodeExpansion,compile("statement",new Statement(statement),new MetaEnv(true))));
+            toret.put("statement",new MetaCommandInit( MetaCommandType.CodeExpansion,compile("statement",new Statement(statement),me.pass(true))));
         }
         return toret;
     }
@@ -410,8 +407,8 @@ public class Filler {
         //User custom types declaration
         f.env.declareRecord("genoveffo").addField("ciao","string").addField("id","int").addFieldOfInternalArray("afield",f.env.get("string")).close();
         Type geno = f.env.get("genoveffo");
-        System.out.println(f.compile("secondary",geno));
-        System.out.println(f.compile("primary",geno));
+        //System.out.println(f.compile("secondary",geno));
+        //System.out.println(f.compile("primary",geno));
 
         //Pass the internal type of the array
         System.out.println(f.compile("serialize_vector(mutable)",f.env.get("string")));

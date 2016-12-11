@@ -1,4 +1,4 @@
-package it.giacomobergami.datatypelang.representation.compiler.utils;
+package it.giacomobergami.datatypelang.utils.regex;
 
 /**
  * Created by vasistas on 11/12/16.

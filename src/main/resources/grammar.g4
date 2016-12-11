@@ -1,0 +1,7 @@
+
+
+
+
+grammar
+    : 'declare'
+    ;

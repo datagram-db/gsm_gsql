@@ -1,17 +1,21 @@
 __attribute__((always_inline)) native(uint) serialize_vector_of_@@ofType@@(std::vector<@@nativeType@@>& v, FILE* file) {
     !(outputsize_init,
         outputsize=vserlen)!
-    native(uint) vsize = v.size(); //^vsize : uint^
+    //^vsize : uint^
+    native(uint) vsize = v.size();
     !(writefixed context=vsize,
         outputsize=vserlen,
         file=file)!
+    vsize++;
+    vsize *= sizeof(native(uint));
     !(vector_foreach,
         vector=v,
         statement{
-            native(uint) xsize = x.size(); //^xsize : uint^
-            !(writefixed context=xsize,
+            //^x : @@name@@^
+            !(writefixed context=vsize,
                 outputsize=vserlen,
                 file=file)!
+            vsize += (x.size()+1); //^xsize : uint^
         }
     )!
     !(vector_foreach,
@@ -23,6 +27,7 @@ __attribute__((always_inline)) native(uint) serialize_vector_of_@@ofType@@(std::
                     file=file)!
             }
     )!
+    if (vserlen!=vsize) std::cerr << "ERROR: " << vserlen << " vs. " << vsize << std::endl;
     !(outputsize_return,
         outputsize=vserlen,
         file=file)!

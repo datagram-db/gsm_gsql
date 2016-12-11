@@ -1,4 +1,4 @@
-package it.giacomobergami.datatypelang.representation.compiler.utils;
+package it.giacomobergami.datatypelang.utils.regex;
 
 import java.util.regex.Matcher;
 

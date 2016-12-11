@@ -1,9 +1,8 @@
-package it.giacomobergami.datatypelang.representation.compiler.utils;
+package it.giacomobergami.datatypelang.utils.regex;
 
-import it.giacomobergami.datatypelang.utils.Opt;
+import it.giacomobergami.datatypelang.utils.funcs.Opt;
 
 import java.util.Iterator;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

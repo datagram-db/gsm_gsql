@@ -1,4 +1,4 @@
-package it.giacomobergami.datatypelang.utils;
+package it.giacomobergami.datatypelang.utils.funcs;
 
 import it.giacomobergami.datatypelang.utils.Pair;
 

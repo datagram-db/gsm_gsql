@@ -1,4 +1,4 @@
-package it.giacomobergami.datatypelang.representation.compiler.utils;
+package it.giacomobergami.datatypelang.utils.regex;
 
 import java.util.regex.Pattern;
 
@@ -11,7 +11,13 @@ public class Match {
     private Match(String pattern) {
         pat = Pattern.compile(pattern);
     }
+    private Match(Pattern pat) {
+        this.pat = pat;
+    }
 
+    public static Match patterns(Pattern pat) {
+        return new Match(pat);
+    }
     public static Match regex(String pat) {
         return new Match(pat);
     }

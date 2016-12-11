@@ -1,9 +1,7 @@
-package it.giacomobergami.datatypelang.utils;
+package it.giacomobergami.datatypelang.utils.funcs;
 
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collector;
 
 /**
  * Created by vasistas on 11/12/16.
