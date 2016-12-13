@@ -1,4 +1,4 @@
-package it.giacomobergami.datatypelang.utils;
+package it.giacomobergami.datatypelang.utils.data;
 
 /**
  * Created by vasistas on 11/12/16.

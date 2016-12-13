@@ -1,6 +1,6 @@
 package it.giacomobergami.datatypelang.utils.funcs;
 
-import it.giacomobergami.datatypelang.utils.Pair;
+import it.giacomobergami.datatypelang.utils.data.Pair;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -19,7 +19,7 @@ public abstract class Accum<X,K> implements Function<Pair<X,K>,K>, BiConsumer<K,
 
     @Override
     public K get() {
-        return v; // I always provide the update value
+        return v; // I always provide the update asTableColumnValue
     }
 
     @Override
@@ -29,7 +29,7 @@ public abstract class Accum<X,K> implements Function<Pair<X,K>,K>, BiConsumer<K,
 
     @Override
     public void accept(K k, X x) {
-        v = apply(new Pair<>(x, v)); // Ignore the k value. Uses the X value
+        v = apply(new Pair<>(x, v)); // Ignore the k asTableColumnValue. Uses the X asTableColumnValue
     }
 
     @Override

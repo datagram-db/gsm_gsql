@@ -1,4 +1,4 @@
-package it.giacomobergami.datatypelang.utils.funcs;
+package it.giacomobergami.datatypelang.utils.funcs.throwables;
 
 import java.util.function.Function;
 

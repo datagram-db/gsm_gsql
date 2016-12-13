@@ -32,4 +32,11 @@ public class Opt<T> {
         return isPresent ? ifTrue.apply(val) : ifFalse.get();
     }
 
+    public boolean isError() {
+        return !isPresent;
+    }
+
+    public T value() {
+        return val;
+    }
 }

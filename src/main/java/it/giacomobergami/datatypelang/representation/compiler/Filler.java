@@ -19,14 +19,13 @@ import it.giacomobergami.datatypelang.utils.funcs.Accum;
 import it.giacomobergami.datatypelang.utils.empties.EIl;
 import it.giacomobergami.datatypelang.utils.funcs.OnExcpt;
 import it.giacomobergami.datatypelang.utils.funcs.ToStream;
-import it.giacomobergami.datatypelang.utils.Pair;
+import it.giacomobergami.datatypelang.utils.data.Pair;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * Created by vasistas on 05/12/16.
@@ -150,7 +149,7 @@ public class Filler {
                 if (!val.endsWith("s")) {
                     toret = toret.replace("@@"+val+"@@",choice(mask,attributes));
                 } else {
-                    Iterable it = new OnExcpt<>(val).as(
+                    Iterable it = (Iterable)new OnExcpt<>(val).as(
                             y-> (Iterable)attributes.getClass().getField(y).get(attributes),
                             y -> new EIl<>()
                     );
@@ -221,7 +220,7 @@ public class Filler {
                     p2 -> new OnExcpt<Pair<String,Object>,String>(p2).as(
                             z -> attributes.getClass().getField(z.getKey()).get(z.getValue()).toString(),
 
-                            // If not, check as a last chance if the metadata map has the informations. If not, then return the empty string as a default value
+                            // If not, check as a last chance if the metadata map has the informations. If not, then return the empty string as a default asTableColumnValue
                             z -> metaData == null ? "" : metaData.getOrDefault(z.getKey(),new MetaCommandInit(MetaCommandType.SingleVariable,"")).value
                     ));
         }

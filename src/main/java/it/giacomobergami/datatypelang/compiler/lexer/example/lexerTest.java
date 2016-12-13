@@ -8,7 +8,7 @@ import it.giacomobergami.datatypelang.compiler.lexer.Lexer;
 public class lexerTest {
 
     public static void main(String[] args) {
-        new Lexer<>(TokenType.class).lex("11 + 22 - 33").forEach(System.out::println);
+        new Lexer<>(TokenType.class).lex("11 + 22 - 33").forEachRemaining(System.out::println);
     }
 
 }

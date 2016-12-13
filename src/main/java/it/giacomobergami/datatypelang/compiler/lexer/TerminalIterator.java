@@ -1,19 +1,20 @@
 package it.giacomobergami.datatypelang.compiler.lexer;
 
-import it.giacomobergami.datatypelang.compiler.lexer.example.TokenType;
-import it.giacomobergami.datatypelang.compiler.parser.cp.Terminal;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Varepsilon;
 
 import java.util.Iterator;
+import java.util.stream.Stream;
 
 /**
  * Created by vasistas on 11/12/16.
  */
-public class TerminalIterator<T extends Enum> implements Iterator<Terminal<T>> {
+public class TerminalIterator<T extends Enum> implements Iterator<OnInput<T>> {
 
-    Iterator<Terminal<T>> it;
+    Iterator<OnInput<T>> it;
 
-    public TerminalIterator(Class<T> clazz, String input) {
-        it = new Lexer<>(clazz).terminalIterator(input);
+    public TerminalIterator(Stream<OnInput<T>> onInputStream) {
+        it = onInputStream.iterator();
     }
 
     @Override
@@ -22,7 +23,7 @@ public class TerminalIterator<T extends Enum> implements Iterator<Terminal<T>> {
     }
 
     @Override
-    public Terminal<T> next() {
-        return it.hasNext() ? it.next() : new Terminal<>();
+    public OnInput<T> next() {
+        return it.hasNext() ? it.next() : new Varepsilon<T>();
     }
 }
