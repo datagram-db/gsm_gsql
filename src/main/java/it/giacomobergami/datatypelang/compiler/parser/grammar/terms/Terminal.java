@@ -1,6 +1,8 @@
 package it.giacomobergami.datatypelang.compiler.parser.grammar.terms;
 
 import it.giacomobergami.datatypelang.compiler.parser.grammar.TableColumnEntry;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.Token;
 
 /**
  * A terminal represents a regex exception through its regex
@@ -14,7 +16,7 @@ public class Terminal<K extends Enum> implements TableColumnEntry<K> {
     }
     @Override
     public boolean isNull() {
-        return isVarepsiolon;
+        return false;
     }
 
     @Override
@@ -22,21 +24,24 @@ public class Terminal<K extends Enum> implements TableColumnEntry<K> {
         return terminalCase.toString();
     }
 
+    @Override
+    public OnInput<K> toInput() {
+        return new Token<K>(terminalCase,null);
+    }
+
     public K caso() {
         return terminalCase;
     }
 
     K terminalCase;
-    private final boolean isVarepsiolon;
+
+    @Override
+    public String toString() {
+        return terminalCase.toString();
+    }
 
     public Terminal(K empty) {
         terminalCase = empty;
-        this.isVarepsiolon = false;
-    }
-
-    public Terminal() {
-        terminalCase = null;
-        this.isVarepsiolon = true;
     }
 
 
@@ -47,20 +52,18 @@ public class Terminal<K extends Enum> implements TableColumnEntry<K> {
 
         Terminal<?> terminal = (Terminal<?>) o;
 
-        if (isVarepsiolon != terminal.isVarepsiolon) return false;
         return terminalCase != null ? terminalCase.equals(terminal.terminalCase) : terminal.terminalCase == null;
     }
 
     @Override
     public int hashCode() {
         int result = terminalCase != null ? terminalCase.hashCode() : 0;
-        result = 31 * result + (isVarepsiolon ? 1 : 0);
         return result;
     }
 
     @Override
-    public GrammarTerm<K> asGrammarTerm() {
-        return this;
+    public OnInput<K> asOnInput() {
+        return new Token<K>(terminalCase,null);
     }
 }
 

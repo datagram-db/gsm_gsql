@@ -14,4 +14,22 @@ public class ANTerm<T extends Enum> extends Association<T> {
         nonterm = nt;
         rs = term;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ANTerm)) return false;
+
+        ANTerm<?> anTerm = (ANTerm<?>) o;
+
+        if (nonterm != null ? !nonterm.equals(anTerm.nonterm) : anTerm.nonterm != null) return false;
+        return rs != null ? rs.equals(anTerm.rs) : anTerm.rs == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = nonterm != null ? nonterm.hashCode() : 0;
+        result = 31 * result + (rs != null ? rs.hashCode() : 0);
+        return result;
+    }
 }

@@ -22,12 +22,17 @@ public class Varepsilon<K extends Enum> implements OnInput<K>, TableColumnEntry<
     }
 
     @Override
+    public GrammarTerm<K> asGrammarTerm() {
+        return this;
+    }
+
+    @Override
     public boolean isTerminal() {
         return true;
     }
     @Override
     public boolean isNull() {
-        return false;
+        return true;
     }
     @Override
     public String getValue() {
@@ -35,7 +40,23 @@ public class Varepsilon<K extends Enum> implements OnInput<K>, TableColumnEntry<
     }
 
     @Override
-    public GrammarTerm<K> asGrammarTerm() {
-        return null;
+    public OnInput<K> toInput() {
+        return this;
+    }
+
+    @Override
+    public OnInput<K> asOnInput() {
+        return this;
+    }
+
+
+    @Override
+    public String toString() {
+        return "$";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Varepsilon;
     }
 }

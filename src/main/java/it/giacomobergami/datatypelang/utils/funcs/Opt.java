@@ -1,5 +1,6 @@
 package it.giacomobergami.datatypelang.utils.funcs;
 
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -18,6 +19,11 @@ public class Opt<T> {
     private Opt(T val) {
         isPresent = true;
         this.val = val;
+    }
+
+    public Opt(Optional<T> val) {
+        isPresent = val.isPresent();
+        this.val = isPresent ? val.get() : null;
     }
 
     public static <T> Opt<T> err() {

@@ -14,13 +14,22 @@ public class State<K extends Enum> {
 
     boolean isReduce;
     Set<ItemWithLookahead<K>> elements;
-    State(ItemWithLookahead<K> next) {
+    int stateNo;
+
+    State(int no,ItemWithLookahead<K> next) {
         elements = new HashSet<>();
         elements.add(next);
+        stateNo = no;
     }
 
-    State(Set<ItemWithLookahead<K>> elements) {
+    State(int no,Set<ItemWithLookahead<K>> elements) {
         this.elements = elements;
+        stateNo = no;
+    }
+
+    @Override
+    public String toString() {
+        return "State N°"+stateNo+".\n"+elements.toString();
     }
 
 }

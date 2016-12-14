@@ -2,6 +2,7 @@ package it.giacomobergami.datatypelang.compiler.parser.grammar.terms;
 
 
 import it.giacomobergami.datatypelang.compiler.parser.grammar.TableColumnEntry;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 
 /**
  * Created by vasistas on 11/12/16.
@@ -13,6 +14,11 @@ public class NonTerminal<K extends Enum> implements TableColumnEntry<K> {
     }
 
     private String name;
+
+    @Override
+    public String toString() {
+        return name;
+    }
 
     @Override
     public boolean isTerminal() {
@@ -27,6 +33,11 @@ public class NonTerminal<K extends Enum> implements TableColumnEntry<K> {
     @Override
     public String getValue() {
         return name;
+    }
+
+    @Override
+    public OnInput<K> toInput() {
+        return null;
     }
 
 
@@ -46,7 +57,7 @@ public class NonTerminal<K extends Enum> implements TableColumnEntry<K> {
     }
 
     @Override
-    public GrammarTerm<K> asGrammarTerm() {
-        return this;
+    public OnInput<K> asOnInput() {
+        return null;
     }
 }

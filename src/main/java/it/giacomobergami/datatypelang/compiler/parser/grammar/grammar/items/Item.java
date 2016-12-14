@@ -1,20 +1,58 @@
 package it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items;
 
 import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.TableColumnEntry;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Grammar;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.NonTerminal;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.utils.Array;
 import it.giacomobergami.datatypelang.utils.funcs.Opt;
+import org.apache.commons.lang3.ArrayUtils;
 
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * Created by vasistas on 12/12/16.
  */
 public class Item<K extends Enum> implements  IItem<K,Item<K>> {
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Item)) return false;
+
+        Item<?> item = (Item<?>) o;
+
+        if (pos != item.pos) return false;
+        if (head != null ? !head.equals(item.head) : item.head != null) return false;
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        return Arrays.equals(elems, item.elems);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = head != null ? head.hashCode() : 0;
+        result = 31 * result + Arrays.hashCode(elems);
+        result = 31 * result + pos;
+        return result;
+    }
+
     public final NonTerminal<K> head;
     public final GrammarTerm<K>[] elems;
     public final int pos;
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(head).append(" -> ");
+        for (int i=0; i<elems.length; i++) {
+            if (i==pos) sb.append(".");
+            sb.append(elems[i]);
+        }
+        return sb.toString();
+    }
+
     protected Item(NonTerminal<K> head, GrammarTerm<K>[] elems, int pos) {
         this.elems = elems;
         this.pos = pos;
@@ -22,7 +60,11 @@ public class Item<K extends Enum> implements  IItem<K,Item<K>> {
     }
 
     public static <K extends Enum> Opt<Item<K>> generate(NonTerminal<K> head,GrammarTerm<K>[] elems, int pos) {
-        return pos > 0 && elems.length >= pos ? Opt.of(new Item<K>(head,elems, pos)) : Opt.err();
+        return pos >= 0 && elems.length > pos ? Opt.of(new Item<K>(head,elems, pos)) : Opt.err();
+    }
+
+    public ItemWithLookahead<K> extendWithLookaheads(Grammar<K> gram, OnInput<K>...lookaheads) {
+        return new ItemWithLookahead(gram,this,lookaheads);
     }
 
     public static <K extends Enum> Opt<Item<K>> generate(Rule<K> r, NonTerminal<K> A) {
@@ -93,5 +135,29 @@ public class Item<K extends Enum> implements  IItem<K,Item<K>> {
     @Override
     public int getItemPos() {
         return pos;
+    }
+
+    @Override
+    public GrammarTerm<K>[] getElementsNextToCore() {
+        ArrayList<GrammarTerm<K>> al = new ArrayList<>();
+        if (pos==elems.length)
+            return (GrammarTerm<K>[]) new Object[0];
+        else {
+            return  ArrayUtils.subarray(elems, pos + 1, elems.length - 1);
+        }
+    }
+
+    @Override
+    public List<GrammarTerm<K>> getElementsNextToCore(GrammarTerm<K> withLookahead) {
+        ArrayList<GrammarTerm<K>> k = new ArrayList<>();
+        if (pos==elems.length)
+            return k;
+        else {
+            for (GrammarTerm<K> x : elems) {
+                k.add(x.asTableColumnEntry());
+            }
+            k.add(withLookahead.asTableColumnEntry());
+            return k;
+        }
     }
 }

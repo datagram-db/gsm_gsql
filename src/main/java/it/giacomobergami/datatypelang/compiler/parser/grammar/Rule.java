@@ -1,6 +1,8 @@
 package it.giacomobergami.datatypelang.compiler.parser.grammar;
 
 import it.giacomobergami.datatypelang.compiler.parser.grammar.associations.Association;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Grammar;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.ItemWithLookahead;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.NonTerminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.OnStack;
@@ -45,4 +47,22 @@ public class Rule<K extends Enum> implements IRule<GrammarTerm<K>,NonTerminal<K>
         return actual.toString();
     }
 
+    public ItemWithLookahead<K> asLookaheadItem(Grammar<K> g) {
+        return ItemWithLookahead.generate(g,this).value();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Rule)) return false;
+
+        Rule<?> rule = (Rule<?>) o;
+
+        return actual != null ? actual.equals(rule.actual) : rule.actual == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return actual != null ? actual.hashCode() : 0;
+    }
 }
