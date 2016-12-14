@@ -23,13 +23,13 @@ import java.util.function.Function;
 /**
  * Created by vasistas on 11/12/16.
  */
-public class ParserTable<K extends Enum, NT extends NonTerminal> {
+public class ParserTable<K extends Enum> {
 
     TypesafeTable<K> table;
     Deque<Integer> stateStack;
 
     public ParserTable(Grammar<K> g) {
-        table = new TypesafeTable(g);
+        table = new TypesafeTable();
         stateStack = new ArrayDeque<>();
     }
 

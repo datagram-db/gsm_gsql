@@ -56,6 +56,11 @@ public class Varepsilon<K extends Enum> implements OnInput<K>, TableColumnEntry<
     }
 
     @Override
+    public int hashCode() {
+        return 0;
+    }
+
+    @Override
     public boolean equals(Object o) {
         return o instanceof Varepsilon;
     }

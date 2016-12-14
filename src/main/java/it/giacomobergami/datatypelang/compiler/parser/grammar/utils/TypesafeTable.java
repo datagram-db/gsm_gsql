@@ -16,8 +16,8 @@ public class TypesafeTable<K extends Enum> {
 
     Table<Integer, TableColumnEntry<K>, TableCase> table;
 
-    public TypesafeTable(Grammar<K> g) {
-        throw new RuntimeException("Grammar has not initialized the table<");
+    public TypesafeTable() {
+        table = HashBasedTable.create();
     }
 
     public Opt<TableCase> set(Integer state, TableColumnEntry<K> t_nt_dollar, int shift) {

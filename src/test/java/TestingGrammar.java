@@ -5,6 +5,7 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.Item
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.NonTerminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Terminal;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.utils.TypesafeTable;
 import it.giacomobergami.datatypelang.utils.funcs.Opt;
 
 import java.util.*;
@@ -98,7 +99,8 @@ public class TestingGrammar {
         ItemWithLookahead<termine> starter = gram.startItem();
         System.out.println(starter);
         State<termine> s1 = gram.stateFromLookahead(idx++,starter);
-        System.out.println(s1);
+        TypesafeTable<termine> tst = new TypesafeTable<>();
+        s1.initTypesafeTable(gram,tst);
 
         System.out.println("…Everything went smoothly! :=D");
     }

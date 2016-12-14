@@ -6,10 +6,12 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.NonTerminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Varepsilon;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.utils.GlobalCounter;
 import it.giacomobergami.datatypelang.utils.funcs.Opt;
 
 import java.lang.reflect.Array;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by vasistas on 12/12/16.
@@ -138,12 +140,16 @@ public class ItemWithLookahead<K extends Enum> implements IItem<K,ItemWithLookah
         return result;
     }
 
-    public Iterable<GrammarTerm<K>> getLookaheadSymbols() {
+    public Iterable<GrammarTerm<K>> getIterableLookaheadSymbols() {
         return () -> Arrays.stream(lookaheadSymbols).map(x->x.asGrammarTerm()).iterator();
     }
 
+    public List<GrammarTerm<K>> getListLookaheadSymbols() {
+        return Arrays.stream(lookaheadSymbols).map(x->x.asGrammarTerm()).collect(Collectors.toList());
+    }
+
     public ItemWithLookahead<K> setLookaheadSymbols(Collection<GrammarTerm<K>> value) {
-        lookaheadSymbols = value.stream().filter(x->x.isInput()).map(x->x.toInput()).toArray((i)-> (OnInput<K>[])new Object[i]);
+        lookaheadSymbols = value.stream().filter(x->x.isInput()).map(x->x.toInput()).toArray((i)-> (OnInput<K>[]) Array.newInstance(OnInput.class, i));
         return this;
     }
 }

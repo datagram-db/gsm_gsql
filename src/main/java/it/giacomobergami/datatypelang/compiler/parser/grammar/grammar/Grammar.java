@@ -3,6 +3,7 @@ package it.giacomobergami.datatypelang.compiler.parser.grammar.grammar;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
+import it.giacomobergami.datatypelang.compiler.parser.ParserTable;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.TableColumnEntry;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.Item;
@@ -38,17 +39,16 @@ public class Grammar<K extends Enum> {
         return sb.toString();
     }
 
-    private Multimap<ItemWithLookahead<K>,GrammarTerm<K>> mapFromLookahead(ItemWithLookahead<K> first) {
-        Multimap<ItemWithLookahead<K>,GrammarTerm<K>> stateElementsMap = HashMultimap.create();
-        stateElementsMap.putAll(first,first.getLookaheadSymbols());
-        if (first != null) {
+    private Multimap<ItemWithLookahead<K>,GrammarTerm<K>> mapFromLookahead(Multimap<ItemWithLookahead<K>,GrammarTerm<K>> stateElementsMap,ItemWithLookahead<K> axB) {
+        if (axB != null) {
+            stateElementsMap.putAll(axB,axB.getIterableLookaheadSymbols());
             // A -> αxβ
-            Opt<GrammarTerm<K>> x = first.elementAtCurrentPosition();
+            Opt<GrammarTerm<K>> x = axB.elementAtCurrentPosition();
 
             // The first element has been already visited, so I just return the actual state.
             // MEMO: In this case I should generate  a reduce operation
             // Otherwise, I have to check the elements stored within the element
-            if (first.getItemPos() != first.getCore().length && !x.isError()) {
+            if (axB.getItemPos() != axB.getCore().length && !x.isError()) {
                 GrammarTerm<K> t = x.value();
 
                 // If, otherwise, it is a terminal,
@@ -57,19 +57,22 @@ public class Grammar<K extends Enum> {
                 if (!t.isTerminal()) {
 
                     NonTerminal<K> nt = (NonTerminal<K>)t;
-                    Set<ItemWithLookahead<K>> state = new HashSet<>();
-                    state.add(first);
 
-                    GrammarTerm<K>[] l = first.getElementsNextToCore();
+                    GrammarTerm<K>[] B = axB.getElementsNextToCore();
 
                     for (Rule<K> y : map.get(nt)) {
                         ItemWithLookahead<K> item = y.asLookaheadItem(this);
-                        for (GrammarTerm<K> z : l) stateElementsMap.put(item,z);
+                        for (GrammarTerm<K> z : B)
+                            stateElementsMap.putAll(item,first(ArrayUtils.add(B,z)));
 
                         //Check recursively if the current expanded item starts with a NT, and hence it has to be expanded
                         Opt<GrammarTerm<K>> nt2 = item.elementAtCurrentPosition();
                         if (nt2.ifte(z->!z.isTerminal(),()->false)) {
-                            stateElementsMap.putAll(mapFromLookahead(item));
+                            if (!stateElementsMap.get(item).containsAll(item.getListLookaheadSymbols())) {
+                                System.out.println(stateElementsMap.get(item));
+                                System.out.println(stateElementsMap.get(item)+" ˆˆˆvsˆˆˆ "+item.getListLookaheadSymbols());
+                                mapFromLookahead(stateElementsMap,item);
+                            }
                         }
                     }
 
@@ -90,7 +93,13 @@ public class Grammar<K extends Enum> {
      * @return
      */
     public State<K> stateFromLookahead(int No, ItemWithLookahead<K> first) {
-        return new State<K>(No,mapFromLookahead(first).asMap().entrySet().stream().map(x->x.getKey().setLookaheadSymbols(x.getValue())).collect(Collectors.toSet()));
+        return new State<K>(No,mapFromLookahead(HashMultimap.create(),first).asMap().entrySet().stream().map(x->x.getKey().setLookaheadSymbols(x.getValue())).collect(Collectors.toSet()));
+    }
+
+    public State<K> stateFromLookaheads(int No, Collection<ItemWithLookahead<K>> first) {
+        Multimap<ItemWithLookahead<K>,GrammarTerm<K>> stateElementsMap = HashMultimap.create();
+        first.forEach(x->mapFromLookahead(stateElementsMap,x));
+        return new State<K>(No,stateElementsMap.asMap().entrySet().stream().map(x->x.getKey().setLookaheadSymbols(x.getValue())).collect(Collectors.toSet()));
     }
 
 
@@ -102,6 +111,8 @@ public class Grammar<K extends Enum> {
         terminals = null;
         nullables = null;
     }
+
+
 
     private Grammar(NonTerminal<K> starter,Collection<Rule<K>> rules) {
         this.starter = starter;
@@ -270,13 +281,6 @@ public class Grammar<K extends Enum> {
         }
     }
 
-    public OnInput<K>[] firstsToLookahead(Collection<TableColumnEntry<K>> coll) {
-        return coll.stream().filter(TableColumnEntry::isInput).map(TableColumnEntry::asOnInput).toArray(value -> (OnInput<K>[])Array.newInstance(OnInput.class, value));
-    }
-
-    public Stream<GrammarTerm<K>> firstsToLookaheadStream(Collection<TableColumnEntry<K>> coll) {
-        return coll.stream().filter(TableColumnEntry::isInput).map(TableColumnEntry::asGrammarTerm);
-    }
 
     public Set<TableColumnEntry<K>> follow(NonTerminal<K> x) {
         Set<TableColumnEntry<K>> hs = new HashSet<>();
@@ -303,4 +307,14 @@ public class Grammar<K extends Enum> {
     public ItemWithLookahead<K> startItem() {
         return ItemWithLookahead.generate(this,map.get(this.starter).stream().findFirst().get()).value();
     }
+    public Stream<GrammarTerm<K>> firstsToLookaheadStream(Collection<TableColumnEntry<K>> coll) {
+        return coll.stream().filter(TableColumnEntry::isInput).map(TableColumnEntry::asGrammarTerm);
+    }
+
+//////
+    private OnInput<K>[] firstsToLookahead(Collection<TableColumnEntry<K>> coll) {
+        return coll.stream().filter(TableColumnEntry::isInput).map(TableColumnEntry::asOnInput).toArray(value -> (OnInput<K>[])Array.newInstance(OnInput.class, value));
+    }
+
+
 }
