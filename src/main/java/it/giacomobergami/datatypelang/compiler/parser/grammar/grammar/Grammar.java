@@ -3,7 +3,6 @@ package it.giacomobergami.datatypelang.compiler.parser.grammar.grammar;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
-import it.giacomobergami.datatypelang.compiler.parser.ParserTable;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.TableColumnEntry;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.Item;
@@ -69,8 +68,6 @@ public class Grammar<K extends Enum> {
                         Opt<GrammarTerm<K>> nt2 = item.elementAtCurrentPosition();
                         if (nt2.ifte(z->!z.isTerminal(),()->false)) {
                             if (!stateElementsMap.get(item).containsAll(item.getListLookaheadSymbols())) {
-                                System.out.println(stateElementsMap.get(item));
-                                System.out.println(stateElementsMap.get(item)+" ˆˆˆvsˆˆˆ "+item.getListLookaheadSymbols());
                                 mapFromLookahead(stateElementsMap,item);
                             }
                         }
@@ -317,4 +314,7 @@ public class Grammar<K extends Enum> {
     }
 
 
+    public NonTerminal<K> getStarter() {
+        return starter;
+    }
 }

@@ -1,5 +1,6 @@
 package it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items;
 
+import com.sun.corba.se.impl.ior.EncapsulationUtility;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Grammar;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
@@ -114,6 +115,10 @@ public class ItemWithLookahead<K extends Enum> implements IItem<K,ItemWithLookah
     @Override
     public ItemWithLookahead<K> getNextItemMove() {
         return hasNextitemMove() ? new ItemWithLookahead<K>(g,orig.getNextItemMove(),lookaheadSymbols) : null;
+    }
+
+    public static <Z extends Enum> Collection<ItemWithLookahead<Z>> moveForward(Collection<ItemWithLookahead<Z>> toMove) {
+        return toMove.stream().map(x-> x.getNextItemMove()).collect(Collectors.toSet());
     }
 
     @Override

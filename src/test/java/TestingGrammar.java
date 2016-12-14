@@ -1,3 +1,5 @@
+import it.giacomobergami.datatypelang.compiler.lexer.Lexer;
+import it.giacomobergami.datatypelang.compiler.lexer.TerminalIterator;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Grammar;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.State;
@@ -16,7 +18,7 @@ import java.util.*;
 public class TestingGrammar {
 
     public enum termine {
-        DOLLAR("d"), COMMA(";"), ID("id"), EQUAL("="), PLUS("+");
+        DOLLAR("d"), COMMA(";"), ID("id"), EQUAL("="), PLUS("\\+");
 
         public final String pattern;
 
@@ -101,6 +103,14 @@ public class TestingGrammar {
         State<termine> s1 = gram.stateFromLookahead(idx++,starter);
         TypesafeTable<termine> tst = new TypesafeTable<>();
         s1.initTypesafeTable(gram,tst);
+
+        System.out.println("StatesNo="+tst.numberOfStates()+" vs. "+tst.statesNumber());
+        System.out.println(tst);
+
+        System.out.println("Creating a lexer…");
+        Lexer<termine> l = new Lexer<>(termine.class);
+        TerminalIterator<termine> ret = l.lex("id=id;id=id+id");
+        tst.recognize(ret);
 
         System.out.println("…Everything went smoothly! :=D");
     }

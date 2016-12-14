@@ -26,17 +26,24 @@ public class State<K extends Enum> {
     public Multimap<GrammarTerm<K>,ItemWithLookahead<K>> map;
 
     public void initTypesafeTable(Grammar<K> g, TypesafeTable<K> tst) {
-        if (this.isReduce) {
-            for (ItemWithLookahead<K> last : elements) {
-                for (OnInput<K> y : last.lookaheadSymbols)
-                    tst.set(stateNo,y.asTableColumnValue(),new Rule(last.getHead(),last.getCore()));
-                break;
-            }
-        } else
-        map.asMap().entrySet().stream().map(x->new Pair<>(x.getKey(),g.stateFromLookaheads(GlobalCounter.i.assign(),x.getValue()))).forEach(x->{
-            tst.set(stateNo,x.getKey().asTableColumnEntry(),x.getValue().stateNo);
-            x.getValue().initTypesafeTable(g,tst);
-        });
+        //System.err.println("Creating node: "+this+"\nˆˆˆˆˆˆˆ");
+        if (tst.insertAndCheck(this)==-1) {
+            if (this.isReduce) {
+                for (ItemWithLookahead<K> last : elements) {
+
+                    for (OnInput<K> y : last.lookaheadSymbols)
+                        if (last.getHead().equals(g.getStarter()))
+                            tst.set(stateNo,y.asTableColumnValue());
+                        else
+                            tst.set(stateNo, y.asTableColumnValue(),  new Rule(last.getHead(), last.getCore()));
+                    break;
+                }
+            } else
+                map.asMap().entrySet().stream().map(x -> new Pair<>(x.getKey(), g.stateFromLookaheads(GlobalCounter.i.assign(), ItemWithLookahead.moveForward(x.getValue()))    )).forEach(x -> {
+                    x.getValue().initTypesafeTable(g, tst);
+                    tst.set(stateNo, x.getKey().asTableColumnEntry(), tst.get(x.getValue()));
+                });
+        }
     }
 
     State(int no,ItemWithLookahead<K> next) {
@@ -54,7 +61,10 @@ public class State<K extends Enum> {
         elements.forEach(x -> {
             if (!x.elementAtCurrentPosition().isError())
                 map.put(x.elementAtCurrentPosition().value(),x);
-            if (elements.size()==1 && x.elementAtCurrentPosition().isError()) isReduce=true;
+            if (elements.size()==1 && x.elementAtCurrentPosition().isError())
+                isReduce=true;
+            else
+                isReduce=false;
         });
         this.elements = elements;
         stateNo = no;
@@ -65,4 +75,27 @@ public class State<K extends Enum> {
         return "State N°"+stateNo+".\n"+elements.toString();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof State)) return false;
+
+        State<?> state = (State<?>) o;
+
+        if (isReduce != state.isReduce) return false;
+        if (elements != null ? !elements.equals(state.elements) : state.elements != null) return false;
+        return map != null ? map.equals(state.map) : state.map == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (isReduce ? 1 : 0);
+        result = 31 * result + (elements != null ? elements.hashCode() : 0);
+        result = 31 * result + (map != null ? map.hashCode() : 0);
+        return result;
+    }
+
+    public int getNumber() {
+        return stateNo;
+    }
 }

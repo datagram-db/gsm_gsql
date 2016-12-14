@@ -24,7 +24,7 @@ public class TableCase {
     public TableCase(Rule red) {
         this.reduce = red;
         this.shiftInt = -1;
-        isAccept = true;
+        isAccept = false;
     }
 
     public TableCase() {
@@ -42,6 +42,14 @@ public class TableCase {
         } else {
             return (doReduce.apply(reduce));
         }
+    }
+
+    @Override
+    public String toString() {
+        if (isAccept) return "Accept!";
+        else if (reduce==null) {
+            return "S("+shiftInt+")";
+        } else return "R("+reduce.toString()+")";
     }
 
     /**
