@@ -7,10 +7,12 @@ import it.giacomobergami.datatypelang.compiler.lexer.TerminalIterator;
 import it.giacomobergami.datatypelang.compiler.parser.TableCase;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.TableColumnEntry;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.associations.ANTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Grammar;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.State;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.OnStack;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.ReducedStack;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.Token;
 import it.giacomobergami.datatypelang.representation.Type;
 import it.giacomobergami.datatypelang.utils.funcs.Opt;
@@ -103,8 +105,9 @@ public class TypesafeTable<K extends Enum> {
         return (t = table.put(stateNo, kTableColumnEntry, new TableCase())) != null ? Opt.of(t) : Opt.err();
     }
 
-    public boolean recognize(TerminalIterator<K> terminals) {
+    public ANTerm<K> recognize(Grammar<K> starter, TerminalIterator<K> terminals) {
         stateStack = new ArrayDeque<>();
+        stateStack.push(0);
         Deque<OnStack<K>> recognizedInput = new ArrayDeque<>();
         boolean cond = false;
         while (!cond) {
@@ -119,9 +122,10 @@ public class TypesafeTable<K extends Enum> {
                     // a. If I have a shift operation, then… and save the terminal values,
                     shiftNo -> {
                         // a1. …push the state in the stack,
+                        System.err.println("Shifting to "+shiftNo);
                         stateStack.push(shiftNo);
                         // a2. …and push the recognized text in the stack.
-                        if (w instanceof Token) recognizedInput.push((Token<K>) w);
+                        if (w instanceof Token) recognizedInput.push((Token) w);
                     },
 
                     // b. if I have a reduce operation,
@@ -141,12 +145,13 @@ public class TypesafeTable<K extends Enum> {
                     }),()->Opt.of(false));
 
             if (b.isError()) {
-                return false;
+                return null;
             } else {
                 cond = b.value();
             }
         }
-        return true;
+
+        return new ANTerm<K>(starter.getStarter(),(ReducedStack<K>)recognizedInput.pop());
     }
 
 }

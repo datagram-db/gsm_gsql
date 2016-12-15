@@ -24,7 +24,7 @@ public class ItemWithLookahead<K extends Enum> implements IItem<K,ItemWithLookah
     }
 
     public  OnInput<K>[] lookaheadSymbols;
-    private final Item<K> orig;
+    public final Item<K> orig;
     private final Grammar<K> g;
 
     @Override

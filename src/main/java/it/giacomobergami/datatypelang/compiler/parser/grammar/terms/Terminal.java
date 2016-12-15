@@ -26,21 +26,21 @@ public class Terminal<K extends Enum> implements TableColumnEntry<K> {
 
     @Override
     public OnInput<K> toInput() {
-        return new Token<K>(terminalCase,null);
+        return new Token(terminalCase,null);
     }
 
-    public K caso() {
+    public String caso() {
         return terminalCase;
     }
 
-    K terminalCase;
+    String terminalCase;
 
     @Override
     public String toString() {
         return terminalCase.toString();
     }
 
-    public Terminal(K empty) {
+    public Terminal(String empty) {
         terminalCase = empty;
     }
 
@@ -63,7 +63,7 @@ public class Terminal<K extends Enum> implements TableColumnEntry<K> {
 
     @Override
     public OnInput<K> asOnInput() {
-        return new Token<K>(terminalCase,null);
+        return new Token(terminalCase,null);
     }
 }
 

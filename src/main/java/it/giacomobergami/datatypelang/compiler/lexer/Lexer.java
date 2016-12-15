@@ -7,32 +7,33 @@ import it.giacomobergami.datatypelang.utils.Streams;
 import it.giacomobergami.datatypelang.utils.regex.Match;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class Lexer<T extends Enum> {
+public class Lexer {
 
-    private final Class<T> enumClazz;
-    public Lexer(Class<T> enumClazz) {
-        this.enumClazz = enumClazz;
+    private final Map<String,String> enumClazz;
+    public Lexer(Map<String,String> eclazz) {
+        this.enumClazz = eclazz;
     }
 
-    public TerminalIterator<T> lex(String input) {
+    public TerminalIterator lex(String input) {
         // The tokens to return
-        ArrayList<Token<T>> tokens = new ArrayList<>();
+        ArrayList<Token> tokens = new ArrayList<>();
 
-        Pattern tokenPatterns = Pattern.compile(Streams.toStream(enumClazz.getEnumConstants()).map(
-                x-> String.format("(?<%s>%s)", x.name(), x.toString())
+        Pattern tokenPatterns = Pattern.compile(Streams.toStream(enumClazz.entrySet()).map(
+                x-> String.format("(?<%s>%s)", x.getKey(), x.getValue())
         ).collect(Collectors.joining("|")));
 
-        return new TerminalIterator<T>(Streams.toStream(Match.patterns(tokenPatterns).with(input)).map(matcher -> {
-            for (T tokenType : enumClazz.getEnumConstants()) {
-                String match = matcher.fromGroupsGet(tokenType.name());
+        return new TerminalIterator(Streams.toStream(Match.patterns(tokenPatterns).with(input)).map(matcher -> {
+            for (String tokenType : enumClazz.keySet()) {
+                String match = matcher.fromGroupsGet(tokenType);
                 if (match!=null) {
-                    return new Token<T>(tokenType,match);
+                    return new Token(tokenType,match);
                 }
             }
-            return new Varepsilon<T>();
+            return new Varepsilon();
         }).filter(OnInput::nonEmpty));
     }
 

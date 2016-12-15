@@ -46,9 +46,9 @@ public class Item<K extends Enum> implements  IItem<K,Item<K>> {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(head).append(" -> ");
-        for (int i=0; i<elems.length; i++) {
+        for (int i=0; i<=elems.length; i++) {
             if (i==pos) sb.append(".");
-            sb.append(elems[i]);
+            if (i<elems.length) sb.append(elems[i]);
         }
         return sb.toString();
     }

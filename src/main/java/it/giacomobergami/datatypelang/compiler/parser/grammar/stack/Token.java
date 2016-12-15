@@ -9,21 +9,21 @@ import it.giacomobergami.datatypelang.utils.funcs.Opt;
 /**
  * Created by vasistas on 11/12/16.
  */
-public class Token<T extends Enum> implements OnStack<T>, OnInput<T> {
+public class Token implements OnStack, OnInput {
 
-    public final T type;
+    public final String type;
     public String data;
-    public final Terminal<T> term;
+    public final Terminal term;
 
-    public Token(T type, String data) {
+    public Token(String type, String data) {
         this.type = type;
         this.data = data;
-        this.term = new Terminal<T>(type);
+        this.term = new Terminal(type);
     }
 
     @Override
     public String toString() {
-        return String.format("(%s %s)", type.name(), data);
+        return String.format("(%s %s)", type, data);
     }
 
     @Override
@@ -32,12 +32,12 @@ public class Token<T extends Enum> implements OnStack<T>, OnInput<T> {
     }
 
     @Override
-    public TableColumnEntry<T> asTableColumnValue() {
+    public TableColumnEntry asTableColumnValue() {
         return term;
     }
 
     @Override
-    public GrammarTerm<T> asGrammarTerm() {
+    public GrammarTerm asGrammarTerm() {
         return term;
     }
 
@@ -46,7 +46,7 @@ public class Token<T extends Enum> implements OnStack<T>, OnInput<T> {
         if (this == o) return true;
         if (!(o instanceof Token)) return false;
 
-        Token<?> token = (Token<?>) o;
+        Token token = (Token) o;
 
         if (type != null ? !type.equals(token.type) : token.type != null) return false;
         if (data != null ? !data.equals(token.data) : token.data != null) return false;

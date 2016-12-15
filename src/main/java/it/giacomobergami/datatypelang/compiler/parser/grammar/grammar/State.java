@@ -1,9 +1,12 @@
 package it.giacomobergami.datatypelang.compiler.parser.grammar.grammar;
 
+import com.github.mrebhan.crogamp.cli.TableList;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.MultiHashtable;
+import it.giacomobergami.datatypelang.compiler.parser.TableCase;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.TableColumnEntry;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.Item;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.ItemWithLookahead;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
@@ -12,8 +15,7 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.utils.GlobalCounte
 import it.giacomobergami.datatypelang.compiler.parser.grammar.utils.TypesafeTable;
 import it.giacomobergami.datatypelang.utils.data.Pair;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by vasistas on 12/12/16.
@@ -26,22 +28,23 @@ public class State<K extends Enum> {
     public Multimap<GrammarTerm<K>,ItemWithLookahead<K>> map;
 
     public void initTypesafeTable(Grammar<K> g, TypesafeTable<K> tst) {
-        //System.err.println("Creating node: "+this+"\nˆˆˆˆˆˆˆ");
         if (tst.insertAndCheck(this)==-1) {
+            System.err.println(this);
             if (this.isReduce) {
-                for (ItemWithLookahead<K> last : elements) {
-
+                elements.stream().filter(x->x.elementAtCurrentPosition().isError()).forEach(last -> {
                     for (OnInput<K> y : last.lookaheadSymbols)
                         if (last.getHead().equals(g.getStarter()))
                             tst.set(stateNo,y.asTableColumnValue());
                         else
                             tst.set(stateNo, y.asTableColumnValue(),  new Rule(last.getHead(), last.getCore()));
-                    break;
-                }
-            } else
-                map.asMap().entrySet().stream().map(x -> new Pair<>(x.getKey(), g.stateFromLookaheads(GlobalCounter.i.assign(), ItemWithLookahead.moveForward(x.getValue()))    )).forEach(x -> {
-                    x.getValue().initTypesafeTable(g, tst);
-                    tst.set(stateNo, x.getKey().asTableColumnEntry(), tst.get(x.getValue()));
+                });
+            }
+            map.asMap().entrySet().stream()
+                        .map(x -> new Pair<>(x.getKey(), g.stateFromLookaheads(GlobalCounter.i.assign(), ItemWithLookahead.moveForward(x.getValue()))    ))
+                        .forEach(x -> {
+                            State<K> currElement = x.getValue();
+                            currElement.initTypesafeTable(g, tst);
+                            tst.set(stateNo, x.getKey().asTableColumnEntry(), tst.get(currElement));
                 });
         }
     }
@@ -61,18 +64,20 @@ public class State<K extends Enum> {
         elements.forEach(x -> {
             if (!x.elementAtCurrentPosition().isError())
                 map.put(x.elementAtCurrentPosition().value(),x);
-            if (elements.size()==1 && x.elementAtCurrentPosition().isError())
-                isReduce=true;
-            else
-                isReduce=false;
         });
+        isReduce = elements.stream().anyMatch(x->x.elementAtCurrentPosition().isError());
         this.elements = elements;
         stateNo = no;
     }
 
     @Override
     public String toString() {
-        return "State N°"+stateNo+".\n"+elements.toString();
+        String[] header = new String[]{"Item","lookaheads"};
+        TableList tl = new TableList(header.length,header).withUnicode(true);
+        for (ItemWithLookahead<K> x : elements) {
+            tl.addRow(x.orig.toString(), Arrays.toString(x.lookaheadSymbols));
+        }
+        return "State N°"+stateNo+".\n"+tl.toString();
     }
 
     @Override

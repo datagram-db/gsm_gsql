@@ -1,9 +1,12 @@
 import it.giacomobergami.datatypelang.compiler.lexer.Lexer;
 import it.giacomobergami.datatypelang.compiler.lexer.TerminalIterator;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.associations.ANTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Grammar;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.State;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.ItemWithLookahead;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.ReducedStack;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.NonTerminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Terminal;
@@ -18,7 +21,7 @@ import java.util.*;
 public class TestingGrammar {
 
     public enum termine {
-        DOLLAR("d"), COMMA(";"), ID("id"), EQUAL("="), PLUS("\\+");
+        COMMA(";"), ID("\\d"), EQUAL("="), PLUS("\\+");
 
         public final String pattern;
 
@@ -36,8 +39,8 @@ public class TestingGrammar {
         return new NonTerminal<>(NT);
     }
 
-    public static Terminal<termine> t(termine t) {
-        return new Terminal<>(t);
+    public static Terminal<termine> t(String t) {
+        return new Terminal(t);
     }
 
     static ArrayList<Rule<termine>> hsr = new ArrayList<>();
@@ -48,15 +51,23 @@ public class TestingGrammar {
         hsr.add(new Rule(nt));
     }
 
-    public static ArrayList<Rule<termine>> createRules1() {
+    public static Map<String,String> terminalToRegex() {
+        HashMap<String,String> toret = new HashMap<>();
+        toret.put("col",";");
+        toret.put("id","\\d+");
+        toret.put("eq","=");
+        toret.put("plus","\\+");
+        return toret;
+    }
 
+    public static ArrayList<Rule<termine>> createRules1() {
         addRule(nt("SP"),nt("S"));
-        addRule(nt("S"),nt("S"),t(termine.COMMA),nt("A"));
+        addRule(nt("S"),nt("S"),t("col"),nt("A"));
         addRule(nt("S"), nt("A"));
         addRule(nt("A"),nt("E"));
-        addRule(nt("A"),t(termine.ID),t(termine.EQUAL),nt("E"));
-        addRule(nt("E"),nt("E"),t(termine.PLUS),t(termine.ID));
-        addRule(nt("E"),t(termine.ID));
+        addRule(nt("A"),t("id"),t("eq"),nt("E"));
+        addRule(nt("E"),nt("E"),t("plus"),t("id"));
+        addRule(nt("E"),t("id"));
         return hsr;
     }
 
@@ -106,11 +117,16 @@ public class TestingGrammar {
 
         System.out.println("StatesNo="+tst.numberOfStates()+" vs. "+tst.statesNumber());
         System.out.println(tst);
+        System.out.println(tst.table);
 
         System.out.println("Creating a lexer…");
-        Lexer<termine> l = new Lexer<>(termine.class);
-        TerminalIterator<termine> ret = l.lex("id=id;id=id+id");
-        tst.recognize(ret);
+        Lexer l = new Lexer(terminalToRegex());
+        System.out.println("Tokening \"2=2;8=5+3\"");
+        Iterable<OnInput<termine>> ret = () -> l.lex("2=2;8=5+3");
+        ret.forEach(System.out::println);
+        System.out.println("Using the Parser for the generated tokens");
+        ANTerm<termine> result = tst.recognize(gram,(TerminalIterator<termine>) ret.iterator());
+
 
         System.out.println("…Everything went smoothly! :=D");
     }
