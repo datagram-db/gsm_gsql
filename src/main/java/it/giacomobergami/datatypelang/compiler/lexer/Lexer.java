@@ -8,6 +8,7 @@ import it.giacomobergami.datatypelang.utils.regex.Match;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -19,6 +20,10 @@ public class Lexer {
     }
 
     public TerminalIterator lex(String input) {
+        return lex(input,OnInput::nonEmpty);
+    }
+
+    public TerminalIterator lex(String input, Predicate<? super OnInput> p) {
         // The tokens to return
         ArrayList<Token> tokens = new ArrayList<>();
 
@@ -34,7 +39,7 @@ public class Lexer {
                 }
             }
             return new Varepsilon();
-        }).filter(OnInput::nonEmpty));
+        }).filter(p));
     }
 
 

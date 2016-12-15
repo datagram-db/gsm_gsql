@@ -68,6 +68,7 @@ public class TestingGrammar {
         addRule(nt("A"),t("id"),t("eq"),nt("E"));
         addRule(nt("E"),nt("E"),t("plus"),t("id"));
         addRule(nt("E"),t("id"));
+
         return hsr;
     }
 
