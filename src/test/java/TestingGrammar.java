@@ -148,6 +148,9 @@ public class TestingGrammar {
         ANTerm result = tst.recognize(gram,(TerminalIterator) ret.iterator());
         if (result!=null)
             System.out.println("…Everything went smoothly! :=D ");
+
+
+        gram.compileRulesToJavaClasses("test.class");
     }
 
 

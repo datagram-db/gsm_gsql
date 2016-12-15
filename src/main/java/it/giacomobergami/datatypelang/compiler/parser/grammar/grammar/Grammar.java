@@ -1,5 +1,15 @@
 package it.giacomobergami.datatypelang.compiler.parser.grammar.grammar;
 
+import com.github.javaparser.Token;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Modifier;
+import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
+import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
+import com.github.javaparser.ast.type.Type;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
@@ -13,6 +23,7 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.NonTerminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Terminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Varepsilon;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.utils.Numbers;
 import it.giacomobergami.datatypelang.utils.ForFiles;
 import it.giacomobergami.datatypelang.utils.data.Pair;
 import it.giacomobergami.datatypelang.utils.funcs.Opt;
@@ -35,6 +46,44 @@ public class Grammar {
     public final Rule[] rules;
     private Set<Terminal> terminals;
     private Set<NonTerminal> nullables;
+
+    public void compileRulesToJavaClasses(String packageName) {
+        CompilationUnit cu = new CompilationUnit();
+        cu.setPackage(packageName);
+        HashMap<NonTerminal,ClassOrInterfaceDeclaration> classes = new HashMap<>();
+        HashMap<NonTerminal,Integer> classToId = new HashMap<>();
+        int counter = 0;
+        cu.addClass("ReducedStack");
+
+        //Creating the types
+        for (NonTerminal k : map.keySet()) {
+            ClassOrInterfaceDeclaration clazz = cu.addClass(k.getValue());
+            NodeList<ClassOrInterfaceType> extendsList = new NodeList<>();
+            extendsList.add(0,new ClassOrInterfaceType("it.giacomobergami.datatypelang.compiler.parser.grammar.stack.ReducedStack"));
+            clazz.setExtends(extendsList);
+            classes.put(k,clazz);
+            classToId.put(k,counter++);
+        }
+        Set<String> terminalNames = getAllTerminals().stream().map(Terminal::caso).collect(Collectors.toSet());
+        for (NonTerminal k : map.keySet()) {
+
+            for (Rule r : map.get(k)) {
+                ConstructorDeclaration constructor = classes.get(k).addConstructor(Modifier.PUBLIC);
+                GrammarTerm[] tail = r.tail();
+                for (int i = 0, tailLength = tail.length; i < tailLength; i++) {
+                    GrammarTerm x = tail[i];
+                    if (terminalNames.contains(x.getValue())) {
+                        constructor.addAndGetParameter(Token.class,Numbers.toOrdinal(i+1)+"_"+x.getValue());
+                    } else
+                        constructor.addAndGetParameter(x.getValue(), Numbers.toOrdinal(i+1));
+                }
+            }
+            System.err.println(classes.get(k).toString());
+        }
+
+
+
+    }
 
     @Override
     public String toString() {
