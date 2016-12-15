@@ -10,19 +10,24 @@ import it.giacomobergami.datatypelang.utils.funcs.Opt;
  * and hence as a \Varepsilon asTableColumnValue from the input. Is both an input element and a grammar term,
  * since the table is defined on grammar terms
  */
-public class Varepsilon<K extends Enum> implements OnInput<K>, TableColumnEntry<K> {
+public class Varepsilon<K extends Enum> implements OnInput, TableColumnEntry {
     @Override
     public boolean isEmpty() {
         return true;
     }
 
     @Override
-    public TableColumnEntry<K> asTableColumnValue() {
+    public TableColumnEntry asTableColumnValue() {
         return this;
     }
 
     @Override
-    public GrammarTerm<K> asGrammarTerm() {
+    public String getType() {
+        return null;
+    }
+
+    @Override
+    public GrammarTerm asGrammarTerm() {
         return this;
     }
 
@@ -40,12 +45,12 @@ public class Varepsilon<K extends Enum> implements OnInput<K>, TableColumnEntry<
     }
 
     @Override
-    public OnInput<K> toInput() {
+    public OnInput toInput() {
         return this;
     }
 
     @Override
-    public OnInput<K> asOnInput() {
+    public OnInput asOnInput() {
         return this;
     }
 

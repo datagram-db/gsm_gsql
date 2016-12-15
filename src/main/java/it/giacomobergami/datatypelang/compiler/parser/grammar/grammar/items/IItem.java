@@ -13,13 +13,13 @@ import java.util.List;
 /**
  * Created by vasistas on 12/12/16.
  */
-public interface IItem<K extends Enum, T extends IItem<K,T>> extends Iterable<T> {
-    NonTerminal<K> getHead();
-    GrammarTerm<K>[] getCore();
+public interface IItem<T extends IItem<T>> extends Iterable<T> {
+    NonTerminal getHead();
+    GrammarTerm[] getCore();
     int getItemPos();
-    GrammarTerm<K>[] getElementsNextToCore();
-    List<GrammarTerm<K>> getElementsNextToCore(GrammarTerm<K> withLookahead);
+    GrammarTerm[] getElementsNextToCore();
+    List<GrammarTerm> getElementsNextToCore(GrammarTerm withLookahead);
     boolean hasNextitemMove();
     T getNextItemMove();
-    Opt<GrammarTerm<K>> elementAtCurrentPosition();
+    Opt<GrammarTerm> elementAtCurrentPosition();
 }

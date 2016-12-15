@@ -15,31 +15,31 @@ import java.util.Deque;
 /**
  * Implements both the reduce operation and allows to initialize the contents with given values
  */
-public class Rule<K extends Enum> implements IRule<GrammarTerm<K>,NonTerminal<K>> {
+public class Rule implements IRule<GrammarTerm,NonTerminal> {
 
-    AbstractRule<GrammarTerm<K>,NonTerminal<K>> actual;
+    AbstractRule<GrammarTerm,NonTerminal> actual;
 
-    public Rule(NonTerminal<K> name, GrammarTerm<K>... terms) {
+    public Rule(NonTerminal name, GrammarTerm... terms) {
         actual = new AbstractRule<>(name, terms);
     }
 
     @Override
-    public NonTerminal<K> header() {
+    public NonTerminal header() {
         return actual.A;
     }
 
     @Override
-    public GrammarTerm<K>[] tail() {
+    public GrammarTerm[] tail() {
         return actual.alpha;
     }
 
-    public void reduce(Deque<OnStack<K>> estack) {
+    public void reduce(Deque<OnStack> estack) {
         //Inserting the elements in the stack-reverse order
-        Association<K> toR[] = new Association[actual.alpha.length];
+        Association toR[] = new Association[actual.alpha.length];
         for (int i=actual.alpha.length-1; i>=0; i--) {
             toR[i] = Association.assoc(actual.alpha[i],estack.pop());
         }
-        estack.push(new ReducedStack<>(this,toR));
+        estack.push(new ReducedStack(this,toR));
     }
 
     @Override
@@ -47,7 +47,7 @@ public class Rule<K extends Enum> implements IRule<GrammarTerm<K>,NonTerminal<K>
         return actual.toString();
     }
 
-    public ItemWithLookahead<K> asLookaheadItem(Grammar<K> g) {
+    public ItemWithLookahead asLookaheadItem(Grammar g) {
         return ItemWithLookahead.generate(g,this).value();
     }
 
@@ -56,7 +56,7 @@ public class Rule<K extends Enum> implements IRule<GrammarTerm<K>,NonTerminal<K>
         if (this == o) return true;
         if (!(o instanceof Rule)) return false;
 
-        Rule<?> rule = (Rule<?>) o;
+        Rule rule = (Rule) o;
 
         return actual != null ? actual.equals(rule.actual) : rule.actual == null;
     }

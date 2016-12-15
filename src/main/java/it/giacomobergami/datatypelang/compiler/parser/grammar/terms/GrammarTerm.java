@@ -7,7 +7,7 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 /**
  * Created by vasistas on 11/12/16.
  */
-public interface GrammarTerm<K extends Enum>  {
+public interface GrammarTerm {
     boolean isTerminal();
     boolean isNull();
     default boolean isNotNull() {
@@ -17,7 +17,7 @@ public interface GrammarTerm<K extends Enum>  {
     default boolean isInput() {
         return isNull() || isTerminal();
     }
-    TableColumnEntry<K> asTableColumnEntry();
+    TableColumnEntry asTableColumnEntry();
 
-    OnInput<K> toInput();
+    OnInput toInput();
 }

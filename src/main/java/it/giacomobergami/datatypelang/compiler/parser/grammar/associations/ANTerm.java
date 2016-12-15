@@ -8,11 +8,11 @@ import it.giacomobergami.datatypelang.utils.funcs.Opt;
 /**
  * Created by vasistas on 11/12/16.
  */
-public class ANTerm<T extends Enum> extends Association<T> {
+public class ANTerm extends Association {
 
-    NonTerminal<T> nonterm;
-    ReducedStack<T> rs;
-    public ANTerm(NonTerminal<T> nt, ReducedStack<T> term) {
+    NonTerminal nonterm;
+    ReducedStack rs;
+    public ANTerm(NonTerminal nt, ReducedStack term) {
         nonterm = nt;
         rs = term;
     }
@@ -22,7 +22,7 @@ public class ANTerm<T extends Enum> extends Association<T> {
         if (this == o) return true;
         if (!(o instanceof ANTerm)) return false;
 
-        ANTerm<?> anTerm = (ANTerm<?>) o;
+        ANTerm anTerm = (ANTerm) o;
 
         if (nonterm != null ? !nonterm.equals(anTerm.nonterm) : anTerm.nonterm != null) return false;
         return rs != null ? rs.equals(anTerm.rs) : anTerm.rs == null;
@@ -36,7 +36,7 @@ public class ANTerm<T extends Enum> extends Association<T> {
     }
 
     @Override
-    public GrammarTerm<T> getGrammarMatchedElement() {
+    public GrammarTerm getGrammarMatchedElement() {
         return nonterm;
     }
 
@@ -53,7 +53,7 @@ public class ANTerm<T extends Enum> extends Association<T> {
     }
 
     @Override
-    public Opt<ReducedStack<T>> getSubTree() {
+    public Opt<ReducedStack> getSubTree() {
         return Opt.of(rs);
     }
 }

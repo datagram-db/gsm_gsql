@@ -6,14 +6,14 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 /**
  * Created by vasistas on 11/12/16.
  */
-public interface TableColumnEntry<K extends Enum> extends GrammarTerm<K> {
-    default GrammarTerm<K> asGrammarTerm() {
+public interface TableColumnEntry extends GrammarTerm {
+    default GrammarTerm asGrammarTerm() {
         return this;
     }
-    OnInput<K> asOnInput();
+    OnInput asOnInput();
 
     @Override
-    default TableColumnEntry<K> asTableColumnEntry() {
+    default TableColumnEntry asTableColumnEntry() {
         return this;
     }
 }

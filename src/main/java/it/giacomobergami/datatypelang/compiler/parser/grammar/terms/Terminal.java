@@ -7,7 +7,7 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.Token;
 /**
  * A terminal represents a regex exception through its regex
  */
-public class Terminal<K extends Enum> implements TableColumnEntry<K> {
+public class Terminal implements TableColumnEntry {
 
 
     @Override
@@ -25,7 +25,7 @@ public class Terminal<K extends Enum> implements TableColumnEntry<K> {
     }
 
     @Override
-    public OnInput<K> toInput() {
+    public OnInput toInput() {
         return new Token(terminalCase,null);
     }
 
@@ -50,7 +50,7 @@ public class Terminal<K extends Enum> implements TableColumnEntry<K> {
         if (this == o) return true;
         if (!(o instanceof Terminal)) return false;
 
-        Terminal<?> terminal = (Terminal<?>) o;
+        Terminal terminal = (Terminal) o;
 
         return terminalCase != null ? terminalCase.equals(terminal.terminalCase) : terminal.terminalCase == null;
     }
@@ -62,7 +62,7 @@ public class Terminal<K extends Enum> implements TableColumnEntry<K> {
     }
 
     @Override
-    public OnInput<K> asOnInput() {
+    public OnInput asOnInput() {
         return new Token(terminalCase,null);
     }
 }

@@ -9,12 +9,12 @@ import it.giacomobergami.datatypelang.utils.funcs.Opt;
 /**
  * Created by vasistas on 11/12/16.
  */
-public class ATerm<K extends Enum> extends Association<K> {
+public class ATerm<K extends Enum> extends Association {
 
-    private final Terminal<K> term;
+    private final Terminal term;
     private final Token token;
 
-    ATerm(Terminal<K> term, Token token) {
+    ATerm(Terminal term, Token token) {
         this.term = term;
         this.token = token;
     }
@@ -38,7 +38,7 @@ public class ATerm<K extends Enum> extends Association<K> {
     }
 
     @Override
-    public GrammarTerm<K> getGrammarMatchedElement() {
+    public GrammarTerm getGrammarMatchedElement() {
         return term;
     }
 
@@ -53,7 +53,7 @@ public class ATerm<K extends Enum> extends Association<K> {
     }
 
     @Override
-    public Opt<ReducedStack<K>> getSubTree() {
+    public Opt<ReducedStack> getSubTree() {
         return Opt.err();
     }
 

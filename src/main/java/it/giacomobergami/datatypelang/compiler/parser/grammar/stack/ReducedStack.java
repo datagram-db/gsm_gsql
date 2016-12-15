@@ -9,11 +9,11 @@ import java.util.List;
 /**
  * Created by vasistas on 11/12/16.
  */
-public class ReducedStack<K extends Enum> implements OnStack<K> {
+public class ReducedStack implements OnStack {
 
-    public final List<Association<K>> associations;
+    public final List<Association> associations;
     public final Rule r;
-    public ReducedStack(Rule nt, Association<K>... elems) {
+    public ReducedStack(Rule nt, Association... elems) {
         associations = Arrays.asList(elems);
         r = nt;
     }

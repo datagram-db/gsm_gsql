@@ -7,7 +7,7 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 /**
  * Created by vasistas on 11/12/16.
  */
-public class NonTerminal<K extends Enum> implements TableColumnEntry<K> {
+public class NonTerminal implements TableColumnEntry {
 
     public NonTerminal(String name) {
         this.name = name;
@@ -36,7 +36,7 @@ public class NonTerminal<K extends Enum> implements TableColumnEntry<K> {
     }
 
     @Override
-    public OnInput<K> toInput() {
+    public OnInput toInput() {
         return null;
     }
 
@@ -57,7 +57,7 @@ public class NonTerminal<K extends Enum> implements TableColumnEntry<K> {
     }
 
     @Override
-    public OnInput<K> asOnInput() {
+    public OnInput asOnInput() {
         return null;
     }
 }

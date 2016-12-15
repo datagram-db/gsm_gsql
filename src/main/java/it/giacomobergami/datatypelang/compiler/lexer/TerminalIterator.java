@@ -9,11 +9,11 @@ import java.util.stream.Stream;
 /**
  * Created by vasistas on 11/12/16.
  */
-public class TerminalIterator<T extends Enum> implements Iterator<OnInput<T>> {
+public class TerminalIterator implements Iterator<OnInput> {
 
-    Iterator<OnInput<T>> it;
+    Iterator<OnInput> it;
 
-    public TerminalIterator(Stream<OnInput<T>> onInputStream) {
+    public TerminalIterator(Stream<OnInput> onInputStream) {
         it = onInputStream.iterator();
     }
 
@@ -23,7 +23,7 @@ public class TerminalIterator<T extends Enum> implements Iterator<OnInput<T>> {
     }
 
     @Override
-    public OnInput<T> next() {
-        return it.hasNext() ? it.next() : new Varepsilon<T>();
+    public OnInput next() {
+        return it.hasNext() ? it.next() : new Varepsilon();
     }
 }

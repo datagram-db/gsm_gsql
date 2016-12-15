@@ -11,23 +11,23 @@ import it.giacomobergami.datatypelang.utils.funcs.Opt;
 /**
  * Created by vasistas on 11/12/16.
  */
-public abstract class Association<K extends Enum> {
+public abstract class Association {
 
-    public abstract GrammarTerm<K> getGrammarMatchedElement();
+    public abstract GrammarTerm getGrammarMatchedElement();
     public abstract boolean hasSubtree();
     public abstract String getUnderlyingString();
-    public abstract Opt<ReducedStack<K>> getSubTree();
+    public abstract Opt<ReducedStack> getSubTree();
 
-    public static <T extends Enum> Association<T> assocL(Terminal<T> token, Token term) {
-        return new ATerm<T>(token,term);
+    public static  Association assocL(Terminal token, Token term) {
+        return new ATerm(token,term);
     }
 
-    public static <T extends Enum> Association<T> assocR(NonTerminal<T> token, ReducedStack<T> term) {
-        return new ANTerm<T>(token,term);
+    public static Association assocR(NonTerminal token, ReducedStack term) {
+        return new ANTerm(token,term);
     }
 
-    public static <T extends Enum> Association<T> assoc(GrammarTerm<T> gt, OnStack<T> element) {
-        return  (gt.isTerminal() && (element instanceof Token)) ? assocL((Terminal<T>)gt,(Token) element) : assocR((NonTerminal<T>)gt,(ReducedStack<T>) element);
+    public static Association assoc(GrammarTerm gt, OnStack element) {
+        return  (gt.isTerminal() && (element instanceof Token)) ? assocL((Terminal)gt,(Token) element) : assocR((NonTerminal)gt,(ReducedStack) element);
     }
 
 }

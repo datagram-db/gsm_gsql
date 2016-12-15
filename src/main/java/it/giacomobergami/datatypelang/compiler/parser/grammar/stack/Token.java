@@ -37,6 +37,11 @@ public class Token implements OnStack, OnInput {
     }
 
     @Override
+    public String getType() {
+        return type;
+    }
+
+    @Override
     public GrammarTerm asGrammarTerm() {
         return term;
     }

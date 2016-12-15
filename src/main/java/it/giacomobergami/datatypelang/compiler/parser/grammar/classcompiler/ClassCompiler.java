@@ -14,6 +14,6 @@ public class ClassCompiler {
         cu.setPackage("it.giacomobergami.datatypelang.compile.parser.classcompiler");
     }
 
-    
+
 
 }

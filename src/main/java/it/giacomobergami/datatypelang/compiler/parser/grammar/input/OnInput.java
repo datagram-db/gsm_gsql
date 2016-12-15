@@ -8,12 +8,13 @@ import it.giacomobergami.datatypelang.utils.funcs.Opt;
 /**
  * Created by vasistas on 11/12/16.
  */
-public interface OnInput<T extends Enum> {
+public interface OnInput {
     boolean isEmpty();
-    TableColumnEntry<T> asTableColumnValue();
+    TableColumnEntry asTableColumnValue();
+    String getType();
     default boolean nonEmpty() {
         return !isEmpty();
     }
 
-    GrammarTerm<T> asGrammarTerm();
+    GrammarTerm asGrammarTerm();
 }

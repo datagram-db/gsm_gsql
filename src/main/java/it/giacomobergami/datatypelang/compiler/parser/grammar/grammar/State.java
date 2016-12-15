@@ -20,19 +20,19 @@ import java.util.*;
 /**
  * Created by vasistas on 12/12/16.
  */
-public class State<K extends Enum> {
+public class State {
 
     boolean isReduce;
-    Set<ItemWithLookahead<K>> elements;
+    Set<ItemWithLookahead> elements;
     int stateNo;
-    public Multimap<GrammarTerm<K>,ItemWithLookahead<K>> map;
+    public Multimap<GrammarTerm,ItemWithLookahead> map;
 
-    public void initTypesafeTable(Grammar<K> g, TypesafeTable<K> tst) {
+    public void initTypesafeTable(Grammar g, TypesafeTable tst) {
         if (tst.insertAndCheck(this)==-1) {
             System.err.println(this);
             if (this.isReduce) {
                 elements.stream().filter(x->x.elementAtCurrentPosition().isError()).forEach(last -> {
-                    for (OnInput<K> y : last.lookaheadSymbols)
+                    for (OnInput y : last.lookaheadSymbols)
                         if (last.getHead().equals(g.getStarter()))
                             tst.set(stateNo,y.asTableColumnValue());
                         else
@@ -42,14 +42,14 @@ public class State<K extends Enum> {
             map.asMap().entrySet().stream()
                         .map(x -> new Pair<>(x.getKey(), g.stateFromLookaheads(GlobalCounter.i.assign(), ItemWithLookahead.moveForward(x.getValue()))    ))
                         .forEach(x -> {
-                            State<K> currElement = x.getValue();
+                            State currElement = x.getValue();
                             currElement.initTypesafeTable(g, tst);
                             tst.set(stateNo, x.getKey().asTableColumnEntry(), tst.get(currElement));
                 });
         }
     }
 
-    State(int no,ItemWithLookahead<K> next) {
+    State(int no,ItemWithLookahead next) {
         map = HashMultimap.create();
         elements = new HashSet<>();
         elements.add(next);
@@ -59,7 +59,7 @@ public class State<K extends Enum> {
         isReduce = (next.elementAtCurrentPosition().isError());
     }
 
-    State(int no,Set<ItemWithLookahead<K>> elements) {
+    State(int no,Set<ItemWithLookahead> elements) {
         map = HashMultimap.create();
         elements.forEach(x -> {
             if (!x.elementAtCurrentPosition().isError())
@@ -74,7 +74,7 @@ public class State<K extends Enum> {
     public String toString() {
         String[] header = new String[]{"Item","lookaheads"};
         TableList tl = new TableList(header.length,header).withUnicode(true);
-        for (ItemWithLookahead<K> x : elements) {
+        for (ItemWithLookahead x : elements) {
             tl.addRow(x.orig.toString(), Arrays.toString(x.lookaheadSymbols));
         }
         return "State N°"+stateNo+".\n"+tl.toString();
@@ -85,7 +85,7 @@ public class State<K extends Enum> {
         if (this == o) return true;
         if (!(o instanceof State)) return false;
 
-        State<?> state = (State<?>) o;
+        State state = (State) o;
 
         if (isReduce != state.isReduce) return false;
         if (elements != null ? !elements.equals(state.elements) : state.elements != null) return false;

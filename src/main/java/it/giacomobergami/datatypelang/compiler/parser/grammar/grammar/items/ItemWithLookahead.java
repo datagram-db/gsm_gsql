@@ -17,51 +17,51 @@ import java.util.stream.Collectors;
 /**
  * Created by vasistas on 12/12/16.
  */
-public class ItemWithLookahead<K extends Enum> implements IItem<K,ItemWithLookahead<K>> {
+public class ItemWithLookahead implements IItem<ItemWithLookahead> {
 
-    public void setLookaheadSymbols(OnInput<K>[] lookaheadSymbols) {
+    public void setLookaheadSymbols(OnInput[] lookaheadSymbols) {
         this.lookaheadSymbols = lookaheadSymbols;
     }
 
-    public  OnInput<K>[] lookaheadSymbols;
-    public final Item<K> orig;
-    private final Grammar<K> g;
+    public  OnInput[] lookaheadSymbols;
+    public final Item orig;
+    private final Grammar g;
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(orig.toString()).append(", ");
-        for (OnInput<K> x : lookaheadSymbols) sb.append(x).append(",");
+        for (OnInput x : lookaheadSymbols) sb.append(x).append(",");
         sb.append("]");
         return sb.toString();
     }
 
-    private ItemWithLookahead(Grammar<K> gram, NonTerminal<K> nt, GrammarTerm<K>[] elems, int pos, OnInput<K>...lookaheads) {
-        orig = new Item<K>(nt, elems, pos);
+    private ItemWithLookahead(Grammar gram, NonTerminal nt, GrammarTerm[] elems, int pos, OnInput...lookaheads) {
+        orig = new Item(nt, elems, pos);
         this.lookaheadSymbols = lookaheads;
         g = gram;
     }
 
-    ItemWithLookahead(Grammar<K> gram, Item<K> orig, OnInput<K>...lookaheads) {
+    ItemWithLookahead(Grammar gram, Item orig, OnInput...lookaheads) {
         this.orig = orig;
         this.lookaheadSymbols = lookaheads;
         g = gram;
     }
 
-    public static <K extends Enum > Opt<ItemWithLookahead<K>> generate(Grammar<K> gram, Rule<K> r, int pos, OnInput<K>...lookaheads) {
+    public static <K extends Enum > Opt<ItemWithLookahead> generate(Grammar gram, Rule r, int pos, OnInput...lookaheads) {
         return Item.generate(r.header(),r.tail(),pos).ifte(y-> Opt.of(y.extendWithLookaheads(gram,lookaheads)), Opt::err);
     }
 
-    public static <K extends Enum > Opt<ItemWithLookahead<K>> generate(Grammar<K> gram, Rule<K> r) {
+    public static <K extends Enum > Opt<ItemWithLookahead> generate(Grammar gram, Rule r) {
         return Item.generate(r.header(),r.tail(),0).ifte(y-> Opt.of(y.extendWithLookaheads(gram, new Varepsilon<>())), Opt::err);
     }
 
     @Override
-    public Iterator<ItemWithLookahead<K>> iterator() {
-        ItemWithLookahead<K> content = this;
-        return new Iterator<ItemWithLookahead<K>>() {
+    public Iterator<ItemWithLookahead> iterator() {
+        ItemWithLookahead content = this;
+        return new Iterator<ItemWithLookahead>() {
 
-            ItemWithLookahead<K> self = content;
+            ItemWithLookahead self = content;
 
             @Override
             public boolean hasNext() {
@@ -69,21 +69,21 @@ public class ItemWithLookahead<K extends Enum> implements IItem<K,ItemWithLookah
             }
 
             @Override
-            public ItemWithLookahead<K> next() {
-                ItemWithLookahead<K> toret = self;
-                self = new ItemWithLookahead<K>(g,self.orig.getNextItemMove(),self.lookaheadSymbols);
+            public ItemWithLookahead next() {
+                ItemWithLookahead toret = self;
+                self = new ItemWithLookahead(g,self.orig.getNextItemMove(),self.lookaheadSymbols);
                 return toret;
             }
         };
     }
 
     @Override
-    public NonTerminal<K> getHead() {
+    public NonTerminal getHead() {
         return orig.head;
     }
 
     @Override
-    public GrammarTerm<K>[] getCore() {
+    public GrammarTerm[] getCore() {
         return orig.elems;
     }
 
@@ -93,17 +93,17 @@ public class ItemWithLookahead<K extends Enum> implements IItem<K,ItemWithLookah
     }
 
     @Override
-    public GrammarTerm<K>[] getElementsNextToCore() {
+    public GrammarTerm[] getElementsNextToCore() {
         return Arrays
                 .stream(lookaheadSymbols)
                 .map(x -> this.g.firstsToLookaheadStream(this.g.first(orig.getElementsNextToCore(x.asTableColumnValue()))))
                 .flatMap(x->x)
-                .toArray(value ->  (GrammarTerm<K>[]) Array.newInstance(GrammarTerm.class, value));
+                .toArray(value ->  (GrammarTerm[]) Array.newInstance(GrammarTerm.class, value));
     }
 
 
     @Override
-    public List<GrammarTerm<K>> getElementsNextToCore(GrammarTerm<K> withLookahead) {
+    public List<GrammarTerm> getElementsNextToCore(GrammarTerm withLookahead) {
         throw new RuntimeException("ERRROR: ItemWithLookahead provides the lookaheads itself");
     }
 
@@ -113,16 +113,16 @@ public class ItemWithLookahead<K extends Enum> implements IItem<K,ItemWithLookah
     }
 
     @Override
-    public ItemWithLookahead<K> getNextItemMove() {
-        return hasNextitemMove() ? new ItemWithLookahead<K>(g,orig.getNextItemMove(),lookaheadSymbols) : null;
+    public ItemWithLookahead getNextItemMove() {
+        return hasNextitemMove() ? new ItemWithLookahead(g,orig.getNextItemMove(),lookaheadSymbols) : null;
     }
 
-    public static <Z extends Enum> Collection<ItemWithLookahead<Z>> moveForward(Collection<ItemWithLookahead<Z>> toMove) {
+    public static Collection<ItemWithLookahead> moveForward(Collection<ItemWithLookahead> toMove) {
         return toMove.stream().map(x-> x.getNextItemMove()).collect(Collectors.toSet());
     }
 
     @Override
-    public Opt<GrammarTerm<K>> elementAtCurrentPosition() {
+    public Opt<GrammarTerm> elementAtCurrentPosition() {
         return orig.elementAtCurrentPosition();
     }
 
@@ -131,7 +131,7 @@ public class ItemWithLookahead<K extends Enum> implements IItem<K,ItemWithLookah
         if (this == o) return true;
         if (!(o instanceof ItemWithLookahead)) return false;
 
-        ItemWithLookahead<?> that = (ItemWithLookahead<?>) o;
+        ItemWithLookahead that = (ItemWithLookahead) o;
 
         // Probably incorrect - comparing Object[] arrays with Arrays.equals
         if (!Arrays.equals(lookaheadSymbols, that.lookaheadSymbols)) return false;
@@ -145,16 +145,16 @@ public class ItemWithLookahead<K extends Enum> implements IItem<K,ItemWithLookah
         return result;
     }
 
-    public Iterable<GrammarTerm<K>> getIterableLookaheadSymbols() {
+    public Iterable<GrammarTerm> getIterableLookaheadSymbols() {
         return () -> Arrays.stream(lookaheadSymbols).map(x->x.asGrammarTerm()).iterator();
     }
 
-    public List<GrammarTerm<K>> getListLookaheadSymbols() {
+    public List<GrammarTerm> getListLookaheadSymbols() {
         return Arrays.stream(lookaheadSymbols).map(x->x.asGrammarTerm()).collect(Collectors.toList());
     }
 
-    public ItemWithLookahead<K> setLookaheadSymbols(Collection<GrammarTerm<K>> value) {
-        lookaheadSymbols = value.stream().filter(x->x.isInput()).map(x->x.toInput()).toArray((i)-> (OnInput<K>[]) Array.newInstance(OnInput.class, i));
+    public ItemWithLookahead setLookaheadSymbols(Collection<GrammarTerm> value) {
+        lookaheadSymbols = value.stream().filter(x->x.isInput()).map(x->x.toInput()).toArray((i)-> (OnInput[]) Array.newInstance(OnInput.class, i));
         return this;
     }
 }

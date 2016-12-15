@@ -22,10 +22,10 @@ import java.util.*;
 /**
  * Created by vasistas on 11/12/16.
  */
-public class TypesafeTable<K extends Enum> {
+public class TypesafeTable {
 
-    public final Table<Integer, TableColumnEntry<K>, TableCase> table;
-    Set<State<K>> visitedStates;
+    public final Table<Integer, TableColumnEntry, TableCase> table;
+    Set<State> visitedStates;
     Deque<Integer> stateStack;
 
     public TypesafeTable() {
@@ -33,17 +33,17 @@ public class TypesafeTable<K extends Enum> {
         visitedStates = new HashSet<>();
     }
 
-    public Opt<TableCase> set(Integer state, TableColumnEntry<K> t_nt_dollar, int shift) {
+    public Opt<TableCase> set(Integer state, TableColumnEntry t_nt_dollar, int shift) {
         TableCase t;
         return (t = table.put(state, t_nt_dollar, new TableCase(shift))) != null ? Opt.of(t) : Opt.err();
     }
 
-    public Opt<TableCase> set(Integer state, TableColumnEntry<K> t_nt_dollar, Rule r) {
+    public Opt<TableCase> set(Integer state, TableColumnEntry t_nt_dollar, Rule r) {
         TableCase t;
         return (t = table.put(state, t_nt_dollar, new TableCase(r))) != null ? Opt.of(t) : Opt.err();
     }
 
-    public Opt<TableCase> get(Integer state, TableColumnEntry<K> t_nt_dollar) {
+    public Opt<TableCase> get(Integer state, TableColumnEntry t_nt_dollar) {
         return  (table.contains(state,t_nt_dollar)) ? Opt.of(table.get(state,t_nt_dollar)) : Opt.err();
     }
 
@@ -63,7 +63,7 @@ public class TypesafeTable<K extends Enum> {
         return visitedStates.size();
     }
 
-    public int insertAndCheck(State<K> kState) {
+    public int insertAndCheck(State kState) {
         if (visitedStates.contains(kState)) {
             return visitedStates.stream().filter(x->x.equals(kState)).findFirst().get().getNumber();
         } else {
@@ -72,7 +72,7 @@ public class TypesafeTable<K extends Enum> {
         }
     }
 
-    public int get(State<K> kState) {
+    public int get(State kState) {
         if (visitedStates.contains(kState)) {
             return visitedStates.stream().filter(x->x.equals(kState)).findFirst().get().getNumber();
         } else {
@@ -82,11 +82,11 @@ public class TypesafeTable<K extends Enum> {
 
     @Override
     public String toString() {
-        ArrayList<TableColumnEntry<K>> header = new ArrayList<>(table.columnKeySet());
+        ArrayList<TableColumnEntry> header = new ArrayList<>(table.columnKeySet());
         header.add(0,null);
         TableList tl = new TableList(header.size(),header.stream().map(x->x==null ? "" : x.toString()).toArray((i)-> new String[i])).sortBy(0).withUnicode(true);
         for (int i: table.rowKeySet()) {
-            Map<TableColumnEntry<K>, TableCase> row = table.row(i);
+            Map<TableColumnEntry, TableCase> row = table.row(i);
             tl.addRow(
             header.stream().map(x->{
                 if (x==null)
@@ -100,22 +100,22 @@ public class TypesafeTable<K extends Enum> {
         return tl.toString();
     }
 
-    public  Opt<TableCase> set(int stateNo, TableColumnEntry<K> kTableColumnEntry) {
+    public  Opt<TableCase> set(int stateNo, TableColumnEntry kTableColumnEntry) {
         TableCase t;
         return (t = table.put(stateNo, kTableColumnEntry, new TableCase())) != null ? Opt.of(t) : Opt.err();
     }
 
-    public ANTerm<K> recognize(Grammar<K> starter, TerminalIterator<K> terminals) {
+    public ANTerm recognize(Grammar starter, TerminalIterator terminals) {
         stateStack = new ArrayDeque<>();
         stateStack.push(0);
-        Deque<OnStack<K>> recognizedInput = new ArrayDeque<>();
+        Deque<OnStack> recognizedInput = new ArrayDeque<>();
         boolean cond = false;
         while (!cond) {
             //Return the next state position
             Integer s1 = stateStack.peek();
 
             //get the next terminal (or empty element, if it doesn't exist
-            OnInput<K> w = terminals.next();
+            OnInput w = terminals.next();
 
             // If the table contains the entry
             Opt<Boolean> b = get(s1,w.asTableColumnValue()).ifte(y -> y.eliminationRule2(
@@ -137,7 +137,7 @@ public class TypesafeTable<K extends Enum> {
                         // b3. get the state where we have to restart from
                         Integer restartFrom = stateStack.peek();
                         // b4. checks if I can perform the goto action within the table
-                        return get(restartFrom, (TableColumnEntry<K>) x.header())
+                        return get(restartFrom, (TableColumnEntry) x.header())
                                 .ifte(
                                         z -> z.eliminationRule(stateStack::push, w1 -> false),
                                         () -> Opt.of(false)
@@ -151,7 +151,7 @@ public class TypesafeTable<K extends Enum> {
             }
         }
 
-        return new ANTerm<K>(starter.getStarter(),(ReducedStack<K>)recognizedInput.pop());
+        return new ANTerm(starter.getStarter(),(ReducedStack)recognizedInput.pop());
     }
 
 }
