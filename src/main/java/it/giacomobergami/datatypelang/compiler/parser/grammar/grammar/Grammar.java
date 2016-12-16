@@ -64,7 +64,9 @@ public class Grammar {
             classes.put(k,clazz);
             classToId.put(k,counter++);
         }
-        Set<String> terminalNames = getAllTerminals().stream().map(Terminal::caso).collect(Collectors.toSet());
+        Set<String> terminalNames = getAllTerminals().stream().map(
+                Terminal::getValue
+        ).collect(Collectors.toSet());
         for (NonTerminal k : map.keySet()) {
 
             for (Rule r : map.get(k)) {
@@ -154,7 +156,7 @@ public class Grammar {
     }
 
 
-    private Grammar(NonTerminal starter,Rule... rules) {
+    public Grammar(NonTerminal starter,Rule... rules) {
         this.starter = starter;
         map = HashMultimap.create();
         for (Rule x : rules) map.put(x.header(),x);
@@ -175,12 +177,14 @@ public class Grammar {
     }
 
     public static Pair<Grammar,Lexer> parseGrammarFromFile(Path file) {
-        HashMap<String,String> terminalWithRegex = new HashMap<>();
+        LinkedHashMap<String,String> terminalWithRegex = new LinkedHashMap<>();
+        HashMap<String,String> convertedToName = new HashMap<>();
         String fileStirng = ForFiles.toString(file.toFile());
         String rows[] = fileStirng.split("\n");
         ArrayList<Rule> ruleList = new ArrayList<>();
         NonTerminal firstRule = null;
         Predicate<OnInput> pred = OnInput::nonEmpty;
+        int automatic = 0;
 
         int phase = 0;
         boolean justStarted = true;
@@ -191,13 +195,20 @@ public class Grammar {
                         justStarted = false;
                     };
                 } else {
-                    if (row.equals(".")) {
+                    if (row.length()==0) {
                         justStarted = true;
                         phase++;
                     } else {
-                        String name = row.substring(0,row.indexOf('\t'));
-                        String regex = row.substring(row.indexOf('\t')+1);
-                        terminalWithRegex.put(name,regex);
+                        if (row.contains("\t")) {
+                            String name = row.substring(0,row.indexOf('\t'));
+                            String regex = row.substring(row.indexOf('\t')+1);
+                            terminalWithRegex.put(name,regex);
+                        } else {
+                            String thisRow = row.trim();
+                            String auto = "auto"+(automatic++);
+                            terminalWithRegex.put(auto,"\\Q"+thisRow+"\\E");
+                            convertedToName.put(thisRow,auto);
+                        }
                     }
                 }
             } else if (phase == 1) {
@@ -221,7 +232,9 @@ public class Grammar {
                         GrammarTerm[] rules = Arrays.stream(row.substring(row.indexOf("->")+2).trim().split("\\s+")).map(x-> {
                             if (terminalWithRegex.containsKey(x))
                                 return new Terminal(x);
-                            else return new NonTerminal(x);
+                            else if (convertedToName.containsKey(x))
+                                return new Terminal(convertedToName.get(x));
+                                return new NonTerminal(x);
                         }).toArray((i) -> new GrammarTerm[i]);
                         ruleList.add(new Rule(headOfRule,rules));
                     }

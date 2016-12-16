@@ -1,18 +1,18 @@
 terminals:
-col	;
+;
 id	\d+
-eq	=
-plus	\+
+=
++
 space	\s+
-.
+
 
 rules:
 !SP -> S
-S -> S col A 
+S -> S ; A 
 S -> A
 A -> E 
-A -> id eq E
-E -> E plus id 
+A -> id = E
+E -> E + id 
 E -> id
 .
 

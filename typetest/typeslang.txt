@@ -1,0 +1,21 @@
+terminals:
+declare
+record
+{
+}
+anyname	[a-zA-Z\\<\\>]+
+:
+,
+space	\s+
+
+
+rules:
+!SP -> Declare
+Declare -> declare Record
+Field -> anyname : anyname
+FieldList -> Field
+FieldList -> Field , FieldList
+Record -> record anyname { FieldList }
+.
+
+trail: space

@@ -121,6 +121,7 @@ public class TypesafeTable {
             Opt<Boolean> b = get(s1,w.asTableColumnValue()).ifte(y -> y.eliminationRule2(
                     // a. If I have a shift operation, then… and save the terminal values,
                     shiftNo -> {
+
                         // a1. …push the state in the stack,
                         System.err.println("Shifting to "+shiftNo);
                         stateStack.push(shiftNo);
@@ -142,7 +143,7 @@ public class TypesafeTable {
                                         z -> z.eliminationRule(stateStack::push, w1 -> false),
                                         () -> Opt.of(false)
                                 );
-                    }),()->Opt.of(false));
+                    }),()->Opt.err());
 
             if (b.isError()) {
                 return null;

@@ -1,3 +1,4 @@
+import it.giacomobergami.datatypelang.compiler.Configuration;
 import it.giacomobergami.datatypelang.compiler.lexer.Lexer;
 import it.giacomobergami.datatypelang.compiler.lexer.TerminalIterator;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
@@ -121,36 +122,22 @@ public class TestingGrammar {
     }
 
     public static Pair<Grammar,Lexer> deduceFromPair() {
-        return Grammar.parseGrammarFromFile(new File("tipuslangus.txt").getAbsoluteFile().toPath());
+        return Grammar.parseGrammarFromFile(new File("typetest/typeslang.txt").getAbsoluteFile().toPath());
     }
     public static String inputFromFile(String path) {
         return ForFiles.toString(path);
     }
 
     public static void main(String args[]) {
-        Pair<Grammar, Lexer> p = deduceFromPair();
-        Grammar gram = p.getKey();
-        Lexer l  = p.getValue();
-        Iterable<OnInput> ret = () -> l.lex(inputFromFile("input.txt"));
-
-        int idx = 0;
-        System.out.println("Generating the first state");
-        ItemWithLookahead starter = gram.startItem();
-        System.out.println(starter);
-        State s1 = gram.stateFromLookahead(idx++,starter);
-        TypesafeTable tst = new TypesafeTable();
-        s1.initTypesafeTable(gram,tst);
-
-        System.out.println("StatesNo="+tst.numberOfStates()+" vs. "+tst.statesNumber());
-        System.out.println(tst);
-        System.out.println(tst.table);
-
-        ANTerm result = tst.recognize(gram,(TerminalIterator) ret.iterator());
+        Configuration configuration = new Configuration(new File("typetest/typeslang.txt").getAbsoluteFile());
+        ANTerm result = configuration.parseInput(new File("typetest/input.txt").getAbsoluteFile());
         if (result!=null)
             System.out.println("…Everything went smoothly! :=D ");
+        else
+            throw new RuntimeException("Error: input not recognized");
 
 
-        gram.compileRulesToJavaClasses("test.class");
+        configuration.compileRulesToJavaClasses("test.package");
     }
 
 

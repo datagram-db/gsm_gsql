@@ -1,0 +1,3 @@
+declare record prova {
+    questo : elemento
+}
