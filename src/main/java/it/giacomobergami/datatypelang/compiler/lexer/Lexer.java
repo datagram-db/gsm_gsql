@@ -34,11 +34,7 @@ public class Lexer {
         return new TerminalIterator(Streams.toStream(Match.patterns(tokenPatterns).with(input)).map(matcher -> {
             for (String tokenType : enumClazz.keySet()) {
                 String match = matcher.fromGroupsGet(tokenType);
-                if (match!=null) {
-                    System.out.println(tokenType);
-                    //System.exit(1);
-                    return new Token(tokenType,match);
-                }
+                if (match!=null) return new Token(tokenType, match);
             }
             return new Varepsilon();
         }).filter(p));

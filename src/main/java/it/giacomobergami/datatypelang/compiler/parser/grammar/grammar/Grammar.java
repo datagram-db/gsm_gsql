@@ -6,10 +6,7 @@ import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
-import com.github.javaparser.ast.body.Parameter;
-import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
-import com.github.javaparser.ast.type.Type;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
@@ -42,7 +39,7 @@ import java.util.stream.Stream;
 public class Grammar {
 
     private final NonTerminal starter;
-    private final Multimap<NonTerminal,Rule> map;
+    private final Multimap<NonTerminal,Rule> t_nt_toRules_map;
     public final Rule[] rules;
     private Set<Terminal> terminals;
     private Set<NonTerminal> nullables;
@@ -56,7 +53,7 @@ public class Grammar {
         cu.addClass("ReducedStack");
 
         //Creating the types
-        for (NonTerminal k : map.keySet()) {
+        for (NonTerminal k : t_nt_toRules_map.keySet()) {
             ClassOrInterfaceDeclaration clazz = cu.addClass(k.getValue());
             NodeList<ClassOrInterfaceType> extendsList = new NodeList<>();
             extendsList.add(0,new ClassOrInterfaceType("it.giacomobergami.datatypelang.compiler.parser.grammar.stack.ReducedStack"));
@@ -67,9 +64,9 @@ public class Grammar {
         Set<String> terminalNames = getAllTerminals().stream().map(
                 Terminal::getValue
         ).collect(Collectors.toSet());
-        for (NonTerminal k : map.keySet()) {
+        for (NonTerminal k : t_nt_toRules_map.keySet()) {
 
-            for (Rule r : map.get(k)) {
+            for (Rule r : t_nt_toRules_map.get(k)) {
                 ConstructorDeclaration constructor = classes.get(k).addConstructor(Modifier.PUBLIC);
                 GrammarTerm[] tail = r.tail();
                 for (int i = 0, tailLength = tail.length; i < tailLength; i++) {
@@ -94,11 +91,11 @@ public class Grammar {
         return sb.toString();
     }
 
-    private Multimap<ItemWithLookahead,GrammarTerm> mapFromLookahead(Multimap<ItemWithLookahead,GrammarTerm> stateElementsMap,ItemWithLookahead axB) {
+    private Multimap<ItemWithLookahead,GrammarTerm> mapForNewStateSetsFromLookahead(Multimap<ItemWithLookahead,GrammarTerm> toUpdatePassedMap, ItemWithLookahead axB) {
         if (axB != null) {
-            stateElementsMap.putAll(axB,axB.getIterableLookaheadSymbols());
+            toUpdatePassedMap.putAll(axB,axB.getIterableLookaheadSymbols());//adding all the lookaheads from the source production
             // A -> αxβ
-            Opt<GrammarTerm> x = axB.elementAtCurrentPosition();
+            Opt<GrammarTerm> x = axB.elementAtCurrentPosition(); //Checks the x within A, passed as the axB argument
 
             // The first element has been already visited, so I just return the actual state.
             // MEMO: In this case I should generate  a reduce operation
@@ -111,21 +108,30 @@ public class Grammar {
                 //return stateElementsMap;
                 if (!t.isTerminal()) {
 
-                    NonTerminal nt = (NonTerminal)t;
+                    NonTerminal nt = (NonTerminal)t;//Casting to what it has been checked
 
+                    //Return the core elements
                     GrammarTerm[] B = axB.getElementsNextToCore();
+                    //Generate the new lookaheads that have to be added to the productions within nt
+                    Set<TableColumnEntry> looks = new HashSet<>();
+                    for (GrammarTerm z : axB.getListLookaheadSymbols()) {
+                        looks.addAll(first(ArrayUtils.add(B, z)));
+                    }
+                    //Generating an array of lookaheads
+                    OnInput newLookies[] = looks.stream().filter(GrammarTerm::isTerminal).map(z->z.asOnInput()).toArray((i)->new OnInput[i]);
+                    List<OnInput> nlList = Arrays.asList(newLookies);
 
-                    for (Rule y : map.get(nt)) {
-                        ItemWithLookahead item = y.asLookaheadItem(this);
-                        for (GrammarTerm z : B)
-                            stateElementsMap.putAll(item,first(ArrayUtils.add(B,z)));
+                    for (Rule y : t_nt_toRules_map.get(nt)) {
+                        ItemWithLookahead item = y.asLookaheadItem(this, newLookies);//Expand x, get all the rules where x=nt appears
+
+                        if (!toUpdatePassedMap.get(item).containsAll(nlList)) {
+                            toUpdatePassedMap.putAll(item, looks);
+                        }
 
                         //Check recursively if the current expanded item starts with a NT, and hence it has to be expanded
                         Opt<GrammarTerm> nt2 = item.elementAtCurrentPosition();
                         if (nt2.ifte(z->!z.isTerminal(),()->false)) {
-                            if (!stateElementsMap.get(item).containsAll(item.getListLookaheadSymbols())) {
-                                mapFromLookahead(stateElementsMap,item);
-                            }
+                            mapForNewStateSetsFromLookahead(toUpdatePassedMap,item);
                         }
                     }
 
@@ -136,7 +142,7 @@ public class Grammar {
             }
 
         }
-        return stateElementsMap;
+        return toUpdatePassedMap;
     }
 
     /**
@@ -146,20 +152,31 @@ public class Grammar {
      * @return
      */
     public State stateFromLookahead(int No, ItemWithLookahead first) {
-        return new State(No,mapFromLookahead(HashMultimap.create(),first).asMap().entrySet().stream().map(x->x.getKey().setLookaheadSymbols(x.getValue())).collect(Collectors.toSet()));
+        return new State(No, mapForNewStateSetsFromLookahead(HashMultimap.create(),first).asMap().entrySet().stream().map(x->x.getKey().setLookaheadSymbols(x.getValue())).collect(Collectors.toSet()));
     }
 
+    // XXX: the error is within the generation of the internal states.
+    /// //Generating the collection of the next elements without any lookahead update (inheriting the lookaheads of the previous state
     public State stateFromLookaheads(int No, Collection<ItemWithLookahead> first) {
-        Multimap<ItemWithLookahead,GrammarTerm> stateElementsMap = HashMultimap.create();
-        first.forEach(x->mapFromLookahead(stateElementsMap,x));
-        return new State(No,stateElementsMap.asMap().entrySet().stream().map(x->x.getKey().setLookaheadSymbols(x.getValue())).collect(Collectors.toSet()));
+        if (No==5)
+            System.out.print("");
+        // Creating the internal states that have to be returned
+        Multimap<ItemWithLookahead,GrammarTerm> toUpdate = HashMultimap.create();
+        first.forEach(x-> mapForNewStateSetsFromLookahead(toUpdate,x));
+
+        //Have to check now which is the correct
+        State toret = new State(
+                No,
+                toUpdate.asMap().entrySet().stream().map(x->x.getKey().setLookaheadSymbols(x.getValue())).collect(Collectors.toSet())
+        );
+        return toret;
     }
 
 
     public Grammar(NonTerminal starter,Rule... rules) {
         this.starter = starter;
-        map = HashMultimap.create();
-        for (Rule x : rules) map.put(x.header(),x);
+        t_nt_toRules_map = HashMultimap.create();
+        for (Rule x : rules) t_nt_toRules_map.put(x.header(),x);
         this.rules = rules;
         terminals = null;
         nullables = null;
@@ -169,92 +186,11 @@ public class Grammar {
 
     private Grammar(NonTerminal starter,Collection<Rule> rules) {
         this.starter = starter;
-        map = HashMultimap.create();
+        t_nt_toRules_map = HashMultimap.create();
         this.rules = Iterables.toArray(rules,Rule.class);
-        rules.forEach(x -> map.put(x.header(), x));
+        rules.forEach(x -> t_nt_toRules_map.put(x.header(), x));
         terminals = null;
         nullables = null;
-    }
-
-    public static Pair<Grammar,Lexer> parseGrammarFromFile(Path file) {
-        LinkedHashMap<String,String> terminalWithRegex = new LinkedHashMap<>();
-        HashMap<String,String> convertedToName = new HashMap<>();
-        String fileStirng = ForFiles.toString(file.toFile());
-        String rows[] = fileStirng.split("\n");
-        ArrayList<Rule> ruleList = new ArrayList<>();
-        NonTerminal firstRule = null;
-        Predicate<OnInput> pred = OnInput::nonEmpty;
-        int automatic = 0;
-
-        int phase = 0;
-        boolean justStarted = true;
-        for (String row : rows) {
-            if (phase == 0) {
-                if (justStarted) {
-                    if (row.equals("terminals:")) {
-                        justStarted = false;
-                    };
-                } else {
-                    if (row.length()==0) {
-                        justStarted = true;
-                        phase++;
-                    } else {
-                        if (row.contains("\t")) {
-                            String name = row.substring(0,row.indexOf('\t'));
-                            String regex = row.substring(row.indexOf('\t')+1);
-                            terminalWithRegex.put(name,regex);
-                        } else {
-                            String thisRow = row.trim();
-                            String auto = "auto"+(automatic++);
-                            terminalWithRegex.put(auto,"\\Q"+thisRow+"\\E");
-                            convertedToName.put(thisRow,auto);
-                        }
-                    }
-                }
-            } else if (phase == 1) {
-                if (justStarted) {
-                    if (row.equals("rules:")) {
-                        justStarted = false;
-                    }
-                } else {
-                    if (row.equals(".")) {
-                        justStarted = true;
-                        phase++;
-                    } else {
-                        NonTerminal headOfRule;
-                        String head = row.substring(0,row.indexOf("->")).trim();
-                        headOfRule = new NonTerminal(head);
-                        if (head.startsWith("!")) {
-                            head = head.substring(1);
-                            headOfRule = new NonTerminal(head);
-                            firstRule = headOfRule;
-                        }
-                        GrammarTerm[] rules = Arrays.stream(row.substring(row.indexOf("->")+2).trim().split("\\s+")).map(x-> {
-                            if (terminalWithRegex.containsKey(x))
-                                return new Terminal(x);
-                            else if (convertedToName.containsKey(x))
-                                return new Terminal(convertedToName.get(x));
-                                return new NonTerminal(x);
-                        }).toArray((i) -> new GrammarTerm[i]);
-                        ruleList.add(new Rule(headOfRule,rules));
-                    }
-                }
-            } else if (phase == 2) {
-                if (row.startsWith("trail: ")) {
-                    pred = new Predicate<OnInput>() {
-                        Set<String> h = new HashSet<>(Arrays.asList(row.replaceFirst("trail: ", "").split(",")));
-                        @Override
-                        public boolean test(OnInput onInput) {
-                            return onInput.nonEmpty() && (!h.contains(onInput.getType()));
-                        }
-                    };
-                }
-            }
-        }
-        if (phase<2) {
-            throw new RuntimeException("Error, the grammar compiler was stuck at phase "+phase);
-        }
-        return new Pair<>(new Grammar(firstRule,ruleList.toArray(new Rule[ruleList.size()])), new Lexer(terminalWithRegex));
     }
 
     public static <K extends Enum> Opt<Grammar> generateGrammar(NonTerminal starter, Rule... rules) {
@@ -280,7 +216,7 @@ public class Grammar {
      * @return
      */
     public Set<NonTerminal> getAllNonTerminals() {
-        return map.keySet();
+        return t_nt_toRules_map.keySet();
     }
 
     /**
@@ -289,7 +225,7 @@ public class Grammar {
      */
     public Set<Terminal> getAllTerminals() {
         if (terminals == null)
-            terminals = map.values().stream()
+            terminals = t_nt_toRules_map.values().stream()
                     .map(x-> Arrays.stream(x.tail()))
                     .flatMap(x->x)
                     .filter(GrammarTerm::isTerminal)
@@ -325,12 +261,12 @@ public class Grammar {
 
     private Set<TableColumnEntry> first(GrammarTerm x) {
         Set<TableColumnEntry> hs = new HashSet<>();
-        if (x.isTerminal() && (!x.isNull())) {
+        if (x.isTerminal() || (x.isNull())) {
             hs.add((TableColumnEntry)x);
             return hs;
         } else {
             nullables();
-            map.get((NonTerminal) x).forEach(y -> {
+            t_nt_toRules_map.get((NonTerminal) x).forEach(y -> {
                 StringBuilder sb = new StringBuilder();
                 //System.out.println("@@"+y);
                 GrammarTerm[] tl = y.tail();
@@ -362,7 +298,7 @@ public class Grammar {
     }
 
     public Set<TableColumnEntry> first(NonTerminal nt) {
-        return map.get(nt).stream().map(x->first(x.tail()).stream()).flatMap(x->x).collect(Collectors.toSet());
+        return t_nt_toRules_map.get(nt).stream().map(x->first(x.tail()).stream()).flatMap(x->x).collect(Collectors.toSet());
     }
 
     private Set<TableColumnEntry> first(GrammarTerm... x) {
@@ -439,7 +375,7 @@ public class Grammar {
     }
 
     public ItemWithLookahead startItem() {
-        return ItemWithLookahead.generate(this,map.get(this.starter).stream().findFirst().get()).value();
+        return ItemWithLookahead.generate(this, t_nt_toRules_map.get(this.starter).stream().findFirst().get(), new Varepsilon<>()).value();
     }
     public Stream<GrammarTerm> firstsToLookaheadStream(Collection<TableColumnEntry> coll) {
         return coll.stream().filter(TableColumnEntry::isInput).map(TableColumnEntry::asGrammarTerm);

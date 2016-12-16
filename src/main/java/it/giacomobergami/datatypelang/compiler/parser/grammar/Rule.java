@@ -3,6 +3,7 @@ package it.giacomobergami.datatypelang.compiler.parser.grammar;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.associations.Association;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Grammar;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.ItemWithLookahead;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.NonTerminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.OnStack;
@@ -47,8 +48,8 @@ public class Rule implements IRule<GrammarTerm,NonTerminal> {
         return actual.toString();
     }
 
-    public ItemWithLookahead asLookaheadItem(Grammar g) {
-        return ItemWithLookahead.generate(g,this).value();
+    public ItemWithLookahead asLookaheadItem(Grammar g, OnInput... looks) {
+        return ItemWithLookahead.generate(g,this,looks).value();
     }
 
     @Override

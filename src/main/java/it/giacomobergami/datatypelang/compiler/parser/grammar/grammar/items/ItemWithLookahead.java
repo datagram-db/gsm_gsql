@@ -1,13 +1,10 @@
 package it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items;
 
-import com.sun.corba.se.impl.ior.EncapsulationUtility;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Grammar;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.NonTerminal;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Varepsilon;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.utils.GlobalCounter;
 import it.giacomobergami.datatypelang.utils.funcs.Opt;
 
 import java.lang.reflect.Array;
@@ -52,8 +49,8 @@ public class ItemWithLookahead implements IItem<ItemWithLookahead> {
         return Item.generate(r.header(),r.tail(),pos).ifte(y-> Opt.of(y.extendWithLookaheads(gram,lookaheads)), Opt::err);
     }
 
-    public static <K extends Enum > Opt<ItemWithLookahead> generate(Grammar gram, Rule r) {
-        return Item.generate(r.header(),r.tail(),0).ifte(y-> Opt.of(y.extendWithLookaheads(gram, new Varepsilon<>())), Opt::err);
+    public static <K extends Enum > Opt<ItemWithLookahead> generate(Grammar gram, Rule r, OnInput... looks) {
+        return Item.generate(r.header(),r.tail(),0).ifte(y-> Opt.of(y.extendWithLookaheads(gram, looks)), Opt::err);
     }
 
     @Override
@@ -94,11 +91,16 @@ public class ItemWithLookahead implements IItem<ItemWithLookahead> {
 
     @Override
     public GrammarTerm[] getElementsNextToCore() {
+        return orig.getElementsNextToCore();
+        /*
+
+        Old definition:=
+
         return Arrays
                 .stream(lookaheadSymbols)
                 .map(x -> this.g.firstsToLookaheadStream(this.g.first(orig.getElementsNextToCore(x.asTableColumnValue()))))
                 .flatMap(x->x)
-                .toArray(value ->  (GrammarTerm[]) Array.newInstance(GrammarTerm.class, value));
+                .toArray(value ->  (GrammarTerm[]) Array.newInstance(GrammarTerm.class, value)); */
     }
 
 
@@ -117,7 +119,7 @@ public class ItemWithLookahead implements IItem<ItemWithLookahead> {
         return hasNextitemMove() ? new ItemWithLookahead(g,orig.getNextItemMove(),lookaheadSymbols) : null;
     }
 
-    public static Collection<ItemWithLookahead> moveForward(Collection<ItemWithLookahead> toMove) {
+    public static Collection<ItemWithLookahead> moveForward_withNoLookaheadUpdate(Collection<ItemWithLookahead> toMove) {
         return toMove.stream().map(x-> x.getNextItemMove()).collect(Collectors.toSet());
     }
 
@@ -146,11 +148,11 @@ public class ItemWithLookahead implements IItem<ItemWithLookahead> {
     }
 
     public Iterable<GrammarTerm> getIterableLookaheadSymbols() {
-        return () -> Arrays.stream(lookaheadSymbols).map(x->x.asGrammarTerm()).iterator();
+        return () -> Arrays.stream(lookaheadSymbols).map(OnInput::asGrammarTerm).iterator();
     }
 
     public List<GrammarTerm> getListLookaheadSymbols() {
-        return Arrays.stream(lookaheadSymbols).map(x->x.asGrammarTerm()).collect(Collectors.toList());
+        return Arrays.stream(lookaheadSymbols).map(OnInput::asGrammarTerm).collect(Collectors.toList());
     }
 
     public ItemWithLookahead setLookaheadSymbols(Collection<GrammarTerm> value) {

@@ -3,11 +3,7 @@ package it.giacomobergami.datatypelang.compiler.parser.grammar.grammar;
 import com.github.mrebhan.crogamp.cli.TableList;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.sun.org.apache.xalan.internal.xsltc.compiler.util.MultiHashtable;
-import it.giacomobergami.datatypelang.compiler.parser.TableCase;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.TableColumnEntry;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.Item;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.ItemWithLookahead;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
@@ -16,6 +12,7 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.utils.TypesafeTabl
 import it.giacomobergami.datatypelang.utils.data.Pair;
 
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * Created by vasistas on 12/12/16.
@@ -29,18 +26,25 @@ public class State {
 
     public void initTypesafeTable(Grammar g, TypesafeTable tst) {
         if (tst.insertAndCheck(this)==-1) {
-            System.err.println(this);
+            System.out.println(this);
             if (this.isReduce) {
-                elements.stream().filter(x->x.elementAtCurrentPosition().isError()).forEach(last -> {
-                    for (OnInput y : last.lookaheadSymbols)
-                        if (last.getHead().equals(g.getStarter()))
-                            tst.set(stateNo,y.asTableColumnValue());
-                        else
-                            tst.set(stateNo, y.asTableColumnValue(),  new Rule(last.getHead(), last.getCore()));
+                //If there are some states that perform a reduce
+                elements.stream()
+                        .filter(x->x.elementAtCurrentPosition().isError()) // Return all the states where the item position is at the end (we have reduce states)
+                        .forEach(last -> {
+                            for (OnInput y : last.lookaheadSymbols)
+                                if (last.getHead().equals(g.getStarter()))
+                                    tst.set(stateNo,y.asTableColumnValue());
+                                else
+                                    tst.set(stateNo, y.asTableColumnValue(),  new Rule(last.getHead(), last.getCore()));
                 });
             }
+            if (stateNo == 4)
+                System.out.println("");
+            // For all the othere states that do not perform a reduce
             map.asMap().entrySet().stream()
-                        .map(x -> new Pair<>(x.getKey(), g.stateFromLookaheads(GlobalCounter.i.assign(), ItemWithLookahead.moveForward(x.getValue()))    ))
+                    // For each transition, generate the new states
+                        .map(x -> new Pair<>(x.getKey(), g.stateFromLookaheads(GlobalCounter.i.assign(), ItemWithLookahead.moveForward_withNoLookaheadUpdate(x.getValue()))))
                         .forEach(x -> {
                             State currElement = x.getValue();
                             currElement.initTypesafeTable(g, tst);

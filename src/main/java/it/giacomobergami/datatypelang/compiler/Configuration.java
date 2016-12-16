@@ -99,8 +99,6 @@ public class Configuration {
                         Set<String> h = new HashSet<>(Arrays.asList(row.replaceFirst("trail: ", "").split(",")));
                         @Override
                         public boolean test(OnInput onInput) {
-                            boolean bool = onInput.nonEmpty() && (!h.contains(onInput.getType()));
-                            System.out.println(onInput+" as "+bool);
                             return onInput.nonEmpty() && (!h.contains(onInput.getType()));
                         }
                     };

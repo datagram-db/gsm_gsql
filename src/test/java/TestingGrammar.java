@@ -121,9 +121,7 @@ public class TestingGrammar {
         return new Pair<>(gram,l);
     }
 
-    public static Pair<Grammar,Lexer> deduceFromPair() {
-        return Grammar.parseGrammarFromFile(new File("typetest/typeslang.txt").getAbsoluteFile().toPath());
-    }
+
     public static String inputFromFile(String path) {
         return ForFiles.toString(path);
     }

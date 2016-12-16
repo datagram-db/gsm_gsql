@@ -140,10 +140,11 @@ public class Item implements  IItem<Item> {
     @Override
     public GrammarTerm[] getElementsNextToCore() {
         ArrayList<GrammarTerm> al = new ArrayList<>();
-        if (pos==elems.length)
-            return (GrammarTerm[]) new Object[0];
+        if (pos>=elems.length-1)
+            return new GrammarTerm[0];
         else {
-            return  ArrayUtils.subarray(elems, pos + 1, elems.length - 1);
+            GrammarTerm[] gt = ArrayUtils.subarray(elems, pos + 1, elems.length);
+            return  gt;
         }
     }
 
