@@ -1,23 +1,31 @@
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
+import com.sun.org.apache.xalan.internal.xsltc.compiler.util.MultiHashtable;
 import it.giacomobergami.datatypelang.compiler.Configuration;
 import it.giacomobergami.datatypelang.compiler.lexer.Lexer;
-import it.giacomobergami.datatypelang.compiler.lexer.TerminalIterator;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.associations.ANTerm;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.domast.XMLAst;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.domast.XPathProcesser;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Grammar;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.State;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.ItemWithLookahead;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.ReducedStack;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.NonTerminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Terminal;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.utils.TypesafeTable;
+import it.giacomobergami.datatypelang.representation.Type;
+import it.giacomobergami.datatypelang.representation.TypeEnvironment;
+import it.giacomobergami.datatypelang.representation.compiler.Filler;
+import it.giacomobergami.datatypelang.representation.compiler.JSONElem;
 import it.giacomobergami.datatypelang.utils.ForFiles;
 import it.giacomobergami.datatypelang.utils.data.Pair;
 import it.giacomobergami.datatypelang.utils.funcs.Opt;
+import it.giacomobergami.datatypelang.utils.regex.Strings;
 
 import java.io.File;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.regex.Matcher;
 
 /**
  * Created by vasistas on 13/12/16.
@@ -127,15 +135,83 @@ public class TestingGrammar {
     }
 
     public static void main(String args[]) {
+        //String t = "na \"horoto\"";
+        //System.out.println(t.replaceAll("'([^\\\\']+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,2}|u[0-9a-fA-F]{4}))*'|\"([^\\\\\"]+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,2}|u[0-9a-fA-F]{4}))*\"",t));
+        //System.exit(1);
         Configuration configuration = new Configuration(new File("typetest/typeslang.txt").getAbsoluteFile());
         ANTerm result = configuration.parseInput(new File("typetest/input.txt").getAbsoluteFile());
-        if (result!=null)
-            System.out.println("…Everything went smoothly! :=D ");
-        else
-            throw new RuntimeException("Error: input not recognized");
+        XMLAst d = configuration.toXML(result);
+        //System.out.println(d.toString());
+        //d.forest(XPathLanguageQueries.selectStatements()).forEach(System.out::println);
+        Multimap<Type,String> compileRecordAs = HashMultimap.create();
+        XPathProcesser processer = new XPathProcesser();
+        Filler f = new Filler();
+
+        //Type declaration
+        processer.setConsumer(XPathProcesser.setNonTerminalReduction("Typedef"), xmlAst -> {
+            XMLAst array[] = Iterables.toArray(xmlAst.getChildren(),XMLAst.class);
+            if (array.length>0) {
+                String languageType = array[2].getContent();
+                String nativeType = array[4].getContent();
+                boolean isMutable = array[1].getChildren().iterator().next().getContent().equals("mutable");
+                f.addNativeType(languageType,new JSONElem(nativeType,isMutable,-1));
+                System.err.println("Declaring native type "+nativeType);
+            }
+        });
+        processer.setConsumer(XPathProcesser.setNonTerminalReduction("Access"), xmlAst -> {
+            String arity = Strings.unquote(xmlAst.getChild(4).getContent());
+            String data  = Strings.unquote(xmlAst.getChild(6).getContent());
+            boolean forAllFixed = (xmlAst.getChild(1).getContent().equals("allfixed"));
+            String type = (xmlAst.getChild(1).getContent());
+            if (forAllFixed) type = "fixed_"; else type = type+"_";
+            f.setSnippet(type+"arity",arity);
+            f.setSnippet(type+"data",data);
+            System.err.println("Getting other type information for: "+type);
+        });
+
+        //Get all the declarations
+        processer.setConsumer(XPathProcesser.setNonTerminalReduction("Declare"), xmlAst -> {
+            XMLAst whatToDeclare = xmlAst.getChild(1);
+            //Record declaration
+            if (whatToDeclare.isAttribute("head","Record")) {
+                //Getting the record name
+                String recordName = whatToDeclare.getChild(1).getContent();
+                TypeEnvironment.RecordCreator rec = f.declareRecord(recordName);
+                //Getting the record fields
+                whatToDeclare.forest(XPathProcesser.setNonTerminalReduction("Field")).forEach(x->{
+                    rec.addField(x.getChild(0).getContent(),x.getChild(2).getContent());
+                });
+                rec.close(); //Compiling the record definition
+                Type record = f.getCompiledType(recordName);
+                XMLAst compileOptList = whatToDeclare.getChild(6);
+                while (compileOptList.isAttribute("head","NameCommaList") && compileOptList.isAttribute("number","2")) {
+                    compileRecordAs.put(record,compileOptList.getChild(0).getContent());
+                    compileOptList = compileOptList.getChild(2);
+                }
+                compileRecordAs.put(record,compileOptList.getChild(0).getContent());
+                /*while (compileOptList!=null) {
+
+                }*/
+
+                System.err.println("Creating record type "+recordName);
+                Type geno = f.env.get("prova");
+            } else if (whatToDeclare.isAttribute("head","Snippet")) {
+                //Getting the record name
+                String snippetName = whatToDeclare.getChild(0).getContent();
+                String snippet = Strings.unquote(whatToDeclare.getChild(4).getContent());
+                f.setSnippet(snippetName,snippet);
+                System.err.println("Got snippet '"+snippetName+"'");
+            }
+        });
 
 
-        configuration.compileRulesToJavaClasses("test.package");
+        processer.process(d.forest(XPathProcesser.selectSentences()));
+
+        //Compiling what it has to be compiled
+        compileRecordAs.asMap().forEach((l,r)->{
+            r.forEach(x->System.out.println(f.compile(x,l)));
+        });
+        //configuration.compileRulesToJavaClasses("test.package");
     }
 
 

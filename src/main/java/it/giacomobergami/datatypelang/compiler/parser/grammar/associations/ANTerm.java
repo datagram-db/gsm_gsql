@@ -11,7 +11,7 @@ import it.giacomobergami.datatypelang.utils.funcs.Opt;
 public class ANTerm extends Association {
 
     NonTerminal nonterm;
-    ReducedStack rs;
+    public final ReducedStack rs;
     public ANTerm(NonTerminal nt, ReducedStack term) {
         nonterm = nt;
         rs = term;

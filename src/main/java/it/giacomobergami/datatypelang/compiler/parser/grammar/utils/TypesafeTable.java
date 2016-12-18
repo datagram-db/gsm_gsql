@@ -15,9 +15,11 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.OnStack;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.ReducedStack;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.Token;
 import it.giacomobergami.datatypelang.representation.Type;
+import it.giacomobergami.datatypelang.utils.data.LazyRead;
 import it.giacomobergami.datatypelang.utils.funcs.Opt;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 /**
  * Created by vasistas on 11/12/16.
@@ -105,17 +107,19 @@ public class TypesafeTable {
         return (t = table.put(stateNo, kTableColumnEntry, new TableCase())) != null ? Opt.of(t) : Opt.err();
     }
 
-    public ANTerm recognize(Grammar starter, TerminalIterator terminals) {
+    public ANTerm recognize(Grammar starter, LazyRead terminals) {
         stateStack = new ArrayDeque<>();
         stateStack.push(0);
         Deque<OnStack> recognizedInput = new ArrayDeque<>();
         boolean cond = false;
+        Opt<OnInput> lazyRead = Opt.err();
         while (!cond) {
             //Return the next state position
             Integer s1 = stateStack.peek();
 
             //get the next terminal (or empty element, if it doesn't exist
-            OnInput w = terminals.next();
+            OnInput w = terminals.peek();
+            ///System.out.println("State: "+w+" State: "+s1);
 
             // If the table contains the entry
             Opt<Boolean> b = get(s1,w.asTableColumnValue()).ifte(y -> y.eliminationRule2(
@@ -123,14 +127,16 @@ public class TypesafeTable {
                     shiftNo -> {
 
                         // a1. …push the state in the stack,
-                        System.err.println("Shifting to "+shiftNo);
+                        ///System.err.println("Shifting to "+shiftNo);
                         stateStack.push(shiftNo);
                         // a2. …and push the recognized text in the stack.
                         if (w instanceof Token) recognizedInput.push((Token) w);
+                        terminals.flush();
                     },
 
                     // b. if I have a reduce operation,
                     x -> {
+                        Grammar g;
                         // b1. …Apply the reduction: reduce the stack input
                         x.reduce(recognizedInput);
                         // b2. …Apply the reduction: backtrack to the previous state
@@ -138,12 +144,15 @@ public class TypesafeTable {
                         // b3. get the state where we have to restart from
                         Integer restartFrom = stateStack.peek();
                         // b4. checks if I can perform the goto action within the table
-                        return get(restartFrom, (TableColumnEntry) x.header())
+                        return get(restartFrom, x.header())
                                 .ifte(
                                         z -> z.eliminationRule(stateStack::push, w1 -> false),
                                         () -> Opt.of(false)
                                 );
-                    }),()->Opt.err());
+                    }), () -> {
+                        System.err.println("ERROR: I'm reading "+w.toString());
+                        return Opt.err();
+                    });
 
             if (b.isError()) {
                 return null;

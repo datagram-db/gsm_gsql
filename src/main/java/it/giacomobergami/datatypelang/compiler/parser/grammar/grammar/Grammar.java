@@ -29,6 +29,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.lang.reflect.Array;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -43,6 +44,11 @@ public class Grammar {
     public final Rule[] rules;
     private Set<Terminal> terminals;
     private Set<NonTerminal> nullables;
+
+    public int ruleToNumber(Rule r) {
+        AtomicInteger it = new AtomicInteger(0);
+        return t_nt_toRules_map.get(r.header()).stream().map(x -> new Pair<>(it.incrementAndGet(),x)).filter(x->x.getValue().equals(r)).map(x->x.getKey()).findFirst().get();
+    }
 
     public void compileRulesToJavaClasses(String packageName) {
         CompilationUnit cu = new CompilationUnit();

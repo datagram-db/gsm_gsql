@@ -14,7 +14,7 @@ snippet
 }
 mutable
 native
-anyname	[a-zA-Z\\<\\>@_0-9]+
+anyname	[a-zA-Z\\<\\>@_0-9\\(\\)]+
 :
 ,
 =

@@ -26,7 +26,7 @@ public class State {
 
     public void initTypesafeTable(Grammar g, TypesafeTable tst) {
         if (tst.insertAndCheck(this)==-1) {
-            System.out.println(this);
+            ///System.out.println(this);
             if (this.isReduce) {
                 //If there are some states that perform a reduce
                 elements.stream()

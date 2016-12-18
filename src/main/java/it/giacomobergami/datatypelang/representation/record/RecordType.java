@@ -52,4 +52,21 @@ public class RecordType extends Type {
         return Kinds.Record;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof RecordType)) return false;
+
+        RecordType that = (RecordType) o;
+
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        return fields != null ? fields.equals(that.fields) : that.fields == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (fields != null ? fields.hashCode() : 0);
+        return result;
+    }
 }

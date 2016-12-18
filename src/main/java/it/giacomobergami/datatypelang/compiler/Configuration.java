@@ -1,18 +1,20 @@
 package it.giacomobergami.datatypelang.compiler;
 
 import it.giacomobergami.datatypelang.compiler.lexer.Lexer;
-import it.giacomobergami.datatypelang.compiler.lexer.TerminalIterator;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.associations.ANTerm;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.domast.XMLAst;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Grammar;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.State;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.ItemWithLookahead;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.StackVisitor;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.NonTerminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Terminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.utils.TypesafeTable;
 import it.giacomobergami.datatypelang.utils.ForFiles;
+import it.giacomobergami.datatypelang.utils.data.LazyRead;
 
 import java.io.File;
 import java.util.*;
@@ -121,6 +123,10 @@ public class Configuration {
         return () -> lexer.lex(ForFiles.toString(f),pred);
     }
 
+    public LazyRead digestInputFile(File f) {
+        return new LazyRead(lexer.lex(ForFiles.toString(f),pred));
+    }
+
     public  TypesafeTable generateParser() {
         if (tst==null) {
             int idx = 0;
@@ -129,12 +135,17 @@ public class Configuration {
             State s1 = grammar.stateFromLookahead(idx++, starter);
             tst = new TypesafeTable();
             s1.initTypesafeTable(grammar, tst);
+            //System.err.println(tst);
         }
         return tst;
     }
 
     public ANTerm parseInput(File f) {
-        return generateParser().recognize(grammar,(TerminalIterator) readFromInputFile(f).iterator());
+        return generateParser().recognize(grammar, digestInputFile(f));
+    }
+
+    public XMLAst toXML(ANTerm term) {
+        return new XMLAst(new StackVisitor(grammar).visit(term));
     }
 
     public void compileRulesToJavaClasses(String s) {

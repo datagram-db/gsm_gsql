@@ -1,1 +1,1 @@
-    fwrite(!!@@name@@_data!!,!!@@name@@_arity!!,1,!!file!!);
+fwrite(!!@@name@@_data!!,!!@@name@@_arity!!,1,!!file!!);

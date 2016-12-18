@@ -9,7 +9,7 @@ import it.giacomobergami.datatypelang.utils.funcs.Opt;
 /**
  * Created by vasistas on 11/12/16.
  */
-public class ATerm<K extends Enum> extends Association {
+public class ATerm extends Association {
 
     private final Terminal term;
     private final Token token;
@@ -24,7 +24,7 @@ public class ATerm<K extends Enum> extends Association {
         if (this == o) return true;
         if (!(o instanceof ATerm)) return false;
 
-        ATerm<?> aTerm = (ATerm<?>) o;
+        ATerm aTerm = (ATerm) o;
 
         if (term != null ? !term.equals(aTerm.term) : aTerm.term != null) return false;
         return token != null ? token.equals(aTerm.token) : aTerm.token == null;

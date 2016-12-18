@@ -3,9 +3,9 @@ package it.giacomobergami.datatypelang.representation.compiler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import it.giacomobergami.datatypelang.representation.Type;
 import it.giacomobergami.datatypelang.utils.ForFiles;
 import it.giacomobergami.datatypelang.representation.NativeType;
-import it.giacomobergami.datatypelang.representation.Type;
 import it.giacomobergami.datatypelang.representation.TypeEnvironment;
 import it.giacomobergami.datatypelang.representation.compiler.metacommands.MetaCommandInit;
 import it.giacomobergami.datatypelang.representation.compiler.metacommands.MetaCommandType;
@@ -40,6 +40,9 @@ public class Filler {
     //Meta-Space
     //public boolean inMeta;
     public HashMap<String,MetaCommandInit> metaData;
+    public Type getCompiledType(String name) {
+        return env.get(name);
+    }
 
     /**
      * Prepares the compiler for a specific target language in path @param s
@@ -47,11 +50,10 @@ public class Filler {
      */
     public Filler(String s) {
         //inMeta = false;
+        this();
         metaData = null;
-        file_to_content = new HashMap<>();
         File folder = new File(s);
         File[] listOfFiles = folder.listFiles();
-        env = new TypeEnvironment();
 
         mapper = new ObjectMapper();
         typeFactory = mapper.getTypeFactory();
@@ -69,6 +71,15 @@ public class Filler {
                 }
             }
         }
+    }
+
+    public void setSnippet(String name,String snippet) {
+        file_to_content.put(name,snippet);
+    }
+
+    public Filler() {
+        file_to_content = new HashMap<>();
+        env = new TypeEnvironment();
     }
 
     /**
@@ -226,6 +237,13 @@ public class Filler {
         }
     }
 
+    public void addNativeType(String languageType, JSONElem jsonElem) {
+        env.declareEnvType(languageType,jsonElem);
+    }
+
+    public TypeEnvironment.RecordCreator declareRecord(String recordName) {
+        return env.declareRecord(recordName);
+    }
 
 
     public static class Mutable<T> {
@@ -399,29 +417,6 @@ public class Filler {
     }
 
 
-    public static void main(String[] args) {
-        // Load the C++ configurations for compiling to C++ types
-        Filler f = new Filler("cpp/");
 
-        //User custom types declaration
-        f.env.declareRecord("genoveffo").addField("ciao","string").addField("id","int").addFieldOfInternalArray("afield",f.env.get("string")).close();
-        Type geno = f.env.get("genoveffo");
-        //System.out.println(f.compile("secondary",geno));
-        //System.out.println(f.compile("primary",geno));
-
-        //Pass the internal type of the array
-        System.out.println(f.compile("serialize_vector(mutable)",f.env.get("string")));
-
-
-
-        /*
-
-        record <name> =
-            <field_type> <field_name>
-            ..
-        using [<compile> ]+
-        */
-
-    }
 
 }

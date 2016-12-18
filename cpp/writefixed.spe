@@ -1,1 +1,1 @@
-    @@outputsize@@ += fwrite(!!@@name@@_data!!,!!@@name@@_arity!!,1,!!file!!);
+@@outputsize@@ += fwrite(!!@@name@@_data!!,!!@@name@@_arity!!,1,!!file!!);
