@@ -1,3 +1,59 @@
+native fixed int as int_fast32_t.
+native fixed long as int_fast64_t.
+native fixed short as int_fast8_t.
+native fixed uint as uint_fast32_t.
+native fixed ulong as uint_fast64_t.
+native fixed ushort as uint_fast8_t.
+native mutable vector as vector<@@>.
+native mutable string as string.
+
+access all fixed with arity "&!!context!!" by "&!!context!!" .
+access string with arity "!!context!!.size()+1" by "!!context!!.c_data()" .
+access vector with arity "!!context!!.size()"
+by  "for (native(@@name@@) x : !!vector!!) {
+!!statement!!
+}" .
+
+declare primary : snippet =
+"class @@name@@ {
+public:
+@@fields?[secondaryfield](!fixed)@@
+@@fields(mutable)@@
+};"
+.
+
+declare secondary : snippet =
+"extern \\"C\\" {
+struct @@name@@_secondary {
+@@fields(fixed)@@
+@@fields[offset](!fixed)@@
+@@fields?[trailing](!fixed)@@
+};
+}"
+.
+
+declare secondaryfield : snippet =
+"struct @@name@@_secondary stable;"
+.
+
+declare trailing : snippet =
+"char trail[];"
+.
+
+declare writefixed : snippet =
+"@@outputsize@@ += fwrite(!!@@name@@_data!!,!!@@name@@_arity!!,1,!!file!!);"
+.
+
+declare writefixed_nosize : snippet =
+"fwrite(!!@@name@@_data!!,!!@@name@@_arity!!,1,!!file!!);"
+.
+
+declare field : snippet =
+"native(@@ofType@@) @@declaration@@;"
+.
+
 declare record prova {
-    questo : elemento
-}
+    questo : int,
+    edi : int
+} as primary, secondary
+
