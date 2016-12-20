@@ -31,6 +31,31 @@ public class GroupMatcher implements AutoCloseable {
         return mat.group(i);
     }
 
+    public int start() {
+        return mat.start();
+    }
+
+    public int start(int i) {
+        return mat.start(i);
+    }
+
+    public int start(String g) {
+        return mat.start(g);
+    }
+
+
+    public int end() {
+        return mat.end();
+    }
+
+    public int end(int i) {
+        return mat.end(i);
+    }
+
+    public int end(String g) {
+        return mat.end(g);
+    }
+
     @Override
     public void close() {    }
 }

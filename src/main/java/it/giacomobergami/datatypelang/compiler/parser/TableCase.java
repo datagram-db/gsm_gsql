@@ -1,6 +1,6 @@
 package it.giacomobergami.datatypelang.compiler.parser;
 
-import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Rule;
 import it.giacomobergami.datatypelang.utils.funcs.Opt;
 
 import java.util.function.Consumer;

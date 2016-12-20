@@ -24,9 +24,7 @@ public class Lexer {
     }
 
     public TerminalIterator lex(String input, Predicate<? super OnInput> p) {
-        // The tokens to return
-        ArrayList<Token> tokens = new ArrayList<>();
-
+        //Determining the regex pattern
         Pattern tokenPatterns = Pattern.compile(Streams.toStream(enumClazz.entrySet()).map(
                 x-> String.format("(?<%s>%s)", x.getKey(), x.getValue())
         ).collect(Collectors.joining("|")));
@@ -34,7 +32,7 @@ public class Lexer {
         return new TerminalIterator(Streams.toStream(Match.patterns(tokenPatterns).with(input)).map(matcher -> {
             for (String tokenType : enumClazz.keySet()) {
                 String match = matcher.fromGroupsGet(tokenType);
-                if (match!=null) return new Token(tokenType, match);
+                if (match!=null) return new Token(tokenType, match, matcher.start(tokenType), matcher.end(tokenType));
             }
             return new Varepsilon();
         }).filter(p));

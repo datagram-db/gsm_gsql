@@ -1,10 +1,9 @@
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
-import com.sun.org.apache.xalan.internal.xsltc.compiler.util.MultiHashtable;
-import it.giacomobergami.datatypelang.compiler.Configuration;
+import it.giacomobergami.datatypelang.compiler.ParserLexer;
 import it.giacomobergami.datatypelang.compiler.lexer.Lexer;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Rule;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.associations.ANTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.domast.XMLAst;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.domast.XPathProcesser;
@@ -13,19 +12,18 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.NonTerminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Terminal;
-import it.giacomobergami.datatypelang.representation.Type;
-import it.giacomobergami.datatypelang.representation.TypeEnvironment;
-import it.giacomobergami.datatypelang.representation.compiler.Filler;
-import it.giacomobergami.datatypelang.representation.compiler.JSONElem;
+import it.giacomobergami.datatypelang.types.Type;
+import it.giacomobergami.datatypelang.types.TypeEnvironment;
+import it.giacomobergami.datatypelang.language.interpreter.Filler;
+import it.giacomobergami.datatypelang.language.interpreter.JSONElem;
 import it.giacomobergami.datatypelang.utils.ForFiles;
 import it.giacomobergami.datatypelang.utils.data.Pair;
 import it.giacomobergami.datatypelang.utils.funcs.Opt;
+import it.giacomobergami.datatypelang.utils.funcs.OptErr;
 import it.giacomobergami.datatypelang.utils.regex.Strings;
 
 import java.io.File;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.regex.Matcher;
 
 /**
  * Created by vasistas on 13/12/16.
@@ -138,9 +136,17 @@ public class TestingGrammar {
         //String t = "na \"horoto\"";
         //System.out.println(t.replaceAll("'([^\\\\']+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,2}|u[0-9a-fA-F]{4}))*'|\"([^\\\\\"]+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,2}|u[0-9a-fA-F]{4}))*\"",t));
         //System.exit(1);
-        Configuration configuration = new Configuration(new File("typetest/typeslang.txt").getAbsoluteFile());
-        ANTerm result = configuration.parseInput(new File("typetest/input.txt").getAbsoluteFile());
-        XMLAst d = configuration.toXML(result);
+        ParserLexer parserLexer = new ParserLexer(new File("typetest/typeslang.txt").getAbsoluteFile());
+        File ff = new File("typetest/input.txt").getAbsoluteFile();
+        parserLexer.showEditor(ForFiles.toString(ff));
+
+
+        OptErr<ANTerm,OnInput> result = parserLexer.parseInput(ff);
+        if (result.isError()) {
+            System.err.println(result.error());
+            parserLexer.showError(result.errorElement());
+        }
+        XMLAst d = parserLexer.toXML(result.value());
         //System.out.println(d.toString());
         //d.forest(XPathLanguageQueries.selectStatements()).forEach(System.out::println);
         Multimap<Type,String> compileRecordAs = HashMultimap.create();
@@ -155,7 +161,7 @@ public class TestingGrammar {
                 String nativeType = array[4].getContent();
                 boolean isMutable = array[1].getChildren().iterator().next().getContent().equals("mutable");
                 f.addNativeType(languageType,new JSONElem(nativeType,isMutable,-1));
-                System.err.println("Declaring native type "+nativeType);
+                //System.err.println("Declaring native type "+nativeType);
             }
         });
         processer.setConsumer(XPathProcesser.setNonTerminalReduction("Access"), xmlAst -> {
@@ -166,7 +172,7 @@ public class TestingGrammar {
             if (forAllFixed) type = "fixed_"; else type = type+"_";
             f.setSnippet(type+"arity",arity);
             f.setSnippet(type+"data",data);
-            System.err.println("Getting other type information for: "+type);
+            //System.err.println("Getting other type information for: "+type);
         });
 
         //Get all the declarations
@@ -193,14 +199,13 @@ public class TestingGrammar {
 
                 }*/
 
-                System.err.println("Creating record type "+recordName);
-                Type geno = f.env.get("prova");
+                //System.err.println("Creating record type "+recordName);
             } else if (whatToDeclare.isAttribute("head","Snippet")) {
                 //Getting the record name
                 String snippetName = whatToDeclare.getChild(0).getContent();
                 String snippet = Strings.unquote(whatToDeclare.getChild(4).getContent());
                 f.setSnippet(snippetName,snippet);
-                System.err.println("Got snippet '"+snippetName+"'");
+                //System.err.println("Got snippet '"+snippetName+"'");
             }
         });
 

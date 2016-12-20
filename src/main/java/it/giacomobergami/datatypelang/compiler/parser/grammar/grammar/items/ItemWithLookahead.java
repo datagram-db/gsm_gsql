@@ -1,6 +1,6 @@
 package it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items;
 
-import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Rule;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Grammar;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;

@@ -10,8 +10,6 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
-import it.giacomobergami.datatypelang.compiler.lexer.Lexer;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.TableColumnEntry;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.Item;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.ItemWithLookahead;
@@ -21,16 +19,13 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.NonTerminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Terminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Varepsilon;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.utils.Numbers;
-import it.giacomobergami.datatypelang.utils.ForFiles;
 import it.giacomobergami.datatypelang.utils.data.Pair;
 import it.giacomobergami.datatypelang.utils.funcs.Opt;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.lang.reflect.Array;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 

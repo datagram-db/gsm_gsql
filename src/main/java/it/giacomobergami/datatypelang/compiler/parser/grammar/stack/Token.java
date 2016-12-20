@@ -4,7 +4,6 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.TableColumnEntry;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Terminal;
-import it.giacomobergami.datatypelang.utils.funcs.Opt;
 
 /**
  * Created by vasistas on 11/12/16.
@@ -12,18 +11,25 @@ import it.giacomobergami.datatypelang.utils.funcs.Opt;
 public class Token implements OnStack, OnInput {
 
     public final String type;
-    public String data;
+    public final String data;
     public final Terminal term;
+    public final int start,end;
 
-    public Token(String type, String data) {
+    public Token(String type, String data, int start, int end) {
         this.type = type;
         this.data = data;
         this.term = new Terminal(type);
+        this.start = start;
+        this.end = end;
     }
 
     @Override
     public String toString() {
         return String.format("(%s %s)", type, data);
+    }
+
+    public String input() {
+        return data;
     }
 
     @Override
@@ -64,5 +70,13 @@ public class Token implements OnStack, OnInput {
         result = 31 * result + (data != null ? data.hashCode() : 0);
         result = 31 * result + (term != null ? term.hashCode() : 0);
         return result;
+    }
+
+    public int start() {
+        return start;
+    }
+
+    public int end() {
+        return end;
     }
 }

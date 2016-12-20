@@ -1,11 +1,12 @@
-import it.giacomobergami.datatypelang.representation.Type;
-import it.giacomobergami.datatypelang.representation.compiler.Filler;
+import it.giacomobergami.datatypelang.types.Type;
+import it.giacomobergami.datatypelang.language.interpreter.Filler;
 
 /**
  * Created by vasistas on 18/12/16.
  */
 public class FillerTest {
 
+    /*
     public static void main(String[] args) {
         // Load the C++ configurations for compiling to C++ types
         Filler f = new Filler("cpp/");
@@ -21,14 +22,14 @@ public class FillerTest {
 
 
 
-        /*
+
 
         record <name> =
             <field_type> <field_name>
             ..
         using [<compile> ]+
-        */
+
 
     }
-
+*/
 }

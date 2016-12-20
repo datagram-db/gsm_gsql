@@ -3,16 +3,14 @@ package it.giacomobergami.datatypelang.compiler.parser.grammar.grammar;
 import com.github.mrebhan.crogamp.cli.TableList;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.ItemWithLookahead;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.utils.GlobalCounter;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.utils.TypesafeTable;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.Parser;
 import it.giacomobergami.datatypelang.utils.data.Pair;
 
 import java.util.*;
-import java.util.function.Function;
 
 /**
  * Created by vasistas on 12/12/16.
@@ -24,7 +22,7 @@ public class State {
     int stateNo;
     public Multimap<GrammarTerm,ItemWithLookahead> map;
 
-    public void initTypesafeTable(Grammar g, TypesafeTable tst) {
+    public void initTypesafeTable(Grammar g, Parser tst) {
         if (tst.insertAndCheck(this)==-1) {
             ///System.out.println(this);
             if (this.isReduce) {

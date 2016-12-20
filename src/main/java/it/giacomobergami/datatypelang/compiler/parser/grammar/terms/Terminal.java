@@ -26,7 +26,7 @@ public class Terminal implements TableColumnEntry {
 
     @Override
     public OnInput toInput() {
-        return new Token(terminalCase,null);
+        return new Token(terminalCase,null, -1, -1);
     }
 
     public String caso() {
@@ -63,7 +63,7 @@ public class Terminal implements TableColumnEntry {
 
     @Override
     public OnInput asOnInput() {
-        return new Token(terminalCase,null);
+        return new Token(terminalCase,null, -1, -1);
     }
 }
 

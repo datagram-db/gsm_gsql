@@ -46,3 +46,8 @@ TypeLike -> mutable
 .
 
 trail: space
+
+highlight:
+    keyword[13,110,208]:  as, by, access, declare, with, declare, native, all, .
+    method[207,111,13]:   fixed, arity, record, snippet, fixed, mutable
+    strings[51,150,102]:  quoted

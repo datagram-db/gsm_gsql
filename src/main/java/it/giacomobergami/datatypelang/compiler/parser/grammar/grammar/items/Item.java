@@ -1,12 +1,10 @@
 package it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items;
 
-import it.giacomobergami.datatypelang.compiler.parser.grammar.Rule;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.TableColumnEntry;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Rule;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.Grammar;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.NonTerminal;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.utils.Array;
 import it.giacomobergami.datatypelang.utils.funcs.Opt;
 import org.apache.commons.lang3.ArrayUtils;
 
