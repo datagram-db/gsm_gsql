@@ -1,7 +1,7 @@
-package it.giacomobergami.examples.datatypelang.types.array;
+package it.giacomobergami.examples.DTL.types.array;
 
-import it.giacomobergami.examples.datatypelang.types.record.Field;
-import it.giacomobergami.examples.datatypelang.types.record.RecordType;
+import it.giacomobergami.examples.DTL.types.record.Field;
+import it.giacomobergami.examples.DTL.types.record.RecordType;
 
 /**
  * Created by vasistas on 04/12/16.

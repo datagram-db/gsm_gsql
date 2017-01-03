@@ -1,10 +1,10 @@
-package it.giacomobergami.examples.datatypelang.types;
+package it.giacomobergami.examples.DTL.types;
 
-import it.giacomobergami.examples.datatypelang.types.array.ArrayType;
-import it.giacomobergami.examples.datatypelang.types.array.SortedIndexedArrayType;
+import it.giacomobergami.examples.DTL.types.array.ArrayType;
+import it.giacomobergami.examples.DTL.types.array.SortedIndexedArrayType;
 import it.giacomobergami.datatypelang.language.interpreter.JSONElem;
-import it.giacomobergami.examples.datatypelang.types.record.Field;
-import it.giacomobergami.examples.datatypelang.types.record.RecordType;
+import it.giacomobergami.examples.DTL.types.record.Field;
+import it.giacomobergami.examples.DTL.types.record.RecordType;
 
 import java.util.ArrayList;
 import java.util.HashMap;

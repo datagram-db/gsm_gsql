@@ -1,4 +1,4 @@
-package it.giacomobergami.examples.datatypelang.types;
+package it.giacomobergami.examples.DTL.types;
 
 /**
  * Provides the in memory representation of the datatype

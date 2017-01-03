@@ -1,20 +1,20 @@
-package it.giacomobergami.examples.datatypelang;
+package it.giacomobergami.examples.DTL;
 
 import com.google.common.collect.Iterables;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.domast.XMLAst;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.domast.XPathProcesser;
 import it.giacomobergami.datatypelang.language.Compiler;
 import it.giacomobergami.datatypelang.language.interpreter.JSONElem;
-import it.giacomobergami.examples.datatypelang.types.Type;
-import it.giacomobergami.examples.datatypelang.types.TypeEnvironment;
+import it.giacomobergami.examples.DTL.types.Type;
+import it.giacomobergami.examples.DTL.types.TypeEnvironment;
 import it.giacomobergami.datatypelang.utils.regex.Strings;
 
 /**
  * Created by vasistas on 19/12/16.
  */
-public class CompilerExample extends Compiler {
+public class DTLCompiler extends Compiler {
 
-    public CompilerExample() {
+    public DTLCompiler() {
         super(); //Mandatory
     }
 

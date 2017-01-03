@@ -2,7 +2,7 @@ import it.giacomobergami.datatypelang.compiler.ParserLexer;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.associations.ANTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.domast.XMLAst;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
-import it.giacomobergami.examples.datatypelang.CompilerExample;
+import it.giacomobergami.examples.DTL.DTLCompiler;
 import it.giacomobergami.datatypelang.utils.ForFiles;
 import it.giacomobergami.datatypelang.utils.funcs.OptErr;
 
@@ -11,7 +11,7 @@ import java.io.File;
 /**
  * Created by vasistas on 13/12/16.
  */
-public class TestingGrammar {
+public class DTLTest {
 
     public static void main(String args[]) {
 
@@ -29,7 +29,7 @@ public class TestingGrammar {
         XMLAst d = parserLexer.toXML(result.value());
 
         //Defining an user-defined
-        CompilerExample c = new CompilerExample();
+        DTLCompiler c = new DTLCompiler();
         c.compile(d);
 
     }

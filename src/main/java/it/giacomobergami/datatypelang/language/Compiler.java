@@ -4,8 +4,8 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.domast.XMLAst;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.domast.XPathProcesser;
-import it.giacomobergami.examples.datatypelang.Filler;
-import it.giacomobergami.examples.datatypelang.types.Type;
+import it.giacomobergami.examples.DTL.DTLInterpreter;
+import it.giacomobergami.examples.DTL.types.Type;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -15,12 +15,12 @@ import java.util.Arrays;
  */
 public class Compiler {
 
-    public Filler f;
+    public DTLInterpreter f;
     Multimap<Type,String> compileRecordAs;
 
     public Compiler() {
         super();
-        f= new Filler();
+        f= new DTLInterpreter();
         compileRecordAs = HashMultimap.create();
     }
 

@@ -1,9 +1,9 @@
-package it.giacomobergami.examples.datatypelang;
+package it.giacomobergami.examples.DTL;
 
 import it.giacomobergami.datatypelang.language.interpreter.JSONElem;
-import it.giacomobergami.examples.datatypelang.types.Type;
-import it.giacomobergami.examples.datatypelang.types.NativeType;
-import it.giacomobergami.examples.datatypelang.types.TypeEnvironment;
+import it.giacomobergami.examples.DTL.types.Type;
+import it.giacomobergami.examples.DTL.types.NativeType;
+import it.giacomobergami.examples.DTL.types.TypeEnvironment;
 import it.giacomobergami.datatypelang.language.interpreter.metacommands.MetaCommandInit;
 import it.giacomobergami.datatypelang.language.interpreter.metacommands.MetaCommandType;
 import it.giacomobergami.datatypelang.language.interpreter.metacommands.MetaEnv;
@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 /**
  * Created by vasistas on 05/12/16.
  */
-public class Filler {
+public class DTLInterpreter {
     public final HashMap<String,String> file_to_content;
     public final TypeEnvironment env;
 
@@ -69,7 +69,7 @@ public class Filler {
         file_to_content.put(name,snippet);
     }
 
-    public Filler() {
+    public DTLInterpreter() {
         file_to_content = new HashMap<>();
         env = new TypeEnvironment();
     }
