@@ -4,10 +4,9 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.domast.XMLAst;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.domast.XPathProcesser;
-import it.giacomobergami.datatypelang.language.interpreter.Filler;
-import it.giacomobergami.datatypelang.types.Type;
+import it.giacomobergami.examples.datatypelang.Filler;
+import it.giacomobergami.examples.datatypelang.types.Type;
 
-import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
@@ -16,7 +15,7 @@ import java.util.Arrays;
  */
 public class Compiler {
 
-    Filler f;
+    public Filler f;
     Multimap<Type,String> compileRecordAs;
 
     public Compiler() {
@@ -36,9 +35,10 @@ public class Compiler {
     public void compile(XMLAst abstractTree) {
         XPathProcesser processer = new XPathProcesser();
         Arrays.stream(getClass().getDeclaredMethods())
-                .filter(x->x.getGenericParameterTypes().length==1 && x.getGenericParameterTypes()[1].equals(XMLAst.class))
+                .filter(x->
+                        x.getGenericParameterTypes().length==1 && x.getGenericParameterTypes()[0].equals(XMLAst.class))
                 .forEach(x->{
-                    processer.setConsumer(x.getName(), y -> {
+                    processer.setConsumer(XPathProcesser.setNonTerminalReduction(x.getName()), y -> {
                         try {
                             x.invoke(this, y);
                         } catch (IllegalAccessException | InvocationTargetException e) {

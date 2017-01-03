@@ -1,10 +1,10 @@
-package it.giacomobergami.datatypelang.types;
+package it.giacomobergami.examples.datatypelang.types;
 
-import it.giacomobergami.datatypelang.types.array.ArrayType;
-import it.giacomobergami.datatypelang.types.array.SortedIndexedArrayType;
+import it.giacomobergami.examples.datatypelang.types.array.ArrayType;
+import it.giacomobergami.examples.datatypelang.types.array.SortedIndexedArrayType;
 import it.giacomobergami.datatypelang.language.interpreter.JSONElem;
-import it.giacomobergami.datatypelang.types.record.Field;
-import it.giacomobergami.datatypelang.types.record.RecordType;
+import it.giacomobergami.examples.datatypelang.types.record.Field;
+import it.giacomobergami.examples.datatypelang.types.record.RecordType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,7 +19,7 @@ public class TypeEnvironment {
         this.env = new HashMap<>();
     }
 
-    public static enum BasicNativeTypes {
+    public  enum BasicNativeTypes {
         INT(false,"int"),
         UINT(false,"uint"),
         LONG(false,"long"),

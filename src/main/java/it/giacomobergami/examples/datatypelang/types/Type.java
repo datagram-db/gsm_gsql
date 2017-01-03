@@ -1,4 +1,4 @@
-package it.giacomobergami.datatypelang.types;
+package it.giacomobergami.examples.datatypelang.types;
 
 /**
  * Created by vasistas on 04/12/16.

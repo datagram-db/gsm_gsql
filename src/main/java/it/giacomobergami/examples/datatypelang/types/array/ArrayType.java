@@ -1,7 +1,7 @@
-package it.giacomobergami.datatypelang.types.array;
+package it.giacomobergami.examples.datatypelang.types.array;
 
-import it.giacomobergami.datatypelang.types.Kinds;
-import it.giacomobergami.datatypelang.types.Type;
+import it.giacomobergami.examples.datatypelang.types.Kinds;
+import it.giacomobergami.examples.datatypelang.types.Type;
 
 /**
  * Created by vasistas on 04/12/16.

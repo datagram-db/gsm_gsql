@@ -1,8 +1,9 @@
-package it.giacomobergami.datatypelang.language.interpreter;
+package it.giacomobergami.examples.datatypelang;
 
-import it.giacomobergami.datatypelang.types.Type;
-import it.giacomobergami.datatypelang.types.NativeType;
-import it.giacomobergami.datatypelang.types.TypeEnvironment;
+import it.giacomobergami.datatypelang.language.interpreter.JSONElem;
+import it.giacomobergami.examples.datatypelang.types.Type;
+import it.giacomobergami.examples.datatypelang.types.NativeType;
+import it.giacomobergami.examples.datatypelang.types.TypeEnvironment;
 import it.giacomobergami.datatypelang.language.interpreter.metacommands.MetaCommandInit;
 import it.giacomobergami.datatypelang.language.interpreter.metacommands.MetaCommandType;
 import it.giacomobergami.datatypelang.language.interpreter.metacommands.MetaEnv;

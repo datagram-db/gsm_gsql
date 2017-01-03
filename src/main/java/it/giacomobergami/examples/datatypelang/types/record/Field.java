@@ -1,6 +1,6 @@
-package it.giacomobergami.datatypelang.types.record;
+package it.giacomobergami.examples.datatypelang.types.record;
 
-import it.giacomobergami.datatypelang.types.Type;
+import it.giacomobergami.examples.datatypelang.types.Type;
 
 /**
  * Defines a field within a record

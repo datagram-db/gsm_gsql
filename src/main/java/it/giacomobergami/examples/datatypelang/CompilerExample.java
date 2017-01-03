@@ -1,29 +1,24 @@
-package it.giacomobergami.datatypelang.language;
+package it.giacomobergami.examples.datatypelang;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimap;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.domast.XMLAst;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.domast.XPathProcesser;
-import it.giacomobergami.datatypelang.language.interpreter.Filler;
+import it.giacomobergami.datatypelang.language.Compiler;
 import it.giacomobergami.datatypelang.language.interpreter.JSONElem;
-import it.giacomobergami.datatypelang.types.Type;
-import it.giacomobergami.datatypelang.types.TypeEnvironment;
+import it.giacomobergami.examples.datatypelang.types.Type;
+import it.giacomobergami.examples.datatypelang.types.TypeEnvironment;
 import it.giacomobergami.datatypelang.utils.regex.Strings;
 
 /**
  * Created by vasistas on 19/12/16.
  */
-public class ModelExample extends Compiler {
+public class CompilerExample extends Compiler {
 
-    Filler f;
-    Multimap<Type,String> compileRecordAs;
-    public ModelExample() {
-        super();
-        f= new Filler();
-        compileRecordAs = HashMultimap.create();
+    public CompilerExample() {
+        super(); //Mandatory
     }
 
+    //Each method has the name of the non-terminal within a tree. Those methods are got by the compiler
     public void Typedef(XMLAst xmlAst) {
         XMLAst array[] = Iterables.toArray(xmlAst.getChildren(),XMLAst.class);
         if (array.length>0) {
