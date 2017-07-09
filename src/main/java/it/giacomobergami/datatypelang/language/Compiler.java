@@ -15,8 +15,8 @@ import java.util.Arrays;
  */
 public class Compiler {
 
-    public DTLInterpreter f;
-    Multimap<Type,String> compileRecordAs;
+    protected DTLInterpreter f;
+    private Multimap<Type,String> compileRecordAs;
 
     public Compiler() {
         super();
@@ -24,11 +24,11 @@ public class Compiler {
         compileRecordAs = HashMultimap.create();
     }
 
-    public void setSnippet(String s, String arity) {
+    protected void setSnippet(String s, String arity) {
         f.setSnippet(s,arity);
     }
 
-    public void compileRecordAs(Type record, String content) {
+    protected void compileRecordAs(Type record, String content) {
         compileRecordAs.put(record,content);
     }
 

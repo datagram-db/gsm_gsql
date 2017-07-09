@@ -49,7 +49,12 @@ declare writefixed_nosize : snippet =
 .
 
 declare field : snippet =
-"native(@@ofType@@) @@declaration@@;
+"@@fieldDecl@@;
+"
+.
+
+declare fieldtell : snippet =
+"native(@@ofType@@) @@declaration@@
 "
 .
 
@@ -115,7 +120,6 @@ declare serialize_vector(mutable) : snippet =
 
 declare record prova {
     ciao : string,
-    id : int,
     afield : string
 } as primary, secondary
 
