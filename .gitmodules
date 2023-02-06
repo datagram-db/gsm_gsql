@@ -3,4 +3,4 @@
 	url = https://github.com/leethomason/tinyxml2.git
 [submodule "submodules/yaucl"]
 	path = submodules/yaucl
-	url = https://github.com/datagramdb/yaucl.git
+	url = git@github.com:datagramdb/yaucl.git
