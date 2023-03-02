@@ -4,31 +4,48 @@
 #include <gsql_gsm/gsql_operators.h>
 
 #include <string>
-
 #include <gsql_gsm/dump_to_xml.h>
 
+#include <vector>
+#include "rapidcsv.h"
 
 
 int main() {
-    // Database initialisation, with an empty root
+    // Database initialisation, with an empty root'
     gsm_inmemory_db db;
-    // Adding some nodes in it
-    db = create(db, 1, {"nodes"}, {"sometext1"});
-    db = create(db, 2, {"nodes"}, {"sometext2"});
-    db = create(db, 3, {"nodes"}, {"sometext3"});
-    db = create(db, 4, {"nodes2"}, {"sometext4"});
-    db = create(db, 5, {"nodes1"}, {"sometext5"});
+
+    std::string whatFile = "customers-1.csv";
+    rapidcsv::Document doc("/home/neo/Desktop/gsm_gsql/csv_files/" + whatFile);
+
+    int fileNumber = 1;
+
+    std::vector<std::string> colHeaders = doc.GetColumnNames();
+    std::vector<gsm_object_xi_content> tablePhiCsv = {};
+    std::vector<double> scoresCsv = {};
+
+    for(int i = 0; i < doc.GetRowCount(); i++)
+    {
+        std::vector<std::string> row = doc.GetRow<std::string>(i);
+        std::vector<gsm_object_xi_content> tablePhi = {};
+        std::vector<double> scores = {};
+        for(int j = 0; j < row.size(); j++)
+        {
+            int whatRowId = fileNumber + (j+1)+(row.size() * i+1);
+            db = create(db, whatRowId, {colHeaders.at(j)}, {row.at(j)});
+            tablePhi.emplace_back(whatRowId, 1.0);
+            scores.emplace_back(1.0);
+        }
+        int forWhichRow = fileNumber + (i+1);
+        db = create(db, forWhichRow, {"row"}, {row.at(0)}, {scores}, {{"data", {tablePhi}}});
+        tablePhiCsv.emplace_back(forWhichRow, 1.0);
+        scoresCsv.emplace_back(1.0);
+    }
+    db = create(db, fileNumber, {"csv_file"}, {whatFile}, {scoresCsv}, {{"row", {tablePhiCsv}}});
+
     // Setting that the root now shall contain the other elements, while updating 0 to a new object
     db = map(db, [](const gsm_object& ref) { return ref.ell; },
-                 [](const gsm_object& ref) { return ref.xi;  },
-                 [](const gsm_object& ref) {
-        if (ref.id == 0) {
-            std::unordered_map<std::string, std::vector<gsm_object_xi_content>> result;
-            result["src"] = {{1,1.0}, {2,1.0}, {3,1.0}};
-            result["dst"] = {{4,1.0}, {5,1.0}, {3,1.0}};
-            return result;
-        } else return ref.phi;
-        });
+             [](const gsm_object& ref) { return ref.xi;  },
+             [](const gsm_object& ref) {return ref.phi;});
 
     // Assuming that all of the operations are done:
     // Therefore, I can also set up the indices
@@ -38,9 +55,7 @@ int main() {
     idx.valid_data();
 
     // Dumping the db into a XML format
-    dump_to_xml(db, idx, "/home/giacomo/test.xml");
+    dump_to_xml(db, idx, "/home/neo/Desktop/gsm_gsql/test.xml");
     std::cout << "Hello, World!" << std::endl;
     return 0;
 }
-
-
