@@ -7,8 +7,11 @@
 #include <gsql_gsm/dump_to_xml.h>
 
 #include <vector>
-#include "rapidcsv.h"
+#include <fstream>
+#include "submodules/yaucl/submodules/rapidcsv/src/rapidcsv.h"
+#include <nlohmann/json.hpp>
 #include <filesystem>
+using json = nlohmann::json;
 
 int LoadCsvFile(gsm_inmemory_db &db, std::string csvFileDir,  int &iterator)
 {
@@ -53,17 +56,63 @@ void LoadCsvDb(gsm_inmemory_db &db, std::string pathToDb, int &iterator)
 }
 
 
+void recursion(json data, int &iterator, std::vector<gsm_object_xi_content> &tablePhi, std::vector<double> &scores, gsm_inmemory_db &db)
+{
+    for(auto &it : data.items())
+    {
+        if(it.value().is_object())
+        {
+            std::vector<gsm_object_xi_content> tablePhiObject = {};
+            std::vector<double> scoresObject = {};
+            recursion(it.value(), iterator, tablePhiObject, scoresObject, db);
+            db = create(db, ++iterator, {"json_object"}, {it.key()}, {scoresObject}, {{"json_object", {tablePhiObject}}});
+            tablePhi.emplace_back(iterator);
+            scores.emplace_back(1.0);
+        }
+        else
+        {
+            if(!it.value().is_array())
+            {
+                db = create(db, ++iterator, {it.key()}, {to_string(it.value())});
+                tablePhi.emplace_back(iterator);
+                scores.emplace_back(1.0);
+            }
+            else
+            {
+                for (auto arrayValue: it.value())
+                {
+                    db = create(db, ++iterator, {it.key()}, {to_string(arrayValue)});
+                    tablePhi.emplace_back(iterator);
+                    scores.emplace_back(1.0);
+                }
+            }
+        }
+    }
+}
+
 
 int main() {
     // Database initialisation, with an empty root
     gsm_inmemory_db db;
 
     // global iterator keeping track of gsm ids
-    int iterator = 1;
+    int iterator = 0;
 
-    std::string path = "/home/neo/Desktop/gsm_gsql/csv_files/";
+    std::string csvPath = "/home/neo/gsm_gsql/csv_files/";
+    std::string jsonPath = "/home/neo/gsm_gsql/json_files/example2.json";
 
-    LoadCsvDb(db, path, iterator);
+    std::ifstream f(jsonPath);
+    json data = json::parse(f);
+
+
+    std::vector<gsm_object_xi_content> tablePhiJson = {};
+    std::vector<double> scoresJson = {};
+    recursion(data, iterator, tablePhiJson, scoresJson, db);
+    db = create(db, ++iterator, {"json_file"}, {jsonPath}, {scoresJson}, {{"json_file", {tablePhiJson}}});
+
+
+    //LoadCsvDb(db, csvPath, iterator);
+    //LoadCsvFile(db, csvPath + "customers-1.csv", iterator);
 
     // Setting that the root now shall contain the other elements, while updating 0 to a new object
     db = map(db, [](const gsm_object& ref) { return ref.ell; },
@@ -78,7 +127,7 @@ int main() {
     idx.valid_data();
 
     // Dumping the db into a XML format
-    dump_to_xml(db, idx, "/home/neo/Desktop/gsm_gsql/test.xml");
+    dump_to_xml(db, idx, "/home/neo/gsm_gsql/test.xml");
     std::cout << "Hello, World!" << std::endl;
     return 0;
 }

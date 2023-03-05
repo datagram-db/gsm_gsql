@@ -1,0 +1,17 @@
+{
+  "firstLayer" : 1,
+  "customer" :
+  {
+    "name" : "nikita",
+    "address" :
+    {
+      "street" :
+      {
+        "streetName" : "chekanya",
+        "number" : 15
+      },
+      "city" : "tarkov"
+    },
+    "purchases" : [100, 101, 102, 103]
+  }
+}
