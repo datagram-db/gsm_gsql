@@ -56,37 +56,26 @@ void LoadCsvDb(gsm_inmemory_db &db, std::string pathToDb, int &iterator)
 }
 
 
-void recursion(json data, int &iterator, std::vector<gsm_object_xi_content> &tablePhi, std::vector<double> &scores, gsm_inmemory_db &db)
+void recursion(json data, int &iterator, std::vector<gsm_object_xi_content> &tablePhi, std::vector<double> &scores, gsm_inmemory_db &db, std::string previousKey = "")
 {
     for(auto &it : data.items())
     {
-        if(it.value().is_object())
+        std::string xi;
+        if(it.value().is_object() || it.value().is_array())
         {
             std::vector<gsm_object_xi_content> tablePhiObject = {};
             std::vector<double> scoresObject = {};
-            recursion(it.value(), iterator, tablePhiObject, scoresObject, db);
-            db = create(db, ++iterator, {"json_object"}, {it.key()}, {scoresObject}, {{"json_object", {tablePhiObject}}});
-            tablePhi.emplace_back(iterator);
-            scores.emplace_back(1.0);
+            recursion(it.value(), iterator, tablePhiObject, scoresObject, db, it.key());
+            xi = (data.is_array() ? previousKey + it.key() : it.key());
+            db = create(db, ++iterator, {"json_object"}, {xi}, {scoresObject}, {{"json_object", {tablePhiObject}}});
         }
         else
         {
-            if(!it.value().is_array())
-            {
-                db = create(db, ++iterator, {it.key()}, {to_string(it.value())});
-                tablePhi.emplace_back(iterator);
-                scores.emplace_back(1.0);
-            }
-            else
-            {
-                for (auto arrayValue: it.value())
-                {
-                    db = create(db, ++iterator, {it.key()}, {to_string(arrayValue)});
-                    tablePhi.emplace_back(iterator);
-                    scores.emplace_back(1.0);
-                }
-            }
+            xi = (data.is_array() ? previousKey : it.key());
+            db = create(db, ++iterator, {xi}, {to_string(it.value())});
         }
+        tablePhi.emplace_back(iterator);
+        scores.emplace_back(1.0);
     }
 }
 
