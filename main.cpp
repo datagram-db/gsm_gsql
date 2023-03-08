@@ -56,22 +56,21 @@ void LoadCsvDb(gsm_inmemory_db &db, std::string pathToDb, int &iterator)
 }
 
 
-void recursion(json data, int &iterator, std::vector<gsm_object_xi_content> &tablePhi, std::vector<double> &scores, gsm_inmemory_db &db, std::string previousKey = "")
+void JsonRecursion(json data, int &iterator, std::vector<gsm_object_xi_content> &tablePhi, std::vector<double> &scores, gsm_inmemory_db &db, std::string previousKey = "")
 {
     for(auto &it : data.items())
     {
-        std::string xi;
         if(it.value().is_object() || it.value().is_array())
         {
             std::vector<gsm_object_xi_content> tablePhiObject = {};
             std::vector<double> scoresObject = {};
-            recursion(it.value(), iterator, tablePhiObject, scoresObject, db, it.key());
-            xi = (data.is_array() ? previousKey + it.key() : it.key());
-            db = create(db, ++iterator, {"json_object"}, {xi}, {scoresObject}, {{"json_object", {tablePhiObject}}});
+            JsonRecursion(it.value(), iterator, tablePhiObject, scoresObject, db, it.key());
+            std::string phiString = (data.is_array() ? previousKey + it.key() : it.key());
+            db = create(db, ++iterator, {"json_object"}, {}, {scoresObject}, {{phiString, {tablePhiObject}}});
         }
         else
         {
-            xi = (data.is_array() ? previousKey : it.key());
+            std::string xi = (data.is_array() ? previousKey : it.key());
             db = create(db, ++iterator, {xi}, {to_string(it.value())});
         }
         tablePhi.emplace_back(iterator);
@@ -79,6 +78,61 @@ void recursion(json data, int &iterator, std::vector<gsm_object_xi_content> &tab
     }
 }
 
+void LoadJsonFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
+{
+    std::ifstream f(pathToFile);
+    json data = json::parse(f);
+    std::vector<gsm_object_xi_content> tablePhiJson = {};
+    std::vector<double> scoresJson = {};
+    JsonRecursion(data, iterator, tablePhiJson, scoresJson, db);
+    db = create(db, ++iterator, {"json_file"}, {pathToFile}, {scoresJson}, {{"json_file", {tablePhiJson}}});
+}
+
+void LoadIgcFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
+{
+    std::ifstream stream(pathToFile);
+    std::string line;
+
+    std::vector<gsm_object_xi_content> tablePhiIgc = {};
+    std::vector<double> scoresIgc = {};
+    std::string date;
+
+    //get pilot and date
+    for(std::string line; std::getline(stream, line);)
+    {
+        if(date != "")
+            break;
+        if(line.length() < 5)
+            continue;
+        if(line.substr(0,5) == "HFDTE")
+        {
+            date = line.substr(5, 6);
+            db = create(db, ++iterator, {"date"}, {date});
+        }
+    }
+    tablePhiIgc.emplace_back(iterator);
+    scoresIgc.emplace_back(1.0);
+
+    std::vector<gsm_object_xi_content> tablePhiNodes = {};
+    std::vector<double> scoresNodes = {};
+
+    //get flight nodes
+    for(std::string line; std::getline(stream, line);)
+    {
+        std::string a = "";
+        if(line.at(0) == 'B')
+        {
+            std::string time = line.substr(1,6);
+            std::string latitude = line.substr(7,8);
+            std::string longitude = line.substr(15,9);
+            std::string fixValidity = line.substr(24,1);
+            std::string pressureAltitude = line.substr(25, 5);
+            std::string gnssAltitude = line.substr(30, 5);
+        }
+    }
+
+    //db = create(db, ++iterator, {"igc_file"}, {pathToFile}, {scoresIgc}, {{"igc_file", {tablePhiIgc}}});
+}
 
 int main() {
     // Database initialisation, with an empty root
@@ -89,17 +143,10 @@ int main() {
 
     std::string csvPath = "/home/neo/gsm_gsql/csv_files/";
     std::string jsonPath = "/home/neo/gsm_gsql/json_files/example2.json";
+    std::string igcPath = "/home/neo/gsm_gsql/igc_files/example2.igc";
 
-    std::ifstream f(jsonPath);
-    json data = json::parse(f);
-
-
-    std::vector<gsm_object_xi_content> tablePhiJson = {};
-    std::vector<double> scoresJson = {};
-    recursion(data, iterator, tablePhiJson, scoresJson, db);
-    db = create(db, ++iterator, {"json_file"}, {jsonPath}, {scoresJson}, {{"json_file", {tablePhiJson}}});
-
-
+    LoadIgcFile(db, igcPath, iterator);
+    //LoadJsonFile(db, jsonPath, iterator);
     //LoadCsvDb(db, csvPath, iterator);
     //LoadCsvFile(db, csvPath + "customers-1.csv", iterator);
 
