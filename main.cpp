@@ -171,13 +171,8 @@ void LoadIgcFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
     createFast(db, ++iterator, {"igc_file"}, {pathToFile}, {scoresIgc}, {{"igc_file", {tablePhiIgc}}});
 }
 
-void LoadGraph(gsm_inmemory_db &db, int &iterator)
+void LoadGraph(gsm_inmemory_db &db, int &iterator, std::vector<std::string> &graphPaths)
 {
-    std::vector<std::string> graphPaths = {
-            "/home/neo/gsm_gsql/graph_files/graphhead.csv",
-            "/home/neo/gsm_gsql/graph_files/vertex.csv",
-            "/home/neo/gsm_gsql/graph_files/edge.csv"
-    };
     std::vector<gsm_object_xi_content> tablePhiGraph = {};
     std::vector<double> scoresGraph = {};
     for(auto &file : graphPaths)
@@ -283,9 +278,109 @@ void BenchmarkCsvLoading()
     }
 }
 
+std::string FindPath(std::vector<std::string> &paths, std::string findWhat)
+{
+    for(std::string s : paths)
+    {
+        std::string delimiter = "/";
+        size_t last = 0;
+        size_t next = 0;
+        while((next = s.find(delimiter, last)) != std::string::npos)
+        {
+            last = next + 1;
+        }
+
+        std::string x = s.substr(last);
+        if(x.substr(0, findWhat.length()) == findWhat)
+        {
+            return s;
+        }
+    }
+}
+
+
+void BenchmarkGraphLoading()
+{
+    std::chrono::time_point<std::chrono::system_clock> startLoad, endLoad, startIndex, endIndex;
+
+    std::chrono::duration<double> loadTime;
+    std::chrono::duration<double> indexTime;
+
+    std::vector<std::string> paths;
+
+    std::fstream fileOut("/home/neo/gsm_gsql/bench_files/graph_bench.csv", std::fstream::out);
+    fileOut << "id,edge,graphhead,vertex,loadtime,indextime\n";
+    int fileIterator = 0;
+    for(const auto & entry : std::filesystem::directory_iterator("/home/neo/gsm_gsql/generate_graph/"))
+    {
+        fileIterator++;
+        paths.push_back(entry.path().string());
+    }
+    fileIterator /= 3;
+
+    for(int i = 1; i <= fileIterator; i++)
+    {
+        gsm_inmemory_db db;
+        int iterator = 0;
+
+        std::vector<std::string> path =
+        {
+                FindPath(paths, std::to_string(i) +"_generated_edge"),
+                FindPath(paths, std::to_string(i) + "_generated_graphhead"),
+                FindPath(paths, std::to_string(i) + "_generated_vertex")
+        };
+        //1_generated_edge
+        //1_generated_graphhead
+        //1_generated_vertex
+
+        startLoad = std::chrono::system_clock::now();
+        LoadGraph(db, iterator, path);
+        endLoad = std::chrono::system_clock::now();
+
+
+        gsm_db_indices idx;
+        startIndex = std::chrono::system_clock::now();
+        idx.init(db);
+        idx.valid_data();
+        endIndex = std::chrono::system_clock::now();
+
+
+        std::string delimiter = "_";
+        size_t last = 0;
+        size_t next = 0;
+        while((next = path[0].find(delimiter, last)) != std::string::npos)
+        {
+            last = next + 1;
+        }
+        std::string xEdge = path[0].substr(last);
+
+        next = 0;
+        last = 0;
+        while((next = path[1].find(delimiter, last)) != std::string::npos)
+        {
+            last = next + 1;
+        }
+        std::string xHead = path[1].substr(last);
+
+        next = 0;
+        last = 0;
+        while((next = path[2].find(delimiter, last)) != std::string::npos)
+        {
+            last = next + 1;
+        }
+        std::string xVertex = path[2].substr(last);
+
+        loadTime = endLoad - startLoad;
+        indexTime = endIndex - startIndex;
+        fileOut << i << "," << xEdge << "," << xHead << "," << xVertex << "," << loadTime.count() << ',' << indexTime.count() << '\n';
+        return;
+    }
+}
+
 int main() {
     //BenchmarkCsvLoading();
     //BenchmarkJsonLoading();
+    BenchmarkGraphLoading();
     // Database initialisation, with an empty root
     gsm_inmemory_db db;
     // global iterator keeping track of gsm ids
@@ -295,7 +390,7 @@ int main() {
     std::string jsonPath = "/home/neo/gsm_gsql/json_files/generated.json";
     std::string igcPath = "/home/neo/gsm_gsql/igc_files/example2.igc";
 
-    LoadIgcFile(db, igcPath, iterator);
+    //LoadIgcFile(db, igcPath, iterator);
     //LoadCsvDb(db, csvPath, iterator);
     //LoadJsonFile(db, jsonPath, iterator);
     //LoadCsvFile(db, csvPath + "customers-1.csv", iterator);
