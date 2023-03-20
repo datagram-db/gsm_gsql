@@ -33,8 +33,8 @@ using ellT = std::function<std::vector<std::string>(const gsm_object&)>;
 using xiT = std::function<std::vector<std::string>(const gsm_object&)>;
 using phiT = std::function<std::unordered_map<std::string, std::vector<gsm_object_xi_content>>(const gsm_object&)>;
 
-
 // Definition 39 (Object Creation), p. 158
+
 static inline
 struct gsm_inmemory_db create(const struct gsm_inmemory_db& db,
                               uint_fast32_t id = 0, const std::vector<std::string> &ell = {}, const std::vector<std::string> &xi = {},
@@ -48,6 +48,18 @@ struct gsm_inmemory_db create(const struct gsm_inmemory_db& db,
         result.max_id = id;
     return result;
 }
+
+static inline
+void createFast(struct gsm_inmemory_db& db,
+                              uint_fast32_t id = 0, const std::vector<std::string> &ell = {}, const std::vector<std::string> &xi = {},
+                              const std::vector<double> &scores = {}, const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi = {}) {
+    if(db.O.contains(id))
+        return;
+    db.O[id] = {id, ell, xi, scores, phi};
+    if (id > db.max_id)
+        db.max_id = id;
+}
+
 
 // Definition 41 (Elect), p. 160
 static inline
