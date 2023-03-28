@@ -1,6 +1,5 @@
 #include <iostream>
 #include "gsql_gsm/gsm_db_indices.h"
-
 #include <gsql_gsm/gsql_operators.h>
 
 #include <string>
@@ -11,8 +10,14 @@
 #include "submodules/yaucl/submodules/rapidcsv/src/rapidcsv.h"
 #include <nlohmann/json.hpp>
 #include <filesystem>
+#include <curl/curl.h>
+
 #include <chrono>
+#include "sys/types.h"
+#include "sys/sysinfo.h"
+
 using json = nlohmann::json;
+
 
 void JsonRecursion(json data, int &iterator, std::vector<gsm_object_xi_content> &tablePhi, std::vector<double> &scores, gsm_inmemory_db &db, std::string previousKey = "")
 {
@@ -35,6 +40,7 @@ void JsonRecursion(json data, int &iterator, std::vector<gsm_object_xi_content> 
         scores.emplace_back(1.0);
     }
 }
+
 
 void LoadCsvFile(gsm_inmemory_db &db, std::string csvFileDir,  int &iterator, bool graph = false)
 {
@@ -96,29 +102,102 @@ void LoadCsvDb(gsm_inmemory_db &db, std::string pathToDb, int &iterator)
 
 
 
-void LoadJsonFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
+void LoadJson(gsm_inmemory_db &db, std::string pathToFile, int &iterator, std::string xi = "")
 {
-    std::ifstream f(pathToFile);
-    json data = json::parse(f);
+    json data;
+    if(xi == "")
+    {
+        std::ifstream f(pathToFile);
+        xi = pathToFile;
+        data = json::parse(f);
+    }
+    else
+    {
+        data = json::parse(pathToFile);
+    }
+
     std::vector<gsm_object_xi_content> tablePhiJson = {};
     std::vector<double> scoresJson = {};
     JsonRecursion(data, iterator, tablePhiJson, scoresJson, db);
-    createFast(db, ++iterator, {"json_file"}, {pathToFile}, {scoresJson}, {{"json_file", {tablePhiJson}}});
+    createFast(db, ++iterator, {"json_file"}, {xi}, {scoresJson}, {{"json_file", {tablePhiJson}}});
 }
 
-void LoadIgcFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
+std::string downloadedResponse;
+
+std::size_t writer(char *data, size_t size, size_t nmemb, std::string *buffer_in)
+{
+    if(buffer_in != NULL)
+    {
+        downloadedResponse.assign(data);
+        return size*nmemb;
+    }
+    return 0;
+}
+
+std::string DownloadWeather(std::string URL)
+{
+    CURL *curl;
+    CURLcode res;
+    struct curl_slist *headers = NULL;
+    std::ostringstream oss;
+    headers = curl_slist_append(headers, "Accept: application/json");
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+    headers = curl_slist_append(headers, "charset: utf-8");
+    curl = curl_easy_init();
+
+    if(curl)
+    {
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(curl, CURLOPT_URL, URL.c_str());
+        curl_easy_setopt(curl, CURLOPT_HTTPGET, 1);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writer);
+        res = curl_easy_perform(curl);
+
+        if(CURLE_OK == res)
+        {
+            char *ct;
+            res = curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &ct);
+            if((CURLE_OK == res) && ct)
+                return downloadedResponse;
+        }
+    }
+    curl_slist_free_all(headers);
+}
+
+
+void LoadWeather(gsm_inmemory_db &db, int &iterator, double lat, double lon, std::time_t start)
+{
+    std::ifstream file("/home/neo/gsm_gsql/api_keys/openweather.txt");
+    std::string apiKey;
+    file >> apiKey;
+    std::stringstream ss;
+    ss << "https://history.openweathermap.org/data/2.5/history/city?"
+    << "lat=" << lat
+    << "&lon=" << lon
+    << "&type=hour&start=" << start
+    << "&cnt=" << 1
+    << "&appid=" << apiKey;
+
+    std::string url = ss.str();
+    std::cout << "URL:" << url << std::endl;
+    std::string someWeather = DownloadWeather(url);
+    LoadJson(db, someWeather, iterator, "weather_1");
+}
+
+void LoadIgcFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator, bool weather)
 {
     std::ifstream stream(pathToFile);
     std::string line;
 
     std::vector<gsm_object_xi_content> tablePhiIgc = {};
     std::vector<double> scoresIgc = {};
-
+    std::string date;
     //get pilot and date
     for(std::string line; std::getline(stream, line);)
     {
         if(line.substr(0,5) == "HFDTE")
         {
+            date = line.substr(5, 4) + "20" + line.substr(9,2);
             createFast(db, ++iterator, {"date"}, {line.substr(5, 6)});
             break;
         }
@@ -128,7 +207,7 @@ void LoadIgcFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
 
     std::vector<gsm_object_xi_content> tablePhiNodes = {};
     std::vector<double> scoresNodes = {};
-
+    std::time_t previousTimeStamp = 0;
     //get flight nodes
     for(std::string line; std::getline(stream, line);)
     {
@@ -163,6 +242,40 @@ void LoadIgcFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
             createFast(db, ++iterator, {"gnssAltitude"}, {gnssAltitude});
             tablePhiNodes.emplace_back(iterator);
             scoresNodes.emplace_back(1.0);
+
+            if(weather) {
+                std::tm t{};
+                std::istringstream ss(date + time);
+                //DDMMYYYY HHMMSS
+                ss >> std::get_time(&t, "%d%m%Y%H%M%S");
+                if (ss.fail()) {
+                    throw std::runtime_error{"fail to parse fullDate"};
+                }
+                std::time_t timeStamp = mktime(&t);
+                if (timeStamp - previousTimeStamp <= 3600)
+                    continue;
+
+                double latDegrees = (double) stoi(latitude.substr(0, 2));
+                double latMinutes = (double) stoi(latitude.substr(2, 5));
+
+                latMinutes = latMinutes / 100000;
+                latMinutes = (latMinutes * 10) / 6;
+                int latSign = (latitude.at(7) == 'N' ? 1 : -1);
+                double latitudeDouble = (latDegrees + latMinutes) * latSign;
+
+                double longDegrees = (double) stoi(longitude.substr(0, 3));
+                double longMinutes = (double) stoi(longitude.substr(3, 5));
+                longMinutes = longMinutes / 100000;
+                longMinutes = (longMinutes * 10) / 6;
+                int longSign = (longitude.at(8) == 'E' ? 1 : -1);
+                double longitudeDouble = (longDegrees + longMinutes) * longSign;
+
+                if (timeStamp - previousTimeStamp >= 3600) {
+                    previousTimeStamp = timeStamp;
+                    LoadWeather(db, iterator, latitudeDouble, longitudeDouble, timeStamp);
+                    std::cout << downloadedResponse << std::endl;
+                }
+            }
         }
     }
     createFast(db, ++iterator, {"nodes"}, {}, {scoresNodes}, {{"nodes", {tablePhiNodes}}});
@@ -184,203 +297,17 @@ void LoadGraph(gsm_inmemory_db &db, int &iterator, std::vector<std::string> &gra
 
 }
 
-void BenchmarkJsonLoading()
-{
-    std::chrono::time_point<std::chrono::system_clock> startLoad, endLoad, startIndex, endIndex;
-    std::chrono::duration<double> loadTime;
-    std::chrono::duration<double> indexTime;
-    std::fstream fileOut("/home/neo/gsm_gsql/bench_files/json_bench.csv", std::fstream::out);
-    fileOut << "overall,loadtime,indextime\n";
-    for(const auto & entry : std::filesystem::directory_iterator("/home/neo/gsm_gsql/generate_json/"))
-    {
-        gsm_inmemory_db db;
-        int iterator = 0;
-
-        startLoad = std::chrono::system_clock::now();
-        LoadJsonFile(db, entry.path(), iterator);
-        endLoad = std::chrono::system_clock::now();
 
 
-        gsm_db_indices idx;
-        startIndex = std::chrono::system_clock::now();
-        idx.init(db);
-        idx.valid_data();
-        endIndex = std::chrono::system_clock::now();
-
-        loadTime = endLoad - startLoad;
-        indexTime = endIndex - startIndex;
-        std::cout << entry << '\n';
-        std::cout << "loadTime:" << loadTime.count() << " indexTime:" << indexTime.count() << '\n';
 
 
-        std::string pathString{entry.path().string()};
-        pathString = pathString.substr(42,pathString.length()-46);
-        std::string delimiter = "_";
-        size_t last = 0;
-        size_t next = 0;
-
-        while((next = pathString.find(delimiter, last)) != std::string::npos)
-        {
-            std::string x = pathString.substr(last, next-last);
-            last = next + 1;
-        }
-        std::string x = pathString.substr(last);
-        fileOut << x.substr(0, x.length()-1) << ',';
-        fileOut << loadTime.count() << ',' << indexTime.count() << '\n';
-    }
-}
-
-void BenchmarkCsvLoading()
-{
-    std::chrono::time_point<std::chrono::system_clock> startLoad, endLoad, startIndex, endIndex;
-    std::chrono::duration<double> loadTime;
-    std::chrono::duration<double> indexTime;
-    std::fstream fileOut("/home/neo/gsm_gsql/bench_files/csv_bench.csv", std::fstream::out);
-    fileOut << "columns,rows,overall,loadtime,indextime\n";
-    for(const auto & entry : std::filesystem::directory_iterator("/home/neo/gsm_gsql/generate_csv/"))
-    {
-        gsm_inmemory_db db;
-        int iterator = 0;
-
-        startLoad = std::chrono::system_clock::now();
-        LoadCsvFile(db, entry.path(), iterator);
-        endLoad = std::chrono::system_clock::now();
 
 
-        gsm_db_indices idx;
-        startIndex = std::chrono::system_clock::now();
-        idx.init(db);
-        idx.valid_data();
-        endIndex = std::chrono::system_clock::now();
-
-        loadTime = endLoad - startLoad;
-        indexTime = endIndex - startIndex;
-        std::cout << entry << '\n';
-        std::cout << "loadTime:" << loadTime.count() << " indexTime:" << indexTime.count() << '\n';
 
 
-        std::string pathString{entry.path().string()};
-        pathString = pathString.substr(42,pathString.length()-46);
-        std::string delimiter = "_";
-        size_t last = 0;
-        size_t next = 0;
-
-        while((next = pathString.find(delimiter, last)) != std::string::npos)
-        {
-            std::string x = pathString.substr(last, next-last);
-            fileOut << x.substr(3, x.length()) << ',';
-            last = next + 1;
-        }
-        std::string x = pathString.substr(last);
-        fileOut << x.substr(3, x.length()) << ',';
-
-        fileOut << loadTime.count() << ',' << indexTime.count() << '\n';
-    }
-}
-
-std::string FindPath(std::vector<std::string> &paths, std::string findWhat)
-{
-    for(std::string s : paths)
-    {
-        std::string delimiter = "/";
-        size_t last = 0;
-        size_t next = 0;
-        while((next = s.find(delimiter, last)) != std::string::npos)
-        {
-            last = next + 1;
-        }
-
-        std::string x = s.substr(last);
-        if(x.substr(0, findWhat.length()) == findWhat)
-        {
-            return s;
-        }
-    }
-}
-
-
-void BenchmarkGraphLoading()
-{
-    std::chrono::time_point<std::chrono::system_clock> startLoad, endLoad, startIndex, endIndex;
-
-    std::chrono::duration<double> loadTime;
-    std::chrono::duration<double> indexTime;
-
-    std::vector<std::string> paths;
-
-    std::fstream fileOut("/home/neo/gsm_gsql/bench_files/graph_bench.csv", std::fstream::out);
-    fileOut << "id,edge,graphhead,vertex,loadtime,indextime\n";
-    int fileIterator = 0;
-    for(const auto & entry : std::filesystem::directory_iterator("/home/neo/gsm_gsql/generate_graph/"))
-    {
-        fileIterator++;
-        paths.push_back(entry.path().string());
-    }
-    fileIterator /= 3;
-
-    for(int i = 1; i <= fileIterator; i++)
-    {
-        gsm_inmemory_db db;
-        int iterator = 0;
-
-        std::vector<std::string> path =
-        {
-                FindPath(paths, std::to_string(i) +"_generated_edge"),
-                FindPath(paths, std::to_string(i) + "_generated_graphhead"),
-                FindPath(paths, std::to_string(i) + "_generated_vertex")
-        };
-        //1_generated_edge
-        //1_generated_graphhead
-        //1_generated_vertex
-
-        startLoad = std::chrono::system_clock::now();
-        LoadGraph(db, iterator, path);
-        endLoad = std::chrono::system_clock::now();
-
-
-        gsm_db_indices idx;
-        startIndex = std::chrono::system_clock::now();
-        idx.init(db);
-        idx.valid_data();
-        endIndex = std::chrono::system_clock::now();
-
-
-        std::string delimiter = "_";
-        size_t last = 0;
-        size_t next = 0;
-        while((next = path[0].find(delimiter, last)) != std::string::npos)
-        {
-            last = next + 1;
-        }
-        std::string xEdge = path[0].substr(last);
-
-        next = 0;
-        last = 0;
-        while((next = path[1].find(delimiter, last)) != std::string::npos)
-        {
-            last = next + 1;
-        }
-        std::string xHead = path[1].substr(last);
-
-        next = 0;
-        last = 0;
-        while((next = path[2].find(delimiter, last)) != std::string::npos)
-        {
-            last = next + 1;
-        }
-        std::string xVertex = path[2].substr(last);
-
-        loadTime = endLoad - startLoad;
-        indexTime = endIndex - startIndex;
-        fileOut << i << "," << xEdge << "," << xHead << "," << xVertex << "," << loadTime.count() << ',' << indexTime.count() << '\n';
-        return;
-    }
-}
 
 int main() {
-    //BenchmarkCsvLoading();
-    //BenchmarkJsonLoading();
-    BenchmarkGraphLoading();
+
     // Database initialisation, with an empty root
     gsm_inmemory_db db;
     // global iterator keeping track of gsm ids
@@ -390,12 +317,12 @@ int main() {
     std::string jsonPath = "/home/neo/gsm_gsql/json_files/generated.json";
     std::string igcPath = "/home/neo/gsm_gsql/igc_files/example2.igc";
 
-    //LoadIgcFile(db, igcPath, iterator);
+    LoadIgcFile(db, igcPath, iterator, false);
     //LoadCsvDb(db, csvPath, iterator);
     //LoadJsonFile(db, jsonPath, iterator);
     //LoadCsvFile(db, csvPath + "customers-1.csv", iterator);
     //LoadGraph(db, iterator);
-
+    //LoadWeather(db, iterator);
     // Setting that the root now shall contain the other elements, while updating 0 to a new object
 
     /*
