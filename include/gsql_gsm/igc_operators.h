@@ -86,6 +86,9 @@ void calculate_bearing_change(gsm_inmemory_db &db, int &nodesIterator)
     }
 }
 
+
+
+static inline
 void calculate_lift(gsm_inmemory_db &db, int &nodesIterator)
 {
     int previousAltitude = '\0';
@@ -103,7 +106,7 @@ void calculate_lift(gsm_inmemory_db &db, int &nodesIterator)
                 altitude = stoi(db.O[data.id].xi[0]);
             }
         }
-        if (previousAltitude == '\0')
+        if(previousAltitude == '\0')
         {
             previousAltitude = altitude;
             continue;
@@ -118,15 +121,15 @@ void calculate_lift(gsm_inmemory_db &db, int &nodesIterator)
             }
             int diffAltitude = altitude - previousAltitude;
             lifts.at(x).push_back(diffAltitude);
-            previousAltitude = altitude;
         }
         else
         {
             if(!newLift)
                 x++;
             newLift = true;
-            previousAltitude = '\0';
         }
+
+        previousAltitude = altitude;
     }
 
     for(auto &it : lifts)
