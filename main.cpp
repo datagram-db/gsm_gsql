@@ -134,7 +134,7 @@ std::size_t writer(char *data, size_t size, size_t nmemb, std::string *buffer_in
 {
     if(buffer_in != NULL)
     {
-        downloadedResponse.assign(data);
+        downloadedResponse.append(data);
         return size*nmemb;
     }
     return 0;
@@ -142,6 +142,7 @@ std::size_t writer(char *data, size_t size, size_t nmemb, std::string *buffer_in
 
 std::string DownloadWeather(std::string URL)
 {
+    downloadedResponse = "";
     CURL *curl;
     CURLcode res;
     struct curl_slist *headers = NULL;
@@ -174,20 +175,38 @@ std::string DownloadWeather(std::string URL)
 void LoadWeather(gsm_inmemory_db &db, int &iterator, double lat, double lon, std::time_t start)
 {
     std::ifstream file("/home/neo/gsm_gsql/api_keys/openweather.txt");
-    std::string apiKey;
-    file >> apiKey;
-    std::stringstream ss;
-    ss << "https://history.openweathermap.org/data/2.5/history/city?"
+    std::string openWeatherApiKey;
+    file >> openWeatherApiKey;
+
+    std::ifstream fileAnother("/home/neo/gsm_gsql/api_keys/visualcrossing.txt");
+    std::string visualCrossingApiKey;
+    fileAnother >> visualCrossingApiKey;
+
+    std::stringstream vc;
+    vc << "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"
+    << lat << ',' << lon
+    << '/' << start
+    << "?key=" << visualCrossingApiKey;
+
+    std::stringstream ow;
+    ow << "https://history.openweathermap.org/data/2.5/history/city?"
     << "lat=" << lat
     << "&lon=" << lon
     << "&type=hour&start=" << start
     << "&cnt=" << 1
-    << "&appid=" << apiKey;
+    << "&appid=" << openWeatherApiKey;
 
-    std::string url = ss.str();
+    std::string url = ow.str();
     std::cout << "URL:" << url << std::endl;
-    std::string someWeather = DownloadWeather(url);
-    LoadJson(db, someWeather, iterator, "weather_1");
+    std::string weatherString = DownloadWeather(url);
+    std::cout << weatherString << std::endl;
+    LoadJson(db, weatherString, iterator, "weather_ow");
+
+    url = vc.str();
+    std::cout << "URL:" << url << std::endl;
+    weatherString = DownloadWeather(url);
+    std::cout << weatherString << std::endl;
+    LoadJson(db, weatherString, iterator, "weather_vc");
 }
 
 void LoadIgcFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator, bool weather)
@@ -313,12 +332,12 @@ int main() {
     std::string jsonPath = "/home/neo/gsm_gsql/json_files/generated.json";
     std::string igcPath = "/home/neo/gsm_gsql/igc_files/example2.igc";
 
-    LoadIgcFile(db, igcPath, iterator, false);
+    //LoadIgcFile(db, igcPath, iterator, false);
     //LoadCsvDb(db, csvPath, iterator);
     //LoadJsonFile(db, jsonPath, iterator);
     //LoadCsvFile(db, csvPath + "customers-1.csv", iterator);
     //LoadGraph(db, iterator);
-    //LoadWeather(db, iterator);
+    LoadWeather(db, iterator, 52.598447, 0.923155, 1654352543);
     // Setting that the root now shall contain the other elements, while updating 0 to a new object
 
     /*
