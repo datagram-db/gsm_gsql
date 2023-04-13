@@ -12,6 +12,18 @@ include_directories(submodules/yaucl/submodules/json/include)
 
 find_package(CURL REQUIRED)
 
+include_directories(antlr4/cpp/antlr4/script/)
+include_directories(submodules/yaucl/submodules/antlr4/runtime/Cpp/runtime/src)
+add_library(gsm_script antlr4/cpp/antlr4/script/scriptBaseListener.cpp
+        antlr4/cpp/antlr4/script/scriptBaseVisitor.cpp
+        antlr4/cpp/antlr4/script/scriptLexer.cpp
+        antlr4/cpp/antlr4/script/scriptParser.cpp
+        antlr4/cpp/antlr4/script/scriptVisitor.cpp
+        antlr4/cpp/antlr4/script/scriptListener.cpp
+        src/gsql_gsm/script_1/ScriptAST.cpp include/gsql_gsm/script_1/ScriptAST.h src/gsql_gsm/script_1/Funzione.cpp include/gsql_gsm/script_1/Funzione.h src/gsql_gsm/script_1/Javification.cpp include/gsql_gsm/script_1/Javification.h src/gsql_gsm/script_1/ScriptVisitor.cpp include/gsql_gsm/script_1/ScriptVisitor.h)
+target_link_libraries(gsm_script antlr4_static)
+
+
 add_library(gsm_gsql src/gsql_gsm/gsm_object_xi_content.cpp include/gsql_gsm/gsm_object_xi_content.h src/gsql_gsm/gsm_object.cpp include/gsql_gsm/gsm_object.h src/gsql_gsm/gsm_inmemory_db.cpp include/gsql_gsm/gsm_inmemory_db.h include/gsql_gsm/gsql_operators.h src/gsql_gsm/dump_to_xml.cpp include/gsql_gsm/dump_to_xml.h src/gsql_gsm/gsm_db_indices.cpp include/gsql_gsm/gsm_db_indices.h include/gsql_gsm/igc_operators.h)
 target_link_libraries(gsm_gsql CURL::libcurl yaucl_graph yaucl_hashing roaring antlr4_static tinyxml2)
 
