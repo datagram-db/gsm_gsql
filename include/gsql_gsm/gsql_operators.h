@@ -50,9 +50,9 @@ struct gsm_inmemory_db create(const struct gsm_inmemory_db& db,
 }
 
 static inline
-void createFast(struct gsm_inmemory_db& db,
-                              uint_fast32_t id = 0, const std::vector<std::string> &ell = {}, const std::vector<std::string> &xi = {},
-                              const std::vector<double> &scores = {}, const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi = {}) {
+void create_fast(struct gsm_inmemory_db& db,
+                 uint_fast32_t id = 0, const std::vector<std::string> &ell = {}, const std::vector<std::string> &xi = {},
+                 const std::vector<double> &scores = {}, const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi = {}) {
     if(db.O.contains(id))
         return;
     db.O[id] = {id, ell, xi, scores, phi};
