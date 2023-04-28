@@ -20,7 +20,7 @@ void json_recursion(json data, int &iterator, std::vector<gsm_object_xi_content>
             std::vector<gsm_object_xi_content> tablePhiObject = {};
             std::vector<double> scoresObject = {};
             json_recursion(it.value(), iterator, tablePhiObject, scoresObject, db, it.key());
-            std::string phiString = (data.is_array() ? previousKey + it.key() : it.key());
+            std::string phiString = (data.is_array() ? previousKey : it.key());
             create_fast(db, ++iterator, {"json_object"}, {}, {scoresObject}, {{phiString, {tablePhiObject}}});
         }
         else
@@ -48,17 +48,11 @@ static inline
 void load_jsonfile(gsm_inmemory_db &db, std::string pathToFile, int &iterator, std::string xi = "")
 {
     json data;
+    std::ifstream f(pathToFile);
     if(xi == "")
-    {
-        std::ifstream f(pathToFile);
         xi = pathToFile;
-        data = json::parse(f);
-    }
-    else
-    {
-        data = json::parse(pathToFile);
-    }
 
+    data = json::parse(f);
     std::vector<gsm_object_xi_content> tablePhiJson = {};
     std::vector<double> scoresJson = {};
     json_recursion(data, iterator, tablePhiJson, scoresJson, db);

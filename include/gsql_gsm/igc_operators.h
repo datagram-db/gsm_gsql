@@ -256,45 +256,76 @@ std::string weather_curl(std::string URL)
     curl_slist_free_all(headers);
 }
 
+//OW FILE NAME: ow_{geohash}_{unixtime}.json
 std::vector<int> weather_load(gsm_inmemory_db &db, int &iterator, double lat, double lon, std::time_t start)
 {
+    bool fileExists = false;
+    std::string geoHashString = geohash_encode(lat, lon);
     std::vector<int> result;
-    std::ifstream file("/home/neo/gsm_gsql/api_keys/openweather.txt");
-    std::string openWeatherApiKey;
-    file >> openWeatherApiKey;
+    std::string fileName = "_" + geoHashString + "_" + std::to_string(start) + ".json";
+    for(const auto& entry : std::filesystem::directory_iterator("/home/neo/gsm_gsql/json_files/"))
+    {
+        if(entry.path().filename() == "ow" + fileName || entry.path().filename() == "vc" + fileName)
+        {
+            fileExists = true;
+            break;
+        }
+    }
+    if(fileExists)
+    {
+        std::string path = "/home/neo/gsm_gsql/json_files/ow" + fileName;
+        result.push_back(iterator);
+        load_jsonfile(db, path, iterator, "weather_ow");
 
-    std::ifstream fileAnother("/home/neo/gsm_gsql/api_keys/visualcrossing.txt");
-    std::string visualCrossingApiKey;
-    fileAnother >> visualCrossingApiKey;
+        path = "/home/neo/gsm_gsql/json_files/vc" + fileName;
+        result.push_back(iterator);
+        load_jsonfile(db, path, iterator, "weather_vc");
+    }
+    else
+    {
+        std::ifstream file("/home/neo/gsm_gsql/api_keys/openweather.txt");
+        std::string openWeatherApiKey;
+        file >> openWeatherApiKey;
 
-    std::stringstream vc;
-    vc << "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"
-       << lat << ',' << lon
-       << '/' << start
-       << "?key=" << visualCrossingApiKey;
+        std::ifstream fileAnother("/home/neo/gsm_gsql/api_keys/visualcrossing.txt");
+        std::string visualCrossingApiKey;
+        fileAnother >> visualCrossingApiKey;
 
-    std::stringstream ow;
-    ow << "https://history.openweathermap.org/data/2.5/history/city?"
-       << "lat=" << lat
-       << "&lon=" << lon
-       << "&type=hour&start=" << start
-       << "&cnt=" << 1
-       << "&appid=" << openWeatherApiKey;
+        std::stringstream vc;
+        vc << "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"
+           << lat << ',' << lon
+           << '/' << start
+           << "?key=" << visualCrossingApiKey
+           << "&include=current";
 
-    std::string url = ow.str();
-    std::cout << "URL:" << url << std::endl;
-    std::string weatherString = weather_curl(url);
-    std::cout << weatherString << std::endl;
-    result.push_back(iterator);
-    load_jsondata(db, weatherString, iterator, "weather_ow");
+        std::stringstream ow;
+        ow << "https://history.openweathermap.org/data/2.5/history/city?"
+           << "lat=" << lat
+           << "&lon=" << lon
+           << "&type=hour&start=" << start
+           << "&cnt=" << 1
+           << "&appid=" << openWeatherApiKey;
 
-    url = vc.str();
-    std::cout << "URL:" << url << std::endl;
-    weatherString = weather_curl(url);
-    std::cout << weatherString << std::endl;
-    result.push_back(iterator);
-    load_jsondata(db, weatherString, iterator, "weather_vc");
+        std::string url = ow.str();
+        std::cout << "URL:" << url << std::endl;
+        std::string weatherString = weather_curl(url);
+        std::cout << weatherString << std::endl;
 
+        std::ofstream owFile("/home/neo/gsm_gsql/json_files/ow" + fileName);
+        owFile << weatherString;
+        result.push_back(iterator);
+        load_jsondata(db, weatherString, iterator, "weather_ow");
+
+        url = vc.str();
+        std::cout << "URL:" << url << std::endl;
+        weatherString = weather_curl(url);
+        std::cout << weatherString << std::endl;
+
+        std::ofstream vcFile("/home/neo/gsm_gsql/json_files/vc" + fileName);
+        vcFile << weatherString;
+        result.push_back(iterator);
+        load_jsondata(db, weatherString, iterator, "weather_vc");
+    }
     return result;
 }
 
@@ -328,7 +359,6 @@ int generate_weatherbucket(gsm_inmemory_db &db, int bFixesIterator, int &iterato
         std::string geoHashCombo = geoHashString + std::to_string((unixTime / 3600) % 24);
         if(!db.O[ghIterator].phi.contains(geoHashCombo))
         {
-            //if(std::find(db.O[ghIterator].phi[geoHashCombo].begin(), db.O[iterator].phi[geoHashCombo].end(), bFix.id) != db.O[iterator].phi[geoHashCombo].end())
             create_fast(db, ++iterator, {"geohash"}, {geoHashString, std::to_string(unixTime)});
             db.O[ghIterator].phi[geoHashCombo].emplace_back(iterator);
             db.O[ghIterator].scores.emplace_back(1.0);
@@ -346,31 +376,25 @@ int generate_weatherbucket(gsm_inmemory_db &db, int bFixesIterator, int &iterato
     return iterator;
 }
 
-
-void weather_operator(gsm_inmemory_db &db, int &iterator)
-{
-    for(auto &it : db.O[iterator].phi)
-    {
-        for(auto &it2 : it.second)
-        {
-            for(auto &it3 : db.O[it2.id].xi)
-            {
-
-            }
-        }
-    }
-}
-
 /*
+ * OW FILE NAME: ow_{geohash}_{unixtime}.json
+ * WHAT TO EXTRACT:
+ * json -> list -> 0 -> main -> [temp,..]
+ *                   -> wind -> [speed,...]
+ *                   -> clouds -> [all]
+ * 1. in json
+ *
+ *
+ * VC FILE NAME: vc_{geohash}_{unixtime}.json
+ * WHAT TO EXTRACT:
+ * everything from currentConditions
+ * json -> currentConditions -> [temp,wind,...]
+ */
+
+//VC
+
 void weather_operator(gsm_inmemory_db &db, int &iterator)
 {
-    for (auto &[geoHash, vectorGeoHash]: db.O[iterator].phi)
-    {
-        std::cout << geoHash << '\n';
-        for (auto &it: vectorGeoHash) {
-            std::cout << db.O[it.id].xi[0] << ' ' << db.O[it.id].xi[1] << '\n';
-        }
-    }
-}*/
 
+}
 #endif //GSM_GSQL_IGC_OPERATORS_H
