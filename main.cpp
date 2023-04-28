@@ -95,7 +95,7 @@ int load_igcfile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
     {
         if(line.substr(0,5) == "HFDTE")
         {
-            date = line.substr(5, 4) + "20" + line.substr(9,2);
+            date = line.substr(line.length()-7, 4) + "20" + line.substr(line.length()-3, 2);
             put_db(db, iterator, tablePhiIgc, scoresIgc, "date", {line.substr(5, 6)});
             break;
         }
@@ -194,11 +194,11 @@ int main() {
 
     std::string csvPath = "/home/neo/gsm_gsql/csv_files/";
     std::string jsonPath = "/home/neo/gsm_gsql/json_files/example3.json";
-    std::string igcPath = "/home/neo/gsm_gsql/igc_files/example3.igc";
+    std::string igcPath = "/home/neo/gsm_gsql/igc_files/example1.igc";
     int nwm = load_igcfile(db, igcPath, iterator);
+    calculate_lift(db, nwm, iterator);
     int geoHashesIterator = generate_weatherbucket(db, nwm, iterator);
-    //int bucketInfo = generate_weatherbucket(db,geoHashesIterator,iterator);
-    weather_operator(db, geoHashesIterator);
+    //weather_operator(db, iterator, geoHashesIterator);
     //load_csvdb(db, csvPath, iterator);
     //load_jsonfile(db, jsonPath, iterator);
     //load_csvfile(db, csvPath + "customers-1.csv", iterator);

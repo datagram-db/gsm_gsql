@@ -91,7 +91,7 @@ void calculate_bearing_change(gsm_inmemory_db &db, int &nodesIterator)
 
 
 static inline
-void calculate_lift(gsm_inmemory_db &db, int &nodesIterator, int &iterator)
+void calculate_lift(gsm_inmemory_db &db, int &bFixesIterator, int &iterator)
 {
     std::vector<gsm_object_xi_content> tablePhiLifts = {};
     std::vector<double> scoresLifts = {};
@@ -101,7 +101,7 @@ void calculate_lift(gsm_inmemory_db &db, int &nodesIterator, int &iterator)
     int previousAltitude = '\0';
     bool newLiftSeries = true;
 
-    for(auto &bFix : db.O[nodesIterator].phi["b_fix"])
+    for(auto &bFix : db.O[bFixesIterator].phi["b_fix"])
     {
         int altitude;
         int dataId;
@@ -256,30 +256,22 @@ std::string weather_curl(std::string URL)
     curl_slist_free_all(headers);
 }
 
-//OW FILE NAME: ow_{geohash}_{unixtime}.json
 std::vector<int> weather_load(gsm_inmemory_db &db, int &iterator, double lat, double lon, std::time_t start)
 {
-    bool fileExists = false;
     std::string geoHashString = geohash_encode(lat, lon);
     std::vector<int> result;
     std::string fileName = "_" + geoHashString + "_" + std::to_string(start) + ".json";
-    for(const auto& entry : std::filesystem::directory_iterator("/home/neo/gsm_gsql/json_files/"))
-    {
-        if(entry.path().filename() == "ow" + fileName || entry.path().filename() == "vc" + fileName)
-        {
-            fileExists = true;
-            break;
-        }
-    }
-    if(fileExists)
+    std::string owPath = "/home/neo/gsm_gsql/json_files/ow" + fileName;
+    std::string vcPath = "/home/neo/gsm_gsql/json_files/vc" + fileName;
+    if(std::filesystem::exists(owPath) || std::filesystem::exists(vcPath))
     {
         std::string path = "/home/neo/gsm_gsql/json_files/ow" + fileName;
         result.push_back(iterator);
-        load_jsonfile(db, path, iterator, "weather_ow");
+        load_jsonfile(db, path, iterator, "0", "weather_ow");
 
         path = "/home/neo/gsm_gsql/json_files/vc" + fileName;
         result.push_back(iterator);
-        load_jsonfile(db, path, iterator, "weather_vc");
+        load_jsonfile(db, path, iterator, "currentConditions", "weather_vc");
     }
     else
     {
@@ -314,7 +306,7 @@ std::vector<int> weather_load(gsm_inmemory_db &db, int &iterator, double lat, do
         std::ofstream owFile("/home/neo/gsm_gsql/json_files/ow" + fileName);
         owFile << weatherString;
         result.push_back(iterator);
-        load_jsondata(db, weatherString, iterator, "weather_ow");
+        load_jsondata(db, weatherString, iterator, "weather_ow", "0");
 
         url = vc.str();
         std::cout << "URL:" << url << std::endl;
@@ -324,17 +316,15 @@ std::vector<int> weather_load(gsm_inmemory_db &db, int &iterator, double lat, do
         std::ofstream vcFile("/home/neo/gsm_gsql/json_files/vc" + fileName);
         vcFile << weatherString;
         result.push_back(iterator);
-        load_jsondata(db, weatherString, iterator, "weather_vc");
+        load_jsondata(db, weatherString, iterator, "weather_vc", "currentConditions");
     }
     return result;
 }
 
 
 static inline
-int generate_weatherbucket(gsm_inmemory_db &db, int bFixesIterator, int &iterator)
+int generate_weatherbucket(gsm_inmemory_db& db, int bFixesIterator, int& iterator)
 {
-    std::unordered_map<std::string, std::vector<gsm_object_xi_content>> tablePhiGeoHashes = {};
-    std::vector<double> scoresGeohashes = {};
     create_fast(db, ++iterator, {"geohashes"});
     int ghIterator = iterator;
     long long unixTime;
@@ -373,7 +363,7 @@ int generate_weatherbucket(gsm_inmemory_db &db, int bFixesIterator, int &iterato
         db.O[iterator].phi["data"].emplace_back(bFix.id);
         db.O[iterator].scores.emplace_back(1.0);
     }
-    return iterator;
+    return ghIterator;
 }
 
 /*
@@ -393,8 +383,17 @@ int generate_weatherbucket(gsm_inmemory_db &db, int bFixesIterator, int &iterato
 
 //VC
 
-void weather_operator(gsm_inmemory_db &db, int &iterator)
+void weather_operator(gsm_inmemory_db &db, int &iterator, int geoHashesIterator)
 {
-
+    for(auto& [geoHashString, geoHashVector] : db.O[geoHashesIterator].phi)
+    {
+        std::string csvLine = "";
+        std::cout << "ghS:" << geoHashString << '\n';
+        for(auto& gsmObj : geoHashVector)
+        {
+            //std::cout << db.O[gsmObj.id].ell << '\n';
+            std::cout << db.O[gsmObj.id].xi << '\n';
+        }
+    }
 }
 #endif //GSM_GSQL_IGC_OPERATORS_H
