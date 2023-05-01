@@ -104,19 +104,17 @@ void calculate_lift(gsm_inmemory_db &db, int &bFixesIterator, int &iterator)
     for(auto &bFix : db.O[bFixesIterator].phi["b_fix"])
     {
         int altitude;
-        int dataId;
-        for(auto &data : db.O[bFix.id].phi["data"])
+        for(int i = 0; i < db.O[bFix.id].ell.size(); i++)
         {
-            if (db.O[data.id].ell[0] == "pressure_altitude")
+            if (db.O[bFix.id].ell[i] == "pressure_altitude")
             {
-                altitude = stoi(db.O[data.id].xi[0]);
-                dataId = data.id;
+                altitude = stoi(db.O[bFix.id].xi[i]);
             }
         }
         if(previousAltitude == '\0')
         {
             previousAltitude = altitude;
-            previousId = dataId;
+            previousId = bFix.id;
             continue;
         }
         if(altitude > previousAltitude)
@@ -134,7 +132,7 @@ void calculate_lift(gsm_inmemory_db &db, int &bFixesIterator, int &iterator)
 
             tablePhiLift.emplace_back(previousId);
             scoresLift.emplace_back(1.0);
-            tablePhiLift.emplace_back(dataId);
+            tablePhiLift.emplace_back(bFix.id);
             scoresLift.emplace_back(1.0);
 
             create_fast(db, ++iterator, {"lift"}, {std::to_string(diffAltitude)}, {scoresLift},
@@ -153,7 +151,7 @@ void calculate_lift(gsm_inmemory_db &db, int &bFixesIterator, int &iterator)
             newLiftSeries = true;
         }
         previousAltitude = altitude;
-        previousId = dataId;
+        previousId = bFix.id;
     }
     create_fast(db, ++iterator, {"lifts"}, {}, {scoresLifts}, {{"lift_series", {tablePhiLifts}}});
 }
@@ -161,7 +159,9 @@ void calculate_lift(gsm_inmemory_db &db, int &bFixesIterator, int &iterator)
 //https://github.com/chrisveness/latlon-geohash/blob/master/latlon-geohash.js
 std::string geohash_encode(double lat, double lon)
 {
-    const int precision = 7; // ~153m x 153m grid
+    // 7 = ~153m x 153m grid
+    // 6 = ~1200m x 610m grid
+    const int precision = 6;
     const std::string base32 = "0123456789bcdefghjkmnpqrstuvwxyz";
     int idx = 0;
     int bit = 0;
@@ -231,7 +231,6 @@ std::string weather_curl(std::string URL)
     CURL *curl;
     CURLcode res;
     struct curl_slist *headers = NULL;
-    std::ostringstream oss;
     headers = curl_slist_append(headers, "Accept: application/json");
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, "charset: utf-8");
@@ -254,6 +253,45 @@ std::string weather_curl(std::string URL)
         }
     }
     curl_slist_free_all(headers);
+    return 0;
+}
+
+int vcweather_load(gsm_inmemory_db &db, int &iterator, double lat, double lon, std::time_t start)
+{
+    std::string geoHashString = geohash_encode(lat, lon);
+    int result;
+    std::string fileName = "_" + geoHashString + "_" + std::to_string(start) + ".json";
+    std::string vcPath = "/home/neo/gsm_gsql/json_files/vc" + fileName;
+    if(std::filesystem::exists(vcPath))
+    {
+
+        std::string path = "/home/neo/gsm_gsql/json_files/vc" + fileName;
+        load_jsonEllXiFile(db, path, iterator, {"currentConditions"}, "weather_vc");
+        result = iterator;
+    }
+    else
+    {
+        std::ifstream fileAnother("/home/neo/gsm_gsql/api_keys/visualcrossing.txt");
+        std::string visualCrossingApiKey;
+        fileAnother >> visualCrossingApiKey;
+
+        std::stringstream vc;
+        vc << "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"
+           << lat << ',' << lon
+           << '/' << start
+           << "?key=" << visualCrossingApiKey
+           << "&include=current";
+
+
+        std::string url = vc.str();
+        std::string weatherString = weather_curl(url);
+
+        std::ofstream vcFile("/home/neo/gsm_gsql/json_files/vc" + fileName);
+        vcFile << weatherString;
+        result = iterator;
+        load_jsonEllXiData(db, weatherString, iterator, {"currentConditions"}, "weather_vc");
+    }
+    return result;
 }
 
 std::vector<int> weather_load(gsm_inmemory_db &db, int &iterator, double lat, double lon, std::time_t start)
@@ -333,14 +371,14 @@ int generate_weatherbucket(gsm_inmemory_db& db, int bFixesIterator, int& iterato
         double lat;
         double lon;
 
-        for (auto &data: db.O[bFix.id].phi["data"])
+        for(int i = 0; i < db.O[bFix.id].ell.size(); i++)
         {
-            if (db.O[data.id].ell[0] == "latitude_double") {
-                lat = stod(db.O[data.id].xi[0]);
-            } else if (db.O[data.id].ell[0] == "longitude_double") {
-                lon = stod(db.O[data.id].xi[0]);
-            } else if (db.O[data.id].ell[0] == "unix_time") {
-                unixTime = stoll(db.O[data.id].xi[0]);
+            if (db.O[bFix.id].ell[i] == "latitude_double") {
+                lat = stod(db.O[bFix.id].xi[i]);
+            } else if (db.O[bFix.id].ell[i] == "longitude_double") {
+                lon = stod(db.O[bFix.id].xi[i]);
+            } else if (db.O[bFix.id].ell[i] == "unix_time") {
+                unixTime = stoll(db.O[bFix.id].xi[i]);
                 unixTime = unixTime - (unixTime % 3600);
             }
         }
@@ -353,15 +391,28 @@ int generate_weatherbucket(gsm_inmemory_db& db, int bFixesIterator, int& iterato
             db.O[ghIterator].phi[geoHashCombo].emplace_back(iterator);
             db.O[ghIterator].scores.emplace_back(1.0);
 
-            std::vector<int> weatherBucket = weather_load(db, iterator, lat, lon, unixTime);
+            /*std::vector<int> weatherBucket = weather_load(db, iterator, lat, lon, unixTime);
             for(auto &wb : weatherBucket)
             {
                 db.O[ghIterator].phi[geoHashCombo].emplace_back(wb);
                 db.O[ghIterator].scores.emplace_back(1.0);
-            }
+            }*/
+            db.O[iterator].phi["bFix"].emplace_back(bFix.id);
+            db.O[iterator].scores.emplace_back(1.0);
+
+            int weatherBucket = vcweather_load(db, iterator, lat, lon, unixTime);
+            int id = db.O[ghIterator].phi[geoHashCombo].at(0).id;
+
+            db.O[id].phi["weather"].emplace_back(weatherBucket);
+            db.O[id].scores.emplace_back(1.0);
         }
-        db.O[iterator].phi["data"].emplace_back(bFix.id);
-        db.O[iterator].scores.emplace_back(1.0);
+        else
+        {
+            int id = db.O[ghIterator].phi[geoHashCombo].at(0).id;
+            db.O[id].phi["bFix"].emplace_back(bFix.id);
+            db.O[id].scores.emplace_back(1.0);
+        }
+
     }
     return ghIterator;
 }
@@ -383,17 +434,68 @@ int generate_weatherbucket(gsm_inmemory_db& db, int bFixesIterator, int& iterato
 
 //VC
 
-void weather_operator(gsm_inmemory_db &db, int &iterator, int geoHashesIterator)
+void export_csv(gsm_inmemory_db &db, int &iterator, int geoHashesIterator)
 {
+    std::string headers;
+    bool getHeaders = true;
+    std::ofstream fileOut("/home/neo/gsm_gsql/csv_files/test.csv");
     for(auto& [geoHashString, geoHashVector] : db.O[geoHashesIterator].phi)
     {
-        std::string csvLine = "";
-        std::cout << "ghS:" << geoHashString << '\n';
-        for(auto& gsmObj : geoHashVector)
+        std::string weatherLine = "";
+        std::vector<int> bFixes;
+
+        for(auto& geoHash : geoHashVector)
         {
-            //std::cout << db.O[gsmObj.id].ell << '\n';
-            std::cout << db.O[gsmObj.id].xi << '\n';
+            size_t weather = db.O[geoHash.id].phi["weather"].at(0).id;
+            if(getHeaders)
+            {
+                headers += db.O[weather].ell[0];
+                headers += ',';
+            }
+            weatherLine += std::to_string(weather);
+            weatherLine += ',';
+            for(int i = 1; i < db.O[weather].ell.size(); i++)
+            {
+                weatherLine += db.O[weather].xi[i];
+                weatherLine += ',';
+                if(getHeaders)
+                {
+                    headers += db.O[weather].ell[i];
+                    headers += ',';
+                }
+            }
+
+            for(auto& bFix : db.O[geoHash.id].phi["bFix"])
+            {
+                std::string csvLine = weatherLine;
+                if(getHeaders)
+                {
+                    headers += db.O[bFix.id].ell[0];
+                    headers += ',';
+                }
+                csvLine += std::to_string(bFix.id);
+                csvLine += ',';
+                for(int i = 1; i < db.O[bFix.id].ell.size(); i++)
+                {
+                    csvLine += db.O[bFix.id].xi[i];
+                    csvLine += ',';
+                    if(getHeaders)
+                    {
+                        headers += db.O[bFix.id].ell[i];
+                        headers += ',';
+                    }
+                }
+                if(getHeaders)
+                {
+                    headers.pop_back(); // remove last comma ,
+                    fileOut << headers << '\n';
+                    getHeaders = false;
+                }
+                csvLine.pop_back(); //remove last comma ,
+                fileOut << csvLine << '\n';
+            }
         }
     }
+
 }
 #endif //GSM_GSQL_IGC_OPERATORS_H
