@@ -103,31 +103,44 @@ int load_igcfile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
 
     std::vector<gsm_object_xi_content> tablePhiBfixes = {};
     std::vector<double> scoresBfixes = {};
-    int nodeNumber = 0;
     //get flight nodes
     for(std::string line; std::getline(stream, line);)
     {
         if(line.at(0) == 'B')
         {
+            create_fast(db, ++iterator, {"b_fix"}, {""});
             std::vector<gsm_object_xi_content> tablePhiBfix = {};
             std::vector<double> scoresBfix = {};
+
             std::string time = line.substr(1,6);
-            put_db(db, iterator, tablePhiBfix, scoresBfix, "time", time);
+            //put_db(db, iterator, tablePhiBfix, scoresBfix, "time", time);
+            //db.O[iterator].ell.push_back("time");
+            //db.O[iterator].xi.push_back(time);
 
             std::string latitude = line.substr(7,8);
-            put_db(db, iterator, tablePhiBfix, scoresBfix, "latitude", latitude);
+            //put_db(db, iterator, tablePhiBfix, scoresBfix, "latitude", latitude);
+            //db.O[iterator].ell.push_back("latitude");
+            //db.O[iterator].xi.push_back(latitude);
 
             std::string longitude = line.substr(15,9);
-            put_db(db, iterator, tablePhiBfix, scoresBfix, "longitude", longitude);
+            //put_db(db, iterator, tablePhiBfix, scoresBfix, "longitude", longitude);
+            //db.O[iterator].ell.push_back("longitude");
+            //db.O[iterator].xi.push_back(longitude);
 
             std::string fixValidity = line.substr(24,1);
-            put_db(db, iterator, tablePhiBfix, scoresBfix, "fixValidity", fixValidity);
+            //put_db(db, iterator, tablePhiBfix, scoresBfix, "fixValidity", fixValidity);
+            //db.O[iterator].ell.push_back("fixValidity");
+            //db.O[iterator].xi.push_back(fixValidity);
 
             std::string pressureAltitude = line.substr(25, 5);
-            put_db(db, iterator, tablePhiBfix, scoresBfix, "pressure_altitude", pressureAltitude);
+            //put_db(db, iterator, tablePhiBfix, scoresBfix, "pressure_altitude", pressureAltitude);
+            db.O[iterator].ell.push_back("pressure_altitude");
+            db.O[iterator].xi.push_back(pressureAltitude);
 
             std::string gnssAltitude = line.substr(30, 5);
-            put_db(db, iterator, tablePhiBfix, scoresBfix, "gnss_altitude", gnssAltitude);
+            //put_db(db, iterator, tablePhiBfix, scoresBfix, "gnss_altitude", gnssAltitude);
+            //db.O[iterator].ell.push_back("gnss_altitude");
+            //db.O[iterator].xi.push_back(gnssAltitude);
 
             std::tm t{};
             std::istringstream ss(date + time);
@@ -138,7 +151,9 @@ int load_igcfile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
                 throw std::runtime_error{"fail to parse fullDate"};
             }
             std::time_t timeStamp = mktime(&t);
-            put_db(db, iterator, tablePhiBfix, scoresBfix, "unix_time", std::to_string(timeStamp));
+            //put_db(db, iterator, tablePhiBfix, scoresBfix, "unix_time", std::to_string(timeStamp));
+            db.O[iterator].ell.push_back("unix_time");
+            db.O[iterator].xi.push_back(std::to_string(timeStamp));
 
             double latDegrees = (double) stoi(latitude.substr(0, 2));
             double latMinutes = (double) stoi(latitude.substr(2, 5));
@@ -146,7 +161,9 @@ int load_igcfile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
             latMinutes = (latMinutes*10)/6;
             int latSign = (latitude.at(7) == 'N' ? 1 : -1);
             double latitudeDouble = (latDegrees + latMinutes) * latSign;
-            put_db(db, iterator, tablePhiBfix, scoresBfix, "latitude_double", std::to_string(latitudeDouble));
+            //put_db(db, iterator, tablePhiBfix, scoresBfix, "latitude_double", std::to_string(latitudeDouble));
+            db.O[iterator].ell.push_back("latitude_double");
+            db.O[iterator].xi.push_back(std::to_string(latitudeDouble));
 
             double longDegrees = (double) stoi(longitude.substr(0, 3));
             double longMinutes = (double) stoi(longitude.substr(3, 5));
@@ -154,13 +171,14 @@ int load_igcfile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
             longMinutes = (longMinutes*10)/6;
             int longSign = (longitude.at(8) == 'E' ? 1 : -1);
             double longitudeDouble = (longDegrees + longMinutes) * longSign;
-            put_db(db, iterator, tablePhiBfix, scoresBfix, "longitude_double", std::to_string(longitudeDouble));
+            //put_db(db, iterator, tablePhiBfix, scoresBfix, "longitude_double", std::to_string(longitudeDouble));
+            db.O[iterator].ell.push_back("longitude_double");
+            db.O[iterator].xi.push_back(std::to_string(longitudeDouble));
 
-            create_fast(db, ++iterator, {"b_fix"}, {std::to_string(nodeNumber)}, {scoresBfix},
-                        {{{"data"}, {tablePhiBfix}}});
+            //create_fast(db, ++iterator, {"b_fix"}, {std::to_string(nodeNumber)}, {scoresBfix},
+            //            {{{"data"}, {tablePhiBfix}}});
             tablePhiBfixes.emplace_back(iterator);
             scoresBfixes.emplace_back(1.0);
-            nodeNumber++;
         }
     }
     create_fast(db, ++iterator, {"b_fixes"}, {}, {scoresBfixes}, {{"b_fix", {tablePhiBfixes}}});
@@ -193,12 +211,17 @@ int main() {
     int iterator = 0;
 
     std::string csvPath = "/home/neo/gsm_gsql/csv_files/";
-    std::string jsonPath = "/home/neo/gsm_gsql/json_files/example3.json";
+    std::string jsonPath = "/home/neo/gsm_gsql/json_files/vc_6dk65ff_1673719200.json";
     std::string igcPath = "/home/neo/gsm_gsql/igc_files/example1.igc";
+
+    //load_jsonEllXiFile(db, jsonPath, iterator, {"currentConditions"}, "weather");
+
+
     int nwm = load_igcfile(db, igcPath, iterator);
     calculate_lift(db, nwm, iterator);
     int geoHashesIterator = generate_weatherbucket(db, nwm, iterator);
-    //weather_operator(db, iterator, geoHashesIterator);
+    export_csv(db, iterator, geoHashesIterator);
+
     //load_csvdb(db, csvPath, iterator);
     //load_jsonfile(db, jsonPath, iterator);
     //load_csvfile(db, csvPath + "customers-1.csv", iterator);
@@ -221,6 +244,7 @@ int main() {
 
     // Dumping the db into a XML format
     dump_to_xml(db, idx, "/home/neo/gsm_gsql/test.xml");
+    std::cout << sizeof(db) << '\n';
     std::cout << "Hello, World!" << std::endl;
     return 0;
 }
