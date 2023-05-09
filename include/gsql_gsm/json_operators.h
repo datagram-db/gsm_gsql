@@ -52,7 +52,7 @@ void json_ellxi(gsm_inmemory_db& db, json data, int &iterator)
             if(std::find(ignore.begin(), ignore.end(), it.key()) != ignore.end())
                 continue;
             std::string ell = (data.is_array() ? "previousKey" : it.key());
-            std::string xi = to_string(it.value());
+            std::string xi = (to_string(it.value()) == "null" ? "0" : to_string(it.value()));
             db.O[iterator].ell.push_back(ell);
             db.O[iterator].xi.push_back(xi);
         }
@@ -61,7 +61,7 @@ void json_ellxi(gsm_inmemory_db& db, json data, int &iterator)
 }
 
 static inline
-void load_jsonEllXiFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator, std::vector<std::string> specific = {}, std::string ell = "")
+int load_jsonEllXiFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator, std::vector<std::string> specific = {}, std::string ell = "")
 {
     json data;
     std::ifstream f(pathToFile);
@@ -73,10 +73,11 @@ void load_jsonEllXiFile(gsm_inmemory_db &db, std::string pathToFile, int &iterat
     int objIterator = iterator;
     for(auto& it : specific)
         json_ellxi(db, data[it], objIterator);
+    return objIterator;
 }
 
 static inline
-void load_jsonEllXiData(gsm_inmemory_db &db, std::string jsonData, int &iterator, std::vector<std::string> specific = {}, std::string ell = "")
+int load_jsonEllXiData(gsm_inmemory_db &db, std::string jsonData, int &iterator, std::vector<std::string> specific = {}, std::string ell = "")
 {
     json data;
     data = json::parse(jsonData);
@@ -87,6 +88,7 @@ void load_jsonEllXiData(gsm_inmemory_db &db, std::string jsonData, int &iterator
     int objIterator = iterator;
     for(auto& it : specific)
         json_ellxi(db, data[it], objIterator);
+    return objIterator;
 }
 
 

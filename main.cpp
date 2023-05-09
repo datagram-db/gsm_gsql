@@ -95,8 +95,10 @@ int load_igcfile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
     {
         if(line.substr(0,5) == "HFDTE")
         {
-            date = line.substr(line.length()-7, 4) + "20" + line.substr(line.length()-3, 2);
-            put_db(db, iterator, tablePhiIgc, scoresIgc, "date", {line.substr(5, 6)});
+            if(line.at(line.size()-1) == '\r' || line.at(line.size()-1) == '\n')
+                line.pop_back();
+            date = line.substr(line.length()-6, 4) + "20" + line.substr(line.length()-2, 2);
+            put_db(db, iterator, tablePhiIgc, scoresIgc, "date", {line.substr(line.length()-6, 6)});
             break;
         }
     }
@@ -185,7 +187,7 @@ int load_igcfile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
     int bFixesIterator = iterator;
 
     tablePhiIgc.emplace_back(iterator);
-    tablePhiIgc.emplace_back(1.0);
+    scoresIgc.emplace_back(1.0);
     create_fast(db, ++iterator, {"igc_file"}, {pathToFile}, {scoresIgc}, {{"fixes", {tablePhiIgc}}});
     return bFixesIterator;
 }
@@ -202,7 +204,6 @@ void LoadGraph(gsm_inmemory_db &db, int &iterator, std::vector<std::string> &gra
     }
 }
 
-
 int main() {
 
     // Database initialisation, with an empty root
@@ -212,15 +213,14 @@ int main() {
 
     std::string csvPath = "/home/neo/gsm_gsql/csv_files/";
     std::string jsonPath = "/home/neo/gsm_gsql/json_files/vc_6dk65ff_1673719200.json";
-    std::string igcPath = "/home/neo/gsm_gsql/igc_files/example1.igc";
+    std::string igcPath = "/home/neo/gsm_gsql/igc_files/10k.igc";
 
     //load_jsonEllXiFile(db, jsonPath, iterator, {"currentConditions"}, "weather");
 
-
-    int nwm = load_igcfile(db, igcPath, iterator);
-    calculate_lift(db, nwm, iterator);
-    int geoHashesIterator = generate_weatherbucket(db, nwm, iterator);
-    export_csv(db, iterator, geoHashesIterator);
+    int bFixesIterator = load_igcfile(db, igcPath, iterator);
+    int liftsIterator = calculate_lift(db, bFixesIterator, iterator);
+    calculate_bearing_change(db, bFixesIterator);
+    int geoHashesIterator = generate_weatherbucket(db, bFixesIterator, iterator);
 
     //load_csvdb(db, csvPath, iterator);
     //load_jsonfile(db, jsonPath, iterator);
@@ -242,9 +242,11 @@ int main() {
     idx.init(db);
     idx.valid_data();
 
+    std::string csvOutputFileName = "lift10k.csv";
+    export_csv(db, iterator, geoHashesIterator, liftsIterator, idx, csvOutputFileName);
+
     // Dumping the db into a XML format
-    dump_to_xml(db, idx, "/home/neo/gsm_gsql/test.xml");
-    std::cout << sizeof(db) << '\n';
+    dump_to_xml(db, idx, "/home/neo/gsm_gsql/question_mark.xml");
     std::cout << "Hello, World!" << std::endl;
     return 0;
 }

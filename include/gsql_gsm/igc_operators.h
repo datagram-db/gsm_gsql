@@ -21,26 +21,25 @@ inline double to_degrees(double radians)
 //for finding circles for thermals
 //https://github.com/marcin-osowski/igc_lib/blob/master/igc_lib.py
 static inline
-void calculate_bearing_change(gsm_inmemory_db &db, int &nodesIterator)
+void calculate_bearing_change(gsm_inmemory_db &db, int &bFixIterator)
 {
     double previousLong = '\0';
     double previousLat = '\0';
     long long previousTime = '\0';
     double previousBearing = '\0';
-
-    for(auto &bFix : db.O[nodesIterator].phi["b_fix"])
+    for(auto &bFix : db.O[bFixIterator].phi["b_fix"])
     {
         double nowLong;
         double nowLat;
         long long nowTime;
-        for(auto &data : db.O[bFix.id].phi["data"])
+        for(int i = 0; i < db.O[bFix.id].ell.size(); i++)
         {
-            if(db.O[data.id].ell[0] == "latitude_double")
-                nowLat = stod(db.O[data.id].xi[0]);
-            else if(db.O[data.id].ell[0] == "longitude_double")
-                nowLong = stod(db.O[data.id].xi[0]);
-            else if(db.O[data.id].ell[0] == "unix_time")
-                nowTime = stoll(db.O[data.id].xi[0]);
+            if(db.O[bFix.id].ell[i] == "latitude_double")
+                nowLat = stod(db.O[bFix.id].xi[i]);
+            else if(db.O[bFix.id].ell[i] == "longitude_double")
+                nowLong = stod(db.O[bFix.id].xi[i]);
+            else if(db.O[bFix.id].ell[i] == "unix_time")
+                nowTime = stoll(db.O[bFix.id].xi[i]);
             else
                 continue;
         }
@@ -49,6 +48,8 @@ void calculate_bearing_change(gsm_inmemory_db &db, int &nodesIterator)
             previousLat = nowLat;
             previousLong = nowLong;
             previousTime = nowTime;
+            db.O[bFix.id].ell.push_back("bearing_rate");
+            db.O[bFix.id].xi.push_back(std::to_string(0));
             continue;
         }
 
@@ -70,6 +71,8 @@ void calculate_bearing_change(gsm_inmemory_db &db, int &nodesIterator)
         if(previousBearing == '\0')
         {
             previousBearing = bearing;
+            db.O[bFix.id].ell.push_back("bearing_rate");
+            db.O[bFix.id].xi.push_back(std::to_string(0));
         }
         else
         {
@@ -82,16 +85,15 @@ void calculate_bearing_change(gsm_inmemory_db &db, int &nodesIterator)
                     bearingChange -= 360.0;
             }
             double changeRate = bearingChange/timeDiff;
-            std::cout << "chng:" << changeRate << std::endl;
+            db.O[bFix.id].ell.push_back("bearing_rate");
+            db.O[bFix.id].xi.push_back(std::to_string(changeRate));
         }
 
     }
 }
 
-
-
 static inline
-void calculate_lift(gsm_inmemory_db &db, int &bFixesIterator, int &iterator)
+int calculate_lift(gsm_inmemory_db &db, int &bFixesIterator, int &iterator)
 {
     std::vector<gsm_object_xi_content> tablePhiLifts = {};
     std::vector<double> scoresLifts = {};
@@ -100,7 +102,8 @@ void calculate_lift(gsm_inmemory_db &db, int &bFixesIterator, int &iterator)
     int previousId;
     int previousAltitude = '\0';
     bool newLiftSeries = true;
-
+    //TODO:delete
+    int counter = 0;
     for(auto &bFix : db.O[bFixesIterator].phi["b_fix"])
     {
         int altitude;
@@ -134,11 +137,11 @@ void calculate_lift(gsm_inmemory_db &db, int &bFixesIterator, int &iterator)
             scoresLift.emplace_back(1.0);
             tablePhiLift.emplace_back(bFix.id);
             scoresLift.emplace_back(1.0);
-
+            counter++;
             create_fast(db, ++iterator, {"lift"}, {std::to_string(diffAltitude)}, {scoresLift},
-                        {{"altitudes", {tablePhiLift}}});
-            tablePhiLiftSeries.push_back(iterator);
-            scoresLiftSeries.push_back(1.0);
+                        {{"b_fix", {tablePhiLift}}});
+            tablePhiLiftSeries.emplace_back(iterator);
+            scoresLiftSeries.emplace_back(1.0);
         }
         else
         {
@@ -154,6 +157,8 @@ void calculate_lift(gsm_inmemory_db &db, int &bFixesIterator, int &iterator)
         previousId = bFix.id;
     }
     create_fast(db, ++iterator, {"lifts"}, {}, {scoresLifts}, {{"lift_series", {tablePhiLifts}}});
+    std::cout << "count of lifts added:" << counter << '\n';
+    return iterator;
 }
 
 //https://github.com/chrisveness/latlon-geohash/blob/master/latlon-geohash.js
@@ -264,10 +269,8 @@ int vcweather_load(gsm_inmemory_db &db, int &iterator, double lat, double lon, s
     std::string vcPath = "/home/neo/gsm_gsql/json_files/vc" + fileName;
     if(std::filesystem::exists(vcPath))
     {
-
         std::string path = "/home/neo/gsm_gsql/json_files/vc" + fileName;
-        load_jsonEllXiFile(db, path, iterator, {"currentConditions"}, "weather_vc");
-        result = iterator;
+        result = load_jsonEllXiFile(db, path, iterator, {"currentConditions"}, "weather_vc");
     }
     else
     {
@@ -282,14 +285,12 @@ int vcweather_load(gsm_inmemory_db &db, int &iterator, double lat, double lon, s
            << "?key=" << visualCrossingApiKey
            << "&include=current";
 
-
         std::string url = vc.str();
         std::string weatherString = weather_curl(url);
 
         std::ofstream vcFile("/home/neo/gsm_gsql/json_files/vc" + fileName);
         vcFile << weatherString;
-        result = iterator;
-        load_jsonEllXiData(db, weatherString, iterator, {"currentConditions"}, "weather_vc");
+        result = load_jsonEllXiData(db, weatherString, iterator, {"currentConditions"}, "weather_vc");
     }
     return result;
 }
@@ -366,7 +367,7 @@ int generate_weatherbucket(gsm_inmemory_db& db, int bFixesIterator, int& iterato
     create_fast(db, ++iterator, {"geohashes"});
     int ghIterator = iterator;
     long long unixTime;
-    for (auto &bFix: db.O[bFixesIterator].phi["b_fix"])
+    for(auto &bFix: db.O[bFixesIterator].phi["b_fix"])
     {
         double lat;
         double lon;
@@ -391,28 +392,21 @@ int generate_weatherbucket(gsm_inmemory_db& db, int bFixesIterator, int& iterato
             db.O[ghIterator].phi[geoHashCombo].emplace_back(iterator);
             db.O[ghIterator].scores.emplace_back(1.0);
 
-            /*std::vector<int> weatherBucket = weather_load(db, iterator, lat, lon, unixTime);
-            for(auto &wb : weatherBucket)
-            {
-                db.O[ghIterator].phi[geoHashCombo].emplace_back(wb);
-                db.O[ghIterator].scores.emplace_back(1.0);
-            }*/
-            db.O[iterator].phi["bFix"].emplace_back(bFix.id);
+            db.O[iterator].phi["b_fix"].emplace_back(bFix.id);
             db.O[iterator].scores.emplace_back(1.0);
 
             int weatherBucket = vcweather_load(db, iterator, lat, lon, unixTime);
-            int id = db.O[ghIterator].phi[geoHashCombo].at(0).id;
+            int id = db.O[ghIterator].phi[geoHashCombo][0].id;
 
             db.O[id].phi["weather"].emplace_back(weatherBucket);
             db.O[id].scores.emplace_back(1.0);
         }
         else
         {
-            int id = db.O[ghIterator].phi[geoHashCombo].at(0).id;
-            db.O[id].phi["bFix"].emplace_back(bFix.id);
+            int id = db.O[ghIterator].phi[geoHashCombo][0].id;
+            db.O[id].phi["b_fix"].emplace_back(bFix.id);
             db.O[id].scores.emplace_back(1.0);
         }
-
     }
     return ghIterator;
 }
@@ -434,11 +428,18 @@ int generate_weatherbucket(gsm_inmemory_db& db, int bFixesIterator, int& iterato
 
 //VC
 
-void export_csv(gsm_inmemory_db &db, int &iterator, int geoHashesIterator)
+void export_csv(gsm_inmemory_db& db, int &iterator, int geoHashesIterator, int liftsIterator, gsm_db_indices& idx, std::string csvFileName)
 {
     std::string headers;
     bool getHeaders = true;
-    std::ofstream fileOut("/home/neo/gsm_gsql/csv_files/test.csv");
+    std::string fn = "/home/neo/gsm_gsql/csv_files/" + csvFileName;
+    std::ofstream fileOut(fn);
+    //TODO:delete
+    int counter = 0;
+    int sumOfBfix = 0;
+    int sumOfLiftSizes = 0;
+    std::vector<std::string> ignoreIgc = {}; // "latitude_double", "longitude_double", "unix_time"
+
     for(auto& [geoHashString, geoHashVector] : db.O[geoHashesIterator].phi)
     {
         std::string weatherLine = "";
@@ -454,6 +455,7 @@ void export_csv(gsm_inmemory_db &db, int &iterator, int geoHashesIterator)
             }
             weatherLine += std::to_string(weather);
             weatherLine += ',';
+
             for(int i = 1; i < db.O[weather].ell.size(); i++)
             {
                 weatherLine += db.O[weather].xi[i];
@@ -465,18 +467,45 @@ void export_csv(gsm_inmemory_db &db, int &iterator, int geoHashesIterator)
                 }
             }
 
-            for(auto& bFix : db.O[geoHash.id].phi["bFix"])
+            for(auto& bFix : db.O[geoHash.id].phi["b_fix"])
             {
-                std::string csvLine = weatherLine;
-                if(getHeaders)
+                bool isInLift = false;
+                sumOfBfix++;
+                /*
+                for(auto& lift_series : db.O[liftsIterator].phi["lift_series"])
                 {
-                    headers += db.O[bFix.id].ell[0];
-                    headers += ',';
+                    //TODO:delete
+                    size_t dst = idx.containedBy.addUniqueStateOrGetExisting(db.O[lift_series.id].phi["lift"][0].id);
+                    for(auto const& it : idx.containedBy.outgoingEdgesById2(idx.containedBy.addUniqueStateOrGetExisting(bFix.id)))
+                    {
+                        if(it.second == dst)
+                        {
+                            //TODO:delete
+                            counter++;
+                            isInLift = true;
+                        }
+                    }
+                    if(isInLift)
+                        break;
+                }*/
+                size_t liftSeriesId = db.O[liftsIterator].phi["lift_series"][0].id;
+                size_t dst = idx.containedBy.addUniqueStateOrGetExisting(db.O[liftSeriesId].phi["lift"][0].id);
+                for(auto const& it : idx.containedBy.outgoingEdgesById2(idx.containedBy.addUniqueStateOrGetExisting(bFix.id)))
+                {
+                    if(it.second == dst)
+                    {
+                        //TODO:delete
+                        counter++;
+                        isInLift = true;
+                        break;
+                    }
                 }
-                csvLine += std::to_string(bFix.id);
-                csvLine += ',';
+
+                std::string csvLine = weatherLine;
                 for(int i = 1; i < db.O[bFix.id].ell.size(); i++)
                 {
+                    if(std::find(ignoreIgc.begin(), ignoreIgc.end(), db.O[bFix.id].ell[i]) != ignoreIgc.end())
+                        continue;
                     csvLine += db.O[bFix.id].xi[i];
                     csvLine += ',';
                     if(getHeaders)
@@ -485,17 +514,36 @@ void export_csv(gsm_inmemory_db &db, int &iterator, int geoHashesIterator)
                         headers += ',';
                     }
                 }
+
+                headers += "lift";
+                csvLine += (isInLift ? '1' : '0');
+
                 if(getHeaders)
                 {
-                    headers.pop_back(); // remove last comma ,
                     fileOut << headers << '\n';
                     getHeaders = false;
                 }
-                csvLine.pop_back(); //remove last comma ,
                 fileOut << csvLine << '\n';
             }
         }
     }
-
+    //TODO:delete
+    std::cout << "counter_export_csv:" << counter << '\n';
+    std::cout << "sum of bfix in geohash:" << sumOfBfix << '\n';
+    int liftInLiftSeries = 0;
+    std::set<size_t> bfigzIdset;
+    for(auto &lifto_series : db.O[liftsIterator].phi["lift_series"])
+    {
+        for(auto& lifto : db.O[lifto_series.id].phi["lift"])
+        {
+            liftInLiftSeries++;
+            for(auto& bfigz : db.O[lifto.id].phi["b_fix"])
+            {
+                bfigzIdset.insert(bfigz.id);
+            }
+        }
+    }
+    std::cout << "lift in lift series count:" << liftInLiftSeries << '\n';
+    std::cout << "unique bfix.id in each lift object:" << bfigzIdset.size() << '\n';
 }
 #endif //GSM_GSQL_IGC_OPERATORS_H
