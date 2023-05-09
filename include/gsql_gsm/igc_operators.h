@@ -471,7 +471,7 @@ void export_csv(gsm_inmemory_db& db, int &iterator, int geoHashesIterator, int l
             {
                 bool isInLift = false;
                 sumOfBfix++;
-                /*
+
                 for(auto& lift_series : db.O[liftsIterator].phi["lift_series"])
                 {
                     //TODO:delete
@@ -487,18 +487,6 @@ void export_csv(gsm_inmemory_db& db, int &iterator, int geoHashesIterator, int l
                     }
                     if(isInLift)
                         break;
-                }*/
-                size_t liftSeriesId = db.O[liftsIterator].phi["lift_series"][0].id;
-                size_t dst = idx.containedBy.addUniqueStateOrGetExisting(db.O[liftSeriesId].phi["lift"][0].id);
-                for(auto const& it : idx.containedBy.outgoingEdgesById2(idx.containedBy.addUniqueStateOrGetExisting(bFix.id)))
-                {
-                    if(it.second == dst)
-                    {
-                        //TODO:delete
-                        counter++;
-                        isInLift = true;
-                        break;
-                    }
                 }
 
                 std::string csvLine = weatherLine;
