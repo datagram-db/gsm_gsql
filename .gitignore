@@ -1,2 +1,8 @@
 /cmake-build-debug/
 /dist/
+/json_files/
+/csv_files/
+/bench_files/
+/graph_files/
+/igc_files/
+/python/
