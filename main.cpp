@@ -12,11 +12,8 @@
 #include "submodules/yaucl/submodules/rapidcsv/src/rapidcsv.h"
 #include <nlohmann/json.hpp>
 #include <filesystem>
-#include <curl/curl.h>
-
 #include <chrono>
-#include "sys/types.h"
-#include "sys/sysinfo.h"
+
 
 using json = nlohmann::json;
 
@@ -211,11 +208,9 @@ int main() {
     // global iterator keeping track of gsm ids
     int iterator = 0;
 
-    std::string csvPath = "/home/neo/gsm_gsql/csv_files/";
-    std::string jsonPath = "/home/neo/gsm_gsql/json_files/vc_6dk65ff_1673719200.json";
-    std::string igcPath = "/home/neo/gsm_gsql/igc_files/10k.igc";
-
-    //load_jsonEllXiFile(db, jsonPath, iterator, {"currentConditions"}, "weather");
+    std::string csvPath = "csv_files/";
+    std::string jsonPath = "json_files/vc_6dk65ff_1673719200.json";
+    std::string igcPath = "igc_files/long2.igc";
 
     int bFixesIterator = load_igcfile(db, igcPath, iterator);
     int liftsIterator = calculate_lift(db, bFixesIterator, iterator);
@@ -243,10 +238,12 @@ int main() {
     idx.valid_data();
 
     std::string csvOutputFileName = "lift10k.csv";
-    export_csv(db, iterator, geoHashesIterator, liftsIterator, idx, csvOutputFileName);
+    export_csv(db, iterator, geoHashesIterator, liftsIterator, idx, csvOutputFileName,
+               {"cloudcover", "dew", "feelslike", "humidity", "precip", "precipprob", "preciptype", "pressure", "severerisk", "snow", "snowdepth", "solarenergy", "solarradiation", "temp", "uvindex", "visibility", "weather_vc", "winddir", "windgust", "windspeed"},
+               {"bearing_rate", "latitude_double", "longitude_double", "pressure_altitude", "unix_time"},
+               {"lift","isbeginlift"});
 
     // Dumping the db into a XML format
-    dump_to_xml(db, idx, "/home/neo/gsm_gsql/question_mark.xml");
-    std::cout << "Hello, World!" << std::endl;
+    dump_to_xml(db, idx, "question_mark.xml");
     return 0;
 }

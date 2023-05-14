@@ -11,7 +11,8 @@
 #include <curl/curl.h>
 #include <gsql_gsm/gsm_inmemory_db.h>
 #include <gsql_gsm/json_operators.h>
-
+#include <yaucl/strings/serializers.h>
+#include <unordered_map>
 inline double to_degrees(double radians)
 {
     return radians * (180.0 / M_PI);
@@ -102,8 +103,6 @@ int calculate_lift(gsm_inmemory_db &db, int &bFixesIterator, int &iterator)
     int previousId;
     int previousAltitude = '\0';
     bool newLiftSeries = true;
-    //TODO:delete
-    int counter = 0;
     for(auto &bFix : db.O[bFixesIterator].phi["b_fix"])
     {
         int altitude;
@@ -137,7 +136,6 @@ int calculate_lift(gsm_inmemory_db &db, int &bFixesIterator, int &iterator)
             scoresLift.emplace_back(1.0);
             tablePhiLift.emplace_back(bFix.id);
             scoresLift.emplace_back(1.0);
-            counter++;
             create_fast(db, ++iterator, {"lift"}, {std::to_string(diffAltitude)}, {scoresLift},
                         {{"b_fix", {tablePhiLift}}});
             tablePhiLiftSeries.emplace_back(iterator);
@@ -157,7 +155,6 @@ int calculate_lift(gsm_inmemory_db &db, int &bFixesIterator, int &iterator)
         previousId = bFix.id;
     }
     create_fast(db, ++iterator, {"lifts"}, {}, {scoresLifts}, {{"lift_series", {tablePhiLifts}}});
-    std::cout << "count of lifts added:" << counter << '\n';
     return iterator;
 }
 
@@ -266,15 +263,15 @@ int vcweather_load(gsm_inmemory_db &db, int &iterator, double lat, double lon, s
     std::string geoHashString = geohash_encode(lat, lon);
     int result;
     std::string fileName = "_" + geoHashString + "_" + std::to_string(start) + ".json";
-    std::string vcPath = "/home/neo/gsm_gsql/json_files/vc" + fileName;
+    std::string vcPath = "json_files/vc" + fileName;
     if(std::filesystem::exists(vcPath))
     {
-        std::string path = "/home/neo/gsm_gsql/json_files/vc" + fileName;
+        std::string path = "json_files/vc" + fileName;
         result = load_jsonEllXiFile(db, path, iterator, {"currentConditions"}, "weather_vc");
     }
     else
     {
-        std::ifstream fileAnother("/home/neo/gsm_gsql/api_keys/visualcrossing.txt");
+        std::ifstream fileAnother("api_keys/visualcrossing.txt");
         std::string visualCrossingApiKey;
         fileAnother >> visualCrossingApiKey;
 
@@ -288,7 +285,7 @@ int vcweather_load(gsm_inmemory_db &db, int &iterator, double lat, double lon, s
         std::string url = vc.str();
         std::string weatherString = weather_curl(url);
 
-        std::ofstream vcFile("/home/neo/gsm_gsql/json_files/vc" + fileName);
+        std::ofstream vcFile("json_files/vc" + fileName);
         vcFile << weatherString;
         result = load_jsonEllXiData(db, weatherString, iterator, {"currentConditions"}, "weather_vc");
     }
@@ -300,25 +297,25 @@ std::vector<int> weather_load(gsm_inmemory_db &db, int &iterator, double lat, do
     std::string geoHashString = geohash_encode(lat, lon);
     std::vector<int> result;
     std::string fileName = "_" + geoHashString + "_" + std::to_string(start) + ".json";
-    std::string owPath = "/home/neo/gsm_gsql/json_files/ow" + fileName;
-    std::string vcPath = "/home/neo/gsm_gsql/json_files/vc" + fileName;
+    std::string owPath = "json_files/ow" + fileName;
+    std::string vcPath = "json_files/vc" + fileName;
     if(std::filesystem::exists(owPath) || std::filesystem::exists(vcPath))
     {
-        std::string path = "/home/neo/gsm_gsql/json_files/ow" + fileName;
+        std::string path = "json_files/ow" + fileName;
         result.push_back(iterator);
         load_jsonfile(db, path, iterator, "0", "weather_ow");
 
-        path = "/home/neo/gsm_gsql/json_files/vc" + fileName;
+        path = "json_files/vc" + fileName;
         result.push_back(iterator);
         load_jsonfile(db, path, iterator, "currentConditions", "weather_vc");
     }
     else
     {
-        std::ifstream file("/home/neo/gsm_gsql/api_keys/openweather.txt");
+        std::ifstream file("api_keys/openweather.txt");
         std::string openWeatherApiKey;
         file >> openWeatherApiKey;
 
-        std::ifstream fileAnother("/home/neo/gsm_gsql/api_keys/visualcrossing.txt");
+        std::ifstream fileAnother("api_keys/visualcrossing.txt");
         std::string visualCrossingApiKey;
         fileAnother >> visualCrossingApiKey;
 
@@ -342,7 +339,7 @@ std::vector<int> weather_load(gsm_inmemory_db &db, int &iterator, double lat, do
         std::string weatherString = weather_curl(url);
         std::cout << weatherString << std::endl;
 
-        std::ofstream owFile("/home/neo/gsm_gsql/json_files/ow" + fileName);
+        std::ofstream owFile("json_files/ow" + fileName);
         owFile << weatherString;
         result.push_back(iterator);
         load_jsondata(db, weatherString, iterator, "weather_ow", "0");
@@ -352,7 +349,7 @@ std::vector<int> weather_load(gsm_inmemory_db &db, int &iterator, double lat, do
         weatherString = weather_curl(url);
         std::cout << weatherString << std::endl;
 
-        std::ofstream vcFile("/home/neo/gsm_gsql/json_files/vc" + fileName);
+        std::ofstream vcFile("json_files/vc" + fileName);
         vcFile << weatherString;
         result.push_back(iterator);
         load_jsondata(db, weatherString, iterator, "weather_vc", "currentConditions");
@@ -411,127 +408,99 @@ int generate_weatherbucket(gsm_inmemory_db& db, int bFixesIterator, int& iterato
     return ghIterator;
 }
 
-/*
- * OW FILE NAME: ow_{geohash}_{unixtime}.json
- * WHAT TO EXTRACT:
- * json -> list -> 0 -> main -> [temp,..]
- *                   -> wind -> [speed,...]
- *                   -> clouds -> [all]
- * 1. in json
- *
- *
- * VC FILE NAME: vc_{geohash}_{unixtime}.json
- * WHAT TO EXTRACT:
- * everything from currentConditions
- * json -> currentConditions -> [temp,wind,...]
- */
-
-//VC
-
-void export_csv(gsm_inmemory_db& db, int &iterator, int geoHashesIterator, int liftsIterator, gsm_db_indices& idx, std::string csvFileName)
+void export_csv(gsm_inmemory_db& db,
+                int &iterator,
+                int geoHashesIterator,
+                int liftsIterator,
+                gsm_db_indices& idx,
+                std::string csvFileName,
+                const std::set<std::string>& left = {},
+                const std::set<std::string>& right = {},
+                const std::set<std::string>& additional = {})
 {
-    std::string headers;
     bool getHeaders = true;
-    std::string fn = "/home/neo/gsm_gsql/csv_files/" + csvFileName;
+    std::string fn = "csv_files/" + csvFileName;
     std::ofstream fileOut(fn);
-    //TODO:delete
-    int counter = 0;
-    int sumOfBfix = 0;
-    int sumOfLiftSizes = 0;
-    std::vector<std::string> ignoreIgc = {}; // "latitude_double", "longitude_double", "unix_time"
+    std::unordered_map<std::string, std::string> row;
+    std::vector<std::string> header{left.begin(), left.end()};
+    header.insert(header.end(), right.begin(), right.end());
+    header.insert(header.end(), additional.begin(), additional.end());
 
     for(auto& [geoHashString, geoHashVector] : db.O[geoHashesIterator].phi)
     {
-        std::string weatherLine = "";
         std::vector<int> bFixes;
 
         for(auto& geoHash : geoHashVector)
         {
             size_t weather = db.O[geoHash.id].phi["weather"].at(0).id;
-            if(getHeaders)
-            {
-                headers += db.O[weather].ell[0];
-                headers += ',';
-            }
-            weatherLine += std::to_string(weather);
-            weatherLine += ',';
+            if (left.contains(db.O[weather].ell[0]))
+                row[db.O[weather].ell[0]] = std::to_string(weather);
 
             for(int i = 1; i < db.O[weather].ell.size(); i++)
             {
-                weatherLine += db.O[weather].xi[i];
-                weatherLine += ',';
                 if(getHeaders)
                 {
-                    headers += db.O[weather].ell[i];
-                    headers += ',';
+                    if (left.contains(db.O[weather].ell[i]))
+                        row[db.O[weather].ell[i]] = (db.O[weather].xi[i]);
                 }
             }
 
             for(auto& bFix : db.O[geoHash.id].phi["b_fix"])
             {
                 bool isInLift = false;
-                sumOfBfix++;
-
+                bool isBeginLift = false;
                 for(auto& lift_series : db.O[liftsIterator].phi["lift_series"])
                 {
-                    //TODO:delete
-                    size_t dst = idx.containedBy.addUniqueStateOrGetExisting(db.O[lift_series.id].phi["lift"][0].id);
-                    for(auto const& it : idx.containedBy.outgoingEdgesById2(idx.containedBy.addUniqueStateOrGetExisting(bFix.id)))
-                    {
-                        if(it.second == dst)
+                    size_t count = 0;
+                    for (auto& liftPart : db.O[lift_series.id].phi["lift"]) {
+                        size_t dst = idx.containedBy.addUniqueStateOrGetExisting(liftPart.id);
+                        for(auto const& it : idx.containedBy.outgoingEdgesById2(idx.containedBy.addUniqueStateOrGetExisting(bFix.id)))
                         {
-                            //TODO:delete
-                            counter++;
-                            isInLift = true;
+                            if(it.second == dst)
+                            {
+                                isInLift = true;
+                                if(count == 0)
+                                    isBeginLift = true;
+                            }
+                            if(isInLift)
+                                break;
                         }
+                        if(isInLift)
+                            break;
+                        count++;
                     }
                     if(isInLift)
                         break;
                 }
-
-                std::string csvLine = weatherLine;
                 for(int i = 1; i < db.O[bFix.id].ell.size(); i++)
                 {
-                    if(std::find(ignoreIgc.begin(), ignoreIgc.end(), db.O[bFix.id].ell[i]) != ignoreIgc.end())
-                        continue;
-                    csvLine += db.O[bFix.id].xi[i];
-                    csvLine += ',';
-                    if(getHeaders)
-                    {
-                        headers += db.O[bFix.id].ell[i];
-                        headers += ',';
-                    }
+                    if (right.contains(db.O[bFix.id].ell[i]))
+                        row[db.O[bFix.id].ell[i]] =(db.O[bFix.id].xi[i]);
                 }
-
-                headers += "lift";
-                csvLine += (isInLift ? '1' : '0');
-
+                row["lift"] = (isInLift ? "1" : "0");
+                row["isbeginlift"] = (isBeginLift ? "1" : "0");
                 if(getHeaders)
                 {
-                    fileOut << headers << '\n';
+                    for (auto it = header.begin(), en = header.end(); it != en; )
+                    {
+                        fileOut << *it;
+                        it++;
+                        if (it != en)
+                            fileOut << ",";
+                    }
+                    fileOut << '\n';
                     getHeaders = false;
                 }
-                fileOut << csvLine << '\n';
+                for (auto it = header.begin(), en = header.end(); it != en; )
+                {
+                    fileOut << row[*it];
+                    it++;
+                    if (it != en)
+                        fileOut << ",";
+                }
+                fileOut << '\n';
             }
         }
     }
-    //TODO:delete
-    std::cout << "counter_export_csv:" << counter << '\n';
-    std::cout << "sum of bfix in geohash:" << sumOfBfix << '\n';
-    int liftInLiftSeries = 0;
-    std::set<size_t> bfigzIdset;
-    for(auto &lifto_series : db.O[liftsIterator].phi["lift_series"])
-    {
-        for(auto& lifto : db.O[lifto_series.id].phi["lift"])
-        {
-            liftInLiftSeries++;
-            for(auto& bfigz : db.O[lifto.id].phi["b_fix"])
-            {
-                bfigzIdset.insert(bfigz.id);
-            }
-        }
-    }
-    std::cout << "lift in lift series count:" << liftInLiftSeries << '\n';
-    std::cout << "unique bfix.id in each lift object:" << bfigzIdset.size() << '\n';
 }
 #endif //GSM_GSQL_IGC_OPERATORS_H
