@@ -1,0 +1,3 @@
+[submodule "submodules/yaucl"]
+	path = submodules/yaucl
+	url = git@github.com:datagramdb/yaucl.git
