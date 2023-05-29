@@ -27,37 +27,6 @@ char* haspos(char* text, char* BASE, int pos, size_t* len) {
 
 
 /**
- *  surfto()
- * Dato un campo di testo \a text, si vuole cercare dal suo inizio il carattere
- * base: verrà restituita la posizione successiva al ritrovamento del carattere,
- * altrimenti NULL
- */
-char*
-surfto(char* text, char base, int text_size)
-{
-    int i;
-    for (i=0; i<text_size; i++)
-        if (text[i]==base) return &text[i+1];
-    return nullptr;
-}
-
-
-
-/**
- *  atreturns()
- *
- * FUNZIONE DI PARSING/LEXING
- * --------------------------
- * Restituisce eventualmente il puntatore alla stringa dopo due andate a capo
- */
-char* atreturns(char* buf,int len) {
-    int  end=0;
-    for (end=0; end<len; end++)
-        if ((end>0)&&(buf[end]==buf[end-1])&&(buf[end]=='\n')) return &buf[end+1];
-    return nullptr;
-}
-
-/**
  *  atreturn()
  *
  * FUNZIONE DI PARSING/LEXING
@@ -89,18 +58,25 @@ void parse(char* string, size_t len, gsm2::tables::LinearGSM& forloading) {
     size_t noLabel = forloading.label_map.put("").first;
     double weight; size_t content;
     size_t act_id = noLabel;
-    size_t scanSkip = 0;
+    int scanSkip = 0;
+    constexpr char const * ID = "id:";
+    constexpr char const * DOT = ".";
+    constexpr char const * ELL = "ell:";
+    constexpr char const * XI = "xi:";
+    constexpr char const * PROP = "properties:";
+    constexpr char const * PHI = "phi:";
     size_t id;
     // Defining a simple format to scan, so to avoid using a parser for this.
-    while (string) {
+    while (string && *string) {
+        // Reading a new object from the database for value querying
         id = 0;
         ell.clear();
-        if (!(string = haspos(string, "id:", 0, &len))) return;
+        if (!(string = haspos(string, (char*)ID, 0, &len))) return;
         if (sscanf(string, "%lu%n", &id, &scanSkip)==EOF) return;
         len-=scanSkip;
         string+=scanSkip;
         if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string, "ell:", 0, &len))) return;
+        if (!(string = haspos(string,  (char*)ELL, 0, &len))) return;
         act_id = noLabel;
 
         if (!(string = atreturn(string, &len))) return;
@@ -118,7 +94,7 @@ void parse(char* string, size_t len, gsm2::tables::LinearGSM& forloading) {
         }
         string++; len--;
         if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string, "xi:", 0, &len))) return;
+        if (!(string = haspos(string,  (char*)XI, 0, &len))) return;
         // Setting up the new object
         forloading.main_registry.load_record(graphId, act_id, id);
 
@@ -137,7 +113,7 @@ void parse(char* string, size_t len, gsm2::tables::LinearGSM& forloading) {
         }
         string++; len--;
         if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string, "properties:", 0, &len))) return;
+        if (!(string = haspos(string,  (char*)PROP, 0, &len))) return;
 
         if (!(string = atreturn(string, &len))) return;
         if (!(string = skipSpaces(string, &len))) return;
@@ -155,7 +131,7 @@ void parse(char* string, size_t len, gsm2::tables::LinearGSM& forloading) {
         }
         string++; len--;
         if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string, "phi:", 0, &len))) return;
+        if (!(string = haspos(string,  (char*)PHI, 0, &len))) return;
 
         if (!(string = atreturn(string, &len))) return;
         if (!(string = skipSpaces(string, &len))) return;
@@ -177,11 +153,14 @@ void parse(char* string, size_t len, gsm2::tables::LinearGSM& forloading) {
             len--;
             if (!(string = skipSpaces(string, &len))) return;
         }
+        string++;
+        len--;
         if (!(string = skipSpaces(string, &len))) return;
 
         if (strncmp(string,"~~",2)==0) {
             // Finding a new graph
             graphId++; string+=2; len-=2;
+            if (!(string = skipSpaces(string, &len))) return;
         }
     }
     // TODO: indexing
