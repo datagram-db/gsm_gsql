@@ -90,8 +90,10 @@ void parse(char* string, size_t len, gsm2::tables::LinearGSM& forloading) {
     double weight; size_t content;
     size_t act_id = noLabel;
     size_t scanSkip = 0;
+    size_t id;
+    // Defining a simple format to scan, so to avoid using a parser for this.
     while (string) {
-        size_t id = 200;
+        id = 0;
         ell.clear();
         if (!(string = haspos(string, "id:", 0, &len))) return;
         if (sscanf(string, "%lu%n", &id, &scanSkip)==EOF) return;
