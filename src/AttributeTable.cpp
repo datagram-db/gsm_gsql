@@ -44,8 +44,10 @@ namespace gsm2 {
         }
 
         void
-        AttributeTable::record_load(size_t act_id, const std::variant<double, size_t, long long int, std::string, bool> &val,
-                                    size_t tid, size_t eid) {
+        AttributeTable::record_load(size_t act_id,
+                                    const std::variant<double, size_t, long long int, std::string, bool> &val,
+                                    size_t tid,
+                                    size_t eid) {
 //            DEBUG_ASSERT(assertVariant(val));
             while (elements.size() <= act_id)
                 elements.emplace_back();

@@ -3,6 +3,7 @@ project(gsm2)
 
 include_directories(include)
 include_directories(submodules/yaucl/include)
+include_directories(submodules/yaucl/submodules/json/include)
 
 set(CMAKE_CXX_STANDARD 23)
 

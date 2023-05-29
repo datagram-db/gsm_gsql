@@ -194,3 +194,28 @@ void SimplifiedFuzzyStringMatching::fuzzyMatch(double threshold, size_t topk, co
     // providing the final result
     toReturnTop.getPoll(result);
 }
+
+void
+FuzzyMatchSerializer::addGramsToMap(const std::string &string, size_t id, const std::vector<std::string> &associatedOtherStrings) {
+    if (string.empty()) return;
+    SLHM_Primary_store(termObject, string, id);
+    objectMultipleStirngs[id].emplace_back(string);
+    for (const std::string& x : associatedOtherStrings)
+        objectMultipleStirngs[id].emplace_back(x);
+
+    std::unordered_map<std::string,size_t> cp;
+    std::vector<size_t> vec;
+
+    compareStringHashmap2(string, cp, vec);
+    size_t sum = 0;
+    for (size_t& j : vec) {
+        sum += j;
+    }
+    SLHM_Primary_store(objectGramSize, string, sum);
+
+    for (auto & begin : cp) {
+        std::string x = begin.first;
+        StringToTwoGramSizeHashMultimapIndexer_store(twogramAndStringMultiplicity, string, x, begin.second);
+        SLHM_Primary_store(gramToObject, x, id);
+    }
+}

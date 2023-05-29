@@ -46,5 +46,50 @@ private:
 };
 
 
+#include <codecvt>
+
+class FuzzyMatchSerializer {
+    std::hash<std::string> hfunc;
+    std::map<size_t, std::vector<std::pair<std::string, std::vector<size_t>>>> gramToObject, objectGramSize, termObject;
+    std::map<size_t, std::vector<std::string>> objectMultipleStirngs;
+    std::map<size_t, std::vector<std::pair<std::string, std::vector<std::pair<std::string, size_t>>>>> twogramAndStringMultiplicity;
+//    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+
+    inline void SLHM_Primary_store(std::map<size_t, std::vector<std::pair<std::string, std::vector<size_t>>>>& ordered_multimap, const std::string &elem, size_t value) {
+        auto& hashKey = ordered_multimap[hfunc(elem)];
+//        Node<LONG_NUMERIC, std::pair<std::string, std::vector<LONG_NUMERIC>>> *hashKey = ordered_multimap.insertKey(hfunc(elem));
+        if (!hashKey.empty()) {
+            for (std::pair<std::string, std::vector<size_t>> &x : hashKey) {
+                if (x.first == elem) {
+                    x.second.emplace_back(value);
+                    return;
+                }
+            }
+        }
+        std::vector<size_t> element;
+        element.push_back(value);
+        hashKey.emplace_back(elem, element);
+    }
+    inline void StringToTwoGramSizeHashMultimapIndexer_store(std::map<size_t, std::vector<std::pair<std::string, std::vector<std::pair<std::string, size_t>>>>>& ordered_multimap, const std::string &elem, const std::string &twogram, size_t value) {
+        auto&hashKey = ordered_multimap[hfunc(elem)];
+        if (!hashKey.empty()) {
+            for (std::pair<std::string, std::vector<std::pair<std::string, size_t>>> &x : hashKey) {
+                if (x.first == elem) {
+                    x.second.emplace_back(twogram, value);
+                    return;
+                }
+            }
+        }
+        std::vector<std::pair<std::string, size_t>> element;
+        element.emplace_back(twogram, value);
+        hashKey.emplace_back(elem, element);
+    }
+public:
+    // TODO: approximate fuzzy matching for this!
+    void addGramsToMap(const std::string &string,
+                       size_t id,
+                       const std::vector<std::string> &associatedOtherStrings);
+};
+
 
 #endif //KNOBAB_SIMPLIFIEDFUZZYSTRINGMATCHING_H

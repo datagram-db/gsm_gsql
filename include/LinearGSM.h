@@ -13,9 +13,10 @@
 namespace gsm2 {
     namespace tables {
         struct LinearGSM {
+            yaucl::structures::any_to_uint_bimap<std::string> label_map;
             std::unordered_map<std::string, PhiTable> containment_tables;
             std::unordered_map<std::string, AttributeTable> KeyValueContainment;
-            SimplifiedFuzzyStringMatching ell_values, xi_values;
+            FuzzyMatchSerializer ell_values, xi_values; //TODO: proper version, with multiple values associated to the string!
             ActivityTable                main_registry;
 
             // TODO : Loading from file representation
