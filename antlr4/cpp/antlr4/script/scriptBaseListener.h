@@ -43,6 +43,9 @@ public:
   virtual void enterLt(scriptParser::LtContext * /*ctx*/) override { }
   virtual void exitLt(scriptParser::LtContext * /*ctx*/) override { }
 
+  virtual void enterProject(scriptParser::ProjectContext * /*ctx*/) override { }
+  virtual void exitProject(scriptParser::ProjectContext * /*ctx*/) override { }
+
   virtual void enterPut(scriptParser::PutContext * /*ctx*/) override { }
   virtual void exitPut(scriptParser::PutContext * /*ctx*/) override { }
 

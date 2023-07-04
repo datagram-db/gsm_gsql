@@ -93,6 +93,8 @@ namespace script {
             std::any visitSubtype_of(scriptParser::Subtype_ofContext *context) override;
             std::any visitType_or(scriptParser::Type_orContext *context) override;
             std::any visitType_and(scriptParser::Type_andContext *context) override;
+
+            std::any visitProject(scriptParser::ProjectContext *context) override;
         };
 
     } // script

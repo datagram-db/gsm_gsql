@@ -69,6 +69,7 @@ namespace script::structures {
         CeilE,
         ConcatE,
         GtE,
+        ProjectE,
         LtE,
         GEqE,
         LEqE,

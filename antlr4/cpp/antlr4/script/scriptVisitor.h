@@ -37,6 +37,8 @@ public:
 
     virtual std::any visitLt(scriptParser::LtContext *context) = 0;
 
+    virtual std::any visitProject(scriptParser::ProjectContext *context) = 0;
+
     virtual std::any visitPut(scriptParser::PutContext *context) = 0;
 
     virtual std::any visitDiv(scriptParser::DivContext *context) = 0;

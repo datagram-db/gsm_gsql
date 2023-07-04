@@ -197,6 +197,9 @@ std::string script::structures::ScriptAST::toString(bool quot) const {
         case AtE:
             return "" + arrayList[0]->toString(true) +"  ["+ arrayList[1]->toString(true)+"]";
 
+        case ProjectE:
+            return "" + arrayList[0]->toString(true) +"  [["+ arrayList[1]->toString(true)+"]]";
+
         case PutE:
             return "" + arrayList[0]->toString(true) +"  ["+ arrayList[1]->toString(true)+"]:= ("+ arrayList[2]->toString(true)+")";
 
@@ -537,6 +540,43 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
         case ApplyE:
         case AtE:
             return arrayList[0]->toFunction()(arrayList[1]->run());
+
+        case ProjectE: {
+            auto run = arrayList[0]->run();
+            auto run2 = arrayList[1]->toList();
+            if (run->type == String) {
+                std::string compose;
+                size_t N = run->string.size();
+                for (const auto& idx : run2) {
+                    size_t actual = idx->toInteger();
+                    if (actual < N)
+                        compose += run->string.at(actual);
+                }
+                return string_(compose);
+            } else if ((run->type == Tuple) || (run->type == TupleT)) {
+                StringMap<DPtr<script::structures::ScriptAST>> result;
+                for (const auto& key : run2) {
+                    auto songs = key->toString();
+                    auto it = run->tuple.find(songs);
+                    if (it != run->tuple.end())
+                        result[songs] = it->second;
+                }
+                if (run->type == TupleT)
+                    return tuple_type_(std::move(result));
+                else
+                    return tuple_(std::move(result));
+            } else {
+                auto ls = run->toList();
+                ArrayList<DPtr<script::structures::ScriptAST>> result;
+                size_t N = ls.size();
+                for (const auto& key: run2) {
+                    size_t actual = key->toInteger();
+                    if (actual < N)
+                        result.emplace_back(ls[actual]);
+                }
+                return array_(std::move(ls));
+            }
+        }
 
         case PutE:
         {
@@ -1068,6 +1108,32 @@ std::ptrdiff_t script::structures::ScriptAST::javaComparator(const DPtr<ScriptAS
 
         case Variable:
             return variableEval()->javaComparator(object->variableEval());
+
+        case Array:
+            return int_lexicographical_compare(arrayList.begin(), arrayList.end(),
+                                               object->arrayList.begin(), object->arrayList.end(),
+                                               [](const auto& x, auto& y) {return x->javaComparator(y);});
+
+        case Tuple:
+        case TupleT: {
+            std::vector<std::pair<std::string, DPtr<script::structures::ScriptAST>>> left, right;
+            for (const auto&[k,v] : tuple) {
+                left.emplace_back(k, v);
+            }
+            for (const auto&[k,v] : object->tuple) {
+                right.emplace_back(k, v);
+            }
+            auto f = [](const std::pair<std::string, DPtr<script::structures::ScriptAST>>& x,
+                         const std::pair<std::string, DPtr<script::structures::ScriptAST>>& y) {
+                return (x.first < y.first) || ((x.first==y.first) && (x.second->javaComparator(y.second)));
+            };
+            std::sort(left.begin(), left.end(), f);
+            std::sort(right.begin(), right.end(), f);
+            return int_lexicographical_compare(left.begin(), left.end(),
+                                               right.begin(), right.end(),
+                                               f);
+        }
+
 
         default:
             return int_lexicographical_compare(function->body.begin(), function->body.end(),

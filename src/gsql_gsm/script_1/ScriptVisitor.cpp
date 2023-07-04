@@ -570,9 +570,11 @@ namespace script {
             return result;
         }
 
-//        std::any ScriptVisitor::visitStar(scriptParser::StarContext *context) {
-//            return std::any();
-//        }
+        std::any ScriptVisitor::visitProject(scriptParser::ProjectContext *context) {
+            auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(0)));
+            auto rx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(1)));
+            return {script::structures::ScriptAST::binop_(this->context, script::structures::t::ProjectE, std::move(lx), std::move(rx))};
+        }
 
     } // script
 } // compiler

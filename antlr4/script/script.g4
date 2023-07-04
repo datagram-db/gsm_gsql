@@ -62,6 +62,7 @@ expr : '(' expr ')'                          #paren
      | IF expr THEN expr ELSE expr     #ifte
      | 'sub(' expr ',' expr ':' expr ')' #substring
      | expr '[' expr ']'                    #at
+     | expr '[[' expr ']]'                    #project
      | expr '[' expr ']:=' expr             #put
      | expr 'in' expr                       #contains
      | REMOVE expr FROM expr            #remove

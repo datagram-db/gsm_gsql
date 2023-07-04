@@ -51,6 +51,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitProject(scriptParser::ProjectContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitPut(scriptParser::PutContext *ctx) override {
     return visitChildren(ctx);
   }

@@ -41,6 +41,9 @@ public:
   virtual void enterLt(scriptParser::LtContext *ctx) = 0;
   virtual void exitLt(scriptParser::LtContext *ctx) = 0;
 
+  virtual void enterProject(scriptParser::ProjectContext *ctx) = 0;
+  virtual void exitProject(scriptParser::ProjectContext *ctx) = 0;
+
   virtual void enterPut(scriptParser::PutContext *ctx) = 0;
   virtual void exitPut(scriptParser::PutContext *ctx) = 0;
 

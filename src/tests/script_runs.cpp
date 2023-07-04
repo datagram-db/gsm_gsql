@@ -26,7 +26,7 @@ TEST_F(simple_scripts, second) {
 TEST_F(simple_scripts, third) {
     std::ifstream file{scripts_folder / "script_03.txt"};
     ASSERT_STREQ(script::compiler::ScriptVisitor::eval(file)->toString().c_str(),
-                 "{\"H\", \"e\", \"l\", \"l\", \"o\", \",\", \" \", \"w\", \"o\", \"r\", \"l\", \"d\", \"!\"}");
+                 "{\"H\"; \"e\"; \"l\"; \"l\"; \"o\"; \",\"; \" \"; \"w\"; \"o\"; \"r\"; \"l\"; \"d\"; \"!\"}");
 }
 
 TEST_F(simple_scripts, fourth) {
@@ -39,4 +39,16 @@ TEST_F(simple_scripts, fifth) {
     std::ifstream file{scripts_folder / "script_05.txt"};
     ASSERT_STREQ(script::compiler::ScriptVisitor::eval(file)->toString().c_str(),
                  "tt");
+}
+
+TEST_F(simple_scripts, sixth) {
+    std::ifstream file{scripts_folder / "script_06.txt"};
+    ASSERT_STREQ(script::compiler::ScriptVisitor::eval(file)->toString().c_str(),
+                 "tt");
+}
+
+TEST_F(simple_scripts, seventh) {
+    std::ifstream file{scripts_folder / "script_07.txt"};
+    ASSERT_STREQ(script::compiler::ScriptVisitor::eval(file)->toString().c_str(),
+                 "ff");
 }

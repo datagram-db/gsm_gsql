@@ -378,7 +378,7 @@ int main() {
     std::filesystem::path scripts_folder = std::filesystem::current_path().parent_path() / "data" / "script";
     gsm_inmemory_db database;
     script::compiler::ScriptVisitor::bindGSM(&database);
-    std::ifstream file{scripts_folder / "script_05.txt"};
+    std::ifstream file{scripts_folder / "script_06.txt"};
     std::cout << script::compiler::ScriptVisitor::eval(file)->toString() << std::endl;
     return 0;
 }
