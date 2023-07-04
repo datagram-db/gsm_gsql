@@ -53,6 +53,8 @@ public:
 
     virtual std::any visitAdd(scriptParser::AddContext *context) = 0;
 
+    virtual std::any visitSubtype_of(scriptParser::Subtype_ofContext *context) = 0;
+
     virtual std::any visitType_bool(scriptParser::Type_boolContext *context) = 0;
 
     virtual std::any visitEnsure(scriptParser::EnsureContext *context) = 0;
@@ -74,6 +76,8 @@ public:
     virtual std::any visitEq(scriptParser::EqContext *context) = 0;
 
     virtual std::any visitType_tuple(scriptParser::Type_tupleContext *context) = 0;
+
+    virtual std::any visitType_or(scriptParser::Type_orContext *context) = 0;
 
     virtual std::any visitSigma_type(scriptParser::Sigma_typeContext *context) = 0;
 
@@ -126,6 +130,8 @@ public:
     virtual std::any visitInj(scriptParser::InjContext *context) = 0;
 
     virtual std::any visitApply(scriptParser::ApplyContext *context) = 0;
+
+    virtual std::any visitType_and(scriptParser::Type_andContext *context) = 0;
 
     virtual std::any visitCross(scriptParser::CrossContext *context) = 0;
 

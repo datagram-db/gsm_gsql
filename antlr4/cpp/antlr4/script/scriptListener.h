@@ -65,6 +65,9 @@ public:
   virtual void enterAdd(scriptParser::AddContext *ctx) = 0;
   virtual void exitAdd(scriptParser::AddContext *ctx) = 0;
 
+  virtual void enterSubtype_of(scriptParser::Subtype_ofContext *ctx) = 0;
+  virtual void exitSubtype_of(scriptParser::Subtype_ofContext *ctx) = 0;
+
   virtual void enterType_bool(scriptParser::Type_boolContext *ctx) = 0;
   virtual void exitType_bool(scriptParser::Type_boolContext *ctx) = 0;
 
@@ -97,6 +100,9 @@ public:
 
   virtual void enterType_tuple(scriptParser::Type_tupleContext *ctx) = 0;
   virtual void exitType_tuple(scriptParser::Type_tupleContext *ctx) = 0;
+
+  virtual void enterType_or(scriptParser::Type_orContext *ctx) = 0;
+  virtual void exitType_or(scriptParser::Type_orContext *ctx) = 0;
 
   virtual void enterSigma_type(scriptParser::Sigma_typeContext *ctx) = 0;
   virtual void exitSigma_type(scriptParser::Sigma_typeContext *ctx) = 0;
@@ -175,6 +181,9 @@ public:
 
   virtual void enterApply(scriptParser::ApplyContext *ctx) = 0;
   virtual void exitApply(scriptParser::ApplyContext *ctx) = 0;
+
+  virtual void enterType_and(scriptParser::Type_andContext *ctx) = 0;
+  virtual void exitType_and(scriptParser::Type_andContext *ctx) = 0;
 
   virtual void enterCross(scriptParser::CrossContext *ctx) = 0;
   virtual void exitCross(scriptParser::CrossContext *ctx) = 0;

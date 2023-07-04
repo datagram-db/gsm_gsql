@@ -329,10 +329,7 @@ void LoadGraph(gsm_inmemory_db_view &db,
     }
 }
 
-
-
-
-int main() {
+void old_main() {
 
     // Database initialisation, with an empty root
     auto actual = std::make_shared<gsm_inmemory_db>();
@@ -368,6 +365,21 @@ int main() {
     // Dumping the db into a XML format
     dump_to_xml(*db.db, idx, "test.xml");
     std::cout << "Hello, World!" << std::endl;
+//    return 0;
+}
+
+#include <gsql_gsm/script_1/ScriptVisitor.h>
+#include <gsql_gsm/script_1/ScriptAST.h>
+#include <fstream>
+#include <filesystem>
+#include <gtest/gtest.h>
+
+int main() {
+    std::filesystem::path scripts_folder = std::filesystem::current_path().parent_path() / "data" / "script";
+    gsm_inmemory_db database;
+    script::compiler::ScriptVisitor::bindGSM(&database);
+    std::ifstream file{scripts_folder / "script_05.txt"};
+    std::cout << script::compiler::ScriptVisitor::eval(file)->toString() << std::endl;
     return 0;
 }
 

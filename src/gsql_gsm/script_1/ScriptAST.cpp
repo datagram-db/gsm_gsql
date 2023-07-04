@@ -92,18 +92,26 @@ long long script::structures::ScriptAST::toInteger()   {
 std::string script::structures::ScriptAST::toString(bool quot) const {
     std::string result;
     switch (type) {
+        case BooleanT:
+            return "bool";
         case Boolean:
             return bool_ ? "tt" : "ff";
         case Integer:
             return std::to_string(integer);
+        case IntegerT:
+            return "int";
         case Double:
             return std::to_string(doubleValue_);
+        case DoubleT:
+            return "double";
         case String:
             if (quot) {
                 std::stringstream ss;
                 ss << std::quoted(string);
                 return ss.str();
             } else return string;
+        case StringT:
+            return "string";
         case Assignment:
             return arrayList[0]->toString(true) +" := ("+arrayList[1]->toString(true)+") ";
         case Function:
@@ -119,7 +127,6 @@ std::string script::structures::ScriptAST::toString(bool quot) const {
                                     return (m.empty() ? m : m+"; ") + obj->toString(true);
                                 }) + "}";
             }
-
         case Array:
             if (arrayList.size() == 1)
                 return "{" + arrayList[0]->toString(true) + "}";
@@ -130,17 +137,47 @@ std::string script::structures::ScriptAST::toString(bool quot) const {
                 return "{" + std::accumulate(it,
                                              arrayList.end(), std::string(""),
                                                                        [](const std::string& m, DPtr<script::structures::ScriptAST> obj) {
-                                                                           return (m.empty() ? m : m+", ") + obj->toString(true);
+                                                                           return (m.empty() ? m : m+"; ") + obj->toString(true);
                                                                        }) + "}";
+            }
+        case ArrayOfT:
+            return "listof (" + arrayList[0]->toString(true) +")";
+        case TupleT:
+        case Tuple:
+            if (tuple.size() == 1) {
+                auto it = tuple.begin();
+                std::stringstream ss;
+                if (type == TupleT)
+                    ss << "t< ";
+                else
+                    ss << "< ";
+                ss <<std::quoted(it->first) << " >> " << it->second->toString(true) << " >";
+                return ss.str();
+            }
+            else
+            {
+                auto it = tuple.begin();
+//                it++;
+                return ((type == TupleT) ? "t< " : "< ") + std::accumulate(it,
+                                             tuple.end(), std::string(""),
+                                             [](const std::string& m, const std::pair<std::string,DPtr<script::structures::ScriptAST>>& obj) {
+                                                 std::stringstream ss;
+                                                 ss << std::quoted(obj.first) << " >> " << obj.second->toString(true);
+                                                 return (m.empty() ? m : m+"; ") + ss.str();
+                                             }) + " >";
             }
         case Variable:
             return string;
 
         case AndE:
             return "(" + arrayList[0]->toString(true) +") && ("+ arrayList[1]->toString(true)+")";
+        case ANDT:
+            return "(" + arrayList[0]->toString(true) +") /\\ ("+ arrayList[1]->toString(true)+")";
 
         case OrE:
             return "(" + arrayList[0]->toString(true) +") || ("+ arrayList[1]->toString(true)+")";
+        case ORT:
+            return "(" + arrayList[0]->toString(true) +") \\/ ("+ arrayList[1]->toString(true)+")";
 
         case NotE:
             return "!(" + arrayList[0]->toString(true) +")";
@@ -276,14 +313,7 @@ std::string script::structures::ScriptAST::toString(bool quot) const {
         case EvalE:
             return "eval (" + arrayList[0]->toString(true) +")";
 
-        case IntegerT:
-            return "int";
 
-        case DoubleT:
-            return "double";
-
-        case StringT:
-            return "string";
     }
     return "";
 }
@@ -979,7 +1009,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
         }
 
         case TypeOf: {
-            return typeInference();
+            return arrayList[0]->typeInference();
         }
 
         case AssertE:
@@ -1015,6 +1045,14 @@ std::ptrdiff_t script::structures::ScriptAST::javaComparator(const DPtr<ScriptAS
     std::ptrdiff_t cmp = ((std::ptrdiff_t)type) - ((std::ptrdiff_t)object->type);
     if (cmp != 0) return cmp;
     switch (type) {
+        case BooleanT:
+        case DoubleT:
+        case IntegerT:
+        case AnyT:
+        case StringT:
+        case StarT:
+            return cmp;
+
         case Boolean:
             return ((std::ptrdiff_t)bool_) - ((std::ptrdiff_t)object->bool_);
         case Integer:
@@ -1039,7 +1077,7 @@ std::ptrdiff_t script::structures::ScriptAST::javaComparator(const DPtr<ScriptAS
 }
 
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::typeInference() {
-    auto self = arrayList[0]->run();
+    auto self = run();
     switch (self->type) {
         case Variable:
             return variableEval()->typeInference();

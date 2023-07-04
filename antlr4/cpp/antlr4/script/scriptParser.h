@@ -20,13 +20,14 @@ public:
     T__32 = 33, T__33 = 34, T__34 = 35, T__35 = 36, T__36 = 37, T__37 = 38, 
     T__38 = 39, T__39 = 40, T__40 = 41, TYPEOF = 42, SIGMA = 43, ASSERT = 44, 
     STRINGT = 45, DOUBLET = 46, BOOLT = 47, INTT = 48, START = 49, KIND = 50, 
-    LISTT = 51, ALPAREN = 52, ARPAREN = 53, LPAREN = 54, RPAREN = 55, BOOL = 56, 
-    FUN = 57, NOT = 58, IF = 59, THEN = 60, ELSE = 61, REMOVE = 62, FROM = 63, 
-    LOG = 64, POW = 65, SIN = 66, COS = 67, TAN = 68, PHI = 69, ELL = 70, 
-    XI = 71, INJ = 72, OBJ = 73, FLAT = 74, SELFX = 75, VARPHI = 76, CROSS = 77, 
-    SCRIPT = 78, GSQL = 79, CREATEDB = 80, VARNAME = 81, CREATE = 82, ELECT = 83, 
-    MAP = 84, DISJOINT = 85, FOLD = 86, EscapedString = 87, NUMBER = 88, 
-    INTEGER = 89, SPACE = 90, COMMENT = 91, LINE_COMMENT = 92
+    LISTT = 51, SUBTYPE = 52, ALPAREN = 53, ARPAREN = 54, LPAREN = 55, RPAREN = 56, 
+    BOOL = 57, AND_TYPE = 58, OR_TYPE = 59, FUN = 60, NOT = 61, IF = 62, 
+    THEN = 63, ELSE = 64, REMOVE = 65, FROM = 66, LOG = 67, POW = 68, SIN = 69, 
+    COS = 70, TAN = 71, PHI = 72, ELL = 73, XI = 74, INJ = 75, OBJ = 76, 
+    FLAT = 77, SELFX = 78, VARPHI = 79, CROSS = 80, SCRIPT = 81, GSQL = 82, 
+    CREATEDB = 83, VARNAME = 84, CREATE = 85, ELECT = 86, MAP = 87, DISJOINT = 88, 
+    FOLD = 89, EscapedString = 90, NUMBER = 91, INTEGER = 92, SPACE = 93, 
+    COMMENT = 94, LINE_COMMENT = 95
   };
 
   enum {
@@ -284,6 +285,19 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
+  class  Subtype_ofContext : public ExprContext {
+  public:
+    Subtype_ofContext(ExprContext *ctx);
+
+    std::vector<ExprContext *> expr();
+    ExprContext* expr(size_t i);
+    antlr4::tree::TerminalNode *SUBTYPE();
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
   class  Type_boolContext : public ExprContext {
   public:
     Type_boolContext(ExprContext *ctx);
@@ -403,10 +417,22 @@ public:
   public:
     Type_tupleContext(ExprContext *ctx);
 
-    antlr4::tree::TerminalNode *ALPAREN();
     std::vector<Tuple_pairContext *> tuple_pair();
     Tuple_pairContext* tuple_pair(size_t i);
     antlr4::tree::TerminalNode *ARPAREN();
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Type_orContext : public ExprContext {
+  public:
+    Type_orContext(ExprContext *ctx);
+
+    std::vector<ExprContext *> expr();
+    ExprContext* expr(size_t i);
+    antlr4::tree::TerminalNode *OR_TYPE();
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
 
@@ -720,6 +746,19 @@ public:
 
     std::vector<ExprContext *> expr();
     ExprContext* expr(size_t i);
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Type_andContext : public ExprContext {
+  public:
+    Type_andContext(ExprContext *ctx);
+
+    std::vector<ExprContext *> expr();
+    ExprContext* expr(size_t i);
+    antlr4::tree::TerminalNode *AND_TYPE();
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
 

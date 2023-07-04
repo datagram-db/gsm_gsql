@@ -78,7 +78,7 @@ expr : '(' expr ')'                          #paren
      | LPAREN (expr ';')* expr RPAREN                     #atom_array
      | START                                #kind
      | ALPAREN (tuple_pair ';')* tuple_pair ARPAREN                     #atom_tuple
-     | 't' ALPAREN (tuple_pair ';')* tuple_pair ARPAREN                 #type_tuple
+     | 't<'  (tuple_pair ';')* tuple_pair ARPAREN                 #type_tuple
      | FUN VARNAME '->' LPAREN (expr ';')* expr RPAREN    #function
      | VARNAME                              #variable
      | 'map(' expr ':' expr ')'             #map

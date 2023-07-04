@@ -87,7 +87,9 @@ namespace script::structures {
         EvalE,
         AssertE,
         SigmaT,
-        StarT
+        StarT,
+        ANDT,
+        ORT
     };
 
     //// Generic object for expressions

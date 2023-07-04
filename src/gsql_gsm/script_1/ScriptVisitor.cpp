@@ -128,6 +128,7 @@ namespace script {
             return result;
         }
 
+
         std::any ScriptVisitor::visitFunction(scriptParser::FunctionContext *context) {
             auto f = std::make_shared<script::structures::Funzione>(this->context, context->VARNAME()->getText());
             for (const auto& child : context->expr()) {
@@ -478,7 +479,7 @@ namespace script {
         }
 
         std::any ScriptVisitor::visitType_string(scriptParser::Type_stringContext *context) {
-            return {script::structures::ScriptAST::integer_T()};
+            return {script::structures::ScriptAST::string_T()};
         }
 
         std::any ScriptVisitor::visitType_list(scriptParser::Type_listContext *context) {
@@ -540,11 +541,32 @@ namespace script {
             StringMap<DPtr<script::structures::ScriptAST>> map;
             if (context) {
                 for (const auto& ref : context->tuple_pair()) {
-                    auto cp = std::any_cast<std::pair<std::string, DPtr<script::structures::ScriptAST>>>(ref);
+                    auto cp = std::any_cast<std::pair<std::string, DPtr<script::structures::ScriptAST>>>(
+                            visitTuple_pair(ref));
                     map[cp.first] = cp.second;
                 }
             }
             return {script::structures::ScriptAST::tuple_(std::move(map))};
+        }
+
+        std::any ScriptVisitor::visitSubtype_of(scriptParser::Subtype_ofContext *context) {
+            throw std::runtime_error("ERROR: FUTURE WORK!");
+        }
+
+        std::any ScriptVisitor::visitType_or(scriptParser::Type_orContext *context) {
+            auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(0)));
+            auto rx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(1)));
+            auto result = script::structures::ScriptAST::binop_(this->context, script::structures::t::ORT, std::move(lx), std::move(rx));
+
+            return result;
+        }
+
+        std::any ScriptVisitor::visitType_and(scriptParser::Type_andContext *context) {
+            auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(0)));
+            auto rx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(1)));
+            auto result = script::structures::ScriptAST::binop_(this->context, script::structures::t::ANDT, std::move(lx), std::move(rx));
+
+            return result;
         }
 
 //        std::any ScriptVisitor::visitStar(scriptParser::StarContext *context) {

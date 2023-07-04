@@ -28,7 +28,7 @@ add_library(gsm_gsql src/gsql_gsm/gsm_object_xi_content.cpp include/gsql_gsm/gsm
 target_link_libraries(gsm_gsql CURL::libcurl yaucl_graph yaucl_hashing roaring antlr4_static tinyxml2)
 
 add_executable(gsm_gsql_test main.cpp)
-target_link_libraries(gsm_gsql_test CURL::libcurl yaucl_graph yaucl_hashing roaring antlr4_static tinyxml2 gsm_gsql )
+target_link_libraries(gsm_gsql_test CURL::libcurl yaucl_graph yaucl_hashing roaring antlr4_static gsm_script tinyxml2 gsm_gsql )
 
 
 enable_testing ()

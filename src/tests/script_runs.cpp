@@ -34,3 +34,9 @@ TEST_F(simple_scripts, fourth) {
     ASSERT_STREQ(script::compiler::ScriptVisitor::eval(file)->toString().c_str(),
                  "5");
 }
+
+TEST_F(simple_scripts, fifth) {
+    std::ifstream file{scripts_folder / "script_05.txt"};
+    ASSERT_STREQ(script::compiler::ScriptVisitor::eval(file)->toString().c_str(),
+                 "tt");
+}

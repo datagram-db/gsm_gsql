@@ -1,0 +1,1 @@
+(typeof (< "ciao" >> "bene" ; "tutta" >> 2 >) [ "ciao" ]) == string

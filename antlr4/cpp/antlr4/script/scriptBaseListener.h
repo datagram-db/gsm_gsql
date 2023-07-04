@@ -67,6 +67,9 @@ public:
   virtual void enterAdd(scriptParser::AddContext * /*ctx*/) override { }
   virtual void exitAdd(scriptParser::AddContext * /*ctx*/) override { }
 
+  virtual void enterSubtype_of(scriptParser::Subtype_ofContext * /*ctx*/) override { }
+  virtual void exitSubtype_of(scriptParser::Subtype_ofContext * /*ctx*/) override { }
+
   virtual void enterType_bool(scriptParser::Type_boolContext * /*ctx*/) override { }
   virtual void exitType_bool(scriptParser::Type_boolContext * /*ctx*/) override { }
 
@@ -99,6 +102,9 @@ public:
 
   virtual void enterType_tuple(scriptParser::Type_tupleContext * /*ctx*/) override { }
   virtual void exitType_tuple(scriptParser::Type_tupleContext * /*ctx*/) override { }
+
+  virtual void enterType_or(scriptParser::Type_orContext * /*ctx*/) override { }
+  virtual void exitType_or(scriptParser::Type_orContext * /*ctx*/) override { }
 
   virtual void enterSigma_type(scriptParser::Sigma_typeContext * /*ctx*/) override { }
   virtual void exitSigma_type(scriptParser::Sigma_typeContext * /*ctx*/) override { }
@@ -177,6 +183,9 @@ public:
 
   virtual void enterApply(scriptParser::ApplyContext * /*ctx*/) override { }
   virtual void exitApply(scriptParser::ApplyContext * /*ctx*/) override { }
+
+  virtual void enterType_and(scriptParser::Type_andContext * /*ctx*/) override { }
+  virtual void exitType_and(scriptParser::Type_andContext * /*ctx*/) override { }
 
   virtual void enterCross(scriptParser::CrossContext * /*ctx*/) override { }
   virtual void exitCross(scriptParser::CrossContext * /*ctx*/) override { }

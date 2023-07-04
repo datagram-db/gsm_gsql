@@ -18,18 +18,15 @@ namespace script {
         struct ScriptVisitor : public scriptVisitor {
             DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> context;
             static gsm_inmemory_db* db; // WARNING: THIS CANNOT BE USED IN CONCURRENT SETTINGS WHERE MULTIPLE DATABASES ARE USED!
-
             ScriptVisitor();
             static void bindGSM(gsm_inmemory_db* gsm) { db = gsm; }
             static DPtr<script::structures::ScriptAST> eval(std::istream& is);
-
             std::any visitScript(scriptParser::ScriptContext *context) override;
             std::any visitSub(scriptParser::SubContext *context) override;
             std::any visitAtom_array(scriptParser::Atom_arrayContext *context) override;
             std::any visitSelect(scriptParser::SelectContext *context) override;
             std::any visitMult(scriptParser::MultContext *context) override;
             std::any visitLt(scriptParser::LtContext *context) override;
-//            std::any visitInvoke(scriptParser::InvokeContext *context) override;
             std::any visitSubstring(scriptParser::SubstringContext *context) override;
             std::any visitRemove(scriptParser::RemoveContext *context) override;
             std::any visitPut(scriptParser::PutContext *context) override;
@@ -80,35 +77,22 @@ namespace script {
             std::any visitPow(scriptParser::PowContext *context) override;
             std::any visitSin(scriptParser::SinContext *context) override;
             std::any visitFloor(scriptParser::FloorContext *context) override;
-
-
             std::any visitTuple_pair(scriptParser::Tuple_pairContext *context) override;
-
             std::any visitType_bool(scriptParser::Type_boolContext *context) override;
-
             std::any visitEnsure(scriptParser::EnsureContext *context) override;
-
             std::any visitKind(scriptParser::KindContext *context) override;
-
             std::any visitType_tuple(scriptParser::Type_tupleContext *context) override;
-
             std::any visitSigma_type(scriptParser::Sigma_typeContext *context) override;
-
             std::any visitType_string(scriptParser::Type_stringContext *context) override;
-
             std::any visitTypeof(scriptParser::TypeofContext *context) override;
-
             std::any visitType_int(scriptParser::Type_intContext *context) override;
-
             std::any visitAtom_tuple(scriptParser::Atom_tupleContext *context) override;
-
             std::any visitType_double(scriptParser::Type_doubleContext *context) override;
-
             std::any visitType_list(scriptParser::Type_listContext *context) override;
-
             std::any visitObj(scriptParser::ObjContext *context) override;
-
-//            std::any visitStar(scriptParser::StarContext *context) override;
+            std::any visitSubtype_of(scriptParser::Subtype_ofContext *context) override;
+            std::any visitType_or(scriptParser::Type_orContext *context) override;
+            std::any visitType_and(scriptParser::Type_andContext *context) override;
         };
 
     } // script

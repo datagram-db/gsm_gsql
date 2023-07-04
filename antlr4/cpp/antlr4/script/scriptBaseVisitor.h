@@ -83,6 +83,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitSubtype_of(scriptParser::Subtype_ofContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitType_bool(scriptParser::Type_boolContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -124,6 +128,10 @@ public:
   }
 
   virtual std::any visitType_tuple(scriptParser::Type_tupleContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitType_or(scriptParser::Type_orContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -228,6 +236,10 @@ public:
   }
 
   virtual std::any visitApply(scriptParser::ApplyContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitType_and(scriptParser::Type_andContext *ctx) override {
     return visitChildren(ctx);
   }
 
