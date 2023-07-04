@@ -517,7 +517,8 @@ namespace script {
             StringMap<DPtr<script::structures::ScriptAST>> map;
             if (context) {
                 for (const auto& ref : context->tuple_pair()) {
-                    auto cp = std::any_cast<std::pair<std::string, DPtr<script::structures::ScriptAST>>>(ref);
+                    auto cp = std::any_cast<std::pair<std::string, DPtr<script::structures::ScriptAST>>>(
+                            visitTuple_pair(ref));
                     map[cp.first] = cp.second;
                 }
             }
