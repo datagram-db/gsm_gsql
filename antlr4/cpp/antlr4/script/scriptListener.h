@@ -17,6 +17,9 @@ public:
   virtual void enterScript(scriptParser::ScriptContext *ctx) = 0;
   virtual void exitScript(scriptParser::ScriptContext *ctx) = 0;
 
+  virtual void enterTuple_pair(scriptParser::Tuple_pairContext *ctx) = 0;
+  virtual void exitTuple_pair(scriptParser::Tuple_pairContext *ctx) = 0;
+
   virtual void enterVarphi(scriptParser::VarphiContext *ctx) = 0;
   virtual void exitVarphi(scriptParser::VarphiContext *ctx) = 0;
 
@@ -37,9 +40,6 @@ public:
 
   virtual void enterLt(scriptParser::LtContext *ctx) = 0;
   virtual void exitLt(scriptParser::LtContext *ctx) = 0;
-
-  virtual void enterInvoke(scriptParser::InvokeContext *ctx) = 0;
-  virtual void exitInvoke(scriptParser::InvokeContext *ctx) = 0;
 
   virtual void enterPut(scriptParser::PutContext *ctx) = 0;
   virtual void exitPut(scriptParser::PutContext *ctx) = 0;
@@ -65,6 +65,12 @@ public:
   virtual void enterAdd(scriptParser::AddContext *ctx) = 0;
   virtual void exitAdd(scriptParser::AddContext *ctx) = 0;
 
+  virtual void enterType_bool(scriptParser::Type_boolContext *ctx) = 0;
+  virtual void exitType_bool(scriptParser::Type_boolContext *ctx) = 0;
+
+  virtual void enterEnsure(scriptParser::EnsureContext *ctx) = 0;
+  virtual void exitEnsure(scriptParser::EnsureContext *ctx) = 0;
+
   virtual void enterImply(scriptParser::ImplyContext *ctx) = 0;
   virtual void exitImply(scriptParser::ImplyContext *ctx) = 0;
 
@@ -73,6 +79,9 @@ public:
 
   virtual void enterVar(scriptParser::VarContext *ctx) = 0;
   virtual void exitVar(scriptParser::VarContext *ctx) = 0;
+
+  virtual void enterKind(scriptParser::KindContext *ctx) = 0;
+  virtual void exitKind(scriptParser::KindContext *ctx) = 0;
 
   virtual void enterAtom_bool(scriptParser::Atom_boolContext *ctx) = 0;
   virtual void exitAtom_bool(scriptParser::Atom_boolContext *ctx) = 0;
@@ -85,6 +94,12 @@ public:
 
   virtual void enterEq(scriptParser::EqContext *ctx) = 0;
   virtual void exitEq(scriptParser::EqContext *ctx) = 0;
+
+  virtual void enterType_tuple(scriptParser::Type_tupleContext *ctx) = 0;
+  virtual void exitType_tuple(scriptParser::Type_tupleContext *ctx) = 0;
+
+  virtual void enterSigma_type(scriptParser::Sigma_typeContext *ctx) = 0;
+  virtual void exitSigma_type(scriptParser::Sigma_typeContext *ctx) = 0;
 
   virtual void enterContains(scriptParser::ContainsContext *ctx) = 0;
   virtual void exitContains(scriptParser::ContainsContext *ctx) = 0;
@@ -122,6 +137,9 @@ public:
   virtual void enterNot(scriptParser::NotContext *ctx) = 0;
   virtual void exitNot(scriptParser::NotContext *ctx) = 0;
 
+  virtual void enterType_string(scriptParser::Type_stringContext *ctx) = 0;
+  virtual void exitType_string(scriptParser::Type_stringContext *ctx) = 0;
+
   virtual void enterGeq(scriptParser::GeqContext *ctx) = 0;
   virtual void exitGeq(scriptParser::GeqContext *ctx) = 0;
 
@@ -143,6 +161,12 @@ public:
   virtual void enterMap(scriptParser::MapContext *ctx) = 0;
   virtual void exitMap(scriptParser::MapContext *ctx) = 0;
 
+  virtual void enterTypeof(scriptParser::TypeofContext *ctx) = 0;
+  virtual void exitTypeof(scriptParser::TypeofContext *ctx) = 0;
+
+  virtual void enterType_int(scriptParser::Type_intContext *ctx) = 0;
+  virtual void exitType_int(scriptParser::Type_intContext *ctx) = 0;
+
   virtual void enterOr(scriptParser::OrContext *ctx) = 0;
   virtual void exitOr(scriptParser::OrContext *ctx) = 0;
 
@@ -158,6 +182,12 @@ public:
   virtual void enterGt(scriptParser::GtContext *ctx) = 0;
   virtual void exitGt(scriptParser::GtContext *ctx) = 0;
 
+  virtual void enterAtom_tuple(scriptParser::Atom_tupleContext *ctx) = 0;
+  virtual void exitAtom_tuple(scriptParser::Atom_tupleContext *ctx) = 0;
+
+  virtual void enterType_double(scriptParser::Type_doubleContext *ctx) = 0;
+  virtual void exitType_double(scriptParser::Type_doubleContext *ctx) = 0;
+
   virtual void enterFilter(scriptParser::FilterContext *ctx) = 0;
   virtual void exitFilter(scriptParser::FilterContext *ctx) = 0;
 
@@ -167,8 +197,14 @@ public:
   virtual void enterXi(scriptParser::XiContext *ctx) = 0;
   virtual void exitXi(scriptParser::XiContext *ctx) = 0;
 
+  virtual void enterType_list(scriptParser::Type_listContext *ctx) = 0;
+  virtual void exitType_list(scriptParser::Type_listContext *ctx) = 0;
+
   virtual void enterAbs(scriptParser::AbsContext *ctx) = 0;
   virtual void exitAbs(scriptParser::AbsContext *ctx) = 0;
+
+  virtual void enterObj(scriptParser::ObjContext *ctx) = 0;
+  virtual void exitObj(scriptParser::ObjContext *ctx) = 0;
 
   virtual void enterVariable(scriptParser::VariableContext *ctx) = 0;
   virtual void exitVariable(scriptParser::VariableContext *ctx) = 0;

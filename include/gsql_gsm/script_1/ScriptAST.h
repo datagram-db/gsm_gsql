@@ -10,12 +10,25 @@
 #include <gsql_gsm/gsm_inmemory_db.h>
 #include <functional>
 
+#ifndef ALLOC_TYPE
+#define ALLOC_TYPE(NAME,case) do { if (!(NAME).get()) { (NAME) = std::make_shared<ScriptAST>(); (NAME)->type = case; } return (NAME);  } while (0)
+#endif
+
 namespace script::structures {
     struct ScriptAST;
     struct Funzione;
     using Gamma = HashMap<std::string, DPtr<ScriptAST>>;
 
     enum t {
+        TypeOf,
+        AnyT,
+        SortT,
+        BooleanT,
+        IntegerT,
+        DoubleT,
+        StringT,
+        TupleT,
+        ArrayOfT,
         Boolean,
         Integer,
         Double,
@@ -23,24 +36,19 @@ namespace script::structures {
         Assignment,
         Function,
         Array,
-//        Java,
-//        JavaMethod,
+        Tuple,
         Variable,
-//        LazyExpression,
         AndE,
         OrE,
         NotE,
         EqE,
         IfteE,
         ImplyE,
-//        LessE,
-//        MoreE,
         ApplyE,
         AtE,
         PutE,
         RemoveE,
         AppendE,
-//        AssignE,
         ContainsE,
         FilterE,
         InvokeE,
@@ -50,7 +58,6 @@ namespace script::structures {
         DivE,
         ModE,
         AbsE,
-//        MinE,
         MinusE,
         MulE,
         SinE,
@@ -70,13 +77,17 @@ namespace script::structures {
         VarPhiX,
         EllX,
         XiX,
+        ObjX,
         CrossE,
         SelfCrossE,
         InjE,
         FlatE,
         LFoldE,
         RFoldE,
-        EvalE
+        EvalE,
+        AssertE,
+        SigmaT,
+        StarT
     };
 
     //// Generic object for expressions
@@ -86,8 +97,7 @@ namespace script::structures {
         double doubleValue_;
         std::string string; // 2
         ArrayList<DPtr<ScriptAST>> arrayList; // 3
-//        JPair<DPtr<ScriptAST>, DPtr<ScriptAST>> assignment;
-//        JPair<List<DPtr<ScriptAST>>, DPtr<SerializableListFunctions>> argsWithFunction;
+        StringMap<DPtr<ScriptAST>> tuple; // 4
         DPtr<Funzione> function;
         t type;
         DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>> optGamma;
@@ -116,7 +126,36 @@ namespace script::structures {
         return val;
     }
 
+        static inline DPtr<ScriptAST> array_type(DPtr<ScriptAST>&& v) {
+            auto val = std::make_shared<ScriptAST>();
+            val->type = t::ArrayOfT ;
+            val->arrayList.emplace_back(v);
+            return val;
+        }
+
+
+        static inline DPtr<ScriptAST> tuple_(StringMap<DPtr<ScriptAST>>&& v) {
+            auto val = std::make_shared<ScriptAST>();
+            val->type = t::Tuple ;
+            val->tuple = std::move(v);
+            return val;
+        }
+
+        static inline DPtr<ScriptAST> tuple_type_(StringMap<DPtr<ScriptAST>>&& v) {
+            auto val = std::make_shared<ScriptAST>();
+            val->type = t::TupleT ;
+            val->tuple = std::move(v);
+            return val;
+        }
+
         DPtr<ScriptAST> variableEval();
+
+        static inline DPtr<ScriptAST> fromObjectContent(const gsm_object_xi_content& v) {
+            StringMap<DPtr<ScriptAST>> result;
+            result["id"] = integer_(v.id);
+            result["score"] = double_(v.score);
+            return tuple_(std::move(result));
+        }
 
         static inline DPtr<ScriptAST> assignment_(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& gamma, DPtr<ScriptAST>&& left, DPtr<ScriptAST>&& right) {
             auto val = std::make_shared<ScriptAST>();
@@ -182,46 +221,47 @@ namespace script::structures {
         double toDouble();
         ArrayList<DPtr<ScriptAST>> toList();
         std::function<DPtr<ScriptAST>(DPtr<ScriptAST>)> toFunction();
+        StringMap<DPtr<ScriptAST>> toMap();
         DPtr<ScriptAST> run();
 
-        /**
-         * Function to be used if the function needs to be interpreted as the ell/xi for an object
-         * @return
-         */
-        std::vector<std::string> asVectorOfStrings() {
-            auto ls = toList();
-            std::vector<std::string> result(ls.size());
-            for (const DPtr<ScriptAST>& ptr : ls) {
-                result.emplace_back(ptr->toString());
-            }
-            return result;
-        }
+//        /**
+//         * Function to be used if the function needs to be interpreted as the ell/xi for an object
+//         * @return
+//         */
+//        std::vector<std::string> asVectorOfStrings() {
+//            auto ls = toList();
+//            std::vector<std::string> result(ls.size());
+//            for (const DPtr<ScriptAST>& ptr : ls) {
+//                result.emplace_back(ptr->toString());
+//            }
+//            return result;
+//        }
 
-        /**
-         * Function to be used if the function needs to be interpreted as the phi for an object
-         * @return
-         */
-        std::unordered_map<std::string, std::vector<gsm_object_xi_content>> asPhiForObject() {
-            auto ls = toList();
-            std::unordered_map<std::string, std::vector<gsm_object_xi_content>> result;
-            for (const DPtr<ScriptAST>& ptr : ls) {
-                auto cp = ptr->toList();
-                size_t cp_size = cp.size();
-                if (cp_size == 1) {
-                    result[cp[0]->toString()] = {};
-                } else if (cp_size == 2) {
-                    auto vector = result[cp[0]->toString()];
-                    auto content = cp[1]->toList();
-                    size_t content_size = cp.size();
-                    if (content_size == 1) {
-                        vector.emplace_back(content[0]->toInteger());
-                    } else if (content_size == 2) {
-                        vector.emplace_back(content[0]->toInteger(), content[1]->toDouble());
-                    }
-                }
-            }
-            return result;
-        }
+//        /**
+//         * Function to be used if the function needs to be interpreted as the phi for an object
+//         * @return
+//         */
+//        std::unordered_map<std::string, std::vector<gsm_object_xi_content>> asPhiForObject() {
+//            auto ls = toList();
+//            std::unordered_map<std::string, std::vector<gsm_object_xi_content>> result;
+//            for (const DPtr<ScriptAST>& ptr : ls) {
+//                auto cp = ptr->toList();
+//                size_t cp_size = cp.size();
+//                if (cp_size == 1) {
+//                    result[cp[0]->toString()] = {};
+//                } else if (cp_size == 2) {
+//                    auto vector = result[cp[0]->toString()];
+//                    auto content = cp[1]->toList();
+//                    size_t content_size = cp.size();
+//                    if (content_size == 1) {
+//                        vector.emplace_back(content[0]->toInteger());
+//                    } else if (content_size == 2) {
+//                        vector.emplace_back(content[0]->toInteger(), content[1]->toDouble());
+//                    }
+//                }
+//            }
+//            return result;
+//        }
 
 
 
@@ -287,7 +327,7 @@ namespace script::structures {
 
         static inline DPtr<ScriptAST> string_(const std::string& i) {
             auto val = std::make_shared<ScriptAST>();
-            val->type = t::Double ;
+            val->type = t::String ;
             val->string = i;
             return val;
         }
@@ -307,6 +347,31 @@ namespace script::structures {
                 TRUE->bool_ = true;
             }
             return TRUE;
+        }
+
+
+        static inline DPtr<ScriptAST> double_T() {
+            ALLOC_TYPE(DOUBLET, t::DoubleT);
+        }
+
+        static inline DPtr<ScriptAST> any_T() {
+            ALLOC_TYPE(ANYT, t::AnyT);
+        }
+
+        static inline DPtr<ScriptAST> integer_T() {
+            ALLOC_TYPE(INTEGERT, t::IntegerT);
+        }
+
+        static inline DPtr<ScriptAST> string_T() {
+            ALLOC_TYPE(STRINGT, t::StringT);
+        }
+
+        static inline DPtr<ScriptAST> boolean_T() {
+            ALLOC_TYPE(BOOLEANT, t::BooleanT);
+        }
+
+        static inline DPtr<ScriptAST> star_T() {
+            ALLOC_TYPE(START, t::StarT);
         }
 
         template <typename T>
@@ -330,7 +395,9 @@ namespace script::structures {
         }
 
     private:
-        static DPtr<ScriptAST> TRUE, FALSE;
+        static DPtr<ScriptAST> TRUE, FALSE, BOOLEANT, DOUBLET, INTEGERT, STRINGT, START, ANYT;
+
+        DPtr<script::structures::ScriptAST> typeInference();
     };
 }
 

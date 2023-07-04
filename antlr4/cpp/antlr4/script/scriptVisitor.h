@@ -21,6 +21,8 @@ public:
    */
     virtual std::any visitScript(scriptParser::ScriptContext *context) = 0;
 
+    virtual std::any visitTuple_pair(scriptParser::Tuple_pairContext *context) = 0;
+
     virtual std::any visitVarphi(scriptParser::VarphiContext *context) = 0;
 
     virtual std::any visitSelect(scriptParser::SelectContext *context) = 0;
@@ -34,8 +36,6 @@ public:
     virtual std::any visitCos(scriptParser::CosContext *context) = 0;
 
     virtual std::any visitLt(scriptParser::LtContext *context) = 0;
-
-    virtual std::any visitInvoke(scriptParser::InvokeContext *context) = 0;
 
     virtual std::any visitPut(scriptParser::PutContext *context) = 0;
 
@@ -53,11 +53,17 @@ public:
 
     virtual std::any visitAdd(scriptParser::AddContext *context) = 0;
 
+    virtual std::any visitType_bool(scriptParser::Type_boolContext *context) = 0;
+
+    virtual std::any visitEnsure(scriptParser::EnsureContext *context) = 0;
+
     virtual std::any visitImply(scriptParser::ImplyContext *context) = 0;
 
     virtual std::any visitEll(scriptParser::EllContext *context) = 0;
 
     virtual std::any visitVar(scriptParser::VarContext *context) = 0;
+
+    virtual std::any visitKind(scriptParser::KindContext *context) = 0;
 
     virtual std::any visitAtom_bool(scriptParser::Atom_boolContext *context) = 0;
 
@@ -66,6 +72,10 @@ public:
     virtual std::any visitConcat(scriptParser::ConcatContext *context) = 0;
 
     virtual std::any visitEq(scriptParser::EqContext *context) = 0;
+
+    virtual std::any visitType_tuple(scriptParser::Type_tupleContext *context) = 0;
+
+    virtual std::any visitSigma_type(scriptParser::Sigma_typeContext *context) = 0;
 
     virtual std::any visitContains(scriptParser::ContainsContext *context) = 0;
 
@@ -91,6 +101,8 @@ public:
 
     virtual std::any visitNot(scriptParser::NotContext *context) = 0;
 
+    virtual std::any visitType_string(scriptParser::Type_stringContext *context) = 0;
+
     virtual std::any visitGeq(scriptParser::GeqContext *context) = 0;
 
     virtual std::any visitFlat(scriptParser::FlatContext *context) = 0;
@@ -105,6 +117,10 @@ public:
 
     virtual std::any visitMap(scriptParser::MapContext *context) = 0;
 
+    virtual std::any visitTypeof(scriptParser::TypeofContext *context) = 0;
+
+    virtual std::any visitType_int(scriptParser::Type_intContext *context) = 0;
+
     virtual std::any visitOr(scriptParser::OrContext *context) = 0;
 
     virtual std::any visitInj(scriptParser::InjContext *context) = 0;
@@ -115,13 +131,21 @@ public:
 
     virtual std::any visitGt(scriptParser::GtContext *context) = 0;
 
+    virtual std::any visitAtom_tuple(scriptParser::Atom_tupleContext *context) = 0;
+
+    virtual std::any visitType_double(scriptParser::Type_doubleContext *context) = 0;
+
     virtual std::any visitFilter(scriptParser::FilterContext *context) = 0;
 
     virtual std::any visitPhi(scriptParser::PhiContext *context) = 0;
 
     virtual std::any visitXi(scriptParser::XiContext *context) = 0;
 
+    virtual std::any visitType_list(scriptParser::Type_listContext *context) = 0;
+
     virtual std::any visitAbs(scriptParser::AbsContext *context) = 0;
+
+    virtual std::any visitObj(scriptParser::ObjContext *context) = 0;
 
     virtual std::any visitVariable(scriptParser::VariableContext *context) = 0;
 

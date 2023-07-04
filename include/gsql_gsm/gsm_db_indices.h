@@ -68,7 +68,7 @@ struct gsm_db_indices {
             }
         }
         containement_order = containedBy.g.topological_sort(-1);
-        container_order = containerOf.g.topological_sort(containerOf.getId(db.o));
+        container_order = containerOf.g.topological_sort(containerOf.getId(db.max_id));
         traversal_order = siblinghood.g.topological_sort(-1);
     }
 

@@ -19,6 +19,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitTuple_pair(scriptParser::Tuple_pairContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitVarphi(scriptParser::VarphiContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -44,10 +48,6 @@ public:
   }
 
   virtual std::any visitLt(scriptParser::LtContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitInvoke(scriptParser::InvokeContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -83,6 +83,14 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitType_bool(scriptParser::Type_boolContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitEnsure(scriptParser::EnsureContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitImply(scriptParser::ImplyContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -92,6 +100,10 @@ public:
   }
 
   virtual std::any visitVar(scriptParser::VarContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitKind(scriptParser::KindContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -108,6 +120,14 @@ public:
   }
 
   virtual std::any visitEq(scriptParser::EqContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitType_tuple(scriptParser::Type_tupleContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitSigma_type(scriptParser::Sigma_typeContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -159,6 +179,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitType_string(scriptParser::Type_stringContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitGeq(scriptParser::GeqContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -187,6 +211,14 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitTypeof(scriptParser::TypeofContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitType_int(scriptParser::Type_intContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitOr(scriptParser::OrContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -207,6 +239,14 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitAtom_tuple(scriptParser::Atom_tupleContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitType_double(scriptParser::Type_doubleContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitFilter(scriptParser::FilterContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -219,7 +259,15 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitType_list(scriptParser::Type_listContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitAbs(scriptParser::AbsContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitObj(scriptParser::ObjContext *ctx) override {
     return visitChildren(ctx);
   }
 

@@ -18,6 +18,7 @@ template <typename T> using List = std::vector<T>;
 template <typename K, typename V> using JPair = std::pair<K,V>;
 template <typename T> using DPtr = std::shared_ptr<T>;
 template <typename K, typename V> using HashMap = std::unordered_map<K,V>;
+template <typename T> using StringMap = HashMap<String, T>;
 
 
 

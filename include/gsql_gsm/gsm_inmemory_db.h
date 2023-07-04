@@ -29,12 +29,11 @@
 #include <gsql_gsm/gsm_object.h>
 
 struct gsm_inmemory_db {
-    // Root object
-    size_t                                 o;
     // All objects of the database
     std::unordered_map<size_t, gsm_object> O;
+    uint_fast32_t max_id = 0;
     // maximum Id available
-    size_t max_id;
+//    size_t max_id;
 
     gsm_inmemory_db(uint_fast32_t id = 0, const std::vector<std::string> &ell = {}, const std::vector<std::string> &xi = {},
                     const std::vector<double> &scores = {}, const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi = {});
@@ -82,6 +81,26 @@ private:
                 expand_varphi_plus(cont.id, result);
             }
         }
+    }
+};
+
+#include <memory>
+
+struct gsm_inmemory_db_view {
+    // Root object
+    size_t                                 o;
+    std::shared_ptr<gsm_inmemory_db>      db;
+    gsm_inmemory_db_view() : o{0}, db{nullptr} {}
+    gsm_inmemory_db_view(size_t o, std::shared_ptr<gsm_inmemory_db> db);
+    gsm_inmemory_db_view(const gsm_inmemory_db_view& ) = default;
+    gsm_inmemory_db_view(gsm_inmemory_db_view&& x) : o{x.o} {
+        db = std::move(x.db);
+    }
+    gsm_inmemory_db_view& operator=(const gsm_inmemory_db_view& ) = default;
+    gsm_inmemory_db_view& operator=(gsm_inmemory_db_view&& x) {
+        o = x.o;
+        db = std::move(x.db);
+        return *this;
     }
 };
 

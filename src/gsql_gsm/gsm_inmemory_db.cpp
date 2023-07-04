@@ -25,10 +25,14 @@
 
 #include <gsql_gsm/gsm_inmemory_db.h>
 
-gsm_inmemory_db::gsm_inmemory_db(uint_fast32_t id, const std::vector<std::string> &ell,
+gsm_inmemory_db::gsm_inmemory_db(uint_fast32_t id,
+                                 const std::vector<std::string> &ell,
                                  const std::vector<std::string> &xi, const std::vector<double> &scores,
-                                 const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi) :
-        o{id} {
+                                 const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi)
+         {
     O[id] = {id, ell, xi, scores, phi};
     max_id = id;
+//             max_id = 1;
 }
+
+gsm_inmemory_db_view::gsm_inmemory_db_view(size_t o, std::shared_ptr<gsm_inmemory_db> db) : o(o), db(db) {}

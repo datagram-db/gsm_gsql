@@ -19,15 +19,25 @@
 
 using json = nlohmann::json;
 
-void PutInDb(gsm_inmemory_db &db, int &iterator, std::vector<gsm_object_xi_content>&tablePhi,
-             std::vector<double> &scores, std::string ell, std::string xi, double score = 1.0)
+
+void PutInDb(gsm_inmemory_db_view &db,
+             std::vector<gsm_object_xi_content>&tablePhi,
+             std::vector<double> &scores,
+             std::string ell,
+             std::string xi,
+             double score = 1.0)
 {
-    createFast(db, ++iterator, {ell}, {xi});
-    tablePhi.emplace_back(iterator, score);
+    createFast(db, ++db.db->max_id, {ell}, {xi});
+    tablePhi.emplace_back(db.db->max_id, score);
     scores.emplace_back(score);
 }
 
-void JsonRecursion(json data, int &iterator, std::vector<gsm_object_xi_content> &tablePhi, std::vector<double> &scores, gsm_inmemory_db &db, std::string previousKey = "")
+static inline
+void JsonRecursion(json data,
+                   std::vector<gsm_object_xi_content> &tablePhi,
+                   std::vector<double> &scores,
+                   gsm_inmemory_db_view &db,
+                   std::string previousKey = "")
 {
     for(auto &it : data.items())
     {
@@ -35,26 +45,28 @@ void JsonRecursion(json data, int &iterator, std::vector<gsm_object_xi_content> 
         {
             std::vector<gsm_object_xi_content> tablePhiObject = {};
             std::vector<double> scoresObject = {};
-            JsonRecursion(it.value(), iterator, tablePhiObject, scoresObject, db, it.key());
+            JsonRecursion(it.value(), tablePhiObject, scoresObject, db, it.key());
             std::string phiString = (data.is_array() ? previousKey + it.key() : it.key());
-            createFast(db, ++iterator, {"json_object"}, {}, {scoresObject}, {{phiString, {tablePhiObject}}});
+            createFast(db, ++db.db->max_id, {"json_object"}, {}, {scoresObject}, {{phiString, {tablePhiObject}}});
         }
         else
         {
             std::string ell = (data.is_array() ? previousKey : it.key());
-            createFast(db, ++iterator, {ell}, {to_string(it.value())});
+            createFast(db, ++db.db->max_id, {ell}, {to_string(it.value())});
         }
-        tablePhi.emplace_back(iterator);
+        tablePhi.emplace_back(db.db->max_id);
         scores.emplace_back(1.0);
     }
 }
 
 
-void LoadCsvFile(gsm_inmemory_db &db, std::string csvFileDir,  int &iterator, bool graph = false)
+static inline
+void LoadCsvFile(gsm_inmemory_db_view &db,
+                 const std::string& csvFileDir,
+                 bool graph = false)
 {
 
     char separator = (graph ? ';' : ','); // ; or ,
-
 
     rapidcsv::Document doc(csvFileDir, rapidcsv::LabelParams(0, -1), rapidcsv::SeparatorParams(separator));
 
@@ -75,57 +87,55 @@ void LoadCsvFile(gsm_inmemory_db &db, std::string csvFileDir,  int &iterator, bo
             if(graph && (row.at(j).at(0) == '{' || row.at(j).at(0) == '['))
             {
                 json data = json::parse(row.at(j));
-                JsonRecursion(data, iterator, tablePhi, scores, db, colHeaders.at(j));
+                JsonRecursion(data, tablePhi, scores, db, colHeaders.at(j));
             }
             else
             {
                 std::string x = colHeaders.at(j);
-                PutInDb(db, iterator, tablePhi, scores, colHeaders.at(j), row.at(j));
+                PutInDb(db, tablePhi, scores, colHeaders.at(j), row.at(j), 1.0);
             }
         }
 
-        createFast(db, ++iterator, {"row"}, {row.at(0)}, {scores}, {{"data", {tablePhi}}});
-        tablePhiCsv.emplace_back(iterator, 1.0);
+        createFast(db, ++db.db->max_id, {"row"}, {row.at(0)}, {scores}, {{"data", {tablePhi}}});
+        tablePhiCsv.emplace_back(db.db->max_id, 1.0);
         scoresCsv.emplace_back(1.0);
     }
-    createFast(db, ++iterator, {"csv_file"}, {csvFileDir}, {scoresCsv}, {{"row", {tablePhiCsv}}});
+    createFast(db, ++db.db->max_id, {"csv_file"}, {csvFileDir}, {scoresCsv}, {{"row", {tablePhiCsv}}});
 }
 
-void LoadCsvDb(gsm_inmemory_db &db, std::string pathToDb, int &iterator)
+static inline
+void LoadCsvDb(gsm_inmemory_db_view &db, const std::string& pathToDb)
 {
     std::vector<gsm_object_xi_content> tablePhiDb = {}; // Phi table for csv db
     std::vector<double> scoresCsvDb = {}; // Scores table for csv db
     for(const auto & entry : std::filesystem::directory_iterator(pathToDb))
     {
         std::cout << entry.path() << std::endl;
-        LoadCsvFile(db, entry.path(), iterator);
-        tablePhiDb.emplace_back(iterator, 1.0);
+        LoadCsvFile(db, entry.path(), db.db->max_id);
+        tablePhiDb.emplace_back(db.db->max_id, 1.0);
         scoresCsvDb.emplace_back(1.0);
     }
-    create(db, ++iterator, {"csv_db"}, {pathToDb}, {scoresCsvDb}, {{"csv_file", {tablePhiDb}}});
+    createFast(db, ++db.db->max_id, {"csv_db"}, {pathToDb}, {scoresCsvDb}, {{"csv_file", {tablePhiDb}}});
 }
 
 
-
-
-void LoadJson(gsm_inmemory_db &db, std::string pathToFile, int &iterator, std::string xi = "")
+void LoadJson(gsm_inmemory_db_view &db,
+              const std::string& pathToFile,
+              std::string xi = "")
 {
     json data;
-    if(xi == "")
-    {
+    if(xi.empty()) {
         std::ifstream f(pathToFile);
         xi = pathToFile;
         data = json::parse(f);
-    }
-    else
-    {
+    } else {
         data = json::parse(pathToFile);
     }
 
     std::vector<gsm_object_xi_content> tablePhiJson = {};
     std::vector<double> scoresJson = {};
-    JsonRecursion(data, iterator, tablePhiJson, scoresJson, db);
-    createFast(db, ++iterator, {"json_file"}, {xi}, {scoresJson}, {{"json_file", {tablePhiJson}}});
+    JsonRecursion(data, tablePhiJson, scoresJson, db);
+    createFast(db, ++db.db->max_id, {"json_file"}, {xi}, {scoresJson}, {{"json_file", {tablePhiJson}}});
 }
 
 std::string downloadedResponse;
@@ -172,7 +182,7 @@ std::string DownloadWeather(std::string URL)
 }
 
 
-void LoadWeather(gsm_inmemory_db &db, int &iterator, double lat, double lon, std::time_t start)
+void LoadWeather(gsm_inmemory_db_view &db, double lat, double lon, std::time_t start)
 {
     std::ifstream file("/home/neo/gsm_gsql/api_keys/openweather.txt");
     std::string openWeatherApiKey;
@@ -200,16 +210,18 @@ void LoadWeather(gsm_inmemory_db &db, int &iterator, double lat, double lon, std
     std::cout << "URL:" << url << std::endl;
     std::string weatherString = DownloadWeather(url);
     std::cout << weatherString << std::endl;
-    LoadJson(db, weatherString, iterator, "weather_ow");
+    LoadJson(db, weatherString, "weather_ow");
 
     url = vc.str();
     std::cout << "URL:" << url << std::endl;
     weatherString = DownloadWeather(url);
     std::cout << weatherString << std::endl;
-    LoadJson(db, weatherString, iterator, "weather_vc");
+    LoadJson(db, weatherString, "weather_vc");
 }
 
-void LoadIgcFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator, bool weather)
+void LoadIgcFile(gsm_inmemory_db_view &db,
+                 std::string pathToFile,
+                 bool weather)
 {
     std::ifstream stream(pathToFile);
     std::string line;
@@ -223,12 +235,12 @@ void LoadIgcFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator, boo
         if(line.substr(0,5) == "HFDTE")
         {
             date = line.substr(5, 4) + "20" + line.substr(9,2);
-            PutInDb(db, iterator, tablePhiIgc, scoresIgc, "date", {line.substr(5, 6)});
+            PutInDb(db, tablePhiIgc, scoresIgc, "date", {line.substr(5, 6)}, 1.0);
             break;
         }
     }
 
-    int bFixesIterator;
+    size_t bFixesIterator;
     std::vector<gsm_object_xi_content> tablePhiNodes = {};
     std::vector<double> scoresNodes = {};
     std::time_t previousTimeStamp = 0;
@@ -241,22 +253,22 @@ void LoadIgcFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator, boo
             std::vector<gsm_object_xi_content> tablePhiNode = {};
             std::vector<double> scoresNode = {};
             std::string time = line.substr(1,6);
-            PutInDb(db, iterator, tablePhiNode, scoresNode, "time", time);
+            PutInDb(db, tablePhiNode, scoresNode, "time", time);
 
             std::string latitude = line.substr(7,8);
-            PutInDb(db, iterator, tablePhiNode, scoresNode, "latitude", latitude);
+            PutInDb(db, tablePhiNode, scoresNode, "latitude", latitude);
 
             std::string longitude = line.substr(15,9);
-            PutInDb(db, iterator, tablePhiNode, scoresNode, "longitude", longitude);
+            PutInDb(db, tablePhiNode, scoresNode, "longitude", longitude);
 
             std::string fixValidity = line.substr(24,1);
-            PutInDb(db, iterator, tablePhiNode, scoresNode, "fixValidity", fixValidity);
+            PutInDb(db, tablePhiNode, scoresNode, "fixValidity", fixValidity);
 
             std::string pressureAltitude = line.substr(25, 5);
-            PutInDb(db, iterator, tablePhiNode, scoresNode, "pressure_altitude", pressureAltitude);
+            PutInDb(db, tablePhiNode, scoresNode, "pressure_altitude", pressureAltitude);
 
             std::string gnssAltitude = line.substr(30, 5);
-            PutInDb(db, iterator, tablePhiNode, scoresNode, "gnss_altitude", gnssAltitude);
+            PutInDb(db, tablePhiNode, scoresNode, "gnss_altitude", gnssAltitude);
 
             std::tm t{};
             std::istringstream ss(date + time);
@@ -267,7 +279,7 @@ void LoadIgcFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator, boo
                 throw std::runtime_error{"fail to parse fullDate"};
             }
             std::time_t timeStamp = mktime(&t);
-            PutInDb(db, iterator, tablePhiNode, scoresNode, "unix_time", std::to_string(timeStamp));
+            PutInDb(db, tablePhiNode, scoresNode, "unix_time", std::to_string(timeStamp));
 
             double latDegrees = (double) stoi(latitude.substr(0, 2));
             double latMinutes = (double) stoi(latitude.substr(2, 5));
@@ -275,7 +287,7 @@ void LoadIgcFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator, boo
             latMinutes = (latMinutes*10)/6;
             int latSign = (latitude.at(7) == 'N' ? 1 : -1);
             double latitudeDouble = (latDegrees + latMinutes) * latSign;
-            PutInDb(db, iterator, tablePhiNode, scoresNode, "latitude_double", std::to_string(latitudeDouble));
+            PutInDb(db, tablePhiNode, scoresNode, "latitude_double", std::to_string(latitudeDouble));
 
             double longDegrees = (double) stoi(longitude.substr(0, 3));
             double longMinutes = (double) stoi(longitude.substr(3, 5));
@@ -283,38 +295,37 @@ void LoadIgcFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator, boo
             longMinutes = (longMinutes*10)/6;
             int longSign = (longitude.at(8) == 'E' ? 1 : -1);
             double longitudeDouble = (longDegrees + longMinutes) * longSign;
-            PutInDb(db, iterator, tablePhiNode, scoresNode, "longitude_double", std::to_string(longitudeDouble));
+            PutInDb(db, tablePhiNode, scoresNode, "longitude_double", std::to_string(longitudeDouble));
 
-            createFast(db, ++iterator, {"b_fix"}, {std::to_string(nodeNumber)}, {scoresNode}, {{{"data"}, {tablePhiNode}}});
-            tablePhiNodes.emplace_back(iterator);
+            createFast(db, ++db.db->max_id, {"b_fix"}, {std::to_string(nodeNumber)}, {scoresNode}, {{{"data"}, {tablePhiNode}}});
+            tablePhiNodes.emplace_back(db.db->max_id);
             scoresNodes.emplace_back(1.0);
             nodeNumber++;
             if (timeStamp - previousTimeStamp >= 3600 && weather)
             {
                 previousTimeStamp = timeStamp;
-                LoadWeather(db, iterator, latitudeDouble, longitudeDouble, timeStamp);
+                LoadWeather(db, latitudeDouble, longitudeDouble, timeStamp);
                 std::cout << downloadedResponse << std::endl;
             }
         }
     }
-    createFast(db, ++iterator, {"b_fixes"}, {}, {scoresNodes}, {{"b_fix", {tablePhiNodes}}});
-    bFixesIterator = iterator;
-    tablePhiIgc.emplace_back(iterator);
+    createFast(db, ++db.db->max_id, {"b_fixes"}, {}, {scoresNodes}, {{"b_fix", {tablePhiNodes}}});
+    bFixesIterator = db.db->max_id;
+    tablePhiIgc.emplace_back(db.db->max_id);
     tablePhiIgc.emplace_back(1.0);
-    createFast(db, ++iterator, {"igc_file"}, {pathToFile}, {scoresIgc}, {{"fixes", {tablePhiIgc}}});
+    createFast(db, ++db.db->max_id, {"igc_file"}, {pathToFile}, {scoresIgc}, {{"fixes", {tablePhiIgc}}});
     //calculate_lift(db, nodesIterator);
     calculate_bearing_change(db, bFixesIterator);
 }
 
-void LoadGraph(gsm_inmemory_db &db, int &iterator, std::vector<std::string> &graphPaths)
-{
+void LoadGraph(gsm_inmemory_db_view &db,
+               std::vector<std::string> &graphPaths){
     std::vector<gsm_object_xi_content> tablePhiGraph = {};
     std::vector<double> scoresGraph = {};
-    for(auto &file : graphPaths)
-    {
-        LoadCsvFile(db, file, iterator, true);
-        tablePhiGraph.emplace_back(iterator);
-        scoresGraph.emplace_back(iterator);
+    for(auto &file : graphPaths) {
+        LoadCsvFile(db, file, true);
+        tablePhiGraph.emplace_back(db.o);
+        scoresGraph.emplace_back(db.o);
     }
 }
 
@@ -324,20 +335,21 @@ void LoadGraph(gsm_inmemory_db &db, int &iterator, std::vector<std::string> &gra
 int main() {
 
     // Database initialisation, with an empty root
-    gsm_inmemory_db db;
+    auto actual = std::make_shared<gsm_inmemory_db>();
+    gsm_inmemory_db_view db(0, actual);
     // global iterator keeping track of gsm ids
-    int iterator = 0;
+//    int iterator = 0;
 
-    std::string csvPath = "/home/neo/gsm_gsql/csv_files/";
-    std::string jsonPath = "/home/neo/gsm_gsql/json_files/generated.json";
-    std::string igcPath = "/home/neo/gsm_gsql/igc_files/example2.igc";
+    std::string csvPath = "data/csv_files/";
+    std::string jsonPath = "data/json_files/generated.json";
+    std::string igcPath = "data/igc_files/example2.igc";
 
     //LoadIgcFile(db, igcPath, iterator, false);
     //LoadCsvDb(db, csvPath, iterator);
     //LoadJsonFile(db, jsonPath, iterator);
     //LoadCsvFile(db, csvPath + "customers-1.csv", iterator);
     //LoadGraph(db, iterator);
-    LoadWeather(db, iterator, 52.598447, 0.923155, 1654352543);
+    LoadWeather(db, 52.598447, 0.923155, 1654352543);
     // Setting that the root now shall contain the other elements, while updating 0 to a new object
 
     /*
@@ -350,11 +362,11 @@ int main() {
     // Therefore, I can also set up the indices
 
     gsm_db_indices idx;
-    idx.init(db);
+    idx.init(*db.db);
     idx.valid_data();
 
     // Dumping the db into a XML format
-    dump_to_xml(db, idx, "/home/neo/gsm_gsql/test.xml");
+    dump_to_xml(*db.db, idx, "test.xml");
     std::cout << "Hello, World!" << std::endl;
     return 0;
 }

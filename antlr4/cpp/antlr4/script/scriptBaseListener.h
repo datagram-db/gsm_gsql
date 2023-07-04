@@ -19,6 +19,9 @@ public:
   virtual void enterScript(scriptParser::ScriptContext * /*ctx*/) override { }
   virtual void exitScript(scriptParser::ScriptContext * /*ctx*/) override { }
 
+  virtual void enterTuple_pair(scriptParser::Tuple_pairContext * /*ctx*/) override { }
+  virtual void exitTuple_pair(scriptParser::Tuple_pairContext * /*ctx*/) override { }
+
   virtual void enterVarphi(scriptParser::VarphiContext * /*ctx*/) override { }
   virtual void exitVarphi(scriptParser::VarphiContext * /*ctx*/) override { }
 
@@ -39,9 +42,6 @@ public:
 
   virtual void enterLt(scriptParser::LtContext * /*ctx*/) override { }
   virtual void exitLt(scriptParser::LtContext * /*ctx*/) override { }
-
-  virtual void enterInvoke(scriptParser::InvokeContext * /*ctx*/) override { }
-  virtual void exitInvoke(scriptParser::InvokeContext * /*ctx*/) override { }
 
   virtual void enterPut(scriptParser::PutContext * /*ctx*/) override { }
   virtual void exitPut(scriptParser::PutContext * /*ctx*/) override { }
@@ -67,6 +67,12 @@ public:
   virtual void enterAdd(scriptParser::AddContext * /*ctx*/) override { }
   virtual void exitAdd(scriptParser::AddContext * /*ctx*/) override { }
 
+  virtual void enterType_bool(scriptParser::Type_boolContext * /*ctx*/) override { }
+  virtual void exitType_bool(scriptParser::Type_boolContext * /*ctx*/) override { }
+
+  virtual void enterEnsure(scriptParser::EnsureContext * /*ctx*/) override { }
+  virtual void exitEnsure(scriptParser::EnsureContext * /*ctx*/) override { }
+
   virtual void enterImply(scriptParser::ImplyContext * /*ctx*/) override { }
   virtual void exitImply(scriptParser::ImplyContext * /*ctx*/) override { }
 
@@ -75,6 +81,9 @@ public:
 
   virtual void enterVar(scriptParser::VarContext * /*ctx*/) override { }
   virtual void exitVar(scriptParser::VarContext * /*ctx*/) override { }
+
+  virtual void enterKind(scriptParser::KindContext * /*ctx*/) override { }
+  virtual void exitKind(scriptParser::KindContext * /*ctx*/) override { }
 
   virtual void enterAtom_bool(scriptParser::Atom_boolContext * /*ctx*/) override { }
   virtual void exitAtom_bool(scriptParser::Atom_boolContext * /*ctx*/) override { }
@@ -87,6 +96,12 @@ public:
 
   virtual void enterEq(scriptParser::EqContext * /*ctx*/) override { }
   virtual void exitEq(scriptParser::EqContext * /*ctx*/) override { }
+
+  virtual void enterType_tuple(scriptParser::Type_tupleContext * /*ctx*/) override { }
+  virtual void exitType_tuple(scriptParser::Type_tupleContext * /*ctx*/) override { }
+
+  virtual void enterSigma_type(scriptParser::Sigma_typeContext * /*ctx*/) override { }
+  virtual void exitSigma_type(scriptParser::Sigma_typeContext * /*ctx*/) override { }
 
   virtual void enterContains(scriptParser::ContainsContext * /*ctx*/) override { }
   virtual void exitContains(scriptParser::ContainsContext * /*ctx*/) override { }
@@ -124,6 +139,9 @@ public:
   virtual void enterNot(scriptParser::NotContext * /*ctx*/) override { }
   virtual void exitNot(scriptParser::NotContext * /*ctx*/) override { }
 
+  virtual void enterType_string(scriptParser::Type_stringContext * /*ctx*/) override { }
+  virtual void exitType_string(scriptParser::Type_stringContext * /*ctx*/) override { }
+
   virtual void enterGeq(scriptParser::GeqContext * /*ctx*/) override { }
   virtual void exitGeq(scriptParser::GeqContext * /*ctx*/) override { }
 
@@ -145,6 +163,12 @@ public:
   virtual void enterMap(scriptParser::MapContext * /*ctx*/) override { }
   virtual void exitMap(scriptParser::MapContext * /*ctx*/) override { }
 
+  virtual void enterTypeof(scriptParser::TypeofContext * /*ctx*/) override { }
+  virtual void exitTypeof(scriptParser::TypeofContext * /*ctx*/) override { }
+
+  virtual void enterType_int(scriptParser::Type_intContext * /*ctx*/) override { }
+  virtual void exitType_int(scriptParser::Type_intContext * /*ctx*/) override { }
+
   virtual void enterOr(scriptParser::OrContext * /*ctx*/) override { }
   virtual void exitOr(scriptParser::OrContext * /*ctx*/) override { }
 
@@ -160,6 +184,12 @@ public:
   virtual void enterGt(scriptParser::GtContext * /*ctx*/) override { }
   virtual void exitGt(scriptParser::GtContext * /*ctx*/) override { }
 
+  virtual void enterAtom_tuple(scriptParser::Atom_tupleContext * /*ctx*/) override { }
+  virtual void exitAtom_tuple(scriptParser::Atom_tupleContext * /*ctx*/) override { }
+
+  virtual void enterType_double(scriptParser::Type_doubleContext * /*ctx*/) override { }
+  virtual void exitType_double(scriptParser::Type_doubleContext * /*ctx*/) override { }
+
   virtual void enterFilter(scriptParser::FilterContext * /*ctx*/) override { }
   virtual void exitFilter(scriptParser::FilterContext * /*ctx*/) override { }
 
@@ -169,8 +199,14 @@ public:
   virtual void enterXi(scriptParser::XiContext * /*ctx*/) override { }
   virtual void exitXi(scriptParser::XiContext * /*ctx*/) override { }
 
+  virtual void enterType_list(scriptParser::Type_listContext * /*ctx*/) override { }
+  virtual void exitType_list(scriptParser::Type_listContext * /*ctx*/) override { }
+
   virtual void enterAbs(scriptParser::AbsContext * /*ctx*/) override { }
   virtual void exitAbs(scriptParser::AbsContext * /*ctx*/) override { }
+
+  virtual void enterObj(scriptParser::ObjContext * /*ctx*/) override { }
+  virtual void exitObj(scriptParser::ObjContext * /*ctx*/) override { }
 
   virtual void enterVariable(scriptParser::VariableContext * /*ctx*/) override { }
   virtual void exitVariable(scriptParser::VariableContext * /*ctx*/) override { }

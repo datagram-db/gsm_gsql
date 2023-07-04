@@ -7,6 +7,12 @@
 #include <gsql_gsm/script_1/ScriptAST.h>
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::TRUE;
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::FALSE;
+DPtr<script::structures::ScriptAST> script::structures::ScriptAST::DOUBLET;
+DPtr<script::structures::ScriptAST> script::structures::ScriptAST::INTEGERT;
+DPtr<script::structures::ScriptAST> script::structures::ScriptAST::BOOLEANT;
+DPtr<script::structures::ScriptAST> script::structures::ScriptAST::STRINGT;
+DPtr<script::structures::ScriptAST> script::structures::ScriptAST::START;
+DPtr<script::structures::ScriptAST> script::structures::ScriptAST::ANYT;
 #include <gsql_gsm/script_1/Funzione.h>
 
 bool script::structures::ScriptAST::toBoolean()  {
@@ -23,6 +29,9 @@ bool script::structures::ScriptAST::toBoolean()  {
                 return !arrayList.empty();
             case Function:
                 return !function->body.empty();
+            case TupleT:
+            case Tuple:
+                return !tuple.empty();
             default:
                 return run()->toBoolean();
         }
@@ -41,6 +50,9 @@ double script::structures::ScriptAST::toDouble()  {
             return (double)string.length();
         case Array:
             return (double)arrayList.size();
+        case TupleT:
+        case Tuple:
+            return (double)tuple.size();
         case Function:
             return (double)function->body.size();
         default:
@@ -63,6 +75,9 @@ long long script::structures::ScriptAST::toInteger()   {
             return (long long)string.length();
         case Array:
             return (long long)arrayList.size();
+        case Tuple:
+        case TupleT:
+            return (long long)tuple.size();
         case Function:
             return (long long)function->body.size();
         default:
@@ -97,25 +112,25 @@ std::string script::structures::ScriptAST::toString(bool quot) const {
             else
             {
                 auto it = function->body.begin();
-                it++;
+//                it++;
                 return function->parameter + " -> {" + std::accumulate(it,
                                 function->body.end(), std::string(""),
                                 [](const std::string& m, DPtr<script::structures::ScriptAST> obj) {
-                                    return (m.empty() ? m : "; ") + obj->toString(true);
+                                    return (m.empty() ? m : m+"; ") + obj->toString(true);
                                 }) + "}";
             }
 
         case Array:
-            if (function->body.size() == 1)
+            if (arrayList.size() == 1)
                 return "{" + arrayList[0]->toString(true) + "}";
             else
             {
                 auto it = arrayList.begin();
-                it++;
+//                it++;
                 return "{" + std::accumulate(it,
                                              arrayList.end(), std::string(""),
                                                                        [](const std::string& m, DPtr<script::structures::ScriptAST> obj) {
-                                                                           return (m.empty() ? m : ", ") + obj->toString(true);
+                                                                           return (m.empty() ? m : m+", ") + obj->toString(true);
                                                                        }) + "}";
             }
         case Variable:
@@ -260,6 +275,15 @@ std::string script::structures::ScriptAST::toString(bool quot) const {
 
         case EvalE:
             return "eval (" + arrayList[0]->toString(true) +")";
+
+        case IntegerT:
+            return "int";
+
+        case DoubleT:
+            return "double";
+
+        case StringT:
+            return "string";
     }
     return "";
 }
@@ -281,6 +305,16 @@ ArrayList<DPtr<script::structures::ScriptAST>> script::structures::ScriptAST::to
             }
             break;
         }
+        case TupleT:
+        case Tuple: {
+            for (const auto&[k,v] : tuple) {
+                ArrayList<DPtr<script::structures::ScriptAST>> inneres;
+                inneres.emplace_back(string_(k));
+                inneres.emplace_back(v);
+                result.emplace_back(array_(std::move(inneres)));
+            }
+            break;
+        }
         case Array:
             return arrayList;
         case Function:
@@ -288,14 +322,56 @@ ArrayList<DPtr<script::structures::ScriptAST>> script::structures::ScriptAST::to
         default:
             return run()->toList();
     }
-    return std::move(result);
+    return result;
+}
+
+StringMap<DPtr<script::structures::ScriptAST>> script::structures::ScriptAST::toMap()  {
+    StringMap<DPtr<script::structures::ScriptAST>> result;
+    switch (type) {
+        case Boolean:
+        case Integer:
+        case Double: {
+            result["0"] = shared_from_this();
+            break;
+        }
+
+        case String: {
+            for (size_t i = 0, N = string.size(); i<N; i++) {
+                result[std::to_string(i)] = string_(""+string.at(i));
+            }
+            break;
+        }
+
+        case Array: {
+            for (size_t i = 0, N = arrayList.size(); i<N; i++) {
+                result[std::to_string(i)] = arrayList.at(i);
+            }
+            break;
+        }
+
+        case Function: {
+            throw std::runtime_error("ERROR: cannot convert a function with a potential infinite domain into a tuple!");
+        }
+
+        case TupleT:
+        case Tuple: {
+            return tuple;
+        }
+
+        default:
+            return run()->toMap();
+    }
+    return result;
 }
 
 std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>)> script::structures::ScriptAST::toFunction()  {
     switch (type) {
         case Boolean:
+        case BooleanT:
         case Integer:
+        case IntegerT:
         case Double:
+        case DoubleT:
             return [this](auto x) {return shared_from_this(); };
 
         case String:
@@ -324,6 +400,19 @@ std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::Scrip
                 return function->apply(std::move(x));
             };
         }
+
+        case TupleT:
+        case Tuple: {
+            return [this](DPtr<script::structures::ScriptAST> x) {
+                std::string i = x->toString();
+                auto it = tuple.find(i);
+                if (it == tuple.end())
+                    return script::structures::ScriptAST::star_T();
+                else
+                    return it->second;
+            };
+        }
+
         default:
             return run()->toFunction();
     }
@@ -358,6 +447,7 @@ void script::structures::ScriptAST::setContext(DPtr<std::unordered_map<std::stri
 #include "gsql_gsm/script_1/ScriptVisitor.h"
 #include "yaucl/strings/string_utils.h"
 #include "yaucl/functional/iterators.h"
+#include "yaucl/structures/setoids/basics.h"
 
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
     switch (type) {
@@ -367,6 +457,16 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
         case String:
         case Array:
         case Function:
+        case BooleanT:
+        case DoubleT:
+        case StringT:
+        case StarT:
+        case SortT:
+        case IntegerT:
+        case ArrayOfT:
+        case Tuple:
+        case TupleT:
+        case SigmaT:
             return shared_from_this();
 
         case Assignment:
@@ -375,8 +475,8 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
                 (*arrayList[0]->optGamma)[arrayList[0]->string] = arrayList[1];
             } else if (arrayList[0]->type == Function) {
                 return arrayList[0]->function->apply(arrayList[1]);
-            } else
-                return arrayList[1];
+            }
+            return arrayList[1];
             break;
 
         case Variable:
@@ -433,6 +533,13 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
                     }
                 }
                 return string_(cpy);
+            } else if ((run->type == Tuple) || (run->type == TupleT)) {
+                auto cpy = tuple;
+                cpy[arrayList[1]->toString()] = arrayList[2]->run();
+                if (run->type == TupleT)
+                    return tuple_type_(std::move(cpy));
+                else
+                    return tuple_(std::move(cpy));
             } else {
                 auto list = arrayList[0]->toList();
                 size_t pos = arrayList[1]->toInteger();
@@ -454,6 +561,13 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
             auto run = arrayList[1]->run();
             if (run->type == String) {
                 return string_(yaucl::strings::replace_all(run->string, arrayList[0]->toString(), ""));
+            } else if ((run->type == Tuple) || (run->type == TupleT)) {
+                auto cpy = tuple;
+                cpy.erase(arrayList[1]->toString());
+                if (run->type == TupleT)
+                    return tuple_type_(std::move(cpy));
+                else
+                    return tuple_(std::move(cpy));
             } else {
                 ArrayList<DPtr<script::structures::ScriptAST>> vv;
                 auto list = arrayList[0]->toList();
@@ -467,48 +581,99 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
 
         case AppendE:
         {
-            auto lsx = arrayList[0]->toList();
-            auto lrx = arrayList[0]->toList();
-            ArrayList<DPtr<script::structures::ScriptAST>> v;
-            v.insert(v.end(), std::make_move_iterator(lsx.begin()), std::make_move_iterator(lsx.end()));
-            v.insert(v.end(), std::make_move_iterator(lrx.begin()), std::make_move_iterator(lrx.end()));
-            return array_(std::move(v));
+            auto run = arrayList[0]->run();
+            auto run2 = arrayList[1]->run();
+            if ((run->type == Tuple) && (run2->type == Tuple)) {
+                auto cpy = run->tuple;
+                for (const auto& [k,v] : run2->tuple) {
+                    cpy[k] = v;
+                }
+                return tuple_(std::move(cpy));
+            } else if ((run->type == TupleT) && (run2->type == TupleT)) {
+                auto cpy = run->tuple;
+                for (const auto& [k,v] : run2->tuple) {
+                    cpy[k] = v;
+                }
+                return tuple_type_(std::move(cpy));
+            } else {
+                auto lsx = arrayList[0]->toList();
+                auto lrx = arrayList[1]->toList();
+                ArrayList<DPtr<script::structures::ScriptAST>> v;
+                v.insert(v.end(), std::make_move_iterator(lsx.begin()), std::make_move_iterator(lsx.end()));
+                v.insert(v.end(), std::make_move_iterator(lrx.begin()), std::make_move_iterator(lrx.end()));
+                return array_(std::move(v));
+            }
         }
-
-//
-//        case AssignE:
-//            break;
 
         case ContainsE:
         {
             auto transf = arrayList[0]->run();
-            auto list = arrayList[1]->toList();
-            for (const auto& ref : list) {
-                if (ref->javaComparator(transf) == 0) return true_();
+            auto run = arrayList[1]->run();
+            if ((run->type == Tuple) || (run->type == TupleT)) {
+                return run->tuple.contains(transf->toString()) ? true_() : false_();
+            } else {
+                auto list = run->toList();
+                for (const auto& ref : list) {
+                    if (ref->javaComparator(transf) == 0) return true_();
+                }
+                return false_();
             }
-            return false_();
         }
 
         case FilterE: {
-            ArrayList<DPtr<script::structures::ScriptAST>> vv;
+            auto run = arrayList[1]->run();
             auto prop = arrayList[0]->toFunction();
-            auto list = arrayList[1]->toList();
-            for (const auto& ref : list) {
-                if (prop(ref)->toBoolean())
-                    vv.emplace_back(ref);
+            if ((run->type == Tuple) || (run->type == TupleT)) {
+                StringMap<DPtr<script::structures::ScriptAST>> return_;
+                for (const auto& [k,v]: run->tuple) {
+                    StringMap<DPtr<script::structures::ScriptAST>> map;
+                    map["key"] = string_(k);
+                    map["value"] = v;
+                    if (prop(tuple_(std::move(map)))->toBoolean()) {
+                        return_[k] = v;
+                    }
+                }
+                return (run->type == Tuple) ? tuple_(std::move(return_)) : tuple_type_(std::move(return_));
+            } else {
+                ArrayList<DPtr<script::structures::ScriptAST>> vv;
+                auto list = arrayList[1]->toList();
+                for (const auto& ref : list) {
+                    if (prop(ref)->toBoolean())
+                        vv.emplace_back(ref);
+                }
+                return script::structures::ScriptAST::array_(std::move(vv));
             }
-            return script::structures::ScriptAST::array_(std::move(vv));
         }
 
         case MapE:
         {
+            auto run = arrayList[1]->run();
             auto transf = arrayList[0]->toFunction();
-            auto list = arrayList[1]->toList();
-            ArrayList<DPtr<script::structures::ScriptAST>> vv(list.size());
-            for (const auto& ref : list) {
+            if ((run->type == Tuple) || (run->type == TupleT)) {
+                StringMap<DPtr<script::structures::ScriptAST>> return_;
+                for (const auto& [k,v]: run->tuple) {
+                    StringMap<DPtr<script::structures::ScriptAST>> map;
+                    map["key"] = string_(k);
+                    map["value"] = v;
+                    auto mapResult = transf(tuple_(std::move(map)))->toMap();
+                    auto it = mapResult.find("key");
+                    auto it2 = mapResult.find("value");
+                    if ((it != mapResult.end()) && (it2 != mapResult.end())) {
+                        return_[it->second->toString()] = it2->second;
+                    } else {
+                        throw std::runtime_error("ERROR: the transformation should return key and value as elements!");
+                    }
+                }
+                return (run->type == Tuple) ? tuple_(std::move(return_)) : tuple_type_(std::move(return_));
+            } else {
+                auto list = run->toList();
+                ArrayList<DPtr<script::structures::ScriptAST>> vv(list.size());
+                for (const auto& ref : list) {
                     vv.emplace_back(transf(ref));
+                }
+                return script::structures::ScriptAST::array_(std::move(vv));
             }
-            return script::structures::ScriptAST::array_(std::move(vv));
+
         }
 
         case SubElementsE: {
@@ -520,6 +685,21 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
                     return string_("");
                 else
                     return string_(arrayList[2]->string.substr(begin, end-begin+1));
+            } else if (run2->type == TupleT || run2->type == Tuple) {
+                std::vector<std::string> ls;
+                StringMap<DPtr<script::structures::ScriptAST>> cp;
+                ls.reserve(run2->tuple.size());
+                for (const auto& [k,v] : run2->tuple) {
+                    ls.emplace_back(k);
+                }
+                remove_duplicates(ls);
+                auto first = ls.begin() + begin;
+                auto last = ls.begin() + end;
+                while (first != last) {
+                    cp[*first] = run2->tuple.at(*first);
+                    first++;
+                }
+                return (run2->type == Tuple) ? tuple_(std::move(cp)) : tuple_type_(std::move(cp));
             } else {
                 auto ls = run2->toList();
                 auto first = ls.begin() + begin;
@@ -636,10 +816,11 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
                 auto it = m.find(label);
                 if (it != m.cend()) {
                     for (const auto& content : it->second) {
-                        ArrayList<DPtr<script::structures::ScriptAST>> item;
-                        item.emplace_back(v.emplace_back(script::structures::ScriptAST::integer_((long long)content.id)));
-                        item.emplace_back(v.emplace_back(script::structures::ScriptAST::double_(content.score)));
-                        v.emplace_back(script::structures::ScriptAST::array_(std::move(item)));
+//                        StringMap<DPtr<script::structures::ScriptAST>> content;
+//                        ArrayList<DPtr<script::structures::ScriptAST>> item;
+//                        item.emplace_back(v.emplace_back(script::structures::ScriptAST::integer_((long long)content.id)));
+//                        item.emplace_back(v.emplace_back(script::structures::ScriptAST::double_(content.score)));
+                        v.emplace_back(fromObjectContent(content));
                     }
                 }
             } else {
@@ -682,6 +863,32 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
                 std::cerr << "WARNING: No DB being associated. Returning an empty array for Xi" << std::endl;
             }
             return script::structures::ScriptAST::array_(std::move(v));
+        }
+
+        case ObjX: {
+            auto id = (size_t) arrayList[0]->toInteger();
+            StringMap<DPtr<script::structures::ScriptAST>> vv;
+            if (!db) {
+                std::cerr << "WARNING: No DB being associated. Returning an empty array for Xi" << std::endl;
+            } else {
+                ArrayList<DPtr<script::structures::ScriptAST>> ell, xi, errs;
+                for (const std::string& val : db->xi(id))
+                    xi.emplace_back(script::structures::ScriptAST::string_(val));
+                vv["@xi"] = array_(std::move(xi));
+                for (const std::string& val : db->ell(id))
+                    ell.emplace_back(script::structures::ScriptAST::string_(val));
+                vv["@ell"] = array_(std::move(ell));
+                for (const double val : db->err(id))
+                    errs.emplace_back(script::structures::ScriptAST::double_(val));
+                vv["@err"] = array_(std::move(errs));
+                for (const auto& [k,v] : db->phi(id)) {
+                    ArrayList<DPtr<script::structures::ScriptAST>> local;
+                    for (const auto& content : v)
+                        local.emplace_back(std::move(fromObjectContent(content)));
+                    vv[k] = array_(std::move(local));
+                }
+            }
+            return script::structures::ScriptAST::tuple_(std::move(vv));
         }
 
         case ModE:
@@ -770,6 +977,15 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
             ss << arrayList[0]->toString(true);
             return script::compiler::ScriptVisitor::eval(ss);
         }
+
+        case TypeOf: {
+            return typeInference();
+        }
+
+        case AssertE:
+            if (!arrayList[0]->toBoolean())
+                throw std::runtime_error(arrayList[0]->toString()+": condition does not hold!");
+            return true_();
     }
     return std::make_shared<ScriptAST>();
 }
@@ -819,5 +1035,116 @@ std::ptrdiff_t script::structures::ScriptAST::javaComparator(const DPtr<ScriptAS
             return int_lexicographical_compare(function->body.begin(), function->body.end(),
                                                object->function->body.begin(), object->function->body.end(),
                                                [](const auto& x, auto& y) {return x->javaComparator(y);});
+    }
+}
+
+DPtr<script::structures::ScriptAST> script::structures::ScriptAST::typeInference() {
+    auto self = arrayList[0]->run();
+    switch (self->type) {
+        case Variable:
+            return variableEval()->typeInference();
+
+        case AnyT:
+        case BooleanT:
+        case IntegerT:
+        case DoubleT:
+        case StringT:
+        case TupleT:
+        case ArrayOfT:
+        case SortT:
+        case StarT:
+        case SigmaT:
+            return star_T();
+
+        case Boolean:
+            return boolean_T();
+
+        case Integer:
+            return integer_T();
+
+        case Double:
+            return double_T();
+
+        case String:
+            return string_T();
+
+        case Tuple: {
+            StringMap<DPtr<script::structures::ScriptAST>> type_tuple;
+            for (const auto&[k,v] : self->tuple) {
+                type_tuple[k] = v->typeInference();
+            }
+            return tuple_type_(std::move(type_tuple));
+        }
+
+        case Array: {
+            ArrayList<DPtr<script::structures::ScriptAST>> types;
+            types.reserve(self->arrayList.size());
+            for (const auto& val : self->arrayList) {
+                types.emplace_back(val->typeInference());
+            }
+            remove_duplicates(types, [](const auto& x, const auto& y) {
+                return x->javaComparator(y) < 0;
+            });
+            if (types.empty()) {
+                return array_type(any_T());
+            } else if (types.size() > 1) {
+                throw std::runtime_error("ERROR: at this stage, I cannot unify distinct types together! This requires typing inference with relaxation!");
+            } else {
+                return array_type(std::move(types[0]));
+            }
+        }
+
+        default:
+            throw std::runtime_error("Cannot determine the type of an unevaluated expression! This would require a more expressive type system!");
+//        case Assignment: break;
+//        case Function: break;
+//        case AndE: break;
+//        case OrE: break;
+//        case NotE: break;
+//        case EqE: break;
+//        case IfteE: break;
+//        case ImplyE: break;
+//        case ApplyE: break;
+//        case AtE: break;
+//        case PutE: break;
+//        case RemoveE: break;
+//        case AppendE: break;
+//        case ContainsE: break;
+//        case FilterE: break;
+//        case InvokeE: break;
+//        case MapE: break;
+//        case SubElementsE: break;
+//        case AddE: break;
+//        case DivE: break;
+//        case ModE: break;
+//        case AbsE: break;
+//        case MinusE: break;
+//        case MulE: break;
+//        case SinE: break;
+//        case CosE: break;
+//        case TanE: break;
+//        case ExpE: break;
+//        case LogE: break;
+//        case FloorE: break;
+//        case CeilE: break;
+//        case ConcatE: break;
+//        case GtE: break;
+//        case LtE: break;
+//        case GEqE: break;
+//        case LEqE: break;
+//        case NeqE: break;
+//        case PhiX: break;
+//        case VarPhiX: break;
+//        case EllX: break;
+//        case XiX: break;
+//        case ObjX: break;
+//        case CrossE: break;
+//        case SelfCrossE: break;
+//        case InjE: break;
+//        case FlatE: break;
+//        case LFoldE: break;
+//        case RFoldE: break;
+//        case EvalE: break;
+//        case AssertE: break;
     }
 }

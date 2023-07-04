@@ -6,9 +6,35 @@
  */
 
 grammar script;
+//gsm_gsql: directives*;
+//
+//directives : '#script' EscapedString        #script_from_file
+//           |  SCRIPT LPAREN script RPAREN   #script_from_data
+//           |  CREATEDB EscapedString        #create_db_with_name
+//           |  GSQL LPAREN gsql RPAREN       #actual_gsql
+//           ;
+//
+//gsql : (gexpr '!')* gexpr;
+//
+//gexpr : '<' gexpr '>'                                                     #gparen
+//      | CREATE dbview (ell=expr (xi=expr? (scores=expr (phi=expr)?)?)?)?  #g_create
+//      | ELECT dbview expr                                                 #g_direct_elect
+//      | ELECT dbview EscapedString INTEGER                                #g_zerocontainment_elect
+//      | MAP   dbview expr expr expr                                       #g_map
+//      | DISJOINT dbview+                                                  #g_disjoint
+//      | VARNAME ':=' gexpr                                                #set_variable
+//      | FOLD expr dbview ':' FUN VAR VAR '->>' gexpr                      #g_fold
+//      ;
+//
+//dbview : EscapedString INTEGER                #direct_view
+//       | EscapedString EscapedString INTEGER? #contaiment_from_zero_view
+//       | gexpr                                #subexpr
+//       ;
 
 script  : (expr ';')* expr
      ;
+
+tuple_pair: EscapedString '>>' expr;
 
 expr : '(' expr ')'                          #paren
      | expr '+' expr                         #add
@@ -28,73 +54,139 @@ expr : '(' expr ')'                          #paren
      | expr '>'     expr                    #gt
      | expr '<'     expr                    #lt
      | expr ':='    expr                    #assign
-     | expr '.'     expr                    #invoke
-     | 'eval(' expr ')'                      #eval
      | '(' expr  expr ')'                #apply
      | 'var(' expr ')'                       #var
-     | 'not' expr                            #not
+     | 'eval(' expr ')'                       #eval
+     | NOT expr                            #not
      | expr '=>' expr                        #imply
-     | 'if' expr 'then' expr 'else' expr     #ifte
+     | IF expr THEN expr ELSE expr     #ifte
      | 'sub(' expr ',' expr ':' expr ')' #substring
      | expr '[' expr ']'                    #at
      | expr '[' expr ']:=' expr             #put
      | expr 'in' expr                       #contains
-     | 'remove' expr 'from' expr            #remove
+     | REMOVE expr FROM expr            #remove
+     | STRINGT                       #type_string
      | EscapedString                        #atom_string
+     | BOOLT                         #type_bool
      | BOOL                                 #atom_bool
+     | INTT                           #type_int
+     | DOUBLET                         #type_double
      | NUMBER                               #atom_number
-     | '{' (expr ',')* expr '}'             #atom_array
-     | VARNAME '->' '{' (expr ';')* expr '}'    #function
+     | expr AND_TYPE expr           #type_and
+     | expr OR_TYPE expr            #type_or
+     | LISTT expr                                           #type_list
+     | LPAREN (expr ';')* expr RPAREN                     #atom_array
+     | START                                #kind
+     | ALPAREN (tuple_pair ';')* tuple_pair ARPAREN                     #atom_tuple
+     | 't' ALPAREN (tuple_pair ';')* tuple_pair ARPAREN                 #type_tuple
+     | FUN VARNAME '->' LPAREN (expr ';')* expr RPAREN    #function
      | VARNAME                              #variable
      | 'map(' expr ':' expr ')'             #map
      | 'select(' expr ':' expr ')'          #select
      | 'filter(' expr ':' expr ')'          #filter
      | 'rfold(' expr ',' expr ':' expr ')'          #rfold
      | 'lfold(' expr ',' expr ':' expr ')'          #lfold
-     | 'log' expr expr                      #log
-     | 'pow' expr expr                      #pow
-     | 'sin' expr                           #sin
-     | 'cos' expr                           #cos
-     | 'tan' expr                           #tan
+     | LOG expr expr                      #log
+     | POW expr expr                      #pow
+     | SIN expr                           #sin
+     | COS expr                           #cos
+     | TAN expr                           #tan
      | '|_' expr '_|'                       #floor
      | '|-' expr '-|'                       #ceil
-     | 'phi' expr expr                      #phi
-     | 'ell' expr                           #ell
-     | 'xi'  expr                           #xi
-     | 'inj' expr                           #inj
-     | 'flat' expr                          #flat
-     | expr 'x' expr                    #cross
-     | 'selfx' expr                     #selfcross
-     | 'varphi' expr                        #varphi
+     | PHI expr expr                      #phi
+     | ELL expr                           #ell
+     | XI  expr                           #xi
+     | INJ expr                           #inj
+     | OBJ expr                           #obj
+     | FLAT expr                          #flat
+     | CROSS expr expr                    #cross
+     | SELFX expr                     #selfcross
+     | VARPHI expr                        #varphi
+     | TYPEOF expr                        #typeof
+     | SIGMA expr 'where' expr                       #sigma_type
+     | expr SUBTYPE expr            #subtype_of
+     | ASSERT expr                        #ensure
      ;
 
-
+TYPEOF: 'typeof';
+SIGMA: 'sigma';
+ASSERT: 'assert';
+STRINGT: 'string';
+DOUBLET: 'double';
+BOOLT: 'bool';
+INTT: 'int';
+START: 'star';
+KIND: 'kind';
+LISTT: 'listof';
+SUBTYPE: '<:';
+ALPAREN : '<';
+ARPAREN : '>';
+LPAREN : '{';
+RPAREN : '}';
 BOOL : 'tt'
      | 'ff'
      ;
+AND_TYPE : '/\\';
+OR_TYPE : '\\/';
+FUN : 'fun';
+NOT : 'not';
+IF : 'if';
+THEN : 'then';
+ELSE : 'else';
+REMOVE : 'remove';
+FROM : 'from';
+LOG : 'log';
+POW : 'pow';
+SIN : 'sin';
+COS : 'cos';
+TAN : 'tan';
+PHI : 'phi';
+ELL : 'ell';
+XI : 'xi';
+INJ : 'inj';
+OBJ : 'OBJ';
+FLAT : 'flat';
+SELFX : 'selfx';
+VARPHI : 'varphi';
+CROSS : 'cross';
+SCRIPT : 'script';
+GSQL : 'gsql';
+CREATEDB : 'CREATEDB';
 VARNAME   : [a-z]+ ;
-FUNVAR    : [A-Z]+ ;
+CREATE : 'CREATE';
+ELECT : 'ELECT';
+MAP : 'MAP';
+DISJOINT : 'DISJOINT';
+FOLD : 'FOLD';
 EscapedString : '"' (~[\\"] | '\\' [\\"])* '"';
-NUMBER : DecimalFloatingConstant ;
-WS     : [ \n\t\r]+ -> skip;
+NUMBER : DecimalFloatingConstant | DIGIT;
+INTEGER : DIGIT;
+SPACE : [ \t\r\n]+ -> skip;
+COMMENT
+    : '/*' .*? '*/' -> skip
+;
 
+LINE_COMMENT
+    : '//' ~[\r\n]* -> skip
+;
 
 fragment
 DecimalFloatingConstant
-    :   [0-9]* '.' [0-9]+
-        |   [0-9]+ '.'
+    :   [0-9]* '.' DIGIT
+        |   DIGIT '.'
 
-    |   [0-9]+ ExponentPart
+    |   DIGIT ExponentPart
     ;
 
 fragment
 FractionalConstant
-    :   [0-9]* '.' [0-9]+
-    |   [0-9]+ '.'
+    :   [0-9]* '.' DIGIT
+    |   DIGIT '.'
     ;
 
 fragment
 ExponentPart
-    :   [eE] [+-]? [0-9]+
+    :   [eE] [+-]? DIGIT
     ;
 
+fragment DIGIT : [0-9]+;

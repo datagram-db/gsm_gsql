@@ -33,7 +33,7 @@ void dump_to_xml(const gsm_inmemory_db& db,
     tinyxml2::XMLElement *gsm = doc.NewElement("gsm");
     {
         tinyxml2::XMLElement *db_node = gsm->InsertNewChildElement("database");
-        db_node->SetAttribute("o", db.o);
+        db_node->SetAttribute("o", db.max_id);
         for (const auto& [id, obj] : db.O) {
             tinyxml2::XMLElement *obj_node = db_node->InsertNewChildElement("object");
             std::string o_id = std::to_string(id);

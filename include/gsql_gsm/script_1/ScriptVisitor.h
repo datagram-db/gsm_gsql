@@ -29,7 +29,7 @@ namespace script {
             std::any visitSelect(scriptParser::SelectContext *context) override;
             std::any visitMult(scriptParser::MultContext *context) override;
             std::any visitLt(scriptParser::LtContext *context) override;
-            std::any visitInvoke(scriptParser::InvokeContext *context) override;
+//            std::any visitInvoke(scriptParser::InvokeContext *context) override;
             std::any visitSubstring(scriptParser::SubstringContext *context) override;
             std::any visitRemove(scriptParser::RemoveContext *context) override;
             std::any visitPut(scriptParser::PutContext *context) override;
@@ -64,38 +64,51 @@ namespace script {
             std::any visitEll(scriptParser::EllContext *context) override;
             std::any visitPhi(scriptParser::PhiContext *context) override;
             std::any visitXi(scriptParser::XiContext *context) override;
-
             std::any visitMod(scriptParser::ModContext *context) override;
-
             std::any visitFlat(scriptParser::FlatContext *context) override;
-
             std::any visitSelfcross(scriptParser::SelfcrossContext *context) override;
-
             std::any visitInj(scriptParser::InjContext *context) override;
-
             std::any visitCross(scriptParser::CrossContext *context) override;
-
             std::any visitAbs(scriptParser::AbsContext *context) override;
-
             std::any visitRfold(scriptParser::RfoldContext *context) override;
-
             std::any visitLfold(scriptParser::LfoldContext *context) override;
-
             std::any visitFilter(scriptParser::FilterContext *context) override;
-
             std::any visitCos(scriptParser::CosContext *context) override;
-
             std::any visitTan(scriptParser::TanContext *context) override;
-
             std::any visitCeil(scriptParser::CeilContext *context) override;
-
             std::any visitLog(scriptParser::LogContext *context) override;
-
             std::any visitPow(scriptParser::PowContext *context) override;
-
             std::any visitSin(scriptParser::SinContext *context) override;
-
             std::any visitFloor(scriptParser::FloorContext *context) override;
+
+
+            std::any visitTuple_pair(scriptParser::Tuple_pairContext *context) override;
+
+            std::any visitType_bool(scriptParser::Type_boolContext *context) override;
+
+            std::any visitEnsure(scriptParser::EnsureContext *context) override;
+
+            std::any visitKind(scriptParser::KindContext *context) override;
+
+            std::any visitType_tuple(scriptParser::Type_tupleContext *context) override;
+
+            std::any visitSigma_type(scriptParser::Sigma_typeContext *context) override;
+
+            std::any visitType_string(scriptParser::Type_stringContext *context) override;
+
+            std::any visitTypeof(scriptParser::TypeofContext *context) override;
+
+            std::any visitType_int(scriptParser::Type_intContext *context) override;
+
+            std::any visitAtom_tuple(scriptParser::Atom_tupleContext *context) override;
+
+            std::any visitType_double(scriptParser::Type_doubleContext *context) override;
+
+            std::any visitType_list(scriptParser::Type_listContext *context) override;
+
+            std::any visitObj(scriptParser::ObjContext *context) override;
+
+//            std::any visitStar(scriptParser::StarContext *context) override;
         };
 
     } // script

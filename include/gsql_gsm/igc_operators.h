@@ -19,26 +19,27 @@ inline double to_degrees(double radians)
 //for finding circles for thermals
 //https://github.com/marcin-osowski/igc_lib/blob/master/igc_lib.py
 static inline
-void calculate_bearing_change(gsm_inmemory_db &db, int &nodesIterator)
+gsm_inmemory_db_view calculate_bearing_change(gsm_inmemory_db_view& view,
+                                              size_t node)
 {
     double previousLong = '\0';
     double previousLat = '\0';
     long long previousTime = '\0';
     double previousBearing = '\0';
 
-    for(auto &bFix : db.O[nodesIterator].phi["b_fix"])
+    for(auto &bFix : view.db->O[node].phi["b_fix"])
     {
         double nowLong;
         double nowLat;
         long long nowTime;
-        for(auto &data : db.O[bFix.id].phi["data"])
+        for(auto &data : view.db->O[bFix.id].phi["data"])
         {
-            if(db.O[data.id].ell[0] == "latitude_double")
-                nowLat = stod(db.O[data.id].xi[0]);
-            else if(db.O[data.id].ell[0] == "longitude_double")
-                nowLong = stod(db.O[data.id].xi[0]);
-            else if(db.O[data.id].ell[0] == "unix_time")
-                nowTime = stoll(db.O[data.id].xi[0]);
+            if(view.db->O[data.id].ell[0] == "latitude_double")
+                nowLat = stod(view.db->O[data.id].xi[0]);
+            else if(view.db->O[data.id].ell[0] == "longitude_double")
+                nowLong = stod(view.db->O[data.id].xi[0]);
+            else if(view.db->O[data.id].ell[0] == "unix_time")
+                nowTime = stoll(view.db->O[data.id].xi[0]);
             else
                 continue;
         }
@@ -51,10 +52,8 @@ void calculate_bearing_change(gsm_inmemory_db &db, int &nodesIterator)
         }
 
         double dLon = (nowLong - previousLong);
-
         double y = sin(dLon) * cos(nowLat);
         double x = (cos(previousLat) * sin(nowLat)) - (sin(previousLat) * cos(nowLat) * cos(dLon));
-
         double bearing = atan2(y, x);
 
         bearing = to_degrees(bearing);
@@ -84,12 +83,14 @@ void calculate_bearing_change(gsm_inmemory_db &db, int &nodesIterator)
         }
 
     }
+    return view;
 }
 
 
 
 static inline
-void calculate_lift(gsm_inmemory_db &db, int &nodesIterator, int &iterator)
+gsm_inmemory_db_view calculate_lift(gsm_inmemory_db_view& view,
+                                    size_t nodesIterator)
 {
     std::vector<gsm_object_xi_content> tablePhiLifts = {};
     std::vector<double> scoresLifts = {};
@@ -99,15 +100,15 @@ void calculate_lift(gsm_inmemory_db &db, int &nodesIterator, int &iterator)
     int previousAltitude = '\0';
     bool newLiftSeries = true;
 
-    for(auto &bFix : db.O[nodesIterator].phi["b_fix"])
+    for(auto &bFix : view.db->O[nodesIterator].phi["b_fix"])
     {
         int altitude;
         int dataId;
-        for(auto &data : db.O[bFix.id].phi["data"])
+        for(auto &data : view.db->O[bFix.id].phi["data"])
         {
-            if (db.O[data.id].ell[0] == "pressure_altitude")
+            if (view.db->O[data.id].ell[0] == "pressure_altitude")
             {
-                altitude = stoi(db.O[data.id].xi[0]);
+                altitude = stoi(view.db->O[data.id].xi[0]);
                 dataId = data.id;
             }
         }
@@ -135,16 +136,16 @@ void calculate_lift(gsm_inmemory_db &db, int &nodesIterator, int &iterator)
             tablePhiLift.emplace_back(dataId);
             scoresLift.emplace_back(1.0);
 
-            createFast(db, ++iterator, {"lift"}, {std::to_string(diffAltitude)}, {scoresLift}, {{"altitudes", {tablePhiLift}}});
-            tablePhiLiftSeries.push_back(iterator);
+            createFast(view, ++view.db->max_id, {"lift"}, {std::to_string(diffAltitude)}, {scoresLift}, {{"altitudes", {tablePhiLift}}});
+            tablePhiLiftSeries.push_back(++view.db->max_id);
             scoresLiftSeries.push_back(1.0);
         }
         else
         {
             if(!newLiftSeries)
             {
-                createFast(db, ++iterator, {"lift_series"}, {}, {scoresLiftSeries}, {{"lift", {tablePhiLiftSeries}}});
-                tablePhiLifts.emplace_back(iterator);
+                createFast(view, ++++view.db->max_id, {"lift_series"}, {}, {scoresLiftSeries}, {{"lift", {tablePhiLiftSeries}}});
+                tablePhiLifts.emplace_back(++view.db->max_id);
                 scoresLifts.emplace_back(1.0);
             }
             newLiftSeries = true;
@@ -152,7 +153,7 @@ void calculate_lift(gsm_inmemory_db &db, int &nodesIterator, int &iterator)
         previousAltitude = altitude;
         previousId = dataId;
     }
-    createFast(db, ++iterator, {"lifts"}, {}, {scoresLifts}, {{"lift_series", {tablePhiLifts}}});
+    createFast(view, ++++view.db->max_id, {"lifts"}, {}, {scoresLifts}, {{"lift_series", {tablePhiLifts}}});
 }
 
 //https://github.com/chrisveness/latlon-geohash/blob/master/latlon-geohash.js
@@ -209,7 +210,8 @@ std::string geohash_encode(double lat, double lon)
 }
 
 static inline
-void generate_weatherbucket(gsm_inmemory_db &db, int &nodesIterator, int &iterator) {
+void generate_weatherbucket(gsm_inmemory_db_view &view,
+                            size_t nodesIterator) {
     std::vector<gsm_object_xi_content> tablePhiGeoHashes = {};
     std::vector<double> scoresGeohashes = {};
     std::unordered_map<std::string, std::vector<gsm_object_xi_content>> tablePhiGeoHash;
@@ -217,17 +219,17 @@ void generate_weatherbucket(gsm_inmemory_db &db, int &nodesIterator, int &iterat
     long long previousUnixTime = -1;
     long long unixTime;
     bool added = false;
-    for (auto &bFix: db.O[nodesIterator].phi["b_fix"]) {
+    for (auto &bFix: view.db->O[nodesIterator].phi["b_fix"]) {
         double lat;
         double lon;
 
-        for (auto &data: db.O[bFix.id].phi["data"]) {
-            if (db.O[data.id].ell[0] == "latitude_double") {
-                lat = stod(db.O[data.id].xi[0]);
-            } else if (db.O[data.id].ell[0] == "longitude_double") {
-                lon = stod(db.O[data.id].xi[0]);
-            } else if (db.O[data.id].ell[0] == "unix_time") {
-                unixTime = stoll(db.O[data.id].xi[0]);
+        for (auto &data: view.db->O[bFix.id].phi["data"]) {
+            if (view.db->O[data.id].ell[0] == "latitude_double") {
+                lat = stod(view.db->O[data.id].xi[0]);
+            } else if (view.db->O[data.id].ell[0] == "longitude_double") {
+                lon = stod(view.db->O[data.id].xi[0]);
+            } else if (view.db->O[data.id].ell[0] == "unix_time") {
+                unixTime = stoll(view.db->O[data.id].xi[0]);
             }
         }
         if (previousUnixTime == -1) {
@@ -240,12 +242,12 @@ void generate_weatherbucket(gsm_inmemory_db &db, int &nodesIterator, int &iterat
             //at time bucket
             for (auto &geoHashObject: tablePhiGeoHash) {
                 //TODO: load weather, add weather to phi
-                createFast(db, ++iterator, {"geohash"}, {geoHashObject.first}, {scoresGeohash[geoHashObject.first]},
+                createFast(view, ++view.db->max_id, {"geohash"}, {geoHashObject.first}, {scoresGeohash[geoHashObject.first]},
                            {{{"data"}, {geoHashObject.second}}});
-                tablePhiGeoHashes.emplace_back(iterator);
+                tablePhiGeoHashes.emplace_back(view.db->max_id);
                 scoresGeohashes.emplace_back(1.0);
             }
-            createFast(db, ++iterator, {"geohashes"}, {std::to_string(previousUnixTime)}, {scoresGeohashes},
+            createFast(view, ++view.db->max_id, {"geohashes"}, {std::to_string(previousUnixTime)}, {scoresGeohashes},
                        {{{"geohash"}, {tablePhiGeoHashes}}});
             tablePhiGeoHash = {};
             scoresGeohash = {};
@@ -264,11 +266,11 @@ void generate_weatherbucket(gsm_inmemory_db &db, int &nodesIterator, int &iterat
         for (auto &geoHashObject: tablePhiGeoHash)
         {
             //TODO: load weather, add weather to phi
-            createFast(db, ++iterator, {"geohash"}, {geoHashObject.first},{scoresGeohash[geoHashObject.first]},{{{"data"}, {geoHashObject.second}}});
-            tablePhiGeoHashes.emplace_back(iterator);
+            createFast(view, ++view.db->max_id, {"geohash"}, {geoHashObject.first},{scoresGeohash[geoHashObject.first]},{{{"data"}, {geoHashObject.second}}});
+            tablePhiGeoHashes.emplace_back(view.db->max_id);
             scoresGeohashes.emplace_back(1.0);
         }
-        createFast(db, ++iterator, {"geohashes"}, {std::to_string(previousUnixTime)},{scoresGeohashes},{{{"geohash"}, {tablePhiGeoHashes}}});
+        createFast(view, ++view.db->max_id, {"geohashes"}, {std::to_string(previousUnixTime)},{scoresGeohashes},{{{"geohash"}, {tablePhiGeoHashes}}});
     }
 }
 
