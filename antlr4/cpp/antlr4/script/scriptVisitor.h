@@ -23,6 +23,8 @@ public:
 
     virtual std::any visitTuple_pair(scriptParser::Tuple_pairContext *context) = 0;
 
+    virtual std::any visitCoerce(scriptParser::CoerceContext *context) = 0;
+
     virtual std::any visitVarphi(scriptParser::VarphiContext *context) = 0;
 
     virtual std::any visitSelect(scriptParser::SelectContext *context) = 0;
@@ -48,6 +50,8 @@ public:
     virtual std::any visitSelfcross(scriptParser::SelfcrossContext *context) = 0;
 
     virtual std::any visitLeq(scriptParser::LeqContext *context) = 0;
+
+    virtual std::any visitType_label(scriptParser::Type_labelContext *context) = 0;
 
     virtual std::any visitNeq(scriptParser::NeqContext *context) = 0;
 
@@ -81,6 +85,8 @@ public:
 
     virtual std::any visitType_or(scriptParser::Type_orContext *context) = 0;
 
+    virtual std::any visitType_lex(scriptParser::Type_lexContext *context) = 0;
+
     virtual std::any visitSigma_type(scriptParser::Sigma_typeContext *context) = 0;
 
     virtual std::any visitContains(scriptParser::ContainsContext *context) = 0;
@@ -90,6 +96,8 @@ public:
     virtual std::any visitAtom_number(scriptParser::Atom_numberContext *context) = 0;
 
     virtual std::any visitAt(scriptParser::AtContext *context) = 0;
+
+    virtual std::any visitEnforce(scriptParser::EnforceContext *context) = 0;
 
     virtual std::any visitSub(scriptParser::SubContext *context) = 0;
 

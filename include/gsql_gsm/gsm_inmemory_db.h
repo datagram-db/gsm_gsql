@@ -35,13 +35,13 @@ struct gsm_inmemory_db {
     // maximum Id available
 //    size_t max_id;
 
-    gsm_inmemory_db(uint_fast32_t id = 0, const std::vector<std::string> &ell = {}, const std::vector<std::string> &xi = {},
+    gsm_inmemory_db(uint_fast32_t id = 0, const std::string &ell = {}, const std::vector<std::string> &xi = {},
                     const std::vector<double> &scores = {}, const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi = {});
     gsm_inmemory_db(const gsm_inmemory_db& ) = default;
     gsm_inmemory_db(gsm_inmemory_db&& ) = default;
     gsm_inmemory_db& operator=(const gsm_inmemory_db& ) = default;
     gsm_inmemory_db& operator=(gsm_inmemory_db&& ) = default;
-    inline const std::vector<std::string>& ell(size_t i) const { return O.at(i).ell; }
+    inline const std::string& ell(size_t i) const { return O.at(i).ell; }
     inline const std::vector<std::string>& xi(size_t i ) const { return O.at(i).xi; }
     inline const std::vector<double>& err(size_t i) const { return O.at(i).scores; }
     inline const std::unordered_map<std::string, std::vector<gsm_object_xi_content>>& phi(size_t i) const {return O.at(i).phi; }

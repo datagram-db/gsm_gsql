@@ -29,7 +29,7 @@
 #include <gsql_gsm/gsm_inmemory_db.h>
 #include <functional>
 
-using ellT = std::function<std::vector<std::string>(const gsm_object&)>;
+using ellT = std::function<std::string(const gsm_object&)>;
 using xiT = std::function<std::vector<std::string>(const gsm_object&)>;
 using phiT = std::function<std::unordered_map<std::string, std::vector<gsm_object_xi_content>>(const gsm_object&)>;
 
@@ -55,7 +55,7 @@ using phiT = std::function<std::unordered_map<std::string, std::vector<gsm_objec
 static inline
 gsm_inmemory_db_view createFast(struct gsm_inmemory_db_view& db,
                 uint_fast32_t id = 0,
-                const std::vector<std::string> &ell = {},
+                const std::string &ell = {},
                 const std::vector<std::string> &xi = {},
                 const std::vector<double> &scores = {},
                 const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi = {}) {

@@ -40,9 +40,9 @@ void dump_to_xml(const gsm_inmemory_db& db,
             obj_node->SetAttribute("id", id);
 
             tinyxml2::XMLElement *ell_node = obj_node->InsertNewChildElement("ell");
-            for (const auto& l : obj.ell) {
-                ell_node->InsertNewChildElement("item")->InsertNewText(l.c_str());
-            }
+//            for (const auto& l : obj.ell) {
+                ell_node->InsertNewChildElement("item")->InsertNewText(obj.ell.c_str());
+//            }
 
             tinyxml2::XMLElement *xi_node = obj_node->InsertNewChildElement("xi");
             for (const auto& l : obj.xi) {

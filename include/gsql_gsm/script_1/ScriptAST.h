@@ -9,6 +9,7 @@
 #include <gsql_gsm/script_1/SerializableFunction.h>
 #include <gsql_gsm/gsm_inmemory_db.h>
 #include <functional>
+#include <optional>
 
 #ifndef ALLOC_TYPE
 #define ALLOC_TYPE(NAME,case) do { if (!(NAME).get()) { (NAME) = std::make_shared<ScriptAST>(); (NAME)->type = case; } return (NAME);  } while (0)
@@ -19,16 +20,23 @@ namespace script::structures {
     struct Funzione;
     using Gamma = HashMap<std::string, DPtr<ScriptAST>>;
 
+
     enum t {
-        TypeOf,
+        SigmaT,
+        StarT,
+        ANDT,
+        ORT,
+        LABELT,
+        ENFORCET,
+        LexTT,
         AnyT,
-        SortT,
         BooleanT,
         IntegerT,
         DoubleT,
         StringT,
         TupleT,
         ArrayOfT,
+        TypeOf,
         Boolean,
         Integer,
         Double,
@@ -87,10 +95,8 @@ namespace script::structures {
         RFoldE,
         EvalE,
         AssertE,
-        SigmaT,
-        StarT,
-        ANDT,
-        ORT
+        SubtypeOfE,
+        CoerceE
     };
 
     //// Generic object for expressions
@@ -105,12 +111,37 @@ namespace script::structures {
         t type;
         DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>> optGamma;
         gsm_inmemory_db* db;
+        DPtr<ScriptAST> casted_type;
 
         ScriptAST() { }
         ScriptAST(const ScriptAST&) = default;
         ScriptAST(ScriptAST&&) = default;
         ScriptAST& operator=(const ScriptAST&) = default;
         ScriptAST& operator=(ScriptAST&&) = default;
+
+
+        inline bool isType() const {
+            switch (type) {
+                case SigmaT:
+                case StarT:
+                case ANDT:
+                case ORT:
+                case LABELT:
+                case ENFORCET:
+                case LexTT:
+                case AnyT:
+                case BooleanT:
+                case IntegerT:
+                case DoubleT:
+                case StringT:
+                case TupleT:
+                case ArrayOfT:
+                case TypeOf:
+                    return true;
+                default:
+                    return false;
+            }
+        }
 
     void setContext(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& g,
                     gsm_inmemory_db* db);
@@ -317,6 +348,16 @@ namespace script::structures {
 
         std::string toString(bool quoted=false) const;
 
+
+
+        /**
+         * If the left subtype can be reconciled to the one on the right, then I shall proivde a transformation function for those!
+         * @param left: subtype
+         * @param right: supertype
+         * @return If there is a viable transformation from the first to the latter, then there should be a conversion between the two types
+         */
+        std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>> subTyping(DPtr<script::structures::ScriptAST>& left, DPtr<script::structures::ScriptAST>& right);
+
         DPtr<ScriptAST> var() {
             if (type == t::Variable) {
                 return shared_from_this();
@@ -331,6 +372,13 @@ namespace script::structures {
         static inline DPtr<ScriptAST> string_(const std::string& i) {
             auto val = std::make_shared<ScriptAST>();
             val->type = t::String ;
+            val->string = i;
+            return val;
+        }
+
+        static inline DPtr<ScriptAST> label_T_(const std::string& i) {
+            auto val = std::make_shared<ScriptAST>();
+            val->type = t::LABELT ;
             val->string = i;
             return val;
         }
@@ -368,6 +416,8 @@ namespace script::structures {
         static inline DPtr<ScriptAST> string_T() {
             ALLOC_TYPE(STRINGT, t::StringT);
         }
+
+
 
         static inline DPtr<ScriptAST> boolean_T() {
             ALLOC_TYPE(BOOLEANT, t::BooleanT);

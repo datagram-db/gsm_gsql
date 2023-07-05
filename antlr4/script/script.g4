@@ -66,20 +66,22 @@ expr : '(' expr ')'                          #paren
      | expr '[' expr ']:=' expr             #put
      | expr 'in' expr                       #contains
      | REMOVE expr FROM expr            #remove
-     | STRINGT                       #type_string
-     | EscapedString                        #atom_string
-     | BOOLT                         #type_bool
-     | BOOL                                 #atom_bool
-     | INTT                           #type_int
-     | DOUBLET                         #type_double
      | NUMBER                               #atom_number
-     | expr AND_TYPE expr           #type_and
-     | expr OR_TYPE expr            #type_or
+     | BOOL                                 #atom_bool
+     | EscapedString                        #atom_string
+     | STRINGT                                              #type_string
+     | BOOLT                                                #type_bool
+     | INTT                                                 #type_int
+     | DOUBLET                                              #type_double
+     | expr AND_TYPE expr                                   #type_and
+     | expr OR_TYPE expr                                    #type_or
      | LISTT expr                                           #type_list
+     | 't<'  (tuple_pair ';')* tuple_pair ARPAREN           #type_tuple
+     | LABELT EscapedString               #type_label
+     | ObjT expr expr                     #type_lex
      | LPAREN (expr ';')* expr RPAREN                     #atom_array
      | START                                #kind
      | ALPAREN (tuple_pair ';')* tuple_pair ARPAREN                     #atom_tuple
-     | 't<'  (tuple_pair ';')* tuple_pair ARPAREN                 #type_tuple
      | FUN VARNAME '->' LPAREN (expr ';')* expr RPAREN    #function
      | VARNAME                              #variable
      | 'map(' expr ':' expr ')'             #map
@@ -107,12 +109,17 @@ expr : '(' expr ')'                          #paren
      | SIGMA expr 'where' expr                       #sigma_type
      | expr SUBTYPE expr            #subtype_of
      | ASSERT expr                        #ensure
+     | expr ENFORCE expr                  #enforce
+     | COERCE expr 'as' expr                #coerce
      ;
 
+COERCE : 'coerce';
+ObjT: 'ObjT';
 TYPEOF: 'typeof';
 SIGMA: 'sigma';
 ASSERT: 'assert';
 STRINGT: 'string';
+LABELT: 'label';
 DOUBLET: 'double';
 BOOLT: 'bool';
 INTT: 'int';
@@ -159,6 +166,7 @@ ELECT : 'ELECT';
 MAP : 'MAP';
 DISJOINT : 'DISJOINT';
 FOLD : 'FOLD';
+ENFORCE: 'enforce_subtype';
 EscapedString : '"' (~[\\"] | '\\' [\\"])* '"';
 NUMBER : DecimalFloatingConstant | DIGIT;
 INTEGER : DIGIT;

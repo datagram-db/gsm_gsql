@@ -551,7 +551,9 @@ namespace script {
         }
 
         std::any ScriptVisitor::visitSubtype_of(scriptParser::Subtype_ofContext *context) {
-            throw std::runtime_error("ERROR: FUTURE WORK!");
+            auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(0)));
+            auto rx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(1)));
+            return {script::structures::ScriptAST::binop_(this->context, script::structures::t::SubtypeOfE, std::move(lx), std::move(rx))};
         }
 
         std::any ScriptVisitor::visitType_or(scriptParser::Type_orContext *context) {
@@ -574,6 +576,30 @@ namespace script {
             auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(0)));
             auto rx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(1)));
             return {script::structures::ScriptAST::binop_(this->context, script::structures::t::ProjectE, std::move(lx), std::move(rx))};
+        }
+
+        std::any ScriptVisitor::visitType_label(scriptParser::Type_labelContext *context) {
+            auto result = context->EscapedString()->getSymbol()->getText();
+            result = result.substr(1, result.size()-2);
+            result = yaucl::strings::replace_all(result, "\\\"", "\"");
+            return {script::structures::ScriptAST::label_T_(result)};
+        }
+
+        std::any ScriptVisitor::visitEnforce(scriptParser::EnforceContext *context) {
+            auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(0)));
+            auto rx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(1)));
+            return {script::structures::ScriptAST::binop_(this->context, script::structures::t::ENFORCET, std::move(lx), std::move(rx))};
+        }
+
+        std::any ScriptVisitor::visitType_lex(scriptParser::Type_lexContext *context) {
+            auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr()));
+            return {script::structures::ScriptAST::unop_(this->context, script::structures::t::LexTT, std::move(lx))};
+        }
+
+        std::any ScriptVisitor::visitCoerce(scriptParser::CoerceContext *context) {
+            auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(0)));
+            auto rx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(1)));
+            return {script::structures::ScriptAST::binop_(this->context, script::structures::t::CoerceE, std::move(lx), std::move(rx))};
         }
 
     } // script

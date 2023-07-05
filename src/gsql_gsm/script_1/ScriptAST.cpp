@@ -494,13 +494,24 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
         case DoubleT:
         case StringT:
         case StarT:
-        case SortT:
         case IntegerT:
         case ArrayOfT:
         case Tuple:
         case TupleT:
-        case SigmaT:
+        case AnyT:
+        case LexTT:
             return shared_from_this();
+
+        case LABELT:
+            if (optGamma) {
+                auto it = optGamma->find(string);
+                if (it == optGamma->end()) return shared_from_this();
+                auto it2 = it->second->run();
+                return ((it2->isType())) ?
+                       it2 :
+                       shared_from_this();
+            } else
+                return shared_from_this();
 
         case Assignment:
             arrayList[1] = arrayList[1]->run();
@@ -913,14 +924,13 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
 
         case EllX: {
             auto id = (size_t) arrayList[0]->toInteger();
-            ArrayList<DPtr<script::structures::ScriptAST>> v;
+//            ArrayList<DPtr<script::structures::ScriptAST>> v;
             if (db) {
-                for (const std::string& val : db->ell(id))
-                    v.emplace_back(script::structures::ScriptAST::string_(val));
+                return string_(db->ell(id));
             } else {
                 std::cerr << "WARNING: No DB being associated. Returning an empty array for Ell" << std::endl;
             }
-            return script::structures::ScriptAST::array_(std::move(v));
+            return string_("");
         }
 
         case XiX:{
@@ -941,13 +951,15 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
             if (!db) {
                 std::cerr << "WARNING: No DB being associated. Returning an empty array for Xi" << std::endl;
             } else {
-                ArrayList<DPtr<script::structures::ScriptAST>> ell, xi, errs;
+//                DPtr<script::structures::ScriptAST> ell;
+                ArrayList<DPtr<script::structures::ScriptAST>> xi, errs;
                 for (const std::string& val : db->xi(id))
                     xi.emplace_back(script::structures::ScriptAST::string_(val));
                 vv["@xi"] = array_(std::move(xi));
-                for (const std::string& val : db->ell(id))
-                    ell.emplace_back(script::structures::ScriptAST::string_(val));
-                vv["@ell"] = array_(std::move(ell));
+                vv["@ell"] = string_(db->ell(id));
+//                for (const std::string& val : db->ell(id))
+//                    ell.emplace_back(script::structures::ScriptAST::string_(val));
+//                vv["@ell"] = array_(std::move(ell));
                 for (const double val : db->err(id))
                     errs.emplace_back(script::structures::ScriptAST::double_(val));
                 vv["@err"] = array_(std::move(errs));
@@ -1056,6 +1068,44 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
             if (!arrayList[0]->toBoolean())
                 throw std::runtime_error(arrayList[0]->toString()+": condition does not hold!");
             return true_();
+
+        case SigmaT:
+            return binop_(optGamma, SigmaT, arrayList[0]->run(), arrayList[1]->run());
+
+        case ANDT:
+            return binop_(optGamma, ANDT, arrayList[0]->run(), arrayList[1]->run());
+
+        case ORT:
+            return binop_(optGamma, ORT, arrayList[0]->run(), arrayList[1]->run());
+
+        case ENFORCET: {
+            auto self = arrayList[0]->run();
+            auto superType = arrayList[1]->run();
+            // TODO: checking the admissibility of the enforcement!
+            // TODO: if yes, then remember the inference step in the inference graph!
+            bool return_result = false;
+            return return_result ? true_() : false_();
+        } break;
+
+        case SubtypeOfE: {
+            auto x = arrayList[0]->run();
+            auto y = arrayList[1]->run();
+            return subTyping(x, y).has_value() ? true_() : false_();
+        } break;
+
+        case CoerceE: {
+            auto self = arrayList[0]->run();
+            auto thisType = self->typeInference();
+            auto superType = arrayList[1]->typeInference();
+            auto result = subTyping(thisType, superType);
+            if (!result.has_value()) {
+                throw std::runtime_error("ERROR: term \"" + self->toString(true) + "\" cannot be casted to " + superType->toString() + " as the term is of type " + thisType->toString() );
+            } else {
+                self = result.value()(std::move(self)); // Using the typecasting resulting from the inference step
+                self->casted_type = superType; // Setting this as the resulting type anyway
+                return self; // returning the casted object
+            }
+        }
     }
     return std::make_shared<ScriptAST>();
 }
@@ -1114,6 +1164,15 @@ std::ptrdiff_t script::structures::ScriptAST::javaComparator(const DPtr<ScriptAS
                                                object->arrayList.begin(), object->arrayList.end(),
                                                [](const auto& x, auto& y) {return x->javaComparator(y);});
 
+        case LexTT:
+        {
+            auto x = arrayList[0]->toList();
+            auto y = arrayList[1]->toList();
+            return int_lexicographical_compare(x.begin(), x.end(),
+                                               y.begin(), y.end(),
+                                               [](const auto& x, auto& y) {return x->javaComparator(y);});
+        }
+
         case Tuple:
         case TupleT: {
             std::vector<std::pair<std::string, DPtr<script::structures::ScriptAST>>> left, right;
@@ -1143,63 +1202,81 @@ std::ptrdiff_t script::structures::ScriptAST::javaComparator(const DPtr<ScriptAS
 }
 
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::typeInference() {
+    if (type == ObjX) {
+
+    }
     auto self = run();
-    switch (self->type) {
-        case Variable:
-            return variableEval()->typeInference();
+    if (self->casted_type) {
+        return self->casted_type;
+    } else {
+        DPtr<script::structures::ScriptAST> result;
+        switch (self->type) {
+            case Variable:
+                result = self->variableEval()->typeInference();
+                break;
 
-        case AnyT:
-        case BooleanT:
-        case IntegerT:
-        case DoubleT:
-        case StringT:
-        case TupleT:
-        case ArrayOfT:
-        case SortT:
-        case StarT:
-        case SigmaT:
-            return star_T();
+            case AnyT:
+            case BooleanT:
+            case IntegerT:
+            case DoubleT:
+            case StringT:
+            case TupleT:
+            case ArrayOfT:
+            case StarT:
+            case SigmaT:
+            case ANDT:
+            case ORT:
+            case LABELT:
+                result = star_T();
+                break;
 
-        case Boolean:
-            return boolean_T();
+            case Boolean:
+                result = boolean_T();
+                break;
 
-        case Integer:
-            return integer_T();
+            case Integer:
+                result = integer_T();
+                break;
 
-        case Double:
-            return double_T();
+            case Double:
+                result = double_T();
+                break;
 
-        case String:
-            return string_T();
+            case String:
+                result = string_T();
+                break;
 
-        case Tuple: {
-            StringMap<DPtr<script::structures::ScriptAST>> type_tuple;
-            for (const auto&[k,v] : self->tuple) {
-                type_tuple[k] = v->typeInference();
+            case Tuple: {
+                StringMap<DPtr<script::structures::ScriptAST>> type_tuple;
+                for (const auto&[k,v] : self->tuple) {
+                    type_tuple[k] = v->typeInference();
+                }
+                result = tuple_type_(std::move(type_tuple));
+                break;
             }
-            return tuple_type_(std::move(type_tuple));
-        }
 
-        case Array: {
-            ArrayList<DPtr<script::structures::ScriptAST>> types;
-            types.reserve(self->arrayList.size());
-            for (const auto& val : self->arrayList) {
-                types.emplace_back(val->typeInference());
-            }
-            remove_duplicates(types, [](const auto& x, const auto& y) {
-                return x->javaComparator(y) < 0;
-            });
-            if (types.empty()) {
-                return array_type(any_T());
-            } else if (types.size() > 1) {
-                throw std::runtime_error("ERROR: at this stage, I cannot unify distinct types together! This requires typing inference with relaxation!");
-            } else {
-                return array_type(std::move(types[0]));
-            }
-        }
+            case Array: {
+                ArrayList<DPtr<script::structures::ScriptAST>> types;
+                types.reserve(self->arrayList.size());
+                for (const auto& val : self->arrayList) {
+                    types.emplace_back(val->typeInference());
+                }
+                remove_duplicates(types, [](const auto& x, const auto& y) {
+                    return x->javaComparator(y) < 0;
+                });
+                if (types.empty()) {
+                    result =   array_type(any_T());
+                } else if (types.size() > 1) {
+                    throw std::runtime_error("ERROR: at this stage, I cannot unify distinct types together! This requires typing inference with relaxation!");
+                } else {
+                    result = array_type(std::move(types[0]));
+                }
 
-        default:
-            throw std::runtime_error("Cannot determine the type of an unevaluated expression! This would require a more expressive type system!");
+            }
+            break;
+
+            default:
+                throw std::runtime_error("Cannot determine the type of an unevaluated expression! This would require a more expressive type system!");
 //        case Assignment: break;
 //        case Function: break;
 //        case AndE: break;
@@ -1250,5 +1327,200 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::typeInference
 //        case RFoldE: break;
 //        case EvalE: break;
 //        case AssertE: break;
+        }
+        casted_type = result;
+        return casted_type;
     }
+
+}
+
+std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>> script::structures::ScriptAST::subTyping(DPtr<script::structures::ScriptAST> &left, DPtr<script::structures::ScriptAST> &right) {
+    constexpr auto f = [](DPtr<script::structures::ScriptAST> &&x) {
+        return x;
+    };
+    if (left->javaComparator(right) == 0) return {f}; // if those are the same type, then by reflexivity they are the same type
+    // TODO! check
+    auto L = left->run();
+    switch (L->type) {
+        case ANDT: {
+            /**
+             *  T1 <: C /\ T2 <: C
+             *  -------------------
+             *     T1 /\ T2 <: C
+             */
+            auto leftType = L->arrayList[0]->run();
+            auto rightType = L->arrayList[1]->run();
+            auto lr = subTyping(leftType, right);
+            auto rr = subTyping(rightType, right);
+            if ((!(lr.has_value())) || (!(rr.has_value()))) {
+                return {}; // no viable conversion
+            } else {
+//                std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)> f = [&rr, &lr](DPtr<script::structures::ScriptAST> &&x) {
+//                    if (lr.has_value())
+//                        return lr.value()(std::move(x));
+//                    else if (rr.has_value())
+//                        return rr.value()(std::move(x));
+//                };
+                return {[&rr, &lr, &leftType, &rightType, this](DPtr<script::structures::ScriptAST> &&x) {
+                    auto t = (x->typeInference());
+                    auto st1 = subTyping(t, leftType);
+                    if (st1.has_value())
+                        return lr.value()(std::move(st1.value()(std::move(x))));
+                    else //if (rr.has_value())
+                    {
+                        auto st2 = subTyping(t, rightType);
+                        return rr.value()(std::move(st2.value()(std::move(x))));
+                    }
+                }};
+            }
+        }
+
+        case ORT: {
+            /**
+             *  T1 <: C \/ T2 <: C
+             *  -------------------
+             *     T1 \/ T2 <: C
+             */
+            auto leftType = L->arrayList[0]->run();
+            auto rightType = L->arrayList[1]->run();
+            auto lr = subTyping(leftType, right);
+            auto rr = subTyping(rightType, right);
+            if ((!(lr.has_value())) && (!(rr.has_value()))) {
+                return {}; // no viable conversion
+            } else {
+                return {[&rr, &lr, &leftType, &rightType, this](DPtr<script::structures::ScriptAST> &&x) {
+                    auto t = (x->typeInference());
+                    auto st1 = subTyping(t, leftType);
+                    if (st1.has_value())
+                        return lr.value()(std::move(st1.value()(std::move(x))));
+                    else //if (rr.has_value())
+                    {
+                        auto st2 = subTyping(t, rightType);
+                        return rr.value()(std::move(st2.value()(std::move(x))));
+                    }
+                }};
+            }
+        }
+
+        case TypeOf: {
+            throw std::runtime_error("Something unexpected: cannot make an inference for the current left operand to a type! this is weird...");
+        }
+
+        case AnyT:
+            return (right->run()->type == AnyT) ?
+            std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>>{f}
+            : std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>>{}; // The most general type is only equal to itself!
+
+        case StarT:
+            return (right->run()->type == StarT)
+            ? std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>>{f}
+            : std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>>{}; // Similarly for sorts, sorts are only subtyped by themselves
+
+        case LABELT: {
+            auto right_run = right->run();
+            if (right_run->type == AnyT) {
+                return {f};
+            } else if (right_run->type == LABELT) {
+                // TODO: check if this was earlier on enforced!
+            } else {
+                throw std::runtime_error("ERROR: a label type could be only a subtype of Any or of any other enforced LabelT subtype");
+            }
+        } break;
+
+        case LexTT: {
+            auto right_run = right->run();
+            if (right_run->type == AnyT) {
+                return {f};
+            } else if (right_run->type == LexTT) {
+                // TODO:
+//                int_lexicographical_compare(function->body.begin(), function->body.end(),
+//                                            object->function->body.begin(), object->function->body.end(),
+//                                            [](const auto& x, auto& y) {return x->javaComparator(y);});
+            } else {
+                auto l = arrayList[0]->run();
+                return subTyping(l, right);
+            }
+            break;
+        }
+
+        case BooleanT:
+            break;
+        case IntegerT:
+            break;
+        case DoubleT:
+            break;
+        case StringT:
+            break;
+        case TupleT:
+            break;
+        case ArrayOfT:
+            break;
+
+        case Boolean:
+        case Integer:
+        case String:
+        case Double:
+        case Assignment:
+        case Function:
+        case Array:
+        case Tuple:
+        case Variable:
+        case AndE:
+        case OrE:
+        case NotE:
+        case EqE:
+        case IfteE:
+        case ImplyE:
+        case ApplyE:
+        case AtE:
+        case PutE:
+        case RemoveE:
+        case AppendE:
+        case ContainsE:
+        case FilterE:
+        case InvokeE:
+        case MapE:
+        case SubElementsE:
+        case AddE:
+        case DivE:
+        case ModE:
+        case AbsE:
+        case MinusE:
+        case MulE:
+        case SinE:
+        case CosE:
+        case TanE:
+        case ExpE:
+        case LogE:
+        case FloorE:
+        case CeilE:
+        case ConcatE:
+        case GtE:
+        case ProjectE:
+        case LtE:
+        case GEqE:
+        case LEqE:
+        case NeqE:
+        case PhiX:
+        case VarPhiX:
+        case EllX:
+        case XiX:
+        case ObjX:
+        case CrossE:
+        case SelfCrossE:
+        case InjE:
+        case FlatE:
+        case LFoldE:
+        case RFoldE:
+        case EvalE:
+        case AssertE:
+        case ENFORCET:
+        case SubtypeOfE:
+            throw std::runtime_error("ERROR: " + L->toString() +" is not a type!");
+        case CoerceE:
+            throw std::runtime_error("ERROR: coercing a type to be another type is not allowed!");
+
+
+    }
+    return {};
 }

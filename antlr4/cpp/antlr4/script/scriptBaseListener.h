@@ -22,6 +22,9 @@ public:
   virtual void enterTuple_pair(scriptParser::Tuple_pairContext * /*ctx*/) override { }
   virtual void exitTuple_pair(scriptParser::Tuple_pairContext * /*ctx*/) override { }
 
+  virtual void enterCoerce(scriptParser::CoerceContext * /*ctx*/) override { }
+  virtual void exitCoerce(scriptParser::CoerceContext * /*ctx*/) override { }
+
   virtual void enterVarphi(scriptParser::VarphiContext * /*ctx*/) override { }
   virtual void exitVarphi(scriptParser::VarphiContext * /*ctx*/) override { }
 
@@ -60,6 +63,9 @@ public:
 
   virtual void enterLeq(scriptParser::LeqContext * /*ctx*/) override { }
   virtual void exitLeq(scriptParser::LeqContext * /*ctx*/) override { }
+
+  virtual void enterType_label(scriptParser::Type_labelContext * /*ctx*/) override { }
+  virtual void exitType_label(scriptParser::Type_labelContext * /*ctx*/) override { }
 
   virtual void enterNeq(scriptParser::NeqContext * /*ctx*/) override { }
   virtual void exitNeq(scriptParser::NeqContext * /*ctx*/) override { }
@@ -109,6 +115,9 @@ public:
   virtual void enterType_or(scriptParser::Type_orContext * /*ctx*/) override { }
   virtual void exitType_or(scriptParser::Type_orContext * /*ctx*/) override { }
 
+  virtual void enterType_lex(scriptParser::Type_lexContext * /*ctx*/) override { }
+  virtual void exitType_lex(scriptParser::Type_lexContext * /*ctx*/) override { }
+
   virtual void enterSigma_type(scriptParser::Sigma_typeContext * /*ctx*/) override { }
   virtual void exitSigma_type(scriptParser::Sigma_typeContext * /*ctx*/) override { }
 
@@ -123,6 +132,9 @@ public:
 
   virtual void enterAt(scriptParser::AtContext * /*ctx*/) override { }
   virtual void exitAt(scriptParser::AtContext * /*ctx*/) override { }
+
+  virtual void enterEnforce(scriptParser::EnforceContext * /*ctx*/) override { }
+  virtual void exitEnforce(scriptParser::EnforceContext * /*ctx*/) override { }
 
   virtual void enterSub(scriptParser::SubContext * /*ctx*/) override { }
   virtual void exitSub(scriptParser::SubContext * /*ctx*/) override { }

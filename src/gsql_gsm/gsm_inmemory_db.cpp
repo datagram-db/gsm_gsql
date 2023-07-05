@@ -26,7 +26,7 @@
 #include <gsql_gsm/gsm_inmemory_db.h>
 
 gsm_inmemory_db::gsm_inmemory_db(uint_fast32_t id,
-                                 const std::vector<std::string> &ell,
+                                 const std::string &ell,
                                  const std::vector<std::string> &xi, const std::vector<double> &scores,
                                  const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi)
          {

@@ -23,6 +23,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitCoerce(scriptParser::CoerceContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitVarphi(scriptParser::VarphiContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -72,6 +76,10 @@ public:
   }
 
   virtual std::any visitLeq(scriptParser::LeqContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitType_label(scriptParser::Type_labelContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -139,6 +147,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitType_lex(scriptParser::Type_lexContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitSigma_type(scriptParser::Sigma_typeContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -156,6 +168,10 @@ public:
   }
 
   virtual std::any visitAt(scriptParser::AtContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitEnforce(scriptParser::EnforceContext *ctx) override {
     return visitChildren(ctx);
   }
 

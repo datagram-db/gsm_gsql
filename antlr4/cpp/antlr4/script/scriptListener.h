@@ -20,6 +20,9 @@ public:
   virtual void enterTuple_pair(scriptParser::Tuple_pairContext *ctx) = 0;
   virtual void exitTuple_pair(scriptParser::Tuple_pairContext *ctx) = 0;
 
+  virtual void enterCoerce(scriptParser::CoerceContext *ctx) = 0;
+  virtual void exitCoerce(scriptParser::CoerceContext *ctx) = 0;
+
   virtual void enterVarphi(scriptParser::VarphiContext *ctx) = 0;
   virtual void exitVarphi(scriptParser::VarphiContext *ctx) = 0;
 
@@ -58,6 +61,9 @@ public:
 
   virtual void enterLeq(scriptParser::LeqContext *ctx) = 0;
   virtual void exitLeq(scriptParser::LeqContext *ctx) = 0;
+
+  virtual void enterType_label(scriptParser::Type_labelContext *ctx) = 0;
+  virtual void exitType_label(scriptParser::Type_labelContext *ctx) = 0;
 
   virtual void enterNeq(scriptParser::NeqContext *ctx) = 0;
   virtual void exitNeq(scriptParser::NeqContext *ctx) = 0;
@@ -107,6 +113,9 @@ public:
   virtual void enterType_or(scriptParser::Type_orContext *ctx) = 0;
   virtual void exitType_or(scriptParser::Type_orContext *ctx) = 0;
 
+  virtual void enterType_lex(scriptParser::Type_lexContext *ctx) = 0;
+  virtual void exitType_lex(scriptParser::Type_lexContext *ctx) = 0;
+
   virtual void enterSigma_type(scriptParser::Sigma_typeContext *ctx) = 0;
   virtual void exitSigma_type(scriptParser::Sigma_typeContext *ctx) = 0;
 
@@ -121,6 +130,9 @@ public:
 
   virtual void enterAt(scriptParser::AtContext *ctx) = 0;
   virtual void exitAt(scriptParser::AtContext *ctx) = 0;
+
+  virtual void enterEnforce(scriptParser::EnforceContext *ctx) = 0;
+  virtual void exitEnforce(scriptParser::EnforceContext *ctx) = 0;
 
   virtual void enterSub(scriptParser::SubContext *ctx) = 0;
   virtual void exitSub(scriptParser::SubContext *ctx) = 0;

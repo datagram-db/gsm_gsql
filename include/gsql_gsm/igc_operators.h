@@ -34,11 +34,11 @@ gsm_inmemory_db_view calculate_bearing_change(gsm_inmemory_db_view& view,
         long long nowTime;
         for(auto &data : view.db->O[bFix.id].phi["data"])
         {
-            if(view.db->O[data.id].ell[0] == "latitude_double")
+            if(view.db->O[data.id].ell == "latitude_double")
                 nowLat = stod(view.db->O[data.id].xi[0]);
-            else if(view.db->O[data.id].ell[0] == "longitude_double")
+            else if(view.db->O[data.id].ell == "longitude_double")
                 nowLong = stod(view.db->O[data.id].xi[0]);
-            else if(view.db->O[data.id].ell[0] == "unix_time")
+            else if(view.db->O[data.id].ell == "unix_time")
                 nowTime = stoll(view.db->O[data.id].xi[0]);
             else
                 continue;
@@ -106,7 +106,7 @@ gsm_inmemory_db_view calculate_lift(gsm_inmemory_db_view& view,
         int dataId;
         for(auto &data : view.db->O[bFix.id].phi["data"])
         {
-            if (view.db->O[data.id].ell[0] == "pressure_altitude")
+            if (view.db->O[data.id].ell == "pressure_altitude")
             {
                 altitude = stoi(view.db->O[data.id].xi[0]);
                 dataId = data.id;
@@ -224,11 +224,11 @@ void generate_weatherbucket(gsm_inmemory_db_view &view,
         double lon;
 
         for (auto &data: view.db->O[bFix.id].phi["data"]) {
-            if (view.db->O[data.id].ell[0] == "latitude_double") {
+            if (view.db->O[data.id].ell == "latitude_double") {
                 lat = stod(view.db->O[data.id].xi[0]);
-            } else if (view.db->O[data.id].ell[0] == "longitude_double") {
+            } else if (view.db->O[data.id].ell == "longitude_double") {
                 lon = stod(view.db->O[data.id].xi[0]);
-            } else if (view.db->O[data.id].ell[0] == "unix_time") {
+            } else if (view.db->O[data.id].ell == "unix_time") {
                 unixTime = stoll(view.db->O[data.id].xi[0]);
             }
         }

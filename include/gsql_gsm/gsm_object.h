@@ -37,7 +37,7 @@ struct gsm_object  {
     // Object's id
     size_t                                                id;
     // Object's labels/types
-    std::vector<std::string>                              ell;
+    std::string                              ell;
     // Object's values
     std::vector<std::string>          xi;
     // Object's uncertainty scores
@@ -45,7 +45,7 @@ struct gsm_object  {
     // Object's containment
     std::unordered_map<std::string, std::vector<gsm_object_xi_content>> phi;
 
-    gsm_object(uint_fast32_t id = 0, const std::vector<std::string> &ell = {}, const std::vector<std::string> &xi = {},
+    gsm_object(uint_fast32_t id = 0, const std::string &ell = {}, const std::vector<std::string> &xi = {},
                const std::vector<double> &scores = {}, const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi = {});
     gsm_object(const gsm_object&) = default;
     gsm_object(gsm_object&&) = default;

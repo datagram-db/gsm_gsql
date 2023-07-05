@@ -49,7 +49,8 @@ struct gsm_db_indices {
         for (const auto& [id, obj] : db.O) {
             auto cDst = containedBy.addUniqueStateOrGetExisting(id);
             auto oDst = containerOf.addUniqueStateOrGetExisting(id);
-            for (const auto& type : obj.ell) ell_types[type].add(id);
+//            for (const auto& type : obj.ell)
+                ell_types[obj.ell].add(id);
             for (const auto& [k1, vl1]: obj.phi) {
                 for (const auto& id_score_1 : vl1) {
                     auto src = siblinghood.addUniqueStateOrGetExisting(id_score_1.id);
