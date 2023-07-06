@@ -376,9 +376,12 @@ void old_main() {
 
 int main() {
     std::filesystem::path scripts_folder = std::filesystem::current_path().parent_path() / "data" / "script";
-    gsm_inmemory_db database;
-    script::compiler::ScriptVisitor::bindGSM(&database);
-    std::ifstream file{scripts_folder / "script_06.txt"};
+    auto database = std::make_shared<gsm_inmemory_db>();
+    gsm_inmemory_db_view view{0, database};
+    createFast(view, 1, "int", {"38"}, {1.0});
+    createFast(view, 2, "label \"timon\"", {}, {1.0}, {{"age", {{1,1.0}}}});
+    script::compiler::ScriptVisitor::bindGSM(database.get());
+    std::ifstream file{"/home/giacomo/CLionProjects/gsm_gsql/data/script/script_08.txt"};
     std::cout << script::compiler::ScriptVisitor::eval(file)->toString() << std::endl;
     return 0;
 }

@@ -69,6 +69,7 @@ expr : '(' expr ')'                          #paren
      | NUMBER                               #atom_number
      | BOOL                                 #atom_bool
      | EscapedString                        #atom_string
+     | BOT                                  #null
      | STRINGT                                              #type_string
      | BOOLT                                                #type_bool
      | INTT                                                 #type_int
@@ -77,6 +78,8 @@ expr : '(' expr ')'                          #paren
      | expr OR_TYPE expr                                    #type_or
      | LISTT expr                                           #type_list
      | 't<'  (tuple_pair ';')* tuple_pair ARPAREN           #type_tuple
+     | ANYT                                                 #type_any
+     | VOID                                                 #type_bot
      | LABELT EscapedString               #type_label
      | ObjT expr expr                     #type_lex
      | LPAREN (expr ';')* expr RPAREN                     #atom_array
@@ -113,6 +116,8 @@ expr : '(' expr ')'                          #paren
      | COERCE expr 'as' expr                #coerce
      ;
 
+VOID: 'void';
+BOT : 'null'|'┴';
 COERCE : 'coerce';
 ObjT: 'ObjT';
 TYPEOF: 'typeof';
@@ -121,6 +126,7 @@ ASSERT: 'assert';
 STRINGT: 'string';
 LABELT: 'label';
 DOUBLET: 'double';
+ANYT: 'any'|'┬';
 BOOLT: 'bool';
 INTT: 'int';
 START: 'star';

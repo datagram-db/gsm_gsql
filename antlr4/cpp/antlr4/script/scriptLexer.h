@@ -19,16 +19,16 @@ public:
     T__26 = 27, T__27 = 28, T__28 = 29, T__29 = 30, T__30 = 31, T__31 = 32, 
     T__32 = 33, T__33 = 34, T__34 = 35, T__35 = 36, T__36 = 37, T__37 = 38, 
     T__38 = 39, T__39 = 40, T__40 = 41, T__41 = 42, T__42 = 43, T__43 = 44, 
-    COERCE = 45, LEXT = 46, TYPEOF = 47, SIGMA = 48, ASSERT = 49, STRINGT = 50, 
-    LABELT = 51, DOUBLET = 52, BOOLT = 53, INTT = 54, START = 55, KIND = 56, 
-    LISTT = 57, SUBTYPE = 58, ALPAREN = 59, ARPAREN = 60, LPAREN = 61, RPAREN = 62, 
-    BOOL = 63, AND_TYPE = 64, OR_TYPE = 65, FUN = 66, NOT = 67, IF = 68, 
-    THEN = 69, ELSE = 70, REMOVE = 71, FROM = 72, LOG = 73, POW = 74, SIN = 75, 
-    COS = 76, TAN = 77, PHI = 78, ELL = 79, XI = 80, INJ = 81, OBJ = 82, 
-    FLAT = 83, SELFX = 84, VARPHI = 85, CROSS = 86, SCRIPT = 87, GSQL = 88, 
-    CREATEDB = 89, VARNAME = 90, CREATE = 91, ELECT = 92, MAP = 93, DISJOINT = 94, 
-    FOLD = 95, ENFORCE = 96, EscapedString = 97, NUMBER = 98, INTEGER = 99, 
-    SPACE = 100, COMMENT = 101, LINE_COMMENT = 102
+    VOID = 45, BOT = 46, COERCE = 47, ObjT = 48, TYPEOF = 49, SIGMA = 50, 
+    ASSERT = 51, STRINGT = 52, LABELT = 53, DOUBLET = 54, ANYT = 55, BOOLT = 56, 
+    INTT = 57, START = 58, KIND = 59, LISTT = 60, SUBTYPE = 61, ALPAREN = 62, 
+    ARPAREN = 63, LPAREN = 64, RPAREN = 65, BOOL = 66, AND_TYPE = 67, OR_TYPE = 68, 
+    FUN = 69, NOT = 70, IF = 71, THEN = 72, ELSE = 73, REMOVE = 74, FROM = 75, 
+    LOG = 76, POW = 77, SIN = 78, COS = 79, TAN = 80, PHI = 81, ELL = 82, 
+    XI = 83, INJ = 84, OBJ = 85, FLAT = 86, SELFX = 87, VARPHI = 88, CROSS = 89, 
+    SCRIPT = 90, GSQL = 91, CREATEDB = 92, VARNAME = 93, CREATE = 94, ELECT = 95, 
+    MAP = 96, DISJOINT = 97, FOLD = 98, ENFORCE = 99, EscapedString = 100, 
+    NUMBER = 101, INTEGER = 102, SPACE = 103, COMMENT = 104, LINE_COMMENT = 105
   };
 
   explicit scriptLexer(antlr4::CharStream *input);

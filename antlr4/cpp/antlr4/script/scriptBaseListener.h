@@ -133,6 +133,9 @@ public:
   virtual void enterAt(scriptParser::AtContext * /*ctx*/) override { }
   virtual void exitAt(scriptParser::AtContext * /*ctx*/) override { }
 
+  virtual void enterNull(scriptParser::NullContext * /*ctx*/) override { }
+  virtual void exitNull(scriptParser::NullContext * /*ctx*/) override { }
+
   virtual void enterEnforce(scriptParser::EnforceContext * /*ctx*/) override { }
   virtual void exitEnforce(scriptParser::EnforceContext * /*ctx*/) override { }
 
@@ -162,6 +165,9 @@ public:
 
   virtual void enterType_string(scriptParser::Type_stringContext * /*ctx*/) override { }
   virtual void exitType_string(scriptParser::Type_stringContext * /*ctx*/) override { }
+
+  virtual void enterType_any(scriptParser::Type_anyContext * /*ctx*/) override { }
+  virtual void exitType_any(scriptParser::Type_anyContext * /*ctx*/) override { }
 
   virtual void enterGeq(scriptParser::GeqContext * /*ctx*/) override { }
   virtual void exitGeq(scriptParser::GeqContext * /*ctx*/) override { }
@@ -231,6 +237,9 @@ public:
 
   virtual void enterObj(scriptParser::ObjContext * /*ctx*/) override { }
   virtual void exitObj(scriptParser::ObjContext * /*ctx*/) override { }
+
+  virtual void enterType_bot(scriptParser::Type_botContext * /*ctx*/) override { }
+  virtual void exitType_bot(scriptParser::Type_botContext * /*ctx*/) override { }
 
   virtual void enterVariable(scriptParser::VariableContext * /*ctx*/) override { }
   virtual void exitVariable(scriptParser::VariableContext * /*ctx*/) override { }

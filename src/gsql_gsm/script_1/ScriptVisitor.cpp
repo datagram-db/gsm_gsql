@@ -2,14 +2,18 @@
 // Created by giacomo on 10/04/23.
 //
 
+#include <yaucl/graphs/NodeLabelBijectionGraph.h>
 #include <gsql_gsm/script_1/ScriptVisitor.h>
 #include <gsql_gsm/script_1/ScriptAST.h>
 #include <gsql_gsm/script_1/Funzione.h>
 #include "scriptLexer.h"
 
+
+
 namespace script {
     namespace compiler {
         gsm_inmemory_db* ScriptVisitor::db = nullptr;
+        NodeLabelBijectionGraph<std::string,std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>> ScriptVisitor::typecaster {};
 
         std::any ScriptVisitor::visitScript(scriptParser::ScriptContext *context) {
             auto result = std::make_shared<script::structures::ScriptAST>();
@@ -18,7 +22,12 @@ namespace script {
             for (const auto& x : context->expr()) {
                 auto tmp = any_cast<DPtr<script::structures::ScriptAST>>(visit(x));
                 tmp->setContext(result->optGamma, result->db);
+                auto currDB = result->db;
                 result = tmp->run();
+                if (!result->db)
+                    result->db = currDB;
+                if (!result->optGamma)
+                    result->optGamma = this->context;
             }
             return result;
         }
@@ -592,14 +601,52 @@ namespace script {
         }
 
         std::any ScriptVisitor::visitType_lex(scriptParser::Type_lexContext *context) {
-            auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr()));
-            return {script::structures::ScriptAST::unop_(this->context, script::structures::t::LexTT, std::move(lx))};
+            auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(0)));
+            auto rx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(1)));
+            return {script::structures::ScriptAST::binop_(this->context, script::structures::t::ObjTT, std::move(lx), std::move(rx))};
         }
 
         std::any ScriptVisitor::visitCoerce(scriptParser::CoerceContext *context) {
             auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(0)));
             auto rx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(1)));
             return {script::structures::ScriptAST::binop_(this->context, script::structures::t::CoerceE, std::move(lx), std::move(rx))};
+        }
+
+        size_t ScriptVisitor::isEnforced(const DPtr<script::structures::ScriptAST> &left, const DPtr<script::structures::ScriptAST> &right) {
+            size_t l = typecaster.getId(left->toString());
+            size_t r = typecaster.getId(right->toString());
+            const auto& outs = typecaster.g.nodes.at(l);
+            bool found = false;
+            for (size_t f : outs) {
+                if (typecaster.g.edge_ids.at(f).second == r) {
+                    return f;
+                }
+            }
+            return -1;
+        }
+
+        std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>> ScriptVisitor::isEnforcedWithCast(const DPtr<script::structures::ScriptAST> &left, const DPtr<script::structures::ScriptAST> &right) {
+            size_t l = typecaster.getId(left->toString());
+            size_t r = typecaster.getId(right->toString());
+            const auto& outs = typecaster.g.nodes.at(l);
+            for (size_t f : outs) {
+                if (typecaster.g.edge_ids.at(f).second == r) {
+                    return {typecaster.getEdgeLabel(f)};
+                }
+            }
+            return {};
+        }
+
+        std::any ScriptVisitor::visitType_bot(scriptParser::Type_botContext *context) {
+            return {script::structures::ScriptAST::bot_t_()};
+        }
+
+        std::any ScriptVisitor::visitNull(scriptParser::NullContext *context) {
+            return {script::structures::ScriptAST::null_()};
+        }
+
+        std::any ScriptVisitor::visitType_any(scriptParser::Type_anyContext *context) {
+            return {script::structures::ScriptAST::any_T()};
         }
 
     } // script

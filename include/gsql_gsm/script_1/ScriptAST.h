@@ -22,13 +22,15 @@ namespace script::structures {
 
 
     enum t {
+        BotT,
+        NullE,
         SigmaT,
         StarT,
         ANDT,
         ORT,
         LABELT,
         ENFORCET,
-        LexTT,
+        ObjTT,
         AnyT,
         BooleanT,
         IntegerT,
@@ -110,7 +112,7 @@ namespace script::structures {
         DPtr<Funzione> function;
         t type;
         DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>> optGamma;
-        gsm_inmemory_db* db;
+        gsm_inmemory_db* db{nullptr};
         DPtr<ScriptAST> casted_type;
 
         ScriptAST() { }
@@ -128,7 +130,7 @@ namespace script::structures {
                 case ORT:
                 case LABELT:
                 case ENFORCET:
-                case LexTT:
+                case ObjTT:
                 case AnyT:
                 case BooleanT:
                 case IntegerT:
@@ -167,6 +169,21 @@ namespace script::structures {
             return val;
         }
 
+        static inline DPtr<ScriptAST> lex_type_(DPtr<ScriptAST>&& l, DPtr<ScriptAST>&& v) {
+            auto val = std::make_shared<ScriptAST>();
+            val->type = t::ObjTT ;
+            val->arrayList.emplace_back(l);
+            val->arrayList.emplace_back(v);
+            return val;
+        }
+
+        static inline DPtr<ScriptAST> lex_type_(DPtr<ScriptAST>&& l, StringMap<DPtr<ScriptAST>>&& v) {
+            auto val = std::make_shared<ScriptAST>();
+            val->type = t::ObjTT ;
+            val->arrayList.emplace_back(l);
+            val->arrayList.emplace_back(tuple_type_(std::move(v)));
+            return val;
+        }
 
         static inline DPtr<ScriptAST> tuple_(StringMap<DPtr<ScriptAST>>&& v) {
             auto val = std::make_shared<ScriptAST>();
@@ -183,6 +200,12 @@ namespace script::structures {
         }
 
         DPtr<ScriptAST> variableEval();
+        DPtr<ScriptAST> mgu(const std::vector<DPtr<ScriptAST>>& x) const {
+            if (x.empty())
+                return any_T();
+            else if (x.size() == 1)
+                return x.at(0);
+        }
 
         static inline DPtr<ScriptAST> fromObjectContent(const gsm_object_xi_content& v) {
             StringMap<DPtr<ScriptAST>> result;
@@ -348,8 +371,6 @@ namespace script::structures {
 
         std::string toString(bool quoted=false) const;
 
-
-
         /**
          * If the left subtype can be reconciled to the one on the right, then I shall proivde a transformation function for those!
          * @param left: subtype
@@ -447,12 +468,54 @@ namespace script::structures {
             return FALSE;
         }
 
-    private:
-        static DPtr<ScriptAST> TRUE, FALSE, BOOLEANT, DOUBLET, INTEGERT, STRINGT, START, ANYT;
+        static inline DPtr<ScriptAST> bot_t_() {
+            if (!BOTCCT.get()) {
+                BOTCCT = std::make_shared<ScriptAST>();
+                BOTCCT->type = t::BotT ;
+            }
+            return BOTCCT;
+        }
 
+        static inline DPtr<ScriptAST> null_() {
+            if (!NULLO.get()) {
+                NULLO = std::make_shared<ScriptAST>();
+                NULLO->type = t::NullE ;
+            }
+            return NULLO;
+        }
+
+        /**
+         * Infers the type associated to the given object if this was not calculated yet.
+         * @return
+         */
         DPtr<script::structures::ScriptAST> typeInference();
+
+    private:
+        static DPtr<ScriptAST> TRUE, FALSE, BOOLEANT, DOUBLET, INTEGERT, STRINGT, START, ANYT, BOTCCT, NULLO;
+
+
+        /**
+         * Typing a specific objectId within the database!
+         * @param id    Object Id within the database
+         * @return      Associated LexT
+         */
+        DPtr<ScriptAST> upTypeObjX(size_t id) const;
     };
 }
+
+//struct DPointerASTWrapper {
+//    const std::string ptr;
+//    DPointerASTWrapper(const DPtr<script::structures::ScriptAST>& ptr) : ptr{ptr->toString(false)} {}
+//};
+//
+//namespace std {
+//    template <> struct hash<struct DPointerASTWrapper> {
+//        std::hash<std::string> H;
+//        size_t operator()(const struct DPointerASTWrapper& x) const {
+//            return H(x.ptr);
+//        }
+//    };
+//}
 
 
 

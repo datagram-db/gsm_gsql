@@ -7,6 +7,7 @@ include_directories(submodules/tinyxml2)
 add_subdirectory(submodules/tinyxml2)
 include_directories(submodules/yaucl/include)
 include_directories(submodules/yaucl/submodules/CRoaring/cpp)
+include_directories(submodules/yaucl/submodules/CRoaring/include)
 add_subdirectory(submodules/yaucl)
 include_directories(submodules/yaucl/submodules/json/include)
 

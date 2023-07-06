@@ -131,6 +131,9 @@ public:
   virtual void enterAt(scriptParser::AtContext *ctx) = 0;
   virtual void exitAt(scriptParser::AtContext *ctx) = 0;
 
+  virtual void enterNull(scriptParser::NullContext *ctx) = 0;
+  virtual void exitNull(scriptParser::NullContext *ctx) = 0;
+
   virtual void enterEnforce(scriptParser::EnforceContext *ctx) = 0;
   virtual void exitEnforce(scriptParser::EnforceContext *ctx) = 0;
 
@@ -160,6 +163,9 @@ public:
 
   virtual void enterType_string(scriptParser::Type_stringContext *ctx) = 0;
   virtual void exitType_string(scriptParser::Type_stringContext *ctx) = 0;
+
+  virtual void enterType_any(scriptParser::Type_anyContext *ctx) = 0;
+  virtual void exitType_any(scriptParser::Type_anyContext *ctx) = 0;
 
   virtual void enterGeq(scriptParser::GeqContext *ctx) = 0;
   virtual void exitGeq(scriptParser::GeqContext *ctx) = 0;
@@ -229,6 +235,9 @@ public:
 
   virtual void enterObj(scriptParser::ObjContext *ctx) = 0;
   virtual void exitObj(scriptParser::ObjContext *ctx) = 0;
+
+  virtual void enterType_bot(scriptParser::Type_botContext *ctx) = 0;
+  virtual void exitType_bot(scriptParser::Type_botContext *ctx) = 0;
 
   virtual void enterVariable(scriptParser::VariableContext *ctx) = 0;
   virtual void exitVariable(scriptParser::VariableContext *ctx) = 0;

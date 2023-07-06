@@ -52,138 +52,140 @@ void scriptParserInitialize() {
       "':='", "'var('", "'eval('", "'=>'", "'sub('", "','", "':'", "'['", 
       "']'", "'[['", "']]'", "']:='", "'in'", "'t<'", "'->'", "'map('", 
       "'select('", "'filter('", "'rfold('", "'lfold('", "'|_'", "'_|'", 
-      "'|-'", "'-|'", "'where'", "'as'", "'coerce'", "'LexT'", "'typeof'", 
-      "'sigma'", "'assert'", "'string'", "'label'", "'double'", "'bool'", 
-      "'int'", "'star'", "'kind'", "'listof'", "'<:'", "'<'", "'>'", "'{'", 
-      "'}'", "", "'/\\'", "'\\/'", "'fun'", "'not'", "'if'", "'then'", "'else'", 
-      "'remove'", "'from'", "'log'", "'pow'", "'sin'", "'cos'", "'tan'", 
-      "'phi'", "'ell'", "'xi'", "'inj'", "'OBJ'", "'flat'", "'selfx'", "'varphi'", 
-      "'cross'", "'script'", "'gsql'", "'CREATEDB'", "", "'CREATE'", "'ELECT'", 
-      "'MAP'", "'DISJOINT'", "'FOLD'", "'enforce_subtype'"
+      "'|-'", "'-|'", "'where'", "'as'", "'void'", "", "'coerce'", "'ObjT'", 
+      "'typeof'", "'sigma'", "'assert'", "'string'", "'label'", "'double'", 
+      "", "'bool'", "'int'", "'star'", "'kind'", "'listof'", "'<:'", "'<'", 
+      "'>'", "'{'", "'}'", "", "'/\\'", "'\\/'", "'fun'", "'not'", "'if'", 
+      "'then'", "'else'", "'remove'", "'from'", "'log'", "'pow'", "'sin'", 
+      "'cos'", "'tan'", "'phi'", "'ell'", "'xi'", "'inj'", "'OBJ'", "'flat'", 
+      "'selfx'", "'varphi'", "'cross'", "'script'", "'gsql'", "'CREATEDB'", 
+      "", "'CREATE'", "'ELECT'", "'MAP'", "'DISJOINT'", "'FOLD'", "'enforce_subtype'"
     },
     std::vector<std::string>{
       "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", 
       "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", 
-      "", "", "", "", "", "", "", "", "", "", "", "COERCE", "LEXT", "TYPEOF", 
-      "SIGMA", "ASSERT", "STRINGT", "LABELT", "DOUBLET", "BOOLT", "INTT", 
-      "START", "KIND", "LISTT", "SUBTYPE", "ALPAREN", "ARPAREN", "LPAREN", 
-      "RPAREN", "BOOL", "AND_TYPE", "OR_TYPE", "FUN", "NOT", "IF", "THEN", 
-      "ELSE", "REMOVE", "FROM", "LOG", "POW", "SIN", "COS", "TAN", "PHI", 
-      "ELL", "XI", "INJ", "OBJ", "FLAT", "SELFX", "VARPHI", "CROSS", "SCRIPT", 
-      "GSQL", "CREATEDB", "VARNAME", "CREATE", "ELECT", "MAP", "DISJOINT", 
-      "FOLD", "ENFORCE", "EscapedString", "NUMBER", "INTEGER", "SPACE", 
-      "COMMENT", "LINE_COMMENT"
+      "", "", "", "", "", "", "", "", "", "", "", "VOID", "BOT", "COERCE", 
+      "ObjT", "TYPEOF", "SIGMA", "ASSERT", "STRINGT", "LABELT", "DOUBLET", 
+      "ANYT", "BOOLT", "INTT", "START", "KIND", "LISTT", "SUBTYPE", "ALPAREN", 
+      "ARPAREN", "LPAREN", "RPAREN", "BOOL", "AND_TYPE", "OR_TYPE", "FUN", 
+      "NOT", "IF", "THEN", "ELSE", "REMOVE", "FROM", "LOG", "POW", "SIN", 
+      "COS", "TAN", "PHI", "ELL", "XI", "INJ", "OBJ", "FLAT", "SELFX", "VARPHI", 
+      "CROSS", "SCRIPT", "GSQL", "CREATEDB", "VARNAME", "CREATE", "ELECT", 
+      "MAP", "DISJOINT", "FOLD", "ENFORCE", "EscapedString", "NUMBER", "INTEGER", 
+      "SPACE", "COMMENT", "LINE_COMMENT"
     }
   );
   static const int32_t serializedATNSegment[] = {
-  	4,1,102,312,2,0,7,0,2,1,7,1,2,2,7,2,1,0,1,0,1,0,5,0,10,8,0,10,0,12,0,
+  	4,1,105,317,2,0,7,0,2,1,7,1,2,2,7,2,1,0,1,0,1,0,5,0,10,8,0,10,0,12,0,
   	13,9,0,1,0,1,0,1,1,1,1,1,1,1,1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,
   	2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,
   	1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,
-  	2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,5,2,78,8,2,10,2,12,
-  	2,81,9,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,5,2,94,8,2,10,2,
-  	12,2,97,9,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,5,2,107,8,2,10,2,12,2,110,
-  	9,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,5,2,122,8,2,10,2,12,2,125,
-  	9,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,
-  	2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,
-  	1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,
-  	2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,
-  	1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,
-  	2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,2,223,8,2,1,2,1,2,1,2,1,2,1,2,
+  	2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,5,2,79,8,2,10,2,
+  	12,2,82,9,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,
+  	2,5,2,99,8,2,10,2,12,2,102,9,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,5,2,112,
+  	8,2,10,2,12,2,115,9,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,5,2,127,
+  	8,2,10,2,12,2,130,9,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,
   	1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,
   	2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,
   	1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,
   	2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,
-  	1,2,1,2,1,2,1,2,1,2,1,2,1,2,5,2,307,8,2,10,2,12,2,310,9,2,1,2,0,1,4,3,
-  	0,2,4,0,0,387,0,11,1,0,0,0,2,16,1,0,0,0,4,222,1,0,0,0,6,7,3,4,2,0,7,8,
-  	5,1,0,0,8,10,1,0,0,0,9,6,1,0,0,0,10,13,1,0,0,0,11,9,1,0,0,0,11,12,1,0,
-  	0,0,12,14,1,0,0,0,13,11,1,0,0,0,14,15,3,4,2,0,15,1,1,0,0,0,16,17,5,97,
-  	0,0,17,18,5,2,0,0,18,19,3,4,2,0,19,3,1,0,0,0,20,21,6,2,-1,0,21,22,5,3,
-  	0,0,22,23,3,4,2,0,23,24,5,4,0,0,24,223,1,0,0,0,25,26,5,14,0,0,26,27,3,
-  	4,2,0,27,28,5,14,0,0,28,223,1,0,0,0,29,30,5,3,0,0,30,31,3,4,2,0,31,32,
-  	3,4,2,0,32,33,5,4,0,0,33,223,1,0,0,0,34,35,5,20,0,0,35,36,3,4,2,0,36,
-  	37,5,4,0,0,37,223,1,0,0,0,38,39,5,21,0,0,39,40,3,4,2,0,40,41,5,4,0,0,
-  	41,223,1,0,0,0,42,43,5,67,0,0,43,223,3,4,2,54,44,45,5,68,0,0,45,46,3,
-  	4,2,0,46,47,5,69,0,0,47,48,3,4,2,0,48,49,5,70,0,0,49,50,3,4,2,52,50,223,
-  	1,0,0,0,51,52,5,23,0,0,52,53,3,4,2,0,53,54,5,24,0,0,54,55,3,4,2,0,55,
-  	56,5,25,0,0,56,57,3,4,2,0,57,58,5,4,0,0,58,223,1,0,0,0,59,60,5,71,0,0,
-  	60,61,3,4,2,0,61,62,5,72,0,0,62,63,3,4,2,46,63,223,1,0,0,0,64,223,5,98,
-  	0,0,65,223,5,63,0,0,66,223,5,97,0,0,67,223,5,50,0,0,68,223,5,53,0,0,69,
-  	223,5,54,0,0,70,223,5,52,0,0,71,72,5,57,0,0,72,223,3,4,2,36,73,79,5,32,
-  	0,0,74,75,3,2,1,0,75,76,5,1,0,0,76,78,1,0,0,0,77,74,1,0,0,0,78,81,1,0,
-  	0,0,79,77,1,0,0,0,79,80,1,0,0,0,80,82,1,0,0,0,81,79,1,0,0,0,82,83,3,2,
-  	1,0,83,84,5,60,0,0,84,223,1,0,0,0,85,86,5,51,0,0,86,223,5,97,0,0,87,88,
-  	5,46,0,0,88,223,3,4,2,33,89,95,5,61,0,0,90,91,3,4,2,0,91,92,5,1,0,0,92,
-  	94,1,0,0,0,93,90,1,0,0,0,94,97,1,0,0,0,95,93,1,0,0,0,95,96,1,0,0,0,96,
-  	98,1,0,0,0,97,95,1,0,0,0,98,99,3,4,2,0,99,100,5,62,0,0,100,223,1,0,0,
-  	0,101,223,5,55,0,0,102,108,5,59,0,0,103,104,3,2,1,0,104,105,5,1,0,0,105,
-  	107,1,0,0,0,106,103,1,0,0,0,107,110,1,0,0,0,108,106,1,0,0,0,108,109,1,
-  	0,0,0,109,111,1,0,0,0,110,108,1,0,0,0,111,112,3,2,1,0,112,113,5,60,0,
-  	0,113,223,1,0,0,0,114,115,5,66,0,0,115,116,5,90,0,0,116,117,5,33,0,0,
-  	117,123,5,61,0,0,118,119,3,4,2,0,119,120,5,1,0,0,120,122,1,0,0,0,121,
-  	118,1,0,0,0,122,125,1,0,0,0,123,121,1,0,0,0,123,124,1,0,0,0,124,126,1,
-  	0,0,0,125,123,1,0,0,0,126,127,3,4,2,0,127,128,5,62,0,0,128,223,1,0,0,
-  	0,129,223,5,90,0,0,130,131,5,34,0,0,131,132,3,4,2,0,132,133,5,25,0,0,
-  	133,134,3,4,2,0,134,135,5,4,0,0,135,223,1,0,0,0,136,137,5,35,0,0,137,
-  	138,3,4,2,0,138,139,5,25,0,0,139,140,3,4,2,0,140,141,5,4,0,0,141,223,
-  	1,0,0,0,142,143,5,36,0,0,143,144,3,4,2,0,144,145,5,25,0,0,145,146,3,4,
-  	2,0,146,147,5,4,0,0,147,223,1,0,0,0,148,149,5,37,0,0,149,150,3,4,2,0,
-  	150,151,5,24,0,0,151,152,3,4,2,0,152,153,5,25,0,0,153,154,3,4,2,0,154,
-  	155,5,4,0,0,155,223,1,0,0,0,156,157,5,38,0,0,157,158,3,4,2,0,158,159,
-  	5,24,0,0,159,160,3,4,2,0,160,161,5,25,0,0,161,162,3,4,2,0,162,163,5,4,
-  	0,0,163,223,1,0,0,0,164,165,5,73,0,0,165,166,3,4,2,0,166,167,3,4,2,22,
-  	167,223,1,0,0,0,168,169,5,74,0,0,169,170,3,4,2,0,170,171,3,4,2,21,171,
-  	223,1,0,0,0,172,173,5,75,0,0,173,223,3,4,2,20,174,175,5,76,0,0,175,223,
-  	3,4,2,19,176,177,5,77,0,0,177,223,3,4,2,18,178,179,5,39,0,0,179,180,3,
-  	4,2,0,180,181,5,40,0,0,181,223,1,0,0,0,182,183,5,41,0,0,183,184,3,4,2,
-  	0,184,185,5,42,0,0,185,223,1,0,0,0,186,187,5,78,0,0,187,188,3,4,2,0,188,
-  	189,3,4,2,15,189,223,1,0,0,0,190,191,5,79,0,0,191,223,3,4,2,14,192,193,
-  	5,80,0,0,193,223,3,4,2,13,194,195,5,81,0,0,195,223,3,4,2,12,196,197,5,
-  	82,0,0,197,223,3,4,2,11,198,199,5,83,0,0,199,223,3,4,2,10,200,201,5,86,
-  	0,0,201,202,3,4,2,0,202,203,3,4,2,9,203,223,1,0,0,0,204,205,5,84,0,0,
-  	205,223,3,4,2,8,206,207,5,85,0,0,207,223,3,4,2,7,208,209,5,47,0,0,209,
-  	223,3,4,2,6,210,211,5,48,0,0,211,212,3,4,2,0,212,213,5,43,0,0,213,214,
-  	3,4,2,5,214,223,1,0,0,0,215,216,5,49,0,0,216,223,3,4,2,3,217,218,5,45,
-  	0,0,218,219,3,4,2,0,219,220,5,44,0,0,220,221,3,4,2,1,221,223,1,0,0,0,
-  	222,20,1,0,0,0,222,25,1,0,0,0,222,29,1,0,0,0,222,34,1,0,0,0,222,38,1,
-  	0,0,0,222,42,1,0,0,0,222,44,1,0,0,0,222,51,1,0,0,0,222,59,1,0,0,0,222,
-  	64,1,0,0,0,222,65,1,0,0,0,222,66,1,0,0,0,222,67,1,0,0,0,222,68,1,0,0,
-  	0,222,69,1,0,0,0,222,70,1,0,0,0,222,71,1,0,0,0,222,73,1,0,0,0,222,85,
-  	1,0,0,0,222,87,1,0,0,0,222,89,1,0,0,0,222,101,1,0,0,0,222,102,1,0,0,0,
-  	222,114,1,0,0,0,222,129,1,0,0,0,222,130,1,0,0,0,222,136,1,0,0,0,222,142,
-  	1,0,0,0,222,148,1,0,0,0,222,156,1,0,0,0,222,164,1,0,0,0,222,168,1,0,0,
-  	0,222,172,1,0,0,0,222,174,1,0,0,0,222,176,1,0,0,0,222,178,1,0,0,0,222,
-  	182,1,0,0,0,222,186,1,0,0,0,222,190,1,0,0,0,222,192,1,0,0,0,222,194,1,
-  	0,0,0,222,196,1,0,0,0,222,198,1,0,0,0,222,200,1,0,0,0,222,204,1,0,0,0,
-  	222,206,1,0,0,0,222,208,1,0,0,0,222,210,1,0,0,0,222,215,1,0,0,0,222,217,
-  	1,0,0,0,223,308,1,0,0,0,224,225,10,74,0,0,225,226,5,5,0,0,226,307,3,4,
-  	2,75,227,228,10,73,0,0,228,229,5,6,0,0,229,307,3,4,2,74,230,231,10,72,
-  	0,0,231,232,5,7,0,0,232,307,3,4,2,73,233,234,10,71,0,0,234,235,5,8,0,
-  	0,235,307,3,4,2,72,236,237,10,70,0,0,237,238,5,9,0,0,238,307,3,4,2,71,
-  	239,240,10,69,0,0,240,241,5,10,0,0,241,307,3,4,2,70,242,243,10,68,0,0,
-  	243,244,5,11,0,0,244,307,3,4,2,69,245,246,10,67,0,0,246,247,5,12,0,0,
-  	247,307,3,4,2,68,248,249,10,66,0,0,249,250,5,13,0,0,250,307,3,4,2,67,
-  	251,252,10,64,0,0,252,253,5,15,0,0,253,307,3,4,2,65,254,255,10,63,0,0,
-  	255,256,5,16,0,0,256,307,3,4,2,64,257,258,10,62,0,0,258,259,5,17,0,0,
-  	259,307,3,4,2,63,260,261,10,61,0,0,261,262,5,18,0,0,262,307,3,4,2,62,
-  	263,264,10,60,0,0,264,265,5,60,0,0,265,307,3,4,2,61,266,267,10,59,0,0,
-  	267,268,5,59,0,0,268,307,3,4,2,60,269,270,10,58,0,0,270,271,5,19,0,0,
-  	271,307,3,4,2,59,272,273,10,53,0,0,273,274,5,22,0,0,274,307,3,4,2,54,
-  	275,276,10,48,0,0,276,277,5,26,0,0,277,278,3,4,2,0,278,279,5,30,0,0,279,
-  	280,3,4,2,49,280,307,1,0,0,0,281,282,10,47,0,0,282,283,5,31,0,0,283,307,
-  	3,4,2,48,284,285,10,38,0,0,285,286,5,64,0,0,286,307,3,4,2,39,287,288,
-  	10,37,0,0,288,289,5,65,0,0,289,307,3,4,2,38,290,291,10,4,0,0,291,292,
-  	5,58,0,0,292,307,3,4,2,5,293,294,10,2,0,0,294,295,5,96,0,0,295,307,3,
-  	4,2,3,296,297,10,50,0,0,297,298,5,26,0,0,298,299,3,4,2,0,299,300,5,27,
-  	0,0,300,307,1,0,0,0,301,302,10,49,0,0,302,303,5,28,0,0,303,304,3,4,2,
-  	0,304,305,5,29,0,0,305,307,1,0,0,0,306,224,1,0,0,0,306,227,1,0,0,0,306,
-  	230,1,0,0,0,306,233,1,0,0,0,306,236,1,0,0,0,306,239,1,0,0,0,306,242,1,
-  	0,0,0,306,245,1,0,0,0,306,248,1,0,0,0,306,251,1,0,0,0,306,254,1,0,0,0,
-  	306,257,1,0,0,0,306,260,1,0,0,0,306,263,1,0,0,0,306,266,1,0,0,0,306,269,
-  	1,0,0,0,306,272,1,0,0,0,306,275,1,0,0,0,306,281,1,0,0,0,306,284,1,0,0,
-  	0,306,287,1,0,0,0,306,290,1,0,0,0,306,293,1,0,0,0,306,296,1,0,0,0,306,
-  	301,1,0,0,0,307,310,1,0,0,0,308,306,1,0,0,0,308,309,1,0,0,0,309,5,1,0,
-  	0,0,310,308,1,0,0,0,8,11,79,95,108,123,222,306,308
+  	1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,2,228,8,2,1,
+  	2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,
+  	1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,
+  	2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,
+  	1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,
+  	2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,5,2,312,8,2,10,2,12,2,315,
+  	9,2,1,2,0,1,4,3,0,2,4,0,0,395,0,11,1,0,0,0,2,16,1,0,0,0,4,227,1,0,0,0,
+  	6,7,3,4,2,0,7,8,5,1,0,0,8,10,1,0,0,0,9,6,1,0,0,0,10,13,1,0,0,0,11,9,1,
+  	0,0,0,11,12,1,0,0,0,12,14,1,0,0,0,13,11,1,0,0,0,14,15,3,4,2,0,15,1,1,
+  	0,0,0,16,17,5,100,0,0,17,18,5,2,0,0,18,19,3,4,2,0,19,3,1,0,0,0,20,21,
+  	6,2,-1,0,21,22,5,3,0,0,22,23,3,4,2,0,23,24,5,4,0,0,24,228,1,0,0,0,25,
+  	26,5,14,0,0,26,27,3,4,2,0,27,28,5,14,0,0,28,228,1,0,0,0,29,30,5,3,0,0,
+  	30,31,3,4,2,0,31,32,3,4,2,0,32,33,5,4,0,0,33,228,1,0,0,0,34,35,5,20,0,
+  	0,35,36,3,4,2,0,36,37,5,4,0,0,37,228,1,0,0,0,38,39,5,21,0,0,39,40,3,4,
+  	2,0,40,41,5,4,0,0,41,228,1,0,0,0,42,43,5,70,0,0,43,228,3,4,2,57,44,45,
+  	5,71,0,0,45,46,3,4,2,0,46,47,5,72,0,0,47,48,3,4,2,0,48,49,5,73,0,0,49,
+  	50,3,4,2,55,50,228,1,0,0,0,51,52,5,23,0,0,52,53,3,4,2,0,53,54,5,24,0,
+  	0,54,55,3,4,2,0,55,56,5,25,0,0,56,57,3,4,2,0,57,58,5,4,0,0,58,228,1,0,
+  	0,0,59,60,5,74,0,0,60,61,3,4,2,0,61,62,5,75,0,0,62,63,3,4,2,49,63,228,
+  	1,0,0,0,64,228,5,101,0,0,65,228,5,66,0,0,66,228,5,100,0,0,67,228,5,46,
+  	0,0,68,228,5,52,0,0,69,228,5,56,0,0,70,228,5,57,0,0,71,228,5,54,0,0,72,
+  	73,5,60,0,0,73,228,3,4,2,38,74,80,5,32,0,0,75,76,3,2,1,0,76,77,5,1,0,
+  	0,77,79,1,0,0,0,78,75,1,0,0,0,79,82,1,0,0,0,80,78,1,0,0,0,80,81,1,0,0,
+  	0,81,83,1,0,0,0,82,80,1,0,0,0,83,84,3,2,1,0,84,85,5,63,0,0,85,228,1,0,
+  	0,0,86,228,5,55,0,0,87,228,5,45,0,0,88,89,5,53,0,0,89,228,5,100,0,0,90,
+  	91,5,48,0,0,91,92,3,4,2,0,92,93,3,4,2,33,93,228,1,0,0,0,94,100,5,64,0,
+  	0,95,96,3,4,2,0,96,97,5,1,0,0,97,99,1,0,0,0,98,95,1,0,0,0,99,102,1,0,
+  	0,0,100,98,1,0,0,0,100,101,1,0,0,0,101,103,1,0,0,0,102,100,1,0,0,0,103,
+  	104,3,4,2,0,104,105,5,65,0,0,105,228,1,0,0,0,106,228,5,58,0,0,107,113,
+  	5,62,0,0,108,109,3,2,1,0,109,110,5,1,0,0,110,112,1,0,0,0,111,108,1,0,
+  	0,0,112,115,1,0,0,0,113,111,1,0,0,0,113,114,1,0,0,0,114,116,1,0,0,0,115,
+  	113,1,0,0,0,116,117,3,2,1,0,117,118,5,63,0,0,118,228,1,0,0,0,119,120,
+  	5,69,0,0,120,121,5,93,0,0,121,122,5,33,0,0,122,128,5,64,0,0,123,124,3,
+  	4,2,0,124,125,5,1,0,0,125,127,1,0,0,0,126,123,1,0,0,0,127,130,1,0,0,0,
+  	128,126,1,0,0,0,128,129,1,0,0,0,129,131,1,0,0,0,130,128,1,0,0,0,131,132,
+  	3,4,2,0,132,133,5,65,0,0,133,228,1,0,0,0,134,228,5,93,0,0,135,136,5,34,
+  	0,0,136,137,3,4,2,0,137,138,5,25,0,0,138,139,3,4,2,0,139,140,5,4,0,0,
+  	140,228,1,0,0,0,141,142,5,35,0,0,142,143,3,4,2,0,143,144,5,25,0,0,144,
+  	145,3,4,2,0,145,146,5,4,0,0,146,228,1,0,0,0,147,148,5,36,0,0,148,149,
+  	3,4,2,0,149,150,5,25,0,0,150,151,3,4,2,0,151,152,5,4,0,0,152,228,1,0,
+  	0,0,153,154,5,37,0,0,154,155,3,4,2,0,155,156,5,24,0,0,156,157,3,4,2,0,
+  	157,158,5,25,0,0,158,159,3,4,2,0,159,160,5,4,0,0,160,228,1,0,0,0,161,
+  	162,5,38,0,0,162,163,3,4,2,0,163,164,5,24,0,0,164,165,3,4,2,0,165,166,
+  	5,25,0,0,166,167,3,4,2,0,167,168,5,4,0,0,168,228,1,0,0,0,169,170,5,76,
+  	0,0,170,171,3,4,2,0,171,172,3,4,2,22,172,228,1,0,0,0,173,174,5,77,0,0,
+  	174,175,3,4,2,0,175,176,3,4,2,21,176,228,1,0,0,0,177,178,5,78,0,0,178,
+  	228,3,4,2,20,179,180,5,79,0,0,180,228,3,4,2,19,181,182,5,80,0,0,182,228,
+  	3,4,2,18,183,184,5,39,0,0,184,185,3,4,2,0,185,186,5,40,0,0,186,228,1,
+  	0,0,0,187,188,5,41,0,0,188,189,3,4,2,0,189,190,5,42,0,0,190,228,1,0,0,
+  	0,191,192,5,81,0,0,192,193,3,4,2,0,193,194,3,4,2,15,194,228,1,0,0,0,195,
+  	196,5,82,0,0,196,228,3,4,2,14,197,198,5,83,0,0,198,228,3,4,2,13,199,200,
+  	5,84,0,0,200,228,3,4,2,12,201,202,5,85,0,0,202,228,3,4,2,11,203,204,5,
+  	86,0,0,204,228,3,4,2,10,205,206,5,89,0,0,206,207,3,4,2,0,207,208,3,4,
+  	2,9,208,228,1,0,0,0,209,210,5,87,0,0,210,228,3,4,2,8,211,212,5,88,0,0,
+  	212,228,3,4,2,7,213,214,5,49,0,0,214,228,3,4,2,6,215,216,5,50,0,0,216,
+  	217,3,4,2,0,217,218,5,43,0,0,218,219,3,4,2,5,219,228,1,0,0,0,220,221,
+  	5,51,0,0,221,228,3,4,2,3,222,223,5,47,0,0,223,224,3,4,2,0,224,225,5,44,
+  	0,0,225,226,3,4,2,1,226,228,1,0,0,0,227,20,1,0,0,0,227,25,1,0,0,0,227,
+  	29,1,0,0,0,227,34,1,0,0,0,227,38,1,0,0,0,227,42,1,0,0,0,227,44,1,0,0,
+  	0,227,51,1,0,0,0,227,59,1,0,0,0,227,64,1,0,0,0,227,65,1,0,0,0,227,66,
+  	1,0,0,0,227,67,1,0,0,0,227,68,1,0,0,0,227,69,1,0,0,0,227,70,1,0,0,0,227,
+  	71,1,0,0,0,227,72,1,0,0,0,227,74,1,0,0,0,227,86,1,0,0,0,227,87,1,0,0,
+  	0,227,88,1,0,0,0,227,90,1,0,0,0,227,94,1,0,0,0,227,106,1,0,0,0,227,107,
+  	1,0,0,0,227,119,1,0,0,0,227,134,1,0,0,0,227,135,1,0,0,0,227,141,1,0,0,
+  	0,227,147,1,0,0,0,227,153,1,0,0,0,227,161,1,0,0,0,227,169,1,0,0,0,227,
+  	173,1,0,0,0,227,177,1,0,0,0,227,179,1,0,0,0,227,181,1,0,0,0,227,183,1,
+  	0,0,0,227,187,1,0,0,0,227,191,1,0,0,0,227,195,1,0,0,0,227,197,1,0,0,0,
+  	227,199,1,0,0,0,227,201,1,0,0,0,227,203,1,0,0,0,227,205,1,0,0,0,227,209,
+  	1,0,0,0,227,211,1,0,0,0,227,213,1,0,0,0,227,215,1,0,0,0,227,220,1,0,0,
+  	0,227,222,1,0,0,0,228,313,1,0,0,0,229,230,10,77,0,0,230,231,5,5,0,0,231,
+  	312,3,4,2,78,232,233,10,76,0,0,233,234,5,6,0,0,234,312,3,4,2,77,235,236,
+  	10,75,0,0,236,237,5,7,0,0,237,312,3,4,2,76,238,239,10,74,0,0,239,240,
+  	5,8,0,0,240,312,3,4,2,75,241,242,10,73,0,0,242,243,5,9,0,0,243,312,3,
+  	4,2,74,244,245,10,72,0,0,245,246,5,10,0,0,246,312,3,4,2,73,247,248,10,
+  	71,0,0,248,249,5,11,0,0,249,312,3,4,2,72,250,251,10,70,0,0,251,252,5,
+  	12,0,0,252,312,3,4,2,71,253,254,10,69,0,0,254,255,5,13,0,0,255,312,3,
+  	4,2,70,256,257,10,67,0,0,257,258,5,15,0,0,258,312,3,4,2,68,259,260,10,
+  	66,0,0,260,261,5,16,0,0,261,312,3,4,2,67,262,263,10,65,0,0,263,264,5,
+  	17,0,0,264,312,3,4,2,66,265,266,10,64,0,0,266,267,5,18,0,0,267,312,3,
+  	4,2,65,268,269,10,63,0,0,269,270,5,63,0,0,270,312,3,4,2,64,271,272,10,
+  	62,0,0,272,273,5,62,0,0,273,312,3,4,2,63,274,275,10,61,0,0,275,276,5,
+  	19,0,0,276,312,3,4,2,62,277,278,10,56,0,0,278,279,5,22,0,0,279,312,3,
+  	4,2,57,280,281,10,51,0,0,281,282,5,26,0,0,282,283,3,4,2,0,283,284,5,30,
+  	0,0,284,285,3,4,2,52,285,312,1,0,0,0,286,287,10,50,0,0,287,288,5,31,0,
+  	0,288,312,3,4,2,51,289,290,10,40,0,0,290,291,5,67,0,0,291,312,3,4,2,41,
+  	292,293,10,39,0,0,293,294,5,68,0,0,294,312,3,4,2,40,295,296,10,4,0,0,
+  	296,297,5,61,0,0,297,312,3,4,2,5,298,299,10,2,0,0,299,300,5,99,0,0,300,
+  	312,3,4,2,3,301,302,10,53,0,0,302,303,5,26,0,0,303,304,3,4,2,0,304,305,
+  	5,27,0,0,305,312,1,0,0,0,306,307,10,52,0,0,307,308,5,28,0,0,308,309,3,
+  	4,2,0,309,310,5,29,0,0,310,312,1,0,0,0,311,229,1,0,0,0,311,232,1,0,0,
+  	0,311,235,1,0,0,0,311,238,1,0,0,0,311,241,1,0,0,0,311,244,1,0,0,0,311,
+  	247,1,0,0,0,311,250,1,0,0,0,311,253,1,0,0,0,311,256,1,0,0,0,311,259,1,
+  	0,0,0,311,262,1,0,0,0,311,265,1,0,0,0,311,268,1,0,0,0,311,271,1,0,0,0,
+  	311,274,1,0,0,0,311,277,1,0,0,0,311,280,1,0,0,0,311,286,1,0,0,0,311,289,
+  	1,0,0,0,311,292,1,0,0,0,311,295,1,0,0,0,311,298,1,0,0,0,311,301,1,0,0,
+  	0,311,306,1,0,0,0,312,315,1,0,0,0,313,311,1,0,0,0,313,314,1,0,0,0,314,
+  	5,1,0,0,0,315,313,1,0,0,0,8,11,80,100,113,128,227,311,313
   };
   staticData->serializedATN = antlr4::atn::SerializedATNView(serializedATNSegment, sizeof(serializedATNSegment) / sizeof(serializedATNSegment[0]));
 
@@ -1313,12 +1315,16 @@ std::any scriptParser::Type_orContext::accept(tree::ParseTreeVisitor *visitor) {
 }
 //----------------- Type_lexContext ------------------------------------------------------------------
 
-tree::TerminalNode* scriptParser::Type_lexContext::LEXT() {
-  return getToken(scriptParser::LEXT, 0);
+tree::TerminalNode* scriptParser::Type_lexContext::ObjT() {
+  return getToken(scriptParser::ObjT, 0);
 }
 
-scriptParser::ExprContext* scriptParser::Type_lexContext::expr() {
-  return getRuleContext<scriptParser::ExprContext>(0);
+std::vector<scriptParser::ExprContext *> scriptParser::Type_lexContext::expr() {
+  return getRuleContexts<scriptParser::ExprContext>();
+}
+
+scriptParser::ExprContext* scriptParser::Type_lexContext::expr(size_t i) {
+  return getRuleContext<scriptParser::ExprContext>(i);
 }
 
 scriptParser::Type_lexContext::Type_lexContext(ExprContext *ctx) { copyFrom(ctx); }
@@ -1478,6 +1484,31 @@ void scriptParser::AtContext::exitRule(tree::ParseTreeListener *listener) {
 std::any scriptParser::AtContext::accept(tree::ParseTreeVisitor *visitor) {
   if (auto parserVisitor = dynamic_cast<scriptVisitor*>(visitor))
     return parserVisitor->visitAt(this);
+  else
+    return visitor->visitChildren(this);
+}
+//----------------- NullContext ------------------------------------------------------------------
+
+tree::TerminalNode* scriptParser::NullContext::BOT() {
+  return getToken(scriptParser::BOT, 0);
+}
+
+scriptParser::NullContext::NullContext(ExprContext *ctx) { copyFrom(ctx); }
+
+void scriptParser::NullContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<scriptListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterNull(this);
+}
+void scriptParser::NullContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<scriptListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitNull(this);
+}
+
+std::any scriptParser::NullContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<scriptVisitor*>(visitor))
+    return parserVisitor->visitNull(this);
   else
     return visitor->visitChildren(this);
 }
@@ -1784,6 +1815,31 @@ void scriptParser::Type_stringContext::exitRule(tree::ParseTreeListener *listene
 std::any scriptParser::Type_stringContext::accept(tree::ParseTreeVisitor *visitor) {
   if (auto parserVisitor = dynamic_cast<scriptVisitor*>(visitor))
     return parserVisitor->visitType_string(this);
+  else
+    return visitor->visitChildren(this);
+}
+//----------------- Type_anyContext ------------------------------------------------------------------
+
+tree::TerminalNode* scriptParser::Type_anyContext::ANYT() {
+  return getToken(scriptParser::ANYT, 0);
+}
+
+scriptParser::Type_anyContext::Type_anyContext(ExprContext *ctx) { copyFrom(ctx); }
+
+void scriptParser::Type_anyContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<scriptListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterType_any(this);
+}
+void scriptParser::Type_anyContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<scriptListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitType_any(this);
+}
+
+std::any scriptParser::Type_anyContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<scriptVisitor*>(visitor))
+    return parserVisitor->visitType_any(this);
   else
     return visitor->visitChildren(this);
 }
@@ -2466,6 +2522,31 @@ std::any scriptParser::ObjContext::accept(tree::ParseTreeVisitor *visitor) {
   else
     return visitor->visitChildren(this);
 }
+//----------------- Type_botContext ------------------------------------------------------------------
+
+tree::TerminalNode* scriptParser::Type_botContext::VOID() {
+  return getToken(scriptParser::VOID, 0);
+}
+
+scriptParser::Type_botContext::Type_botContext(ExprContext *ctx) { copyFrom(ctx); }
+
+void scriptParser::Type_botContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<scriptListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterType_bot(this);
+}
+void scriptParser::Type_botContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<scriptListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitType_bot(this);
+}
+
+std::any scriptParser::Type_botContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<scriptVisitor*>(visitor))
+    return parserVisitor->visitType_bot(this);
+  else
+    return visitor->visitChildren(this);
+}
 //----------------- VariableContext ------------------------------------------------------------------
 
 tree::TerminalNode* scriptParser::VariableContext::VARNAME() {
@@ -2641,7 +2722,7 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
   try {
     size_t alt;
     enterOuterAlt(_localctx, 1);
-    setState(222);
+    setState(227);
     _errHandler->sync(this);
     switch (getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 5, _ctx)) {
     case 1: {
@@ -2719,7 +2800,7 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
       setState(42);
       match(scriptParser::NOT);
       setState(43);
-      expr(54);
+      expr(57);
       break;
     }
 
@@ -2738,7 +2819,7 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
       setState(48);
       match(scriptParser::ELSE);
       setState(49);
-      expr(52);
+      expr(55);
       break;
     }
 
@@ -2774,7 +2855,7 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
       setState(61);
       match(scriptParser::FROM);
       setState(62);
-      expr(46);
+      expr(49);
       break;
     }
 
@@ -2806,535 +2887,564 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
     }
 
     case 13: {
-      _localctx = _tracker.createInstance<Type_stringContext>(_localctx);
+      _localctx = _tracker.createInstance<NullContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
       setState(67);
-      match(scriptParser::STRINGT);
+      match(scriptParser::BOT);
       break;
     }
 
     case 14: {
-      _localctx = _tracker.createInstance<Type_boolContext>(_localctx);
+      _localctx = _tracker.createInstance<Type_stringContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
       setState(68);
-      match(scriptParser::BOOLT);
+      match(scriptParser::STRINGT);
       break;
     }
 
     case 15: {
-      _localctx = _tracker.createInstance<Type_intContext>(_localctx);
+      _localctx = _tracker.createInstance<Type_boolContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
       setState(69);
-      match(scriptParser::INTT);
+      match(scriptParser::BOOLT);
       break;
     }
 
     case 16: {
-      _localctx = _tracker.createInstance<Type_doubleContext>(_localctx);
+      _localctx = _tracker.createInstance<Type_intContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
       setState(70);
-      match(scriptParser::DOUBLET);
+      match(scriptParser::INTT);
       break;
     }
 
     case 17: {
-      _localctx = _tracker.createInstance<Type_listContext>(_localctx);
+      _localctx = _tracker.createInstance<Type_doubleContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
       setState(71);
-      match(scriptParser::LISTT);
-      setState(72);
-      expr(36);
+      match(scriptParser::DOUBLET);
       break;
     }
 
     case 18: {
-      _localctx = _tracker.createInstance<Type_tupleContext>(_localctx);
+      _localctx = _tracker.createInstance<Type_listContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
+      setState(72);
+      match(scriptParser::LISTT);
       setState(73);
-      match(scriptParser::T__31);
-      setState(79);
-      _errHandler->sync(this);
-      alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 1, _ctx);
-      while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER) {
-        if (alt == 1) {
-          setState(74);
-          tuple_pair();
-          setState(75);
-          match(scriptParser::T__0); 
-        }
-        setState(81);
-        _errHandler->sync(this);
-        alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 1, _ctx);
-      }
-      setState(82);
-      tuple_pair();
-      setState(83);
-      match(scriptParser::ARPAREN);
+      expr(38);
       break;
     }
 
     case 19: {
-      _localctx = _tracker.createInstance<Type_labelContext>(_localctx);
+      _localctx = _tracker.createInstance<Type_tupleContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(85);
-      match(scriptParser::LABELT);
-      setState(86);
-      match(scriptParser::EscapedString);
-      break;
-    }
-
-    case 20: {
-      _localctx = _tracker.createInstance<Type_lexContext>(_localctx);
-      _ctx = _localctx;
-      previousContext = _localctx;
-      setState(87);
-      match(scriptParser::LEXT);
-      setState(88);
-      expr(33);
-      break;
-    }
-
-    case 21: {
-      _localctx = _tracker.createInstance<Atom_arrayContext>(_localctx);
-      _ctx = _localctx;
-      previousContext = _localctx;
-      setState(89);
-      match(scriptParser::LPAREN);
-      setState(95);
+      setState(74);
+      match(scriptParser::T__31);
+      setState(80);
       _errHandler->sync(this);
-      alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 2, _ctx);
+      alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 1, _ctx);
       while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER) {
         if (alt == 1) {
-          setState(90);
-          expr(0);
-          setState(91);
-          match(scriptParser::T__0); 
-        }
-        setState(97);
-        _errHandler->sync(this);
-        alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 2, _ctx);
-      }
-      setState(98);
-      expr(0);
-      setState(99);
-      match(scriptParser::RPAREN);
-      break;
-    }
-
-    case 22: {
-      _localctx = _tracker.createInstance<KindContext>(_localctx);
-      _ctx = _localctx;
-      previousContext = _localctx;
-      setState(101);
-      match(scriptParser::START);
-      break;
-    }
-
-    case 23: {
-      _localctx = _tracker.createInstance<Atom_tupleContext>(_localctx);
-      _ctx = _localctx;
-      previousContext = _localctx;
-      setState(102);
-      match(scriptParser::ALPAREN);
-      setState(108);
-      _errHandler->sync(this);
-      alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 3, _ctx);
-      while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER) {
-        if (alt == 1) {
-          setState(103);
+          setState(75);
           tuple_pair();
-          setState(104);
+          setState(76);
           match(scriptParser::T__0); 
         }
-        setState(110);
+        setState(82);
         _errHandler->sync(this);
-        alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 3, _ctx);
+        alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 1, _ctx);
       }
-      setState(111);
+      setState(83);
       tuple_pair();
-      setState(112);
+      setState(84);
       match(scriptParser::ARPAREN);
       break;
     }
 
-    case 24: {
-      _localctx = _tracker.createInstance<FunctionContext>(_localctx);
+    case 20: {
+      _localctx = _tracker.createInstance<Type_anyContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(114);
-      match(scriptParser::FUN);
-      setState(115);
-      match(scriptParser::VARNAME);
-      setState(116);
-      match(scriptParser::T__32);
-      setState(117);
+      setState(86);
+      match(scriptParser::ANYT);
+      break;
+    }
+
+    case 21: {
+      _localctx = _tracker.createInstance<Type_botContext>(_localctx);
+      _ctx = _localctx;
+      previousContext = _localctx;
+      setState(87);
+      match(scriptParser::VOID);
+      break;
+    }
+
+    case 22: {
+      _localctx = _tracker.createInstance<Type_labelContext>(_localctx);
+      _ctx = _localctx;
+      previousContext = _localctx;
+      setState(88);
+      match(scriptParser::LABELT);
+      setState(89);
+      match(scriptParser::EscapedString);
+      break;
+    }
+
+    case 23: {
+      _localctx = _tracker.createInstance<Type_lexContext>(_localctx);
+      _ctx = _localctx;
+      previousContext = _localctx;
+      setState(90);
+      match(scriptParser::ObjT);
+      setState(91);
+      expr(0);
+      setState(92);
+      expr(33);
+      break;
+    }
+
+    case 24: {
+      _localctx = _tracker.createInstance<Atom_arrayContext>(_localctx);
+      _ctx = _localctx;
+      previousContext = _localctx;
+      setState(94);
       match(scriptParser::LPAREN);
-      setState(123);
+      setState(100);
       _errHandler->sync(this);
-      alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 4, _ctx);
+      alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 2, _ctx);
       while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER) {
         if (alt == 1) {
-          setState(118);
+          setState(95);
           expr(0);
-          setState(119);
+          setState(96);
           match(scriptParser::T__0); 
         }
-        setState(125);
+        setState(102);
         _errHandler->sync(this);
-        alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 4, _ctx);
+        alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 2, _ctx);
       }
-      setState(126);
+      setState(103);
       expr(0);
-      setState(127);
+      setState(104);
       match(scriptParser::RPAREN);
       break;
     }
 
     case 25: {
-      _localctx = _tracker.createInstance<VariableContext>(_localctx);
+      _localctx = _tracker.createInstance<KindContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(129);
-      match(scriptParser::VARNAME);
+      setState(106);
+      match(scriptParser::START);
       break;
     }
 
     case 26: {
-      _localctx = _tracker.createInstance<MapContext>(_localctx);
+      _localctx = _tracker.createInstance<Atom_tupleContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(130);
-      match(scriptParser::T__33);
-      setState(131);
-      expr(0);
-      setState(132);
-      match(scriptParser::T__24);
-      setState(133);
-      expr(0);
-      setState(134);
-      match(scriptParser::T__3);
+      setState(107);
+      match(scriptParser::ALPAREN);
+      setState(113);
+      _errHandler->sync(this);
+      alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 3, _ctx);
+      while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER) {
+        if (alt == 1) {
+          setState(108);
+          tuple_pair();
+          setState(109);
+          match(scriptParser::T__0); 
+        }
+        setState(115);
+        _errHandler->sync(this);
+        alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 3, _ctx);
+      }
+      setState(116);
+      tuple_pair();
+      setState(117);
+      match(scriptParser::ARPAREN);
       break;
     }
 
     case 27: {
-      _localctx = _tracker.createInstance<SelectContext>(_localctx);
+      _localctx = _tracker.createInstance<FunctionContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(136);
-      match(scriptParser::T__34);
-      setState(137);
+      setState(119);
+      match(scriptParser::FUN);
+      setState(120);
+      match(scriptParser::VARNAME);
+      setState(121);
+      match(scriptParser::T__32);
+      setState(122);
+      match(scriptParser::LPAREN);
+      setState(128);
+      _errHandler->sync(this);
+      alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 4, _ctx);
+      while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER) {
+        if (alt == 1) {
+          setState(123);
+          expr(0);
+          setState(124);
+          match(scriptParser::T__0); 
+        }
+        setState(130);
+        _errHandler->sync(this);
+        alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 4, _ctx);
+      }
+      setState(131);
       expr(0);
-      setState(138);
-      match(scriptParser::T__24);
-      setState(139);
-      expr(0);
-      setState(140);
-      match(scriptParser::T__3);
+      setState(132);
+      match(scriptParser::RPAREN);
       break;
     }
 
     case 28: {
-      _localctx = _tracker.createInstance<FilterContext>(_localctx);
+      _localctx = _tracker.createInstance<VariableContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(142);
-      match(scriptParser::T__35);
-      setState(143);
-      expr(0);
-      setState(144);
-      match(scriptParser::T__24);
-      setState(145);
-      expr(0);
-      setState(146);
-      match(scriptParser::T__3);
+      setState(134);
+      match(scriptParser::VARNAME);
       break;
     }
 
     case 29: {
-      _localctx = _tracker.createInstance<RfoldContext>(_localctx);
+      _localctx = _tracker.createInstance<MapContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(148);
-      match(scriptParser::T__36);
-      setState(149);
+      setState(135);
+      match(scriptParser::T__33);
+      setState(136);
       expr(0);
-      setState(150);
-      match(scriptParser::T__23);
-      setState(151);
-      expr(0);
-      setState(152);
+      setState(137);
       match(scriptParser::T__24);
-      setState(153);
+      setState(138);
       expr(0);
-      setState(154);
+      setState(139);
       match(scriptParser::T__3);
       break;
     }
 
     case 30: {
-      _localctx = _tracker.createInstance<LfoldContext>(_localctx);
+      _localctx = _tracker.createInstance<SelectContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(156);
-      match(scriptParser::T__37);
-      setState(157);
+      setState(141);
+      match(scriptParser::T__34);
+      setState(142);
       expr(0);
-      setState(158);
-      match(scriptParser::T__23);
-      setState(159);
-      expr(0);
-      setState(160);
+      setState(143);
       match(scriptParser::T__24);
-      setState(161);
+      setState(144);
       expr(0);
-      setState(162);
+      setState(145);
       match(scriptParser::T__3);
       break;
     }
 
     case 31: {
-      _localctx = _tracker.createInstance<LogContext>(_localctx);
+      _localctx = _tracker.createInstance<FilterContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(164);
-      match(scriptParser::LOG);
-      setState(165);
+      setState(147);
+      match(scriptParser::T__35);
+      setState(148);
       expr(0);
-      setState(166);
-      expr(22);
+      setState(149);
+      match(scriptParser::T__24);
+      setState(150);
+      expr(0);
+      setState(151);
+      match(scriptParser::T__3);
       break;
     }
 
     case 32: {
-      _localctx = _tracker.createInstance<PowContext>(_localctx);
+      _localctx = _tracker.createInstance<RfoldContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(168);
-      match(scriptParser::POW);
-      setState(169);
+      setState(153);
+      match(scriptParser::T__36);
+      setState(154);
       expr(0);
-      setState(170);
-      expr(21);
+      setState(155);
+      match(scriptParser::T__23);
+      setState(156);
+      expr(0);
+      setState(157);
+      match(scriptParser::T__24);
+      setState(158);
+      expr(0);
+      setState(159);
+      match(scriptParser::T__3);
       break;
     }
 
     case 33: {
-      _localctx = _tracker.createInstance<SinContext>(_localctx);
+      _localctx = _tracker.createInstance<LfoldContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(172);
-      match(scriptParser::SIN);
-      setState(173);
-      expr(20);
+      setState(161);
+      match(scriptParser::T__37);
+      setState(162);
+      expr(0);
+      setState(163);
+      match(scriptParser::T__23);
+      setState(164);
+      expr(0);
+      setState(165);
+      match(scriptParser::T__24);
+      setState(166);
+      expr(0);
+      setState(167);
+      match(scriptParser::T__3);
       break;
     }
 
     case 34: {
-      _localctx = _tracker.createInstance<CosContext>(_localctx);
+      _localctx = _tracker.createInstance<LogContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(174);
-      match(scriptParser::COS);
-      setState(175);
-      expr(19);
+      setState(169);
+      match(scriptParser::LOG);
+      setState(170);
+      expr(0);
+      setState(171);
+      expr(22);
       break;
     }
 
     case 35: {
-      _localctx = _tracker.createInstance<TanContext>(_localctx);
+      _localctx = _tracker.createInstance<PowContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(176);
-      match(scriptParser::TAN);
-      setState(177);
-      expr(18);
+      setState(173);
+      match(scriptParser::POW);
+      setState(174);
+      expr(0);
+      setState(175);
+      expr(21);
       break;
     }
 
     case 36: {
-      _localctx = _tracker.createInstance<FloorContext>(_localctx);
+      _localctx = _tracker.createInstance<SinContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
+      setState(177);
+      match(scriptParser::SIN);
       setState(178);
-      match(scriptParser::T__38);
-      setState(179);
-      expr(0);
-      setState(180);
-      match(scriptParser::T__39);
+      expr(20);
       break;
     }
 
     case 37: {
-      _localctx = _tracker.createInstance<CeilContext>(_localctx);
+      _localctx = _tracker.createInstance<CosContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(182);
-      match(scriptParser::T__40);
-      setState(183);
-      expr(0);
-      setState(184);
-      match(scriptParser::T__41);
+      setState(179);
+      match(scriptParser::COS);
+      setState(180);
+      expr(19);
       break;
     }
 
     case 38: {
-      _localctx = _tracker.createInstance<PhiContext>(_localctx);
+      _localctx = _tracker.createInstance<TanContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(186);
-      match(scriptParser::PHI);
-      setState(187);
-      expr(0);
-      setState(188);
-      expr(15);
+      setState(181);
+      match(scriptParser::TAN);
+      setState(182);
+      expr(18);
       break;
     }
 
     case 39: {
-      _localctx = _tracker.createInstance<EllContext>(_localctx);
+      _localctx = _tracker.createInstance<FloorContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(190);
-      match(scriptParser::ELL);
-      setState(191);
-      expr(14);
+      setState(183);
+      match(scriptParser::T__38);
+      setState(184);
+      expr(0);
+      setState(185);
+      match(scriptParser::T__39);
       break;
     }
 
     case 40: {
-      _localctx = _tracker.createInstance<XiContext>(_localctx);
+      _localctx = _tracker.createInstance<CeilContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(192);
-      match(scriptParser::XI);
-      setState(193);
-      expr(13);
+      setState(187);
+      match(scriptParser::T__40);
+      setState(188);
+      expr(0);
+      setState(189);
+      match(scriptParser::T__41);
       break;
     }
 
     case 41: {
-      _localctx = _tracker.createInstance<InjContext>(_localctx);
+      _localctx = _tracker.createInstance<PhiContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(194);
-      match(scriptParser::INJ);
-      setState(195);
-      expr(12);
+      setState(191);
+      match(scriptParser::PHI);
+      setState(192);
+      expr(0);
+      setState(193);
+      expr(15);
       break;
     }
 
     case 42: {
-      _localctx = _tracker.createInstance<ObjContext>(_localctx);
+      _localctx = _tracker.createInstance<EllContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
+      setState(195);
+      match(scriptParser::ELL);
       setState(196);
-      match(scriptParser::OBJ);
-      setState(197);
-      expr(11);
+      expr(14);
       break;
     }
 
     case 43: {
-      _localctx = _tracker.createInstance<FlatContext>(_localctx);
+      _localctx = _tracker.createInstance<XiContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
+      setState(197);
+      match(scriptParser::XI);
       setState(198);
-      match(scriptParser::FLAT);
-      setState(199);
-      expr(10);
+      expr(13);
       break;
     }
 
     case 44: {
-      _localctx = _tracker.createInstance<CrossContext>(_localctx);
+      _localctx = _tracker.createInstance<InjContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
+      setState(199);
+      match(scriptParser::INJ);
       setState(200);
-      match(scriptParser::CROSS);
-      setState(201);
-      expr(0);
-      setState(202);
-      expr(9);
+      expr(12);
       break;
     }
 
     case 45: {
-      _localctx = _tracker.createInstance<SelfcrossContext>(_localctx);
+      _localctx = _tracker.createInstance<ObjContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(204);
-      match(scriptParser::SELFX);
-      setState(205);
-      expr(8);
+      setState(201);
+      match(scriptParser::OBJ);
+      setState(202);
+      expr(11);
       break;
     }
 
     case 46: {
-      _localctx = _tracker.createInstance<VarphiContext>(_localctx);
+      _localctx = _tracker.createInstance<FlatContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(206);
-      match(scriptParser::VARPHI);
-      setState(207);
-      expr(7);
+      setState(203);
+      match(scriptParser::FLAT);
+      setState(204);
+      expr(10);
       break;
     }
 
     case 47: {
-      _localctx = _tracker.createInstance<TypeofContext>(_localctx);
+      _localctx = _tracker.createInstance<CrossContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(208);
-      match(scriptParser::TYPEOF);
-      setState(209);
-      expr(6);
+      setState(205);
+      match(scriptParser::CROSS);
+      setState(206);
+      expr(0);
+      setState(207);
+      expr(9);
       break;
     }
 
     case 48: {
-      _localctx = _tracker.createInstance<Sigma_typeContext>(_localctx);
+      _localctx = _tracker.createInstance<SelfcrossContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
+      setState(209);
+      match(scriptParser::SELFX);
       setState(210);
-      match(scriptParser::SIGMA);
-      setState(211);
-      expr(0);
-      setState(212);
-      match(scriptParser::T__42);
-      setState(213);
-      expr(5);
+      expr(8);
       break;
     }
 
     case 49: {
-      _localctx = _tracker.createInstance<EnsureContext>(_localctx);
+      _localctx = _tracker.createInstance<VarphiContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(215);
-      match(scriptParser::ASSERT);
-      setState(216);
-      expr(3);
+      setState(211);
+      match(scriptParser::VARPHI);
+      setState(212);
+      expr(7);
       break;
     }
 
     case 50: {
+      _localctx = _tracker.createInstance<TypeofContext>(_localctx);
+      _ctx = _localctx;
+      previousContext = _localctx;
+      setState(213);
+      match(scriptParser::TYPEOF);
+      setState(214);
+      expr(6);
+      break;
+    }
+
+    case 51: {
+      _localctx = _tracker.createInstance<Sigma_typeContext>(_localctx);
+      _ctx = _localctx;
+      previousContext = _localctx;
+      setState(215);
+      match(scriptParser::SIGMA);
+      setState(216);
+      expr(0);
+      setState(217);
+      match(scriptParser::T__42);
+      setState(218);
+      expr(5);
+      break;
+    }
+
+    case 52: {
+      _localctx = _tracker.createInstance<EnsureContext>(_localctx);
+      _ctx = _localctx;
+      previousContext = _localctx;
+      setState(220);
+      match(scriptParser::ASSERT);
+      setState(221);
+      expr(3);
+      break;
+    }
+
+    case 53: {
       _localctx = _tracker.createInstance<CoerceContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(217);
+      setState(222);
       match(scriptParser::COERCE);
-      setState(218);
+      setState(223);
       expr(0);
-      setState(219);
+      setState(224);
       match(scriptParser::T__43);
-      setState(220);
+      setState(225);
       expr(1);
       break;
     }
@@ -3343,7 +3453,7 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
       break;
     }
     _ctx->stop = _input->LT(-1);
-    setState(308);
+    setState(313);
     _errHandler->sync(this);
     alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 7, _ctx);
     while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER) {
@@ -3351,20 +3461,20 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
         if (!_parseListeners.empty())
           triggerExitRuleEvent();
         previousContext = _localctx;
-        setState(306);
+        setState(311);
         _errHandler->sync(this);
         switch (getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 6, _ctx)) {
         case 1: {
           auto newContext = _tracker.createInstance<AddContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(224);
+          setState(229);
 
-          if (!(precpred(_ctx, 74))) throw FailedPredicateException(this, "precpred(_ctx, 74)");
-          setState(225);
+          if (!(precpred(_ctx, 77))) throw FailedPredicateException(this, "precpred(_ctx, 77)");
+          setState(230);
           match(scriptParser::T__4);
-          setState(226);
-          expr(75);
+          setState(231);
+          expr(78);
           break;
         }
 
@@ -3372,13 +3482,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<SubContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(227);
+          setState(232);
 
-          if (!(precpred(_ctx, 73))) throw FailedPredicateException(this, "precpred(_ctx, 73)");
-          setState(228);
+          if (!(precpred(_ctx, 76))) throw FailedPredicateException(this, "precpred(_ctx, 76)");
+          setState(233);
           match(scriptParser::T__5);
-          setState(229);
-          expr(74);
+          setState(234);
+          expr(77);
           break;
         }
 
@@ -3386,13 +3496,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<DivContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(230);
+          setState(235);
 
-          if (!(precpred(_ctx, 72))) throw FailedPredicateException(this, "precpred(_ctx, 72)");
-          setState(231);
+          if (!(precpred(_ctx, 75))) throw FailedPredicateException(this, "precpred(_ctx, 75)");
+          setState(236);
           match(scriptParser::T__6);
-          setState(232);
-          expr(73);
+          setState(237);
+          expr(76);
           break;
         }
 
@@ -3400,13 +3510,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<ModContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(233);
+          setState(238);
 
-          if (!(precpred(_ctx, 71))) throw FailedPredicateException(this, "precpred(_ctx, 71)");
-          setState(234);
+          if (!(precpred(_ctx, 74))) throw FailedPredicateException(this, "precpred(_ctx, 74)");
+          setState(239);
           match(scriptParser::T__7);
-          setState(235);
-          expr(72);
+          setState(240);
+          expr(75);
           break;
         }
 
@@ -3414,13 +3524,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<MultContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(236);
+          setState(241);
 
-          if (!(precpred(_ctx, 70))) throw FailedPredicateException(this, "precpred(_ctx, 70)");
-          setState(237);
+          if (!(precpred(_ctx, 73))) throw FailedPredicateException(this, "precpred(_ctx, 73)");
+          setState(242);
           match(scriptParser::T__8);
-          setState(238);
-          expr(71);
+          setState(243);
+          expr(74);
           break;
         }
 
@@ -3428,13 +3538,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<ConcatContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(239);
+          setState(244);
 
-          if (!(precpred(_ctx, 69))) throw FailedPredicateException(this, "precpred(_ctx, 69)");
-          setState(240);
+          if (!(precpred(_ctx, 72))) throw FailedPredicateException(this, "precpred(_ctx, 72)");
+          setState(245);
           match(scriptParser::T__9);
-          setState(241);
-          expr(70);
+          setState(246);
+          expr(73);
           break;
         }
 
@@ -3442,13 +3552,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<AppendContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(242);
+          setState(247);
 
-          if (!(precpred(_ctx, 68))) throw FailedPredicateException(this, "precpred(_ctx, 68)");
-          setState(243);
+          if (!(precpred(_ctx, 71))) throw FailedPredicateException(this, "precpred(_ctx, 71)");
+          setState(248);
           match(scriptParser::T__10);
-          setState(244);
-          expr(69);
+          setState(249);
+          expr(72);
           break;
         }
 
@@ -3456,13 +3566,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<AndContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(245);
+          setState(250);
 
-          if (!(precpred(_ctx, 67))) throw FailedPredicateException(this, "precpred(_ctx, 67)");
-          setState(246);
+          if (!(precpred(_ctx, 70))) throw FailedPredicateException(this, "precpred(_ctx, 70)");
+          setState(251);
           match(scriptParser::T__11);
-          setState(247);
-          expr(68);
+          setState(252);
+          expr(71);
           break;
         }
 
@@ -3470,13 +3580,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<OrContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(248);
+          setState(253);
 
-          if (!(precpred(_ctx, 66))) throw FailedPredicateException(this, "precpred(_ctx, 66)");
-          setState(249);
+          if (!(precpred(_ctx, 69))) throw FailedPredicateException(this, "precpred(_ctx, 69)");
+          setState(254);
           match(scriptParser::T__12);
-          setState(250);
-          expr(67);
+          setState(255);
+          expr(70);
           break;
         }
 
@@ -3484,13 +3594,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<EqContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(251);
+          setState(256);
 
-          if (!(precpred(_ctx, 64))) throw FailedPredicateException(this, "precpred(_ctx, 64)");
-          setState(252);
+          if (!(precpred(_ctx, 67))) throw FailedPredicateException(this, "precpred(_ctx, 67)");
+          setState(257);
           match(scriptParser::T__14);
-          setState(253);
-          expr(65);
+          setState(258);
+          expr(68);
           break;
         }
 
@@ -3498,13 +3608,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<NeqContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(254);
+          setState(259);
 
-          if (!(precpred(_ctx, 63))) throw FailedPredicateException(this, "precpred(_ctx, 63)");
-          setState(255);
+          if (!(precpred(_ctx, 66))) throw FailedPredicateException(this, "precpred(_ctx, 66)");
+          setState(260);
           match(scriptParser::T__15);
-          setState(256);
-          expr(64);
+          setState(261);
+          expr(67);
           break;
         }
 
@@ -3512,13 +3622,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<LeqContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(257);
+          setState(262);
 
-          if (!(precpred(_ctx, 62))) throw FailedPredicateException(this, "precpred(_ctx, 62)");
-          setState(258);
+          if (!(precpred(_ctx, 65))) throw FailedPredicateException(this, "precpred(_ctx, 65)");
+          setState(263);
           match(scriptParser::T__16);
-          setState(259);
-          expr(63);
+          setState(264);
+          expr(66);
           break;
         }
 
@@ -3526,13 +3636,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<GeqContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(260);
+          setState(265);
 
-          if (!(precpred(_ctx, 61))) throw FailedPredicateException(this, "precpred(_ctx, 61)");
-          setState(261);
+          if (!(precpred(_ctx, 64))) throw FailedPredicateException(this, "precpred(_ctx, 64)");
+          setState(266);
           match(scriptParser::T__17);
-          setState(262);
-          expr(62);
+          setState(267);
+          expr(65);
           break;
         }
 
@@ -3540,13 +3650,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<GtContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(263);
+          setState(268);
 
-          if (!(precpred(_ctx, 60))) throw FailedPredicateException(this, "precpred(_ctx, 60)");
-          setState(264);
+          if (!(precpred(_ctx, 63))) throw FailedPredicateException(this, "precpred(_ctx, 63)");
+          setState(269);
           match(scriptParser::ARPAREN);
-          setState(265);
-          expr(61);
+          setState(270);
+          expr(64);
           break;
         }
 
@@ -3554,13 +3664,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<LtContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(266);
+          setState(271);
 
-          if (!(precpred(_ctx, 59))) throw FailedPredicateException(this, "precpred(_ctx, 59)");
-          setState(267);
+          if (!(precpred(_ctx, 62))) throw FailedPredicateException(this, "precpred(_ctx, 62)");
+          setState(272);
           match(scriptParser::ALPAREN);
-          setState(268);
-          expr(60);
+          setState(273);
+          expr(63);
           break;
         }
 
@@ -3568,13 +3678,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<AssignContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(269);
+          setState(274);
 
-          if (!(precpred(_ctx, 58))) throw FailedPredicateException(this, "precpred(_ctx, 58)");
-          setState(270);
+          if (!(precpred(_ctx, 61))) throw FailedPredicateException(this, "precpred(_ctx, 61)");
+          setState(275);
           match(scriptParser::T__18);
-          setState(271);
-          expr(59);
+          setState(276);
+          expr(62);
           break;
         }
 
@@ -3582,13 +3692,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<ImplyContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(272);
+          setState(277);
 
-          if (!(precpred(_ctx, 53))) throw FailedPredicateException(this, "precpred(_ctx, 53)");
-          setState(273);
+          if (!(precpred(_ctx, 56))) throw FailedPredicateException(this, "precpred(_ctx, 56)");
+          setState(278);
           match(scriptParser::T__21);
-          setState(274);
-          expr(54);
+          setState(279);
+          expr(57);
           break;
         }
 
@@ -3596,17 +3706,17 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<PutContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(275);
+          setState(280);
 
-          if (!(precpred(_ctx, 48))) throw FailedPredicateException(this, "precpred(_ctx, 48)");
-          setState(276);
+          if (!(precpred(_ctx, 51))) throw FailedPredicateException(this, "precpred(_ctx, 51)");
+          setState(281);
           match(scriptParser::T__25);
-          setState(277);
+          setState(282);
           expr(0);
-          setState(278);
+          setState(283);
           match(scriptParser::T__29);
-          setState(279);
-          expr(49);
+          setState(284);
+          expr(52);
           break;
         }
 
@@ -3614,13 +3724,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<ContainsContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(281);
+          setState(286);
 
-          if (!(precpred(_ctx, 47))) throw FailedPredicateException(this, "precpred(_ctx, 47)");
-          setState(282);
+          if (!(precpred(_ctx, 50))) throw FailedPredicateException(this, "precpred(_ctx, 50)");
+          setState(287);
           match(scriptParser::T__30);
-          setState(283);
-          expr(48);
+          setState(288);
+          expr(51);
           break;
         }
 
@@ -3628,13 +3738,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<Type_andContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(284);
+          setState(289);
 
-          if (!(precpred(_ctx, 38))) throw FailedPredicateException(this, "precpred(_ctx, 38)");
-          setState(285);
+          if (!(precpred(_ctx, 40))) throw FailedPredicateException(this, "precpred(_ctx, 40)");
+          setState(290);
           match(scriptParser::AND_TYPE);
-          setState(286);
-          expr(39);
+          setState(291);
+          expr(41);
           break;
         }
 
@@ -3642,13 +3752,13 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<Type_orContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(287);
+          setState(292);
 
-          if (!(precpred(_ctx, 37))) throw FailedPredicateException(this, "precpred(_ctx, 37)");
-          setState(288);
+          if (!(precpred(_ctx, 39))) throw FailedPredicateException(this, "precpred(_ctx, 39)");
+          setState(293);
           match(scriptParser::OR_TYPE);
-          setState(289);
-          expr(38);
+          setState(294);
+          expr(40);
           break;
         }
 
@@ -3656,12 +3766,12 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<Subtype_ofContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(290);
+          setState(295);
 
           if (!(precpred(_ctx, 4))) throw FailedPredicateException(this, "precpred(_ctx, 4)");
-          setState(291);
+          setState(296);
           match(scriptParser::SUBTYPE);
-          setState(292);
+          setState(297);
           expr(5);
           break;
         }
@@ -3670,12 +3780,12 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<EnforceContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(293);
+          setState(298);
 
           if (!(precpred(_ctx, 2))) throw FailedPredicateException(this, "precpred(_ctx, 2)");
-          setState(294);
+          setState(299);
           match(scriptParser::ENFORCE);
-          setState(295);
+          setState(300);
           expr(3);
           break;
         }
@@ -3684,14 +3794,14 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<AtContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(296);
+          setState(301);
 
-          if (!(precpred(_ctx, 50))) throw FailedPredicateException(this, "precpred(_ctx, 50)");
-          setState(297);
+          if (!(precpred(_ctx, 53))) throw FailedPredicateException(this, "precpred(_ctx, 53)");
+          setState(302);
           match(scriptParser::T__25);
-          setState(298);
+          setState(303);
           expr(0);
-          setState(299);
+          setState(304);
           match(scriptParser::T__26);
           break;
         }
@@ -3700,14 +3810,14 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           auto newContext = _tracker.createInstance<ProjectContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(301);
+          setState(306);
 
-          if (!(precpred(_ctx, 49))) throw FailedPredicateException(this, "precpred(_ctx, 49)");
-          setState(302);
+          if (!(precpred(_ctx, 52))) throw FailedPredicateException(this, "precpred(_ctx, 52)");
+          setState(307);
           match(scriptParser::T__27);
-          setState(303);
+          setState(308);
           expr(0);
-          setState(304);
+          setState(309);
           match(scriptParser::T__28);
           break;
         }
@@ -3716,7 +3826,7 @@ scriptParser::ExprContext* scriptParser::expr(int precedence) {
           break;
         } 
       }
-      setState(310);
+      setState(315);
       _errHandler->sync(this);
       alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 7, _ctx);
     }
@@ -3741,31 +3851,31 @@ bool scriptParser::sempred(RuleContext *context, size_t ruleIndex, size_t predic
 
 bool scriptParser::exprSempred(ExprContext *_localctx, size_t predicateIndex) {
   switch (predicateIndex) {
-    case 0: return precpred(_ctx, 74);
-    case 1: return precpred(_ctx, 73);
-    case 2: return precpred(_ctx, 72);
-    case 3: return precpred(_ctx, 71);
-    case 4: return precpred(_ctx, 70);
-    case 5: return precpred(_ctx, 69);
-    case 6: return precpred(_ctx, 68);
-    case 7: return precpred(_ctx, 67);
-    case 8: return precpred(_ctx, 66);
-    case 9: return precpred(_ctx, 64);
-    case 10: return precpred(_ctx, 63);
-    case 11: return precpred(_ctx, 62);
-    case 12: return precpred(_ctx, 61);
-    case 13: return precpred(_ctx, 60);
-    case 14: return precpred(_ctx, 59);
-    case 15: return precpred(_ctx, 58);
-    case 16: return precpred(_ctx, 53);
-    case 17: return precpred(_ctx, 48);
-    case 18: return precpred(_ctx, 47);
-    case 19: return precpred(_ctx, 38);
-    case 20: return precpred(_ctx, 37);
+    case 0: return precpred(_ctx, 77);
+    case 1: return precpred(_ctx, 76);
+    case 2: return precpred(_ctx, 75);
+    case 3: return precpred(_ctx, 74);
+    case 4: return precpred(_ctx, 73);
+    case 5: return precpred(_ctx, 72);
+    case 6: return precpred(_ctx, 71);
+    case 7: return precpred(_ctx, 70);
+    case 8: return precpred(_ctx, 69);
+    case 9: return precpred(_ctx, 67);
+    case 10: return precpred(_ctx, 66);
+    case 11: return precpred(_ctx, 65);
+    case 12: return precpred(_ctx, 64);
+    case 13: return precpred(_ctx, 63);
+    case 14: return precpred(_ctx, 62);
+    case 15: return precpred(_ctx, 61);
+    case 16: return precpred(_ctx, 56);
+    case 17: return precpred(_ctx, 51);
+    case 18: return precpred(_ctx, 50);
+    case 19: return precpred(_ctx, 40);
+    case 20: return precpred(_ctx, 39);
     case 21: return precpred(_ctx, 4);
     case 22: return precpred(_ctx, 2);
-    case 23: return precpred(_ctx, 50);
-    case 24: return precpred(_ctx, 49);
+    case 23: return precpred(_ctx, 53);
+    case 24: return precpred(_ctx, 52);
 
   default:
     break;

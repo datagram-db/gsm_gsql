@@ -171,6 +171,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitNull(scriptParser::NullContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitEnforce(scriptParser::EnforceContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -208,6 +212,10 @@ public:
   }
 
   virtual std::any visitType_string(scriptParser::Type_stringContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitType_any(scriptParser::Type_anyContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -300,6 +308,10 @@ public:
   }
 
   virtual std::any visitObj(scriptParser::ObjContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitType_bot(scriptParser::Type_botContext *ctx) override {
     return visitChildren(ctx);
   }
 

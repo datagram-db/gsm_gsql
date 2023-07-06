@@ -97,6 +97,8 @@ public:
 
     virtual std::any visitAt(scriptParser::AtContext *context) = 0;
 
+    virtual std::any visitNull(scriptParser::NullContext *context) = 0;
+
     virtual std::any visitEnforce(scriptParser::EnforceContext *context) = 0;
 
     virtual std::any visitSub(scriptParser::SubContext *context) = 0;
@@ -116,6 +118,8 @@ public:
     virtual std::any visitNot(scriptParser::NotContext *context) = 0;
 
     virtual std::any visitType_string(scriptParser::Type_stringContext *context) = 0;
+
+    virtual std::any visitType_any(scriptParser::Type_anyContext *context) = 0;
 
     virtual std::any visitGeq(scriptParser::GeqContext *context) = 0;
 
@@ -162,6 +166,8 @@ public:
     virtual std::any visitAbs(scriptParser::AbsContext *context) = 0;
 
     virtual std::any visitObj(scriptParser::ObjContext *context) = 0;
+
+    virtual std::any visitType_bot(scriptParser::Type_botContext *context) = 0;
 
     virtual std::any visitVariable(scriptParser::VariableContext *context) = 0;
 

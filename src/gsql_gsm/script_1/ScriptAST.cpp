@@ -13,6 +13,8 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::BOOLEANT;
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::STRINGT;
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::START;
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::ANYT;
+DPtr<script::structures::ScriptAST> script::structures::ScriptAST::BOTCCT;
+DPtr<script::structures::ScriptAST> script::structures::ScriptAST::NULLO;
 #include <gsql_gsm/script_1/Funzione.h>
 
 bool script::structures::ScriptAST::toBoolean()  {
@@ -317,6 +319,39 @@ std::string script::structures::ScriptAST::toString(bool quot) const {
             return "eval (" + arrayList[0]->toString(true) +")";
 
 
+        case BotT:
+            return "null";
+
+        case SigmaT:
+            return "sigma (" + arrayList[0]->toString(true) +") where ("+ arrayList[1]->toString(true)+")";
+
+        case StarT:
+            return "star";
+
+        case LABELT: {
+            std::stringstream ss;
+            ss << std::quoted(string);
+            return "label "+ ss.str();
+        }
+
+        case ENFORCET:
+            return "(" + arrayList[0]->toString(true) +") enforce_subtype ("+ arrayList[1]->toString(true)+")";
+        case ObjTT:
+            return "ObjT (" + arrayList[0]->toString(true) +") ("+ arrayList[1]->toString(true)+")";
+        case AnyT:
+            return "any";
+        case TypeOf:
+            return "typeof (" + arrayList[0]->toString(true) +")";
+        case ObjX:
+            return "OBJ ("+ arrayList[0]->toString(true) +")";
+        case AssertE:
+            return "assert ("+ arrayList[0]->toString(true) +")";
+        case SubtypeOfE:
+            return "(" + arrayList[0]->toString(true) +") <: ("+ arrayList[1]->toString(true)+")";
+        case CoerceE:
+            return "coerce (" + arrayList[0]->toString(true) +") as ("+ arrayList[1]->toString(true)+")";
+        case NullE:
+            return "null";
     }
     return "";
 }
@@ -454,13 +489,13 @@ std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::Scrip
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::variableEval()  {
     if (!optGamma.get()) {
         std::cerr << "Error: variable cannot be solved: Gamma is null" << std::endl;
-        return false_();
+        return null_();
     } else {
         auto it = optGamma->find(string);
         if (it != optGamma->end()) {
             return it->second;
         } else
-            return false_();
+            return null_();
     }
 }
 
@@ -499,7 +534,9 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
         case Tuple:
         case TupleT:
         case AnyT:
-        case LexTT:
+        case ObjTT:
+        case BotT:
+        case NullE:
             return shared_from_this();
 
         case LABELT:
@@ -514,7 +551,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
                 return shared_from_this();
 
         case Assignment:
-            arrayList[1] = arrayList[1]->run();
+//            arrayList[1] = arrayList[1]->run();
             if (arrayList[0]->type == Variable) {
                 (*arrayList[0]->optGamma)[arrayList[0]->string] = arrayList[1];
             } else if (arrayList[0]->type == Function) {
@@ -1081,9 +1118,12 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
         case ENFORCET: {
             auto self = arrayList[0]->run();
             auto superType = arrayList[1]->run();
+            bool return_result = false;
             // TODO: checking the admissibility of the enforcement!
             // TODO: if yes, then remember the inference step in the inference graph!
-            bool return_result = false;
+            script::compiler::ScriptVisitor::typecaster.addNewEdgeB(self->toString(), superType->toString(), [](const auto&& x) {
+                return x;
+            });
             return return_result ? true_() : false_();
         } break;
 
@@ -1096,7 +1136,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
         case CoerceE: {
             auto self = arrayList[0]->run();
             auto thisType = self->typeInference();
-            auto superType = arrayList[1]->typeInference();
+            auto superType = arrayList[1];
             auto result = subTyping(thisType, superType);
             if (!result.has_value()) {
                 throw std::runtime_error("ERROR: term \"" + self->toString(true) + "\" cannot be casted to " + superType->toString() + " as the term is of type " + thisType->toString() );
@@ -1106,6 +1146,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
                 return self; // returning the casted object
             }
         }
+
     }
     return std::make_shared<ScriptAST>();
 }
@@ -1164,7 +1205,7 @@ std::ptrdiff_t script::structures::ScriptAST::javaComparator(const DPtr<ScriptAS
                                                object->arrayList.begin(), object->arrayList.end(),
                                                [](const auto& x, auto& y) {return x->javaComparator(y);});
 
-        case LexTT:
+        case ObjTT:
         {
             auto x = arrayList[0]->toList();
             auto y = arrayList[1]->toList();
@@ -1202,8 +1243,11 @@ std::ptrdiff_t script::structures::ScriptAST::javaComparator(const DPtr<ScriptAS
 }
 
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::typeInference() {
-    if (type == ObjX) {
-
+    if (type == Variable) {
+        return variableEval()->typeInference();
+    } else if (type == ObjX) {
+        // Objects should be typed before being converted to a tuple, as they should be first class citizens
+        return upTypeObjX(arrayList[0]->toInteger());
     }
     auto self = run();
     if (self->casted_type) {
@@ -1274,64 +1318,55 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::typeInference
 
             }
             break;
-
             default:
                 throw std::runtime_error("Cannot determine the type of an unevaluated expression! This would require a more expressive type system!");
-//        case Assignment: break;
-//        case Function: break;
-//        case AndE: break;
-//        case OrE: break;
-//        case NotE: break;
-//        case EqE: break;
-//        case IfteE: break;
-//        case ImplyE: break;
-//        case ApplyE: break;
-//        case AtE: break;
-//        case PutE: break;
-//        case RemoveE: break;
-//        case AppendE: break;
-//        case ContainsE: break;
-//        case FilterE: break;
-//        case InvokeE: break;
-//        case MapE: break;
-//        case SubElementsE: break;
-//        case AddE: break;
-//        case DivE: break;
-//        case ModE: break;
-//        case AbsE: break;
-//        case MinusE: break;
-//        case MulE: break;
-//        case SinE: break;
-//        case CosE: break;
-//        case TanE: break;
-//        case ExpE: break;
-//        case LogE: break;
-//        case FloorE: break;
-//        case CeilE: break;
-//        case ConcatE: break;
-//        case GtE: break;
-//        case LtE: break;
-//        case GEqE: break;
-//        case LEqE: break;
-//        case NeqE: break;
-//        case PhiX: break;
-//        case VarPhiX: break;
-//        case EllX: break;
-//        case XiX: break;
-//        case ObjX: break;
-//        case CrossE: break;
-//        case SelfCrossE: break;
-//        case InjE: break;
-//        case FlatE: break;
-//        case LFoldE: break;
-//        case RFoldE: break;
-//        case EvalE: break;
-//        case AssertE: break;
         }
         casted_type = result;
         return casted_type;
     }
 
+}
+
+DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(size_t id) const {
+    StringMap<DPtr<ScriptAST>> vv;
+    if (!db) {
+        std::cerr << "WARNING: No DB being associated. Returning an empty array for Xi" << std::endl;
+    } else {
+        const auto& phi_object = db->phi(id);
+        if (phi_object.empty()) {
+            const auto& XI = db->xi(id);
+            if (XI.empty()) {
+                std::stringstream ss;
+                ss << db->ell(id);
+                auto lfst = compiler::ScriptVisitor::eval(ss);
+                if (!lfst->isType())
+                    throw std::runtime_error("ERROR: the label of an object should express a type!");
+                return lfst;
+            } else {
+                ArrayList<DPtr<ScriptAST>> xi;
+                for (const std::string& val : XI) {
+                    std::stringstream ss;
+                    ss << val;
+                    xi.emplace_back(compiler::ScriptVisitor::eval(ss)->typeInference());
+                }
+                return mgu(xi); // Actually this?
+            }
+        } else {
+            for (const auto& [k,v] : db->phi(id)) {
+                ArrayList<DPtr<ScriptAST>> local;
+                for (const auto& content : v)
+                    local.emplace_back(upTypeObjX(content.id));
+                vv[k] = mgu(local);
+            }
+            std::stringstream ss;
+            ss << db->ell(id);
+            auto lfst = compiler::ScriptVisitor::eval(ss);
+            if (!lfst->isType())
+                throw std::runtime_error("ERROR: the label of an object should express a type!");
+            return lex_type_(std::move(lfst), std::move(vv));
+        }
+    }
+    return lex_type_(std::move(any_T()), std::move(vv));
 }
 
 std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>> script::structures::ScriptAST::subTyping(DPtr<script::structures::ScriptAST> &left, DPtr<script::structures::ScriptAST> &right) {
@@ -1355,12 +1390,6 @@ std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::str
             if ((!(lr.has_value())) || (!(rr.has_value()))) {
                 return {}; // no viable conversion
             } else {
-//                std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)> f = [&rr, &lr](DPtr<script::structures::ScriptAST> &&x) {
-//                    if (lr.has_value())
-//                        return lr.value()(std::move(x));
-//                    else if (rr.has_value())
-//                        return rr.value()(std::move(x));
-//                };
                 return {[&rr, &lr, &leftType, &rightType, this](DPtr<script::structures::ScriptAST> &&x) {
                     auto t = (x->typeInference());
                     auto st1 = subTyping(t, leftType);
@@ -1393,7 +1422,7 @@ std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::str
                     auto st1 = subTyping(t, leftType);
                     if (st1.has_value())
                         return lr.value()(std::move(st1.value()(std::move(x))));
-                    else //if (rr.has_value())
+                    else
                     {
                         auto st2 = subTyping(t, rightType);
                         return rr.value()(std::move(st2.value()(std::move(x))));
@@ -1421,40 +1450,130 @@ std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::str
             if (right_run->type == AnyT) {
                 return {f};
             } else if (right_run->type == LABELT) {
-                // TODO: check if this was earlier on enforced!
+                return script::compiler::ScriptVisitor::isEnforcedWithCast(L, right_run);
             } else {
                 throw std::runtime_error("ERROR: a label type could be only a subtype of Any or of any other enforced LabelT subtype");
             }
         } break;
 
-        case LexTT: {
+        case ObjTT: {
             auto right_run = right->run();
             if (right_run->type == AnyT) {
                 return {f};
-            } else if (right_run->type == LexTT) {
-                // TODO:
-//                int_lexicographical_compare(function->body.begin(), function->body.end(),
-//                                            object->function->body.begin(), object->function->body.end(),
-//                                            [](const auto& x, auto& y) {return x->javaComparator(y);});
-            } else {
-                auto l = arrayList[0]->run();
-                return subTyping(l, right);
-            }
-            break;
-        }
+            } else if (right_run->type == ObjTT) {
+                // Not equal: this is already handled above!
+                auto rewrite = subTyping(L, right_run);
+                if (!rewrite.has_value()) // If the types are not compatible, I cannot cast the type at all
+                    return {};
 
-        case BooleanT:
-            break;
-        case IntegerT:
-            break;
-        case DoubleT:
-            break;
-        case StringT:
-            break;
-        case TupleT:
-            break;
-        case ArrayOfT:
-            break;
+            } else {
+                auto l = L->arrayList[0]->run();
+                return subTyping(l, right_run);
+            }
+        } break;
+
+        case BooleanT: {
+            auto right_run = right->run();
+            if (right_run->type == AnyT) {
+                return {f};
+            } else if (right_run->type == IntegerT) {
+                return {[](DPtr<script::structures::ScriptAST> &&x) {
+                    return script::structures::ScriptAST::integer_(x->toInteger());
+                }};
+            } else if (right_run->type == DoubleT) {
+                return {[](DPtr<script::structures::ScriptAST> &&x) {
+                    return script::structures::ScriptAST::double_(x->toDouble());
+                }};
+            } else if (right_run->type == LABELT) {
+                auto test = script::compiler::ScriptVisitor::isEnforcedWithCast(L, right_run);
+                if (test) return test;
+                test = script::compiler::ScriptVisitor::isEnforcedWithCast(integer_T(), right_run);
+                if (test) return test;
+                test = script::compiler::ScriptVisitor::isEnforcedWithCast(double_T(), right_run);
+                return test;
+            } else
+                return {};
+        } break;
+
+        case IntegerT: {
+            auto right_run = right->run();
+            if (right_run->type == AnyT) {
+                return {f};
+            } else if (right_run->type == DoubleT) {
+                return {[](DPtr<script::structures::ScriptAST> &&x) {
+                    return script::structures::ScriptAST::double_(x->toDouble());
+                }};
+            } else if (right_run->type == LABELT) {
+                auto test = script::compiler::ScriptVisitor::isEnforcedWithCast(L, right_run);
+                if (test) return test;
+                test = script::compiler::ScriptVisitor::isEnforcedWithCast(double_T(), right_run);
+                return test;
+            } else
+                return {};
+        } break;
+
+        case DoubleT: {
+            auto right_run = right->run();
+            if (right_run->type == AnyT) {
+                return {f};
+            } else if (right_run->type == LABELT) {
+                auto test = script::compiler::ScriptVisitor::isEnforcedWithCast(L, right_run);
+                if (test) return test;
+                test = script::compiler::ScriptVisitor::isEnforcedWithCast(double_T(), right_run);
+                return test;
+            } else
+                return {};
+        } break;
+
+        case StringT: {
+            auto right_run = right->run();
+            if (right_run->type == AnyT) {
+                return {f};
+            } else if (right_run->type == LABELT) {
+                return script::compiler::ScriptVisitor::isEnforcedWithCast(L, right_run);
+            } else
+                return {};
+        } break;
+
+        case TupleT: {
+            auto right_run = right->run();
+            size_t enforcing = script::compiler::ScriptVisitor::isEnforced(L, right_run);
+            if (enforcing != -1) {
+                return {script::compiler::ScriptVisitor::typecaster.getEdgeLabel(enforcing)};
+            }
+            if (right_run->type != TupleT)
+                return {};
+            // A tuple is a subtype of the other if each label from the left appears on the
+            // right and the corresponding types are sub-types
+            for (const auto& [k,v] : L->tuple) {
+                auto it = right_run->tuple.find(k);
+                if (it == right_run->tuple.end())
+                    return {};
+                auto cp = v;
+                auto tmp = subTyping(cp, it->second);
+                if (!tmp.has_value())
+                    return {};
+            }
+            // Then, the super-typed tuple will have
+            return {[&right_run](DPtr<script::structures::ScriptAST> &&x) {
+                x->casted_type = right_run;
+                for (const auto& [k,v] : right_run->tuple)
+                    if (!x->tuple.contains(k))
+                        (x->tuple[k] = null_())->casted_type = v; // forcibly casting the null to v
+                return x;
+            }};
+        }
+        case ArrayOfT: {
+            auto right_run = right->run();
+            size_t enforcing = script::compiler::ScriptVisitor::isEnforced(L, right_run);
+            if (enforcing != -1) {
+                return {script::compiler::ScriptVisitor::typecaster.getEdgeLabel(enforcing)};
+            }
+            // Using a type invariance which is actually correct, from Benjamin Pierce's book.
+            return (L->arrayList[0]->javaComparator(right_run->arrayList[0]) == 0)
+            ? std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>>{f}
+            : std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>>{};
+        }
 
         case Boolean:
         case Integer:
@@ -1516,11 +1635,38 @@ std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::str
         case AssertE:
         case ENFORCET:
         case SubtypeOfE:
+        case NullE:
             throw std::runtime_error("ERROR: " + L->toString() +" is not a type!");
         case CoerceE:
             throw std::runtime_error("ERROR: coercing a type to be another type is not allowed!");
 
+        case BotT: {
+            // A null can always be cased
+            auto R = right->run();
+            if (!R->isType())
+                return {};
+            return {[&R](DPtr<script::structures::ScriptAST> &&x) {
+                x->casted_type = R;
+                return x;
+            }};
+        } break;
 
+        case SigmaT: {
+            // TODO: implement also the subtyping based on the predicate inclusion. Still, the two functions should be syntactally equivalent!
+            auto R = right->run();
+            if (R->type == AnyT)
+                return {f};
+            else if (R->type == SigmaT) {
+                auto isSubTypeMain = subTyping(L->arrayList[0], R->arrayList[0]);
+                if ((!isSubTypeMain.has_value()) || (L->arrayList[1]->javaComparator(R->arrayList[1])))
+                    return {};
+                else return {[&R](DPtr<script::structures::ScriptAST> &&x) {
+                        x->casted_type = R;
+                        return x;
+                    }};
+            } else
+                return subTyping(L->arrayList[0], R);
+        } break;
     }
     return {};
 }

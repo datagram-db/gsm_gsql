@@ -5,9 +5,11 @@
 #ifndef GSM_GSQL_SCRIPTVISITOR_H
 #define GSM_GSQL_SCRIPTVISITOR_H
 
+#include <yaucl/graphs/NodeLabelBijectionGraph.h>
 #include <scriptVisitor.h>
 #include <gsql_gsm/script_1/java_types.h>
 #include <gsql_gsm/gsm_inmemory_db.h>
+#include <optional>
 
 namespace script {
     namespace structures {
@@ -16,11 +18,18 @@ namespace script {
     namespace compiler {
 
         struct ScriptVisitor : public scriptVisitor {
+            static NodeLabelBijectionGraph<std::string,std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>> typecaster;
             DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> context;
             static gsm_inmemory_db* db; // WARNING: THIS CANNOT BE USED IN CONCURRENT SETTINGS WHERE MULTIPLE DATABASES ARE USED!
             ScriptVisitor();
             static void bindGSM(gsm_inmemory_db* gsm) { db = gsm; }
             static DPtr<script::structures::ScriptAST> eval(std::istream& is);
+
+            static size_t isEnforced(const DPtr<script::structures::ScriptAST>& left,
+                                   const DPtr<script::structures::ScriptAST>& right);
+            static std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>> isEnforcedWithCast(const DPtr<script::structures::ScriptAST>& left,
+                                   const DPtr<script::structures::ScriptAST>& right);
+
             std::any visitScript(scriptParser::ScriptContext *context) override;
             std::any visitSub(scriptParser::SubContext *context) override;
             std::any visitAtom_array(scriptParser::Atom_arrayContext *context) override;
@@ -94,13 +103,14 @@ namespace script {
             std::any visitType_or(scriptParser::Type_orContext *context) override;
             std::any visitType_and(scriptParser::Type_andContext *context) override;
             std::any visitProject(scriptParser::ProjectContext *context) override;
-
             std::any visitType_label(scriptParser::Type_labelContext *context) override;
             std::any visitEnforce(scriptParser::EnforceContext *context) override;
-
             std::any visitType_lex(scriptParser::Type_lexContext *context) override;
-
             std::any visitCoerce(scriptParser::CoerceContext *context) override;
+            std::any visitType_bot(scriptParser::Type_botContext *context) override;
+            std::any visitNull(scriptParser::NullContext *context) override;
+            std::any visitType_any(scriptParser::Type_anyContext *context) override;
+
         };
 
     } // script
