@@ -1,8 +1,11 @@
 /cmake-build-debug/
+/cmake-build-release/
 /dist/
 /json_files/
 /csv_files/
 /bench_files/
 /graph_files/
 /igc_files/
-/python/
+/api_keys/
+/data/
+/xml_files/
