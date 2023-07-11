@@ -250,11 +250,10 @@ void LoadGraph(gsm_inmemory_db &db, int &iterator, std::vector<std::string> &gra
 //}
 
 int main() {
-
     // Database initialisation, with an empty root
     gsm_inmemory_db db;
-    // global iterator keeping track of gsm ids
-    int iterator = 0;
+    // latest object id added to the DB: adding those incrementally
+    int max_obj_id = 0;
 
     std::string csvPath = "csv_files/";
     std::string jsonPath = "json_files/vc_6dk65ff_1673719200.json";
@@ -263,12 +262,12 @@ int main() {
     //load_jsonEllXiFile(db, jsonPath, iterator, {"currentConditions"}, "weather");
 
     // Load: Transformation function
-    int bFixesIterator = load_igcfile(db, igcPath, iterator);
+    int multivariate_time_series_container = load_igcfile(db, igcPath, max_obj_id);
 
     ///////////////////////////////////
     ///////////////////////////////////
-    // Value extractor for time series
-    auto extractor = [](const gsm_object_xi_content& rec, const gsm_object& obj) -> int{
+    /// - Value extractor for time series
+    auto lift_extractor = [](const gsm_object_xi_content& rec, const gsm_object& obj) -> int{
         int altitude;
         for(int i = 0; i < obj.ell.size(); i++) {
             if (obj.ell.at(i) == "pressure_altitude") {
@@ -278,11 +277,11 @@ int main() {
         }
         return -1; // not found!
     };
-    // Comparing between current and previous value: if the condition holds, this will be still part of the same time series
+    /// - Comparing between current and previous value: if the condition holds, this will be still part of the same time series
     auto comparator = [](const int& left, const int& right) {
         return left > right;
     };
-    // Generating one holder for previous and current step in time series
+    /// - Generating one holder for previous and current step in time series
     generate_cp_container<int> generate_pair_container = [](gsm_inmemory_db &db,
                             int previousId,
                             const gsm_object_xi_content &bFix,
@@ -299,16 +298,73 @@ int main() {
                     {{"b_fix", {tablePhiLift}}});
         out.second = 1.0;
     };
-
-    // Time Series Nesting
-    int liftsIterator = calculate_lift<int>(db, bFixesIterator, iterator,
-                                       extractor, comparator, generate_pair_container,
-                                       "lift", "lift_series", "lifts");
+    //// - Actual invocation!
+    int lift_series_collection = time_series_nesting<int>(db, multivariate_time_series_container, max_obj_id,
+                                                          lift_extractor, comparator, generate_pair_container,
+                                                          "b_fix", "lift", "lift_series", "lifts");
     ///////////////////////////////////
     ///////////////////////////////////
 
-    calculate_bearing_change(db, bFixesIterator);
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
+    ///////////////////////////////////
+    ///////////////////////////////////
+    /// - Extracting the current values for the bearing change
+    auto extractor = [](const gsm_object& object, for_bearing_change& current) {
+        current.bearing = 0;
+        int got = 0;
+        for(int i = 0; i < object.ell.size(); i++)
+        {
+            const auto& label = object.ell.at(i);
+            if(label == "latitude_double") {
+                current.lat = stod(object.xi.at(i));
+                got++;
+            } else if(label == "longitude_double") {
+                current.lon = stod(object.xi.at(i));
+                got++;
+            } else if(label == "unix_time") {
+                current.time = stoll(object.xi.at(i));
+                got++;
+            }
+            if (got==3) break;
+        }
+    };
+    /// - Actually performing the extension of the current object via the computation of the bearing change
+    auto update_current = [](const double& initial_value,
+                             for_bearing_change& previous,
+                             for_bearing_change& current,
+                             std::string &value_to_emplace) {
+        current.computeBearing(previous);
+        long long timeDiff = current.time - previous.time;
+
+        previous.lon = current.lon;
+        previous.lat = current.lat;
+        previous.time = current.time;
+        if(std::abs(previous.bearing) <= std::numeric_limits<double>::round_error()) {
+            previous.bearing = current.bearing;
+            value_to_emplace = std::to_string(initial_value);
+        } else {
+            double bearingChange = previous.bearing - current.bearing;
+            if(std::abs(bearingChange) > 180.0) {
+                if(bearingChange < 0.0)
+                    bearingChange += 360.0;
+                else
+                    bearingChange -= 360.0;
+            }
+            double changeRate = bearingChange/((double)timeDiff);
+            value_to_emplace = std::to_string(changeRate);
+        }
+    };
+    update_tuple_values<double, for_bearing_change>(db, multivariate_time_series_container, "b_fix", "bearing_rate", 0, extractor,
+                                                    update_current);
+    ///////////////////////////////////
+    ///////////////////////////////////
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+
+    ///////////////////////////////////
+    ///////////////////////////////////
+    /// - Definition of the hashing function associated to the current object
     auto hasher = [](const gsm_object_xi_content&, const gsm_object& current_object, geo_hash_support& values) -> std::string {
                 for(int i = 0; i < current_object.ell.size(); i++)
         {
@@ -324,38 +380,27 @@ int main() {
         values.geoHashString = geohash_encode(values.lat, values.lon, 6);
         return values.geoHashString + std::to_string((values.unixTime / 3600) % 24);
     };
+    /// - Values associated to the bucket, for further unpacking the values from the hash!
     auto values = [](const geo_hash_support& values) -> std::vector<std::string> {
        return {values.geoHashString, std::to_string(values.unixTime), std::to_string(values.lat), std::to_string(values.lon)};
     };
+    /// - Actual bucketing of obejcts within the collection
+    int structural_hash_join_via_buckets = generate_notweather_bucket<geo_hash_support>(db, multivariate_time_series_container, max_obj_id, "geohashes", "b_fix", hasher, "geohash", values);
+
+    ///// 1. Loading the weather information
     auto embedder = [](gsm_inmemory_db &db,
-                    int &iterator,
-                    gsm_object &current_object) {
+                       int &iterator,
+                       gsm_object &current_object) {
         long long unixTime = std::stoll(current_object.xi[1]);
         double lat = std::stod(current_object.xi[2]);
         double lon = std::stod(current_object.xi[3]);
-        current_object.phi["weather"].emplace_back(vcweather_load(db, iterator, lat, lon, unixTime));
+        // Adding an object in one of its collections
+        int val = vcweather_load(db, iterator, lat, lon, unixTime);
+        current_object.phi["weather"].emplace_back(val);
     };
-    int geoHashesIterator = generate_notweather_bucket<geo_hash_support>(db, bFixesIterator, iterator, "geohashes", "b_fix", hasher, "geohash", values);
-    embed_with(db,
-               geoHashesIterator,
-                   iterator,
-                   embedder);
-    //load_csvdb(db, csvPath, iterator);
-    //load_jsonfile(db, jsonPath, iterator);
-    //load_csvfile(db, csvPath + "customers-1.csv", iterator);
-    //LoadGraph(db, iterator);
-    //LoadWeather(db, iterator, 52.598447, 0.923155, 1654352543);
-    // Setting that the root now shall contain the other elements, while updating 0 to a new object
-
-    /*
-    db = map(db, [](const gsm_object& ref) { return ref.ell; },
-             [](const gsm_object& ref) { return ref.xi;  },
-             [](const gsm_object& ref) {return ref.phi;});
-    */
-
-    // Assuming that all of the operations are done:
-    // Therefore, I can also set up the indices
-
+    ///// Magnani's embedding operator: extending an object with other objects at runtime
+    ///// In particuilar, extending the structural hash join buckets with the second collection
+    embed_with(db, structural_hash_join_via_buckets, max_obj_id, embedder);
 
     auto start_indexing = std::chrono::high_resolution_clock::now();
     gsm_db_indices idx;
@@ -368,22 +413,22 @@ int main() {
     std::string fn = "csv_files/lift10k.csv";
     std::ofstream fileOut(fn);
 
-    auto calc_and_flat_to_disk = [liftsIterator,&fileOut,&getHeaders](const gsm_inmemory_db& db,
-                            const gsm_db_indices& idx,
-                            const std::set<std::string>& left ,
-                            const std::set<std::string>& right,
-                            const std::set<std::string>& additional,
-                                      const std::vector<std::string>& header,
-                            const gsm_object_xi_content& left_record,
-                            const gsm_object& left_object,
-                            const gsm_object_xi_content& right_record,
-                            const gsm_object& right_object,
-                            std::unordered_map<std::string, std::string>& row) {
+    auto calc_and_flat_to_disk = [lift_series_collection,&fileOut,&getHeaders](const gsm_inmemory_db& db,
+                                                                               const gsm_db_indices& idx,
+                                                                               const std::set<std::string>& left ,
+                                                                               const std::set<std::string>& right,
+                                                                               const std::set<std::string>& additional,
+                                                                               const std::vector<std::string>& header,
+                                                                               const gsm_object_xi_content& left_record,
+                                                                               const gsm_object& left_object,
+                                                                               const gsm_object_xi_content& right_record,
+                                                                               const gsm_object& right_object,
+                                                                               std::unordered_map<std::string, std::string>& row) {
         if (left.contains(left_object.ell.at(0)))
             row[left_object.ell.at(0)] = std::to_string(left_record.id);
         bool isInLift = false;
         bool isBeginLift = false;
-        for(auto& lift_series : db.O.at(liftsIterator).phi.at("lift_series"))
+        for(auto& lift_series : db.O.at(lift_series_collection).phi.at("lift_series"))
         {
             size_t count = 0;
             for (auto& liftPart : db.O.at(lift_series.id).phi.at("lift")) {
@@ -436,7 +481,7 @@ int main() {
 
     std::string csvOutputFileName = "lift10k.csv";
 
-    export_csv(db, geoHashesIterator, idx, csvOutputFileName, "weather", "b_fix",
+    export_csv(db, structural_hash_join_via_buckets, idx, csvOutputFileName, "weather", "b_fix",
                {"cloudcover", "dew", "feelslike", "humidity", "precip", "precipprob", "preciptype", "pressure",
                 /*"severerisk",*/ "snow", "snowdepth", "solarenergy", "solarradiation", "temp", "uvindex", "visibility",
                 "weather_vc", "winddir", "windgust", "windspeed"},

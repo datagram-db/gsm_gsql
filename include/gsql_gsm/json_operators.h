@@ -13,8 +13,7 @@ using json = nlohmann::json;
 static inline
 void json_recursion(json data, int &iterator, std::vector<gsm_object_xi_content> &tablePhi, std::vector<double> &scores, gsm_inmemory_db &db, std::string previousKey = "")
 {
-    for(auto &it : data.items())
-    {
+    for(auto &it : data.items()) {
         if(it.value().is_object() || it.value().is_array())
         {
             std::vector<gsm_object_xi_content> tablePhiObject = {};
@@ -29,46 +28,33 @@ void json_recursion(json data, int &iterator, std::vector<gsm_object_xi_content>
             create_fast(db, ++iterator, {ell}, {to_string(it.value())});
         }
         tablePhi.emplace_back(iterator);
-        scores.emplace_back(1.0);
+//        scores.emplace_back(1.0);
     }
 }
 
-std::vector<std::string> ignore = {"datetime", "datetimeEpoch", "conditions", "icon", "stations", "source", "sunrise",
-                                   "sunriseEpoch", "sunset", "sunsetEpoch", "moonphase"};
+//std::vector<std::string> ignore = {"datetime", "datetimeEpoch", "conditions", "icon", "stations", "source", "sunrise",
+//                                   "sunriseEpoch", "sunset", "sunsetEpoch", "moonphase"};
 
 static inline
-void json_ellxi(gsm_inmemory_db& db, json data, int &iterator)
+void json_ellxi(gsm_inmemory_db& db, json data, int &iterator, const std::unordered_set<std::string>& ignore = {"datetime", "datetimeEpoch", "conditions", "icon", "stations", "source", "sunrise",
+                                                                                                         "sunriseEpoch", "sunset", "sunsetEpoch", "moonphase"})
 {
     std::vector<std::string> tableEllObject;
     std::vector<std::string> tableXiObject;
-    for(auto &it : data.items())
-    {
-        if(it.value().is_object() || it.value().is_array())
-        {
-            //create_fast(db, ++iterator, {it.key()}, {""});
-        }
-        else
-        {
-            if(std::find(ignore.begin(), ignore.end(), it.key()) != ignore.end())
-                continue;
-            std::string ell = (data.is_array() ? "previousKey" : it.key());
-            std::string xi = (to_string(it.value()) == "null" ? "0" : to_string(it.value()));
-            db.O[iterator].ell.push_back(ell);
-            db.O[iterator].xi.push_back(xi);
+    for(auto &it : data.items()) {
+        if (!it.value().is_object() && !it.value().is_array()) {
+            if (ignore.contains(it.key())) continue;
+            db.O[iterator].ell.push_back((data.is_array() ? "previousKey" : it.key()));
+            db.O[iterator].xi.push_back((to_string(it.value()) == "null" ? "0" : to_string(it.value())));
         }
     }
-
 }
 
 static inline
-int load_jsonEllXiFile(gsm_inmemory_db &db, std::string pathToFile, int &iterator, std::vector<std::string> specific = {}, std::string ell = "")
-{
+int load_jsonEllXiFile(gsm_inmemory_db &db, const std::string& pathToFile, int &iterator, const std::vector<std::string>& specific = {}, const std::string& ell = "") {
     json data;
     std::ifstream f(pathToFile);
-
     data = json::parse(f);
-    std::vector<gsm_object_xi_content> tablePhiJson = {};
-    std::vector<double> scoresJson = {};
     create_fast(db, ++iterator, {ell}, {""}, {});
     int objIterator = iterator;
     for(auto& it : specific)
@@ -77,13 +63,13 @@ int load_jsonEllXiFile(gsm_inmemory_db &db, std::string pathToFile, int &iterato
 }
 
 static inline
-int load_jsonEllXiData(gsm_inmemory_db &db, std::string jsonData, int &iterator, std::vector<std::string> specific = {}, std::string ell = "")
-{
+int load_jsonEllXiData(gsm_inmemory_db &db,
+                       const std::string& jsonData,
+                       int &iterator,
+                       const std::vector<std::string>& specific = {},
+                       const std::string& ell = "") {
     json data;
     data = json::parse(jsonData);
-
-    std::vector<gsm_object_xi_content> tablePhiJson = {};
-    std::vector<double> scoresJson = {};
     create_fast(db, ++iterator, {ell}, {""}, {});
     int objIterator = iterator;
     for(auto& it : specific)

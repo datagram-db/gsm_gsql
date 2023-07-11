@@ -1,17 +1,38 @@
 {
   "firstLayer" : 1,
   "customer" :
-  {
-    "name" : "nikita",
-    "address" :
+  [
     {
-      "street" :
-      {
-        "streetName" : "chekanya",
-        "number" : 15
+      "name": "nikita",
+      "address": {
+        "street": {
+          "streetName": "chekanya",
+          "number": 15
+        },
+        "city": "tarkov"
       },
-      "city" : "tarkov"
+      "purchases": [
+        100,
+        101,
+        102,
+        103
+      ]
     },
-    "purchases" : [100, 101, 102, 103]
-  }
+    {
+      "name": "tony",
+      "address": {
+        "street": {
+          "streetName": "some st",
+          "number": 34
+        },
+        "city": "leeds"
+      },
+      "purchases": [
+        200,
+        201,
+        202,
+        203
+      ]
+    }
+    ]
 }

@@ -161,4 +161,9 @@ static inline Alpha fold(IteratorT begin, IteratorT end, Alpha a, std::function<
     return a;
 }
 
+#define PHI_FOLD_BEGIN(buckets_holder, hash_value, record_list, current_record)            for(auto &[hash_value, record_list]: db.O[buckets_holder].phi) { for (auto& current_record : record_list) {
+#define PHI_FOLD_END                                                       }}
+
+#define FOLD_COLLECTION(bFixIterator,collName,bFix)                                        for(auto &bFix : db.O[bFixIterator].phi[collName])
+
 #endif //GSM_GSQL_GSQL_OPERATORS_H

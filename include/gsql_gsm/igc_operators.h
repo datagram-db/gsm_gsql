@@ -178,64 +178,36 @@ struct for_bearing_change {
     }
 };
 
-static inline
-void calculate_bearing_change(gsm_inmemory_db &db, int &bFixIterator)
+
+template <typename T, typename F>
+void update_tuple_values(gsm_inmemory_db &db,
+                         int &bFixIterator,
+                         const std::string&collection_name,
+                         const std::string&filed_name, // "bearing_rate"
+                              T initial_value,
+                         const std::function<void(const gsm_object&, F&)>& extract,
+                         const std::function<void(const T& , F& , F& , std::string &)>& compute_current) // 0)
 {
     auto start = std::chrono::high_resolution_clock::now();
-    for_bearing_change previous;
+    F previous;
     bool first = true;
-    for(auto &bFix : db.O[bFixIterator].phi["b_fix"])
-    {
-        for_bearing_change current;
-        current.bearing = 0;
-        for(int i = 0; i < db.O[bFix.id].ell.size(); i++)
-        {
-            if(db.O[bFix.id].ell.at(i) == "latitude_double")
-                current.lat = stod(db.O[bFix.id].xi[i]);
-            else if(db.O[bFix.id].ell.at(i) == "longitude_double")
-                current.lon = stod(db.O[bFix.id].xi[i]);
-            else if(db.O[bFix.id].ell.at(i) == "unix_time")
-                current.time = stoll(db.O[bFix.id].xi[i]);
-            else
-                continue;
-        }
 
+
+    FOLD_COLLECTION(bFixIterator,collection_name,bFix) {
+        F current;
+        const auto& object = db.O.at(bFix.id);
+        extract(object, current);
+        std::string value_to_emplace;
         if(first)
         {
             previous = (current);
-            db.O[bFix.id].ell.push_back("bearing_rate");
-            db.O[bFix.id].xi.push_back(std::to_string(0));
+            value_to_emplace = (std::to_string(initial_value));
             first = false;
-            continue;
+        } else {
+            compute_current(initial_value, previous, current, value_to_emplace);
         }
-
-        current.computeBearing(previous);
-        long long timeDiff = nowTime - previousTime;
-
-        previousLong = nowLong;
-        previousLat = nowLat;
-        previousTime = nowTime;
-        if(previousBearing == '\0')
-        {
-            previousBearing = bearing;
-            db.O[bFix.id].ell.push_back("bearing_rate");
-            db.O[bFix.id].xi.push_back(std::to_string(0));
-        }
-        else
-        {
-            double bearingChange = previousBearing - bearing;
-            if(fabs(bearingChange) > 180.0)
-            {
-                if(bearingChange < 0.0)
-                    bearingChange += 360.0;
-                else
-                    bearingChange -= 360.0;
-            }
-            double changeRate = bearingChange/timeDiff;
-            db.O[bFix.id].ell.push_back("bearing_rate");
-            db.O[bFix.id].xi.push_back(std::to_string(changeRate));
-        }
-
+        db.O[bFix.id].ell.emplace_back(filed_name);
+        db.O[bFix.id].xi.emplace_back(value_to_emplace);
     }
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - start);
@@ -251,34 +223,15 @@ using generate_cp_container = std::function<void(gsm_inmemory_db &db,
                                                  T altitude,
                                                  std::pair<size_t, double> &out)>;
 
-//template<typename T>
-//void
-//generate_pair_container(gsm_inmemory_db &db,
-//                        int previousId,
-//                        const gsm_object_xi_content &bFix,
-//                        const gsm_object &obj,
-//                        T previousAltitude,
-//                        T altitude,
-//                        std::pair<size_t, double> &out) {
-//    int diffAltitude = altitude - previousAltitude;
-//    static std::vector<gsm_object_xi_content> tablePhiLift(2);
-//    static std::vector<double> scoresLift(2, 1.0);
-//    tablePhiLift[0].id = previousId;
-//    tablePhiLift[1].id = (bFix.id);
-////            counter++;
-//    create_fast(db, out.first, {"lift"}, {std::to_string(diffAltitude)}, {scoresLift},
-//                {{"b_fix", {tablePhiLift}}});
-//    out.second = 1.0;
-//}
-
 template <typename T>
-int calculate_lift(gsm_inmemory_db &db,
-                   int &object_iteration_holder,
-                   int &iterator,
-                   const std::function<T(const gsm_object_xi_content&, const gsm_object&)> extractor,
-                   const std::function<bool(const T&, const T&)>& comparatorCurrWithPrev,
-                   const generate_cp_container<T>& generate_pair_cont,
-                   const std::string& series_name, // "lift"
+int time_series_nesting(gsm_inmemory_db &db,
+                        int &object_iteration_holder,
+                        int &iterator,
+                        const std::function<T(const gsm_object_xi_content&, const gsm_object&)> extractor,
+                        const std::function<bool(const T&, const T&)>& comparatorCurrWithPrev,
+                        const generate_cp_container<T>& generate_pair_cont,
+                        const std::string& collection_name,
+                        const std::string& series_name, // "lift"
                    const std::string& collection_series_name, // "lift_series"
                    const std::string& meta_collection_name // "lifts"
                    )
@@ -293,9 +246,8 @@ int calculate_lift(gsm_inmemory_db &db,
     T previous_value;
     bool newLiftSeries = true;
     std::pair<size_t, double> cp{0,1.0};
-//    int counter = 0;
 
-    for(auto &bFix : db.O[object_iteration_holder].phi["b_fix"])
+    for(auto &bFix : db.O[object_iteration_holder].phi[collection_name])
     {
         const auto& obj = db.O.at(bFix.id);
 
@@ -438,9 +390,6 @@ int generate_notweather_bucket(gsm_inmemory_db& db,
     create_fast(db, ++iterator, {bucket_holder_type});
     int buckets_holder = iterator;
     auto& bucket_holder_object = db.O[buckets_holder];
-//    long long unixTime;
-//    double lat;
-//    double lon;
     T values; // geo_hash_support
     static std::vector<gsm_object_xi_content> empty;
     for(auto &current_record: db.O[to_hash_collection].phi[collection_name]) {
@@ -455,19 +404,12 @@ int generate_notweather_bucket(gsm_inmemory_db& db,
             create_fast(db, ++iterator, {bucket_label}, bucket_values(values));
             // Inserting the new bucket as item of the bucket list
             bucket_holder_object.phi[hash_value].emplace_back(iterator);
-//            bucket_holder_object.scores.emplace_back(1.0);
             id = iterator;
-
-//            int weatherBucket = vcweather_load(db, iterator, values.lat, values.lon, values.unixTime);
-//            db.O[id].phi["weather"].emplace_back(weatherBucket);
-//            db.O[id].scores.emplace_back(1.0);
         } else {
             id = bucket_holder_object.phi[hash_value][0].id;
-
         }
 
-        db.O[id].phi[collection_name].emplace_back(current_record.id); // A)
-//        db.O[id].scores.emplace_back(1.0); // B)
+        db.O[id].phi[collection_name].emplace_back(current_record.id);
     }
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - start);
@@ -481,37 +423,19 @@ static inline
 void embed_with(gsm_inmemory_db& db,
                int buckets_holder,
                int& iterator,
-//                               const std::string& bucket_holder_type, // "geohashes"
-//                               const std::string& collection_name,// "b_fix"
-                               std::function<void(gsm_inmemory_db &db,
+                               const std::function<void(gsm_inmemory_db &db,
                                                          int &iterator,
-                                                         gsm_object &current_object)> embed_as
-//                               const std::string& bucket_label, // "geohash"
-//                               const std::function<std::vector<std::string>(T&)>& bucket_values
+                                                         gsm_object &current_object)>& embed_as
 )
 {
     auto start = std::chrono::high_resolution_clock::now();
-
-    // Creating object holder for the buckes
-//    create_fast(db, ++iterator, {bucket_holder_type});
-//    int buckets_holder = iterator;
-    auto& bucket_holder_object = db.O[buckets_holder];
-//    long long unixTime;
-//    double lat;
-//    double lon;
-    static std::vector<gsm_object_xi_content> empty;
-    for(auto &[hash_value, record_list]: bucket_holder_object.phi) {
-        for (auto& current_record : record_list) {
-            auto& current_object = db.O[current_record.id];
-            embed_as(db, iterator, current_object);
-            //            current_object.scores.emplace_back(1.0);
-        }
-    }
+    PHI_FOLD_BEGIN(buckets_holder, hash_value, record_list, current_record)
+        auto& current_object = db.O[current_record.id];
+        embed_as(db, iterator, current_object);
+    PHI_FOLD_END
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - start);
     std::cout << "embed_weather_bucket: " << elapsed.count() << std::endl;
-//    return buckets_holder;
-
 }
 
 /*
@@ -569,8 +493,6 @@ void bucketed_join_serialize(const gsm_inmemory_db &db, const gsm_db_indices &id
                                             const gsm_object_xi_content &,
                                             const gsm_object &, const gsm_object_xi_content &, const gsm_object &,
                                             std::unordered_map<std::string, std::string> &)> &expand,
-//                                            bool& getHeaders,
-//                             std::ofstream &fileOut,
                              std::unordered_map<std::string, std::string> &row,
                              const std::vector<std::string> &header, size_t collection_id, float &total_flat,
                              float &total_expansion, float &total_rightiter, float &total_lefttiter) {
@@ -581,8 +503,9 @@ void bucketed_join_serialize(const gsm_inmemory_db &db, const gsm_db_indices &id
     for (const auto& left_record : LEFT) {
         auto start_leftiter = std::chrono::high_resolution_clock::now();
         const auto& left_object = db.O.at(left_record.id);
-        for(int i = 1; i < left_object.ell.size(); i++) {
-            if (left.contains(left_object.ell.at(i)))
+        for(int i = 0; i < left_object.ell.size(); i++) {
+            const auto& label = left_object.ell.at(i);
+            if (left.contains(label))
                 row[left_object.ell.at(i)] = (left_object.xi.at(i));
         }
         auto end_leftiter= std::chrono::high_resolution_clock::now();
@@ -610,19 +533,6 @@ void bucketed_join_serialize(const gsm_inmemory_db &db, const gsm_db_indices &id
             auto elapsed_expansion = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_expansion - start_expansion);
             total_expansion += elapsed_expansion.count();
             consumed_bfix_iteration += elapsed_expansion.count();
-
-
-//            // Flattening out the current rows
-//            auto start_flat = std::chrono::high_resolution_clock::now();
-//            {
-//
-////                return getHeaders;
-//            }
-////            getHeaders = serialize_to_csv(getHeaders, fileOut, row, header);
-//            auto end_flat = std::chrono::high_resolution_clock::now();
-//            auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_flat - start_flat);
-//            total_flat += elapsed.count();
-//            consumed_bfix_iteration += elapsed.count();
         }
         auto end_bfixiter = std::chrono::high_resolution_clock::now();
         auto elapsed_bfixiter = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_bfixiter - start_bfixiter);
@@ -643,22 +553,16 @@ void export_csv(gsm_inmemory_db &db, int geoHashesIterator, const gsm_db_indices
 //    std::string headers;
     float total_flat = 0.0, total_expansion = 0.0, total_rightiter = 0.0, total_lefttiter = 0.0;
 
+    auto start_all_time = std::chrono::high_resolution_clock::now();
     std::unordered_map<std::string, std::string> row;
     std::vector<std::string> header{left.begin(), left.end()};
     header.insert(header.end(), right.begin(), right.end());
     header.insert(header.end(), additional.begin(), additional.end());
-
-    auto start_all_time = std::chrono::high_resolution_clock::now();
-    for(auto& [collection_name, bucket] : db.O[geoHashesIterator].phi) {
-        for(const gsm_object_xi_content& in_bucket_collection : bucket) {
+    PHI_FOLD_BEGIN(geoHashesIterator, collection_name, bucket, in_bucket_collection)
             bucketed_join_serialize(db, idx, left_collection, right_collection, left, right, additional, expand,
-//                                    getHeaders,
-//                                    fileOut,
                                     row, header, in_bucket_collection.id, total_flat, total_expansion,
                                     total_rightiter, total_lefttiter);
-
-        }
-    }
+    PHI_FOLD_END
     auto end_all_time= std::chrono::high_resolution_clock::now();
     auto elapsed_all = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_all_time - start_all_time);
     float time_bucket_and_left_iteration = elapsed_all.count() - total_flat - total_expansion - total_rightiter - total_lefttiter;
