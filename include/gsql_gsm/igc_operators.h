@@ -5,165 +5,42 @@
 #ifndef GSM_GSQL_IGC_OPERATORS_H
 #define GSM_GSQL_IGC_OPERATORS_H
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <cmath>
+#include "yaucl/functional/assert.h"
+
 #include <string>
 #include <curl/curl.h>
 #include <gsql_gsm/gsm_inmemory_db.h>
 #include <gsql_gsm/json_operators.h>
-#include <yaucl/strings/serializers.h>
-#include <unordered_map>
+
+std::string downloadedResponse;
+
+static inline
+std::size_t writer(char *data, size_t size, size_t nmemb, std::string *buffer_in)
+{
+    if(buffer_in != NULL)
+    {
+        downloadedResponse.append(data);
+        return size*nmemb;
+    }
+    return 0;
+}
+
+
+static
 inline double to_degrees(double radians)
 {
     return radians * (180.0 / M_PI);
 }
 
-
-//for finding circles for thermals
-//https://github.com/marcin-osowski/igc_lib/blob/master/igc_lib.py
-static inline
-void calculate_bearing_change(gsm_inmemory_db &db, int &bFixIterator)
-{
-    double previousLong = '\0';
-    double previousLat = '\0';
-    long long previousTime = '\0';
-    double previousBearing = '\0';
-    for(auto &bFix : db.O[bFixIterator].phi["b_fix"])
-    {
-        double nowLong;
-        double nowLat;
-        long long nowTime;
-        for(int i = 0; i < db.O[bFix.id].ell.size(); i++)
-        {
-            if(db.O[bFix.id].ell[i] == "latitude_double")
-                nowLat = stod(db.O[bFix.id].xi[i]);
-            else if(db.O[bFix.id].ell[i] == "longitude_double")
-                nowLong = stod(db.O[bFix.id].xi[i]);
-            else if(db.O[bFix.id].ell[i] == "unix_time")
-                nowTime = stoll(db.O[bFix.id].xi[i]);
-            else
-                continue;
-        }
-        if(previousLong == '\0' && previousLat == '\0' && previousTime == '\0')
-        {
-            previousLat = nowLat;
-            previousLong = nowLong;
-            previousTime = nowTime;
-            db.O[bFix.id].ell.push_back("bearing_rate");
-            db.O[bFix.id].xi.push_back(std::to_string(0));
-            continue;
-        }
-
-        double dLon = (nowLong - previousLong);
-
-        double y = sin(dLon) * cos(nowLat);
-        double x = (cos(previousLat) * sin(nowLat)) - (sin(previousLat) * cos(nowLat) * cos(dLon));
-
-        double bearing = atan2(y, x);
-
-        bearing = to_degrees(bearing);
-        bearing = fmod((bearing + 360), 360);
-        bearing = 360 - bearing;
-        long long timeDiff = nowTime - previousTime;
-
-        previousLong = nowLong;
-        previousLat = nowLat;
-        previousTime = nowTime;
-        if(previousBearing == '\0')
-        {
-            previousBearing = bearing;
-            db.O[bFix.id].ell.push_back("bearing_rate");
-            db.O[bFix.id].xi.push_back(std::to_string(0));
-        }
-        else
-        {
-            double bearingChange = previousBearing - bearing;
-            if(fabs(bearingChange) > 180.0)
-            {
-                if(bearingChange < 0.0)
-                    bearingChange += 360.0;
-                else
-                    bearingChange -= 360.0;
-            }
-            double changeRate = bearingChange/timeDiff;
-            db.O[bFix.id].ell.push_back("bearing_rate");
-            db.O[bFix.id].xi.push_back(std::to_string(changeRate));
-        }
-
-    }
-}
-
-static inline
-int calculate_lift(gsm_inmemory_db &db, int &bFixesIterator, int &iterator)
-{
-    std::vector<gsm_object_xi_content> tablePhiLifts = {};
-    std::vector<double> scoresLifts = {};
-    std::vector<gsm_object_xi_content> tablePhiLiftSeries = {};
-    std::vector<double> scoresLiftSeries = {};
-    int previousId;
-    int previousAltitude = '\0';
-    bool newLiftSeries = true;
-    for(auto &bFix : db.O[bFixesIterator].phi["b_fix"])
-    {
-        int altitude;
-        for(int i = 0; i < db.O[bFix.id].ell.size(); i++)
-        {
-            if (db.O[bFix.id].ell[i] == "pressure_altitude")
-            {
-                altitude = stoi(db.O[bFix.id].xi[i]);
-            }
-        }
-        if(previousAltitude == '\0')
-        {
-            previousAltitude = altitude;
-            previousId = bFix.id;
-            continue;
-        }
-        if(altitude > previousAltitude)
-        {
-            if(newLiftSeries)
-            {
-                tablePhiLiftSeries = {};
-                scoresLiftSeries = {};
-                newLiftSeries = false;
-            }
-
-            int diffAltitude = altitude - previousAltitude;
-            std::vector<gsm_object_xi_content> tablePhiLift = {};
-            std::vector<double> scoresLift = {};
-
-            tablePhiLift.emplace_back(previousId);
-            scoresLift.emplace_back(1.0);
-            tablePhiLift.emplace_back(bFix.id);
-            scoresLift.emplace_back(1.0);
-            create_fast(db, ++iterator, {"lift"}, {std::to_string(diffAltitude)}, {scoresLift},
-                        {{"b_fix", {tablePhiLift}}});
-            tablePhiLiftSeries.emplace_back(iterator);
-            scoresLiftSeries.emplace_back(1.0);
-        }
-        else
-        {
-            if(!newLiftSeries)
-            {
-                create_fast(db, ++iterator, {"lift_series"}, {}, {scoresLiftSeries}, {{"lift", {tablePhiLiftSeries}}});
-                tablePhiLifts.emplace_back(iterator);
-                scoresLifts.emplace_back(1.0);
-            }
-            newLiftSeries = true;
-        }
-        previousAltitude = altitude;
-        previousId = bFix.id;
-    }
-    create_fast(db, ++iterator, {"lifts"}, {}, {scoresLifts}, {{"lift_series", {tablePhiLifts}}});
-    return iterator;
-}
-
 //https://github.com/chrisveness/latlon-geohash/blob/master/latlon-geohash.js
-std::string geohash_encode(double lat, double lon)
+// precision 7 = ~153m x 153m grid
+// precision 6 = ~1200m x 610m grid
+static inline
+std::string geohash_encode(double lat, double lon, const int precision = 6)
 {
-    // 7 = ~153m x 153m grid
-    // 6 = ~1200m x 610m grid
-    const int precision = 6;
     const std::string base32 = "0123456789bcdefghjkmnpqrstuvwxyz";
     int idx = 0;
     int bit = 0;
@@ -213,21 +90,8 @@ std::string geohash_encode(double lat, double lon)
     return output;
 }
 
-
-std::string downloadedResponse;
-
-std::size_t writer(char *data, size_t size, size_t nmemb, std::string *buffer_in)
-{
-    if(buffer_in != NULL)
-    {
-        downloadedResponse.append(data);
-        return size*nmemb;
-    }
-    return 0;
-}
-
-
-std::string weather_curl(std::string URL)
+static inline
+std::string weather_curl(const std::string& URL)
 {
     downloadedResponse = "";
     CURL *curl;
@@ -258,6 +122,7 @@ std::string weather_curl(std::string URL)
     return 0;
 }
 
+static inline
 int vcweather_load(gsm_inmemory_db &db, int &iterator, double lat, double lon, std::time_t start)
 {
     std::string geoHashString = geohash_encode(lat, lon);
@@ -291,6 +156,192 @@ int vcweather_load(gsm_inmemory_db &db, int &iterator, double lat, double lon, s
     }
     return result;
 }
+
+//for finding circles for thermals
+//https://github.com/marcin-osowski/igc_lib/blob/master/igc_lib.py
+
+struct for_bearing_change {
+    double lat, lon;
+    long long time;
+    double bearing;
+
+    DEFAULT_CONSTRUCTORS(for_bearing_change)
+
+    void computeBearing(struct for_bearing_change& previous) {
+        double dLon = (lon - previous.lon);
+        double y = sin(dLon) * cos(lat);
+        double x = (cos(previous.lat) * sin(lat)) - (sin(previous.lat) * cos(lat) * cos(dLon));
+        bearing = atan2(y, x);
+        bearing = to_degrees(bearing);
+        bearing = fmod((bearing + 360), 360);
+        bearing = 360 - bearing;
+    }
+};
+
+static inline
+void calculate_bearing_change(gsm_inmemory_db &db, int &bFixIterator)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+    for_bearing_change previous;
+    bool first = true;
+    for(auto &bFix : db.O[bFixIterator].phi["b_fix"])
+    {
+        for_bearing_change current;
+        current.bearing = 0;
+        for(int i = 0; i < db.O[bFix.id].ell.size(); i++)
+        {
+            if(db.O[bFix.id].ell.at(i) == "latitude_double")
+                current.lat = stod(db.O[bFix.id].xi[i]);
+            else if(db.O[bFix.id].ell.at(i) == "longitude_double")
+                current.lon = stod(db.O[bFix.id].xi[i]);
+            else if(db.O[bFix.id].ell.at(i) == "unix_time")
+                current.time = stoll(db.O[bFix.id].xi[i]);
+            else
+                continue;
+        }
+
+        if(first)
+        {
+            previous = (current);
+            db.O[bFix.id].ell.push_back("bearing_rate");
+            db.O[bFix.id].xi.push_back(std::to_string(0));
+            first = false;
+            continue;
+        }
+
+        current.computeBearing(previous);
+        long long timeDiff = nowTime - previousTime;
+
+        previousLong = nowLong;
+        previousLat = nowLat;
+        previousTime = nowTime;
+        if(previousBearing == '\0')
+        {
+            previousBearing = bearing;
+            db.O[bFix.id].ell.push_back("bearing_rate");
+            db.O[bFix.id].xi.push_back(std::to_string(0));
+        }
+        else
+        {
+            double bearingChange = previousBearing - bearing;
+            if(fabs(bearingChange) > 180.0)
+            {
+                if(bearingChange < 0.0)
+                    bearingChange += 360.0;
+                else
+                    bearingChange -= 360.0;
+            }
+            double changeRate = bearingChange/timeDiff;
+            db.O[bFix.id].ell.push_back("bearing_rate");
+            db.O[bFix.id].xi.push_back(std::to_string(changeRate));
+        }
+
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - start);
+    std::cout << "bearing_change: " << elapsed.count() << std::endl;
+}
+
+template <typename T>
+using generate_cp_container = std::function<void(gsm_inmemory_db &db,
+                                                 int previousId,
+                                                 const gsm_object_xi_content &bFix,
+                                                 const gsm_object &obj,
+                                                 T previousAltitude,
+                                                 T altitude,
+                                                 std::pair<size_t, double> &out)>;
+
+//template<typename T>
+//void
+//generate_pair_container(gsm_inmemory_db &db,
+//                        int previousId,
+//                        const gsm_object_xi_content &bFix,
+//                        const gsm_object &obj,
+//                        T previousAltitude,
+//                        T altitude,
+//                        std::pair<size_t, double> &out) {
+//    int diffAltitude = altitude - previousAltitude;
+//    static std::vector<gsm_object_xi_content> tablePhiLift(2);
+//    static std::vector<double> scoresLift(2, 1.0);
+//    tablePhiLift[0].id = previousId;
+//    tablePhiLift[1].id = (bFix.id);
+////            counter++;
+//    create_fast(db, out.first, {"lift"}, {std::to_string(diffAltitude)}, {scoresLift},
+//                {{"b_fix", {tablePhiLift}}});
+//    out.second = 1.0;
+//}
+
+template <typename T>
+int calculate_lift(gsm_inmemory_db &db,
+                   int &object_iteration_holder,
+                   int &iterator,
+                   const std::function<T(const gsm_object_xi_content&, const gsm_object&)> extractor,
+                   const std::function<bool(const T&, const T&)>& comparatorCurrWithPrev,
+                   const generate_cp_container<T>& generate_pair_cont,
+                   const std::string& series_name, // "lift"
+                   const std::string& collection_series_name, // "lift_series"
+                   const std::string& meta_collection_name // "lifts"
+                   )
+{
+    auto start = std::chrono::high_resolution_clock::now();
+    std::vector<gsm_object_xi_content> tablePhiLifts;
+    std::vector<double> scoresLifts{1.0};
+    std::vector<gsm_object_xi_content> tablePhiLiftSeries;
+    std::vector<double> scoresLiftSeries{1.0};
+    bool first_in_series = true;
+    int previousId;
+    T previous_value;
+    bool newLiftSeries = true;
+    std::pair<size_t, double> cp{0,1.0};
+//    int counter = 0;
+
+    for(auto &bFix : db.O[object_iteration_holder].phi["b_fix"])
+    {
+        const auto& obj = db.O.at(bFix.id);
+
+        // Finding pressure_altitude
+        T current_value = extractor(bFix, obj);
+
+        if(first_in_series) {
+            first_in_series = false;
+            previous_value = current_value;
+            previousId = bFix.id;
+            continue;
+        }
+
+        if(comparatorCurrWithPrev(current_value, previous_value)) {
+            if(newLiftSeries)
+            {
+                tablePhiLiftSeries.clear();
+                newLiftSeries = false;
+            }
+            cp.first = ++iterator;
+            generate_pair_cont(db, previousId, bFix, obj, current_value, previous_value, cp);
+            tablePhiLiftSeries.emplace_back(cp.first, cp.second);
+        }
+        else {
+            if(!newLiftSeries) {
+                create_fast(db, ++iterator, {collection_series_name}, {}, scoresLiftSeries, {{series_name, {tablePhiLiftSeries}}});
+                tablePhiLifts.emplace_back(iterator);
+            }
+            newLiftSeries = true;
+        }
+        previous_value = current_value;
+        previousId = bFix.id;
+    }
+    create_fast(db, ++iterator, {meta_collection_name}, {}, scoresLifts, {{collection_series_name, {tablePhiLifts}}});
+    auto end = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - start);
+    std::cout << "calculate_lifts: " << elapsed.count() << std::endl;
+    return iterator;
+}
+
+
+
+
+
+
+
 
 std::vector<int> weather_load(gsm_inmemory_db &db, int &iterator, double lat, double lon, std::time_t start)
 {
@@ -357,150 +408,290 @@ std::vector<int> weather_load(gsm_inmemory_db &db, int &iterator, double lat, do
     return result;
 }
 
+struct geo_hash_support {
+    long long unixTime = 0;
+    double lat = 0;
+    double lon = 0;
+    std::string geoHashString;
 
-static inline
-int generate_weatherbucket(gsm_inmemory_db& db, int bFixesIterator, int& iterator)
+    geo_hash_support() = default;
+    geo_hash_support(const geo_hash_support&) = default;
+    geo_hash_support(geo_hash_support&&) = default;
+    geo_hash_support& operator=(const geo_hash_support&) = default;
+    geo_hash_support& operator=(geo_hash_support&&) = default;
+};
+
+template <typename T>
+int generate_notweather_bucket(gsm_inmemory_db& db,
+                           int to_hash_collection,
+                           int& iterator,
+                           const std::string& bucket_holder_type, // "geohashes"
+                           const std::string& collection_name,// "b_fix"
+                           std::function<std::string(const gsm_object_xi_content&, const gsm_object&, T&)> hasher,
+                           const std::string& bucket_label, // "geohash"
+                           const std::function<std::vector<std::string>(T&)>& bucket_values
+                           )
 {
-    create_fast(db, ++iterator, {"geohashes"});
-    int ghIterator = iterator;
-    long long unixTime;
-    for(auto &bFix: db.O[bFixesIterator].phi["b_fix"])
-    {
-        double lat;
-        double lon;
+    auto start = std::chrono::high_resolution_clock::now();
 
-        for(int i = 0; i < db.O[bFix.id].ell.size(); i++)
-        {
-            if (db.O[bFix.id].ell[i] == "latitude_double") {
-                lat = stod(db.O[bFix.id].xi[i]);
-            } else if (db.O[bFix.id].ell[i] == "longitude_double") {
-                lon = stod(db.O[bFix.id].xi[i]);
-            } else if (db.O[bFix.id].ell[i] == "unix_time") {
-                unixTime = stoll(db.O[bFix.id].xi[i]);
-                unixTime = unixTime - (unixTime % 3600);
-            }
+    // Creating object holder for the buckes
+    create_fast(db, ++iterator, {bucket_holder_type});
+    int buckets_holder = iterator;
+    auto& bucket_holder_object = db.O[buckets_holder];
+//    long long unixTime;
+//    double lat;
+//    double lon;
+    T values; // geo_hash_support
+    static std::vector<gsm_object_xi_content> empty;
+    for(auto &current_record: db.O[to_hash_collection].phi[collection_name]) {
+        const auto& current_object = db.O.at(current_record.id);
+
+        std::string hash_value = hasher(current_record, current_object, values);
+
+        auto it = bucket_holder_object.phi.emplace(hash_value, empty); // attempting at creating a bucket as containment
+        int id;
+        if(it.second) {
+            // Inserting a new object (iterator) into the model, that will contain all the elements belonging to the same shash
+            create_fast(db, ++iterator, {bucket_label}, bucket_values(values));
+            // Inserting the new bucket as item of the bucket list
+            bucket_holder_object.phi[hash_value].emplace_back(iterator);
+//            bucket_holder_object.scores.emplace_back(1.0);
+            id = iterator;
+
+//            int weatherBucket = vcweather_load(db, iterator, values.lat, values.lon, values.unixTime);
+//            db.O[id].phi["weather"].emplace_back(weatherBucket);
+//            db.O[id].scores.emplace_back(1.0);
+        } else {
+            id = bucket_holder_object.phi[hash_value][0].id;
+
         }
 
-        std::string geoHashString = geohash_encode(lat, lon);
-        std::string geoHashCombo = geoHashString + std::to_string((unixTime / 3600) % 24);
-        if(!db.O[ghIterator].phi.contains(geoHashCombo))
-        {
-            create_fast(db, ++iterator, {"geohash"}, {geoHashString, std::to_string(unixTime)});
-            db.O[ghIterator].phi[geoHashCombo].emplace_back(iterator);
-            db.O[ghIterator].scores.emplace_back(1.0);
-
-            db.O[iterator].phi["b_fix"].emplace_back(bFix.id);
-            db.O[iterator].scores.emplace_back(1.0);
-
-            int weatherBucket = vcweather_load(db, iterator, lat, lon, unixTime);
-            int id = db.O[ghIterator].phi[geoHashCombo][0].id;
-
-            db.O[id].phi["weather"].emplace_back(weatherBucket);
-            db.O[id].scores.emplace_back(1.0);
-        }
-        else
-        {
-            int id = db.O[ghIterator].phi[geoHashCombo][0].id;
-            db.O[id].phi["b_fix"].emplace_back(bFix.id);
-            db.O[id].scores.emplace_back(1.0);
-        }
+        db.O[id].phi[collection_name].emplace_back(current_record.id); // A)
+//        db.O[id].scores.emplace_back(1.0); // B)
     }
-    return ghIterator;
+    auto end = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - start);
+    std::cout << "generate_notweather_bucket: " << elapsed.count() << std::endl;
+    return buckets_holder;
 }
 
-void export_csv(gsm_inmemory_db& db,
-                int &iterator,
-                int geoHashesIterator,
-                int liftsIterator,
-                gsm_db_indices& idx,
-                std::string csvFileName,
-                const std::set<std::string>& left = {},
-                const std::set<std::string>& right = {},
-                const std::set<std::string>& additional = {})
+
+
+static inline
+void embed_with(gsm_inmemory_db& db,
+               int buckets_holder,
+               int& iterator,
+//                               const std::string& bucket_holder_type, // "geohashes"
+//                               const std::string& collection_name,// "b_fix"
+                               std::function<void(gsm_inmemory_db &db,
+                                                         int &iterator,
+                                                         gsm_object &current_object)> embed_as
+//                               const std::string& bucket_label, // "geohash"
+//                               const std::function<std::vector<std::string>(T&)>& bucket_values
+)
 {
-    bool getHeaders = true;
-    std::string fn = "csv_files/" + csvFileName;
-    std::ofstream fileOut(fn);
+    auto start = std::chrono::high_resolution_clock::now();
+
+    // Creating object holder for the buckes
+//    create_fast(db, ++iterator, {bucket_holder_type});
+//    int buckets_holder = iterator;
+    auto& bucket_holder_object = db.O[buckets_holder];
+//    long long unixTime;
+//    double lat;
+//    double lon;
+    static std::vector<gsm_object_xi_content> empty;
+    for(auto &[hash_value, record_list]: bucket_holder_object.phi) {
+        for (auto& current_record : record_list) {
+            auto& current_object = db.O[current_record.id];
+            embed_as(db, iterator, current_object);
+            //            current_object.scores.emplace_back(1.0);
+        }
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - start);
+    std::cout << "embed_weather_bucket: " << elapsed.count() << std::endl;
+//    return buckets_holder;
+
+}
+
+/*
+ * OW FILE NAME: ow_{geohash}_{unixtime}.json
+ * WHAT TO EXTRACT:
+ * json -> list -> 0 -> main -> [temp,..]
+ *                   -> wind -> [speed,...]
+ *                   -> clouds -> [all]
+ * 1. in json
+ *
+ *
+ * VC FILE NAME: vc_{geohash}_{unixtime}.json
+ * WHAT TO EXTRACT:
+ * everything from currentConditions
+ * json -> currentConditions -> [temp,wind,...]
+ */
+
+//VC
+
+#include <yaucl/strings/serializers.h>
+#include <unordered_map>
+
+//static inline
+//bool serialize_to_csv(bool& getHeaders, std::ofstream &fileOut, const std::unordered_map<std::string, std::string> &row,
+//                      const std::vector<std::string> &header) {
+//    if(getHeaders)
+//    {
+//        for (auto it = header.begin(), en = header.end(); it != en; ) {
+//            fileOut << *it;
+//            it++;
+//            if (it != en)
+//                fileOut << ",";
+//        }
+//        fileOut << '\n';
+//        getHeaders = false;
+//    }
+//    {
+//        for (auto it = header.begin(), en = header.end(); it != en; ) {
+//            fileOut << row.at(*it);
+//            it++;
+//            if (it != en)
+//                fileOut << ",";
+//        }
+//        fileOut << '\n';
+//    }
+//    return getHeaders;
+//}
+
+static inline
+void bucketed_join_serialize(const gsm_inmemory_db &db, const gsm_db_indices &idx, const std::string &left_collection,
+                             const std::string &right_collection, const std::set<std::string> &left,
+                             const std::set<std::string> &right, const std::set<std::string> &additional,
+                             const std::function<void(const gsm_inmemory_db &, const gsm_db_indices &, const std::set<std::string> &,
+                                            const std::set<std::string> &, const std::set<std::string> &, const std::vector<std::string> &header,
+                                            const gsm_object_xi_content &,
+                                            const gsm_object &, const gsm_object_xi_content &, const gsm_object &,
+                                            std::unordered_map<std::string, std::string> &)> &expand,
+//                                            bool& getHeaders,
+//                             std::ofstream &fileOut,
+                             std::unordered_map<std::string, std::string> &row,
+                             const std::vector<std::string> &header, size_t collection_id, float &total_flat,
+                             float &total_expansion, float &total_rightiter, float &total_lefttiter) {
+    const auto& two_collections_to_join = db.O.at(collection_id);
+    const auto& LEFT = two_collections_to_join.phi.at(left_collection);
+    const auto& RIGHT = two_collections_to_join.phi.at(right_collection);
+
+    for (const auto& left_record : LEFT) {
+        auto start_leftiter = std::chrono::high_resolution_clock::now();
+        const auto& left_object = db.O.at(left_record.id);
+        for(int i = 1; i < left_object.ell.size(); i++) {
+            if (left.contains(left_object.ell.at(i)))
+                row[left_object.ell.at(i)] = (left_object.xi.at(i));
+        }
+        auto end_leftiter= std::chrono::high_resolution_clock::now();
+        auto elapsed_leftiter = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_leftiter-start_leftiter);
+        total_lefttiter += elapsed_leftiter.count();
+
+        float consumed_bfix_iteration = 0.0;
+        auto start_bfixiter = std::chrono::high_resolution_clock::now();
+        for(const auto& right_record : RIGHT) {
+            auto start_rightiter = std::chrono::high_resolution_clock::now();
+            const auto& right_object = db.O.at(right_record.id);
+            for(int i = 1; i < db.O.at(right_record.id).ell.size(); i++) {
+                if (right.contains(right_object.ell.at(i)))
+                    row[right_object.ell.at(i)] =(right_object.xi.at(i));
+            }
+            auto end_rightiter = std::chrono::high_resolution_clock::now();
+            auto elapsed_rightiter = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_rightiter - start_rightiter);
+            consumed_bfix_iteration += elapsed_rightiter.count();
+            total_rightiter += elapsed_rightiter.count();
+
+            // Expansion with the bFixes condition
+            auto start_expansion = std::chrono::high_resolution_clock::now();
+            expand(db, idx, left, right, additional, header, left_record, left_object, right_record, right_object, row);
+            auto end_expansion = std::chrono::high_resolution_clock::now();
+            auto elapsed_expansion = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_expansion - start_expansion);
+            total_expansion += elapsed_expansion.count();
+            consumed_bfix_iteration += elapsed_expansion.count();
+
+
+//            // Flattening out the current rows
+//            auto start_flat = std::chrono::high_resolution_clock::now();
+//            {
+//
+////                return getHeaders;
+//            }
+////            getHeaders = serialize_to_csv(getHeaders, fileOut, row, header);
+//            auto end_flat = std::chrono::high_resolution_clock::now();
+//            auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_flat - start_flat);
+//            total_flat += elapsed.count();
+//            consumed_bfix_iteration += elapsed.count();
+        }
+        auto end_bfixiter = std::chrono::high_resolution_clock::now();
+        auto elapsed_bfixiter = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_bfixiter - start_bfixiter);
+        total_rightiter += (consumed_bfix_iteration - elapsed_bfixiter.count());
+    }
+}
+
+void export_csv(gsm_inmemory_db &db, int geoHashesIterator, const gsm_db_indices &idx,
+                const std::string &csvFileName, const std::string &left_collection, const std::string &right_collection,
+                const std::set<std::string> &left = {}, const std::set<std::string> &right = {},
+                const std::set<std::string> &additional = {},
+                const std::function<void(const gsm_inmemory_db &, const gsm_db_indices &, const std::set<std::string> &,
+                                         const std::set<std::string> &, const std::set<std::string> &, const std::vector<std::string>&,
+                                         const gsm_object_xi_content &,
+                                         const gsm_object &, const gsm_object_xi_content &, const gsm_object &,
+                                         std::unordered_map<std::string, std::string> &)> &expand = {})
+{
+//    std::string headers;
+    float total_flat = 0.0, total_expansion = 0.0, total_rightiter = 0.0, total_lefttiter = 0.0;
+
     std::unordered_map<std::string, std::string> row;
     std::vector<std::string> header{left.begin(), left.end()};
     header.insert(header.end(), right.begin(), right.end());
     header.insert(header.end(), additional.begin(), additional.end());
 
-    for(auto& [geoHashString, geoHashVector] : db.O[geoHashesIterator].phi)
+    auto start_all_time = std::chrono::high_resolution_clock::now();
+    for(auto& [collection_name, bucket] : db.O[geoHashesIterator].phi) {
+        for(const gsm_object_xi_content& in_bucket_collection : bucket) {
+            bucketed_join_serialize(db, idx, left_collection, right_collection, left, right, additional, expand,
+//                                    getHeaders,
+//                                    fileOut,
+                                    row, header, in_bucket_collection.id, total_flat, total_expansion,
+                                    total_rightiter, total_lefttiter);
+
+        }
+    }
+    auto end_all_time= std::chrono::high_resolution_clock::now();
+    auto elapsed_all = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_all_time - start_all_time);
+    float time_bucket_and_left_iteration = elapsed_all.count() - total_flat - total_expansion - total_rightiter - total_lefttiter;
+
+    std::cout << "total bucket+left iteration: " << time_bucket_and_left_iteration << std::endl;
+    std::cout << "total flat&serialize: " << total_flat << std::endl;
+    std::cout << "total expansion: " << total_expansion << std::endl;
+    std::cout << "total left-iteration: " << total_lefttiter << std::endl;
+    std::cout << "total right-iteration: " << total_rightiter << std::endl;
+
+#if 0
+    //TODO:delete
+    std::cout << "counter_export_csv of elements in lift:" << counter << '\n';
+    std::cout << "sum of bfix in geohash:" << sumOfBfix << '\n';
+    int liftInLiftSeries = 0;
+    std::set<size_t> bfigzIdset;
+    for(auto &lifto_series : db.O[liftsIterator].phi["lift_series"])
     {
-        std::vector<int> bFixes;
-
-        for(auto& geoHash : geoHashVector)
+        for(auto& lifto : db.O[lifto_series.id].phi["lift"])
         {
-            size_t weather = db.O[geoHash.id].phi["weather"].at(0).id;
-            if (left.contains(db.O[weather].ell[0]))
-                row[db.O[weather].ell[0]] = std::to_string(weather);
+            liftInLiftSeries++;
 
-            for(int i = 1; i < db.O[weather].ell.size(); i++)
+//            std::cerr << "lift " << lifto.id << " has: " << db.O[lifto.id].phi["b_fix"][0].id<< " and " << db.O[lifto.id].phi["b_fix"][1].id << std::endl;
+            for(auto& bfigz : db.O[lifto.id].phi["b_fix"])
             {
-                if(getHeaders)
-                {
-                    if (left.contains(db.O[weather].ell[i]))
-                        row[db.O[weather].ell[i]] = (db.O[weather].xi[i]);
-                }
-            }
-
-            for(auto& bFix : db.O[geoHash.id].phi["b_fix"])
-            {
-                bool isInLift = false;
-                bool isBeginLift = false;
-                for(auto& lift_series : db.O[liftsIterator].phi["lift_series"])
-                {
-                    size_t count = 0;
-                    for (auto& liftPart : db.O[lift_series.id].phi["lift"]) {
-                        size_t dst = idx.containedBy.addUniqueStateOrGetExisting(liftPart.id);
-                        for(auto const& it : idx.containedBy.outgoingEdgesById2(idx.containedBy.addUniqueStateOrGetExisting(bFix.id)))
-                        {
-                            if(it.second == dst)
-                            {
-                                isInLift = true;
-                                if(count == 0)
-                                    isBeginLift = true;
-                            }
-                            if(isInLift)
-                                break;
-                        }
-                        if(isInLift)
-                            break;
-                        count++;
-                    }
-                    if(isInLift)
-                        break;
-                }
-                for(int i = 1; i < db.O[bFix.id].ell.size(); i++)
-                {
-                    if (right.contains(db.O[bFix.id].ell[i]))
-                        row[db.O[bFix.id].ell[i]] =(db.O[bFix.id].xi[i]);
-                }
-                row["lift"] = (isInLift ? "1" : "0");
-                row["isbeginlift"] = (isBeginLift ? "1" : "0");
-                if(getHeaders)
-                {
-                    for (auto it = header.begin(), en = header.end(); it != en; )
-                    {
-                        fileOut << *it;
-                        it++;
-                        if (it != en)
-                            fileOut << ",";
-                    }
-                    fileOut << '\n';
-                    getHeaders = false;
-                }
-                for (auto it = header.begin(), en = header.end(); it != en; )
-                {
-                    fileOut << row[*it];
-                    it++;
-                    if (it != en)
-                        fileOut << ",";
-                }
-                fileOut << '\n';
+//                std::cout << db.O[lifto.id].phi["b_fix"].size() << std::endl;
+                bfigzIdset.insert(bfigz.id);
             }
         }
     }
+    std::cout << "lift in lift series count:" << liftInLiftSeries << '\n';
+    std::cout << "unique bfix.id in each lift object:" << bfigzIdset.size() << '\n';
+    std::cout << "unique bfix.id in all GeoHash:" << bfigzIdset2.size() << '\n';
+#endif
 }
 #endif //GSM_GSQL_IGC_OPERATORS_H

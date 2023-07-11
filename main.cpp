@@ -1,3 +1,4 @@
+#include <chrono>
 #include <iostream>
 #include "gsql_gsm/gsm_db_indices.h"
 #include <gsql_gsm/gsql_operators.h>
@@ -12,8 +13,11 @@
 #include "submodules/yaucl/submodules/rapidcsv/src/rapidcsv.h"
 #include <nlohmann/json.hpp>
 #include <filesystem>
-#include <chrono>
+#include <curl/curl.h>
 
+#include <chrono>
+#include "sys/types.h"
+#include "sys/sysinfo.h"
 
 using json = nlohmann::json;
 
@@ -83,6 +87,7 @@ void load_csvdb(gsm_inmemory_db &db, std::string pathToDb, int &iterator)
 
 int load_igcfile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
 {
+    auto start = std::chrono::high_resolution_clock::now();
     std::ifstream stream(pathToFile);
     std::vector<gsm_object_xi_content> tablePhiIgc = {};
     std::vector<double> scoresIgc = {};
@@ -186,6 +191,9 @@ int load_igcfile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
     tablePhiIgc.emplace_back(iterator);
     scoresIgc.emplace_back(1.0);
     create_fast(db, ++iterator, {"igc_file"}, {pathToFile}, {scoresIgc}, {{"fixes", {tablePhiIgc}}});
+    auto end = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - start);
+    std::cout << "load_igcfile: " << elapsed.count() << std::endl;
     return bFixesIterator;
 }
 
@@ -201,6 +209,46 @@ void LoadGraph(gsm_inmemory_db &db, int &iterator, std::vector<std::string> &gra
     }
 }
 
+//void expand_with_lift_type(const gsm_inmemory_db& db,
+//                           gsm_db_indices& idx,
+//                           const std::set<std::string>& left ,
+//                           const std::set<std::string>& right,
+//                           const std::set<std::string>& additional,
+//                           const gsm_object_xi_content& left_record,
+//                           const gsm_object& left_object,
+//                           const gsm_object_xi_content& right_record,
+//                           const gsm_object& right_object,
+//                           std::unordered_map<std::string, std::string>& row) {
+//    if (left.contains(left_object.ell.at(0)))
+//        row[left_object.ell.at(0)] = std::to_string(left_record.id);
+//    bool isInLift = false;
+//    bool isBeginLift = false;
+//    for(auto& lift_series : db.O.at(liftsIterator).phi.at("lift_series"))
+//    {
+//        size_t count = 0;
+//        for (auto& liftPart : db.O.at(lift_series.id).phi.at("lift")) {
+//            size_t dst = idx.containedBy.addUniqueStateOrGetExisting(liftPart.id);
+//            for(auto const& it : idx.containedBy.outgoingEdgesById2(idx.containedBy.addUniqueStateOrGetExisting(right_record.id)))
+//            {
+//                if(it.second == dst) {
+//                    isInLift = true;
+//                    if (count == 0)
+//                        isBeginLift = true;
+//                }
+//                if(isInLift)
+//                    break;
+//            }
+//            if(isInLift)
+//                break;
+//            count++;
+//        }
+//        if(isInLift)
+//            break;
+//    }
+//    row["lift"] = (isInLift ? "1" : "0");
+//    row["isbeginlift"] = (isBeginLift ? "1" : "0");
+//}
+
 int main() {
 
     // Database initialisation, with an empty root
@@ -210,13 +258,88 @@ int main() {
 
     std::string csvPath = "csv_files/";
     std::string jsonPath = "json_files/vc_6dk65ff_1673719200.json";
-    std::string igcPath = "igc_files/long2.igc";
+    std::string igcPath = "igc_files/long_10000.igc";
 
+    //load_jsonEllXiFile(db, jsonPath, iterator, {"currentConditions"}, "weather");
+
+    // Load: Transformation function
     int bFixesIterator = load_igcfile(db, igcPath, iterator);
-    int liftsIterator = calculate_lift(db, bFixesIterator, iterator);
-    calculate_bearing_change(db, bFixesIterator);
-    int geoHashesIterator = generate_weatherbucket(db, bFixesIterator, iterator);
 
+    ///////////////////////////////////
+    ///////////////////////////////////
+    // Value extractor for time series
+    auto extractor = [](const gsm_object_xi_content& rec, const gsm_object& obj) -> int{
+        int altitude;
+        for(int i = 0; i < obj.ell.size(); i++) {
+            if (obj.ell.at(i) == "pressure_altitude") {
+                altitude = stoi(obj.xi[i]);
+                return altitude;
+            }
+        }
+        return -1; // not found!
+    };
+    // Comparing between current and previous value: if the condition holds, this will be still part of the same time series
+    auto comparator = [](const int& left, const int& right) {
+        return left > right;
+    };
+    // Generating one holder for previous and current step in time series
+    generate_cp_container<int> generate_pair_container = [](gsm_inmemory_db &db,
+                            int previousId,
+                            const gsm_object_xi_content &bFix,
+                            const gsm_object &obj,
+                            int previousAltitude,
+                            int altitude,
+                            std::pair<size_t, double> &out) {
+        int diffAltitude = altitude - previousAltitude;
+        static std::vector<gsm_object_xi_content> tablePhiLift(2);
+        static std::vector<double> scoresLift(2, 1.0);
+        tablePhiLift[0].id = previousId;
+        tablePhiLift[1].id = (bFix.id);
+        create_fast(db, out.first, {"lift"}, {std::to_string(diffAltitude)}, {scoresLift},
+                    {{"b_fix", {tablePhiLift}}});
+        out.second = 1.0;
+    };
+
+    // Time Series Nesting
+    int liftsIterator = calculate_lift<int>(db, bFixesIterator, iterator,
+                                       extractor, comparator, generate_pair_container,
+                                       "lift", "lift_series", "lifts");
+    ///////////////////////////////////
+    ///////////////////////////////////
+
+    calculate_bearing_change(db, bFixesIterator);
+
+    auto hasher = [](const gsm_object_xi_content&, const gsm_object& current_object, geo_hash_support& values) -> std::string {
+                for(int i = 0; i < current_object.ell.size(); i++)
+        {
+            if (current_object.ell.at(i) == "latitude_double") {
+                values.lat = stod(current_object.xi[i]);
+            } else if (current_object.ell.at(i) == "longitude_double") {
+                values.lon = stod(current_object.xi[i]);
+            } else if (current_object.ell.at(i) == "unix_time") {
+                values.unixTime = stoll(current_object.xi[i]);
+                values.unixTime = values.unixTime - (values.unixTime % 3600);
+            }
+        }
+        values.geoHashString = geohash_encode(values.lat, values.lon, 6);
+        return values.geoHashString + std::to_string((values.unixTime / 3600) % 24);
+    };
+    auto values = [](const geo_hash_support& values) -> std::vector<std::string> {
+       return {values.geoHashString, std::to_string(values.unixTime), std::to_string(values.lat), std::to_string(values.lon)};
+    };
+    auto embedder = [](gsm_inmemory_db &db,
+                    int &iterator,
+                    gsm_object &current_object) {
+        long long unixTime = std::stoll(current_object.xi[1]);
+        double lat = std::stod(current_object.xi[2]);
+        double lon = std::stod(current_object.xi[3]);
+        current_object.phi["weather"].emplace_back(vcweather_load(db, iterator, lat, lon, unixTime));
+    };
+    int geoHashesIterator = generate_notweather_bucket<geo_hash_support>(db, bFixesIterator, iterator, "geohashes", "b_fix", hasher, "geohash", values);
+    embed_with(db,
+               geoHashesIterator,
+                   iterator,
+                   embedder);
     //load_csvdb(db, csvPath, iterator);
     //load_jsonfile(db, jsonPath, iterator);
     //load_csvfile(db, csvPath + "customers-1.csv", iterator);
@@ -233,17 +356,96 @@ int main() {
     // Assuming that all of the operations are done:
     // Therefore, I can also set up the indices
 
+
+    auto start_indexing = std::chrono::high_resolution_clock::now();
     gsm_db_indices idx;
     idx.init(db);
     idx.valid_data();
+    auto end_indexing = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_indexing - start_indexing);
+    std::cout << "indexing: " << elapsed.count() << std::endl;
+    bool getHeaders = true;
+    std::string fn = "csv_files/lift10k.csv";
+    std::ofstream fileOut(fn);
+
+    auto calc_and_flat_to_disk = [liftsIterator,&fileOut,&getHeaders](const gsm_inmemory_db& db,
+                            const gsm_db_indices& idx,
+                            const std::set<std::string>& left ,
+                            const std::set<std::string>& right,
+                            const std::set<std::string>& additional,
+                                      const std::vector<std::string>& header,
+                            const gsm_object_xi_content& left_record,
+                            const gsm_object& left_object,
+                            const gsm_object_xi_content& right_record,
+                            const gsm_object& right_object,
+                            std::unordered_map<std::string, std::string>& row) {
+        if (left.contains(left_object.ell.at(0)))
+            row[left_object.ell.at(0)] = std::to_string(left_record.id);
+        bool isInLift = false;
+        bool isBeginLift = false;
+        for(auto& lift_series : db.O.at(liftsIterator).phi.at("lift_series"))
+        {
+            size_t count = 0;
+            for (auto& liftPart : db.O.at(lift_series.id).phi.at("lift")) {
+                size_t dst = idx.containedBy.GetExisting(liftPart.id);
+                if (dst==-1) continue;
+                size_t right_val = idx.containedBy.GetExisting(right_record.id);
+                if (right_val ==-1) continue;
+                for(auto const& it : idx.containedBy.outgoingEdgesById2(right_val))
+                {
+                    if(it.second == dst) {
+                        isInLift = true;
+                        if (count == 0)
+                            isBeginLift = true;
+                    }
+                    if(isInLift)
+                        break;
+                }
+                if(isInLift)
+                    break;
+                count++;
+            }
+            if(isInLift)
+                break;
+        }
+        row["lift"] = (isInLift ? "1" : "0");
+        row["isbeginlift"] = (isBeginLift ? "1" : "0");
+        if(getHeaders)
+        {
+            for (auto it = header.begin(), en = header.end(); it != en; ) {
+                fileOut << *it;
+                it++;
+                if (it != en)
+                    fileOut << ",";
+            }
+            fileOut << '\n';
+            getHeaders = false;
+        }
+        {
+            for (auto it = header.begin(), en = header.end(); it != en; ) {
+                fileOut << row.at(*it);
+                it++;
+                if (it != en)
+                    fileOut << ",";
+            }
+            fileOut << '\n';
+        }
+    };
+
+
 
     std::string csvOutputFileName = "lift10k.csv";
-    export_csv(db, iterator, geoHashesIterator, liftsIterator, idx, csvOutputFileName,
-               {"cloudcover", "dew", "feelslike", "humidity", "precip", "precipprob", "preciptype", "pressure", "severerisk", "snow", "snowdepth", "solarenergy", "solarradiation", "temp", "uvindex", "visibility", "weather_vc", "winddir", "windgust", "windspeed"},
+
+    export_csv(db, geoHashesIterator, idx, csvOutputFileName, "weather", "b_fix",
+               {"cloudcover", "dew", "feelslike", "humidity", "precip", "precipprob", "preciptype", "pressure",
+                /*"severerisk",*/ "snow", "snowdepth", "solarenergy", "solarradiation", "temp", "uvindex", "visibility",
+                "weather_vc", "winddir", "windgust", "windspeed"},
                {"bearing_rate", "latitude_double", "longitude_double", "pressure_altitude", "unix_time"},
-               {"lift","isbeginlift"});
+               {"lift", "isbeginlift"},
+               calc_and_flat_to_disk);
 
     // Dumping the db into a XML format
     dump_to_xml(db, idx, "question_mark.xml");
+//    std::cout << "Hello, World!" << std::endl;
     return 0;
 }
