@@ -55,8 +55,8 @@ struct gsm_db_indices {
                     auto src = siblinghood.addUniqueStateOrGetExisting(id_score_1.id);
                     auto cSrc = containedBy.addUniqueStateOrGetExisting(id_score_1.id);
                     auto oSrc = containerOf.addUniqueStateOrGetExisting(id_score_1.id);
-                    containedBy.addNewEdgeFromId(cSrc, cDst, "phi-1");
-                    containerOf.addNewEdgeFromId(oDst, oSrc,  "phi");
+                    containedBy.addNewEdgeFromId(cSrc, cDst, k1);
+                    containerOf.addNewEdgeFromId(oDst, oSrc, k1);
                     for (const auto& [k2,vl2] : obj.phi) {
                         if (k1 == k2) continue; // Avoiding loops
                         for (const auto& id_score_2 : vl2) {

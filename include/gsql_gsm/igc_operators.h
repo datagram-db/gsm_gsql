@@ -485,10 +485,10 @@ void embed_with(gsm_inmemory_db& db,
 //}
 
 static inline
-void bucketed_join_serialize(const gsm_inmemory_db &db, const gsm_db_indices &idx, const std::string &left_collection,
+void bucketed_join_serialize(gsm_inmemory_db &db, const gsm_db_indices &idx, const std::string &left_collection,
                              const std::string &right_collection, const std::set<std::string> &left,
                              const std::set<std::string> &right, const std::set<std::string> &additional,
-                             const std::function<void(const gsm_inmemory_db &, const gsm_db_indices &, const std::set<std::string> &,
+                             const std::function<void(gsm_inmemory_db &, const gsm_db_indices &, const std::set<std::string> &,
                                             const std::set<std::string> &, const std::set<std::string> &, const std::vector<std::string> &header,
                                             const gsm_object_xi_content &,
                                             const gsm_object &, const gsm_object_xi_content &, const gsm_object &,
@@ -544,7 +544,7 @@ void export_csv(gsm_inmemory_db &db, int geoHashesIterator, const gsm_db_indices
                 const std::string &csvFileName, const std::string &left_collection, const std::string &right_collection,
                 const std::set<std::string> &left = {}, const std::set<std::string> &right = {},
                 const std::set<std::string> &additional = {},
-                const std::function<void(const gsm_inmemory_db &, const gsm_db_indices &, const std::set<std::string> &,
+                const std::function<void(gsm_inmemory_db &, const gsm_db_indices &, const std::set<std::string> &,
                                          const std::set<std::string> &, const std::set<std::string> &, const std::vector<std::string>&,
                                          const gsm_object_xi_content &,
                                          const gsm_object &, const gsm_object_xi_content &, const gsm_object &,

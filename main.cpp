@@ -263,6 +263,9 @@ int main() {
 
     // Load: Transformation function
     int multivariate_time_series_container = load_igcfile(db, igcPath, max_obj_id);
+    create_fast(db, ++max_obj_id, {"result"});
+    int join_result = max_obj_id;
+    auto& join_table = db.O[join_result];
 
     ///////////////////////////////////
     ///////////////////////////////////
@@ -413,7 +416,7 @@ int main() {
     std::string fn = "csv_files/lift10k.csv";
     std::ofstream fileOut(fn);
 
-    auto calc_and_flat_to_disk = [lift_series_collection,&fileOut,&getHeaders](const gsm_inmemory_db& db,
+    auto calc_and_flat_to_disk = [lift_series_collection,&max_obj_id,&join_table](gsm_inmemory_db& db,
                                                                                const gsm_db_indices& idx,
                                                                                const std::set<std::string>& left ,
                                                                                const std::set<std::string>& right,
@@ -428,53 +431,73 @@ int main() {
             row[left_object.ell.at(0)] = std::to_string(left_record.id);
         bool isInLift = false;
         bool isBeginLift = false;
-        for(auto& lift_series : db.O.at(lift_series_collection).phi.at("lift_series"))
-        {
-            size_t count = 0;
-            for (auto& liftPart : db.O.at(lift_series.id).phi.at("lift")) {
-                size_t dst = idx.containedBy.GetExisting(liftPart.id);
-                if (dst==-1) continue;
-                size_t right_val = idx.containedBy.GetExisting(right_record.id);
-                if (right_val ==-1) continue;
-                for(auto const& it : idx.containedBy.outgoingEdgesById2(right_val))
-                {
-                    if(it.second == dst) {
+
+        size_t right_val = idx.containedBy.GetExisting(right_record.id);
+        if (right_val !=-1) {
+            for(auto const& it : idx.containedBy.outgoingEdgesById2(right_val)) {
+                if (it.first == "b_fix") {;
+                    size_t actual_lift_id = idx.containedBy.getUniqueLabel(it.second);
+                    const auto& obj = db.O.at(actual_lift_id);
+                    if ((obj.ell.size() < 1) || (obj.ell[0] != "lift"))
+                        continue;
+                    else
                         isInLift = true;
-                        if (count == 0)
-                            isBeginLift = true;
+                    for (auto const& it2 : idx.containedBy.outgoingEdgesById2(it.second)) {
+                        if (it2.first == "lift") {
+                            size_t actual_liftseries_id = idx.containedBy.getUniqueLabel(it2.second);
+                            const auto& obj2 = db.O.at(actual_liftseries_id);
+                            if ((obj2.ell.size() < 1) || (obj2.ell[0] != "lift_series"))
+                                continue;
+                            if (obj2.phi.at("lift").at(0).id == actual_lift_id) {
+                                isBeginLift = true;
+                                break;
+                            }
+                        }
                     }
-                    if(isInLift)
+                    if (isInLift && isBeginLift)
                         break;
                 }
-                if(isInLift)
+                if (isInLift && isBeginLift)
                     break;
-                count++;
             }
-            if(isInLift)
-                break;
         }
+
+
         row["lift"] = (isInLift ? "1" : "0");
         row["isbeginlift"] = (isBeginLift ? "1" : "0");
-        if(getHeaders)
-        {
-            for (auto it = header.begin(), en = header.end(); it != en; ) {
-                fileOut << *it;
-                it++;
-                if (it != en)
-                    fileOut << ",";
-            }
-            fileOut << '\n';
-            getHeaders = false;
+
+        std::vector<std::string> headers;
+        std::vector<std::string> values;
+        headers.emplace_back("tuple");
+        values.emplace_back("");
+        for (const auto& [k,v] : row) {
+            headers.emplace_back(k);
+            values.emplace_back(v);
         }
-        {
-            for (auto it = header.begin(), en = header.end(); it != en; ) {
-                fileOut << row.at(*it);
-                it++;
-                if (it != en)
-                    fileOut << ",";
-            }
-            fileOut << '\n';
-        }
+        create_fast(db, ++max_obj_id, headers, values);
+        join_table.phi["table_rows"].emplace_back((size_t)max_obj_id);
+
+
+//        if(getHeaders)
+//        {
+//            for (auto it = header.begin(), en = header.end(); it != en; ) {
+//                fileOut << *it;
+//                it++;
+//                if (it != en)
+//                    fileOut << ",";
+//            }
+//            fileOut << '\n';
+//            getHeaders = false;
+//        }
+//        {
+//            for (auto it = header.begin(), en = header.end(); it != en; ) {
+//                fileOut << row.at(*it);
+//                it++;
+//                if (it != en)
+//                    fileOut << ",";
+//            }
+//            fileOut << '\n';
+//        }
     };
 
 
