@@ -614,9 +614,11 @@ namespace script {
 
         size_t ScriptVisitor::isEnforced(const DPtr<script::structures::ScriptAST> &left, const DPtr<script::structures::ScriptAST> &right) {
             size_t l = typecaster.getId(left->toString());
+            if (l == -1) return -1;
             size_t r = typecaster.getId(right->toString());
+            if (r == -1) return -1;
             const auto& outs = typecaster.g.nodes.at(l);
-            bool found = false;
+//            bool found = false;
             for (size_t f : outs) {
                 if (typecaster.g.edge_ids.at(f).second == r) {
                     return f;

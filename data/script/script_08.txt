@@ -1,1 +1,1 @@
-typeof (OBJ 2)
+typeof (OBJ 3)

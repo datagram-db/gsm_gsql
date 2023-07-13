@@ -374,15 +374,42 @@ void old_main() {
 #include <filesystem>
 #include <gtest/gtest.h>
 
-int main() {
+void other_scenario() {
     std::filesystem::path scripts_folder = std::filesystem::current_path().parent_path() / "data" / "script";
     auto database = std::make_shared<gsm_inmemory_db>();
     gsm_inmemory_db_view view{0, database};
     createFast(view, 1, "int", {"38"}, {1.0});
     createFast(view, 2, "label \"timon\"", {}, {1.0}, {{"age", {{1,1.0}}}});
+    createFast(view, 3, "label \"timon\"", {"< \"ciao\" >> \"bene\" ; \"tutta\" >> 2 ; \"dritta\" >> \"premiata\" >"}, {1.0});
     script::compiler::ScriptVisitor::bindGSM(database.get());
     std::ifstream file{"/home/giacomo/CLionProjects/gsm_gsql/data/script/script_08.txt"};
     std::cout << script::compiler::ScriptVisitor::eval(file)->toString() << std::endl;
+
+}
+
+void graph_scenario() {
+    std::filesystem::path scripts_folder = std::filesystem::current_path() / "data" / "script";
+    auto database = std::make_shared<gsm_inmemory_db>();
+    gsm_inmemory_db_view view{0, database};
+    database->O[0].ell = "label \"graph\"";
+    createFast(view, 1, "label \"user\"", {"< \"name\" >> \"Alex\">"}, {1.0});
+    createFast(view, 2, "label \"user\"", {"< \"name\" >> \"Aries\">"}, {1.0});
+    createFast(view, 3, "label \"follows\"", {"< \"date\" >> \"2018-06-03 15:27\">"}, {1.0});
+    database->O[0].ell = "label \"graph\"";
+    database->O[3].phi["src"].emplace_back(1);
+    database->O[3].phi["dst"].emplace_back(2);
+    database->O[0].phi["nodes"].emplace_back(0);
+    database->O[0].phi["nodes"].emplace_back(1);
+    database->O[0].phi["edges"].emplace_back(3);
+    script::compiler::ScriptVisitor::bindGSM(database.get());
+    std::ifstream file{scripts_folder / "script_09.txt"};
+    std::cout << script::compiler::ScriptVisitor::eval(file)->toString() << std::endl;
+
+}
+
+int main() {
+    // other_scenario();
+    graph_scenario();
     return 0;
 }
 

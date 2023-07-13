@@ -26,6 +26,7 @@ bool script::structures::ScriptAST::toBoolean()  {
             case Double:
                 return doubleValue_ != 0;
             case String:
+            case LABELT:
                 return !string.empty();
             case Array:
                 return !arrayList.empty();
@@ -1195,6 +1196,7 @@ std::ptrdiff_t script::structures::ScriptAST::javaComparator(const DPtr<ScriptAS
                 else return (cmp > 0 ? 1 : -1);
             }
         case String:
+        case LABELT:
             return string.compare(object->string);
 
         case Variable:
@@ -1207,10 +1209,10 @@ std::ptrdiff_t script::structures::ScriptAST::javaComparator(const DPtr<ScriptAS
 
         case ObjTT:
         {
-            auto x = arrayList[0]->toList();
-            auto y = arrayList[1]->toList();
-            return int_lexicographical_compare(x.begin(), x.end(),
-                                               y.begin(), y.end(),
+//            auto x = arrayList[0];
+//            auto y = arrayList[1];
+            return int_lexicographical_compare(arrayList.begin(), arrayList.end(),
+                                               object->arrayList.begin(), object->arrayList.end(),
                                                [](const auto& x, auto& y) {return x->javaComparator(y);});
         }
 
@@ -1349,7 +1351,16 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
                     ss << val;
                     xi.emplace_back(compiler::ScriptVisitor::eval(ss)->typeInference());
                 }
-                return mgu(xi); // Actually this?
+                auto x = mgu(xi); // Actually this?
+                if (x->type == TupleT) {
+                    std::stringstream ss;
+                    ss << db->ell(id);
+                    auto lfst = compiler::ScriptVisitor::eval(ss);
+                    if (!lfst->isType())
+                        throw std::runtime_error("ERROR: the label of an object should express a type!");
+                    return lex_type_(std::move(lfst), std::move(x->tuple));
+                } else
+                    return x;
             }
         } else {
             for (const auto& [k,v] : db->phi(id)) {
@@ -1462,10 +1473,19 @@ std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::str
                 return {f};
             } else if (right_run->type == ObjTT) {
                 // Not equal: this is already handled above!
-                auto rewrite = subTyping(L, right_run);
-                if (!rewrite.has_value()) // If the types are not compatible, I cannot cast the type at all
+                auto rewriteLeft = subTyping(L->arrayList[0], right_run->arrayList[0]);
+                if (!rewriteLeft.has_value()) // If the types are not compatible, I cannot cast the type at all
                     return {};
-
+                auto rewriteRight = subTyping(L->arrayList[1], right_run->arrayList[1]);
+                if (!rewriteRight.has_value())
+                    return {};
+                return [&right_run](DPtr<script::structures::ScriptAST> &&x) {
+                    x->casted_type = right_run;
+                    for (const auto& [k,v] : right_run->arrayList[1]->tuple)
+                        if (x->tuple.contains(k))
+                            (x->tuple[k])->casted_type = v; // forcibly casting the null to v
+                    return x;
+                };
             } else {
                 auto l = L->arrayList[0]->run();
                 return subTyping(l, right_run);
