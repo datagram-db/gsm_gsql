@@ -6,18 +6,12 @@
 #include <gsql_gsm/json_operators.h>
 
 #include <string>
-#include <gsql_gsm/dump_to_xml.h>
 
 #include <vector>
 #include <fstream>
 #include "submodules/yaucl/submodules/rapidcsv/src/rapidcsv.h"
 #include <nlohmann/json.hpp>
 #include <filesystem>
-#include <curl/curl.h>
-
-#include <chrono>
-#include "sys/types.h"
-#include "sys/sysinfo.h"
 
 using json = nlohmann::json;
 
@@ -209,45 +203,6 @@ void LoadGraph(gsm_inmemory_db &db, int &iterator, std::vector<std::string> &gra
     }
 }
 
-//void expand_with_lift_type(const gsm_inmemory_db& db,
-//                           gsm_db_indices& idx,
-//                           const std::set<std::string>& left ,
-//                           const std::set<std::string>& right,
-//                           const std::set<std::string>& additional,
-//                           const gsm_object_xi_content& left_record,
-//                           const gsm_object& left_object,
-//                           const gsm_object_xi_content& right_record,
-//                           const gsm_object& right_object,
-//                           std::unordered_map<std::string, std::string>& row) {
-//    if (left.contains(left_object.ell.at(0)))
-//        row[left_object.ell.at(0)] = std::to_string(left_record.id);
-//    bool isInLift = false;
-//    bool isBeginLift = false;
-//    for(auto& lift_series : db.O.at(liftsIterator).phi.at("lift_series"))
-//    {
-//        size_t count = 0;
-//        for (auto& liftPart : db.O.at(lift_series.id).phi.at("lift")) {
-//            size_t dst = idx.containedBy.addUniqueStateOrGetExisting(liftPart.id);
-//            for(auto const& it : idx.containedBy.outgoingEdgesById2(idx.containedBy.addUniqueStateOrGetExisting(right_record.id)))
-//            {
-//                if(it.second == dst) {
-//                    isInLift = true;
-//                    if (count == 0)
-//                        isBeginLift = true;
-//                }
-//                if(isInLift)
-//                    break;
-//            }
-//            if(isInLift)
-//                break;
-//            count++;
-//        }
-//        if(isInLift)
-//            break;
-//    }
-//    row["lift"] = (isInLift ? "1" : "0");
-//    row["isbeginlift"] = (isBeginLift ? "1" : "0");
-//}
 
 int main() {
     // Database initialisation, with an empty root
@@ -480,28 +435,6 @@ int main() {
         }
         create_fast(db, ++max_obj_id, headers, values);
         join_table.phi["table_rows"].emplace_back((size_t)max_obj_id);
-
-
-//        if(getHeaders)
-//        {
-//            for (auto it = header.begin(), en = header.end(); it != en; ) {
-//                fileOut << *it;
-//                it++;
-//                if (it != en)
-//                    fileOut << ",";
-//            }
-//            fileOut << '\n';
-//            getHeaders = false;
-//        }
-//        {
-//            for (auto it = header.begin(), en = header.end(); it != en; ) {
-//                fileOut << row.at(*it);
-//                it++;
-//                if (it != en)
-//                    fileOut << ",";
-//            }
-//            fileOut << '\n';
-//        }
     };
 
 
