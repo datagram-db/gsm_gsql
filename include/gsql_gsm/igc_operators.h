@@ -180,13 +180,13 @@ struct for_bearing_change {
 
 
 template <typename T, typename F>
-void update_tuple_values(gsm_inmemory_db &db,
-                         int &bFixIterator,
-                         const std::string&collection_name,
-                         const std::string&filed_name, // "bearing_rate"
+void incollection_tuple_extend(gsm_inmemory_db &db,
+                               int &bFixIterator,
+                               const std::string&collection_name,
+                               const std::string&filed_name, // "bearing_rate"
                               T initial_value,
-                         const std::function<void(const gsm_object&, F&)>& extract,
-                         const std::function<void(const T& , F& , F& , std::string &)>& compute_current) // 0)
+                               const std::function<void(const gsm_object&, F&)>& extract,
+                               const std::function<void(const T& , F& , F& , std::string &)>& compute_current) // 0)
 {
     auto start = std::chrono::high_resolution_clock::now();
     F previous;
@@ -211,7 +211,7 @@ void update_tuple_values(gsm_inmemory_db &db,
     }
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - start);
-    std::cout << "bearing_change: " << elapsed.count() << std::endl;
+    std::cout << "x,ExtendObjects," << elapsed.count() << std::endl;
 }
 
 template <typename T>
@@ -284,7 +284,7 @@ int time_series_nesting(gsm_inmemory_db &db,
     create_fast(db, ++iterator, {meta_collection_name}, {}, scoresLifts, {{collection_series_name, {tablePhiLifts}}});
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - start);
-    std::cout << "calculate_lifts: " << elapsed.count() << std::endl;
+    std::cout << "x,CollectionNesting," << elapsed.count() << std::endl;
     return iterator;
 }
 
@@ -374,13 +374,13 @@ struct geo_hash_support {
 };
 
 template <typename T>
-int generate_notweather_bucket(gsm_inmemory_db& db,
-                           int to_hash_collection,
-                           int& iterator,
-                           const std::string& bucket_holder_type, // "geohashes"
+int structural_hashbucket(gsm_inmemory_db& db,
+                          int to_hash_collection,
+                          int& iterator,
+                          const std::string& bucket_holder_type, // "geohashes"
                            const std::string& collection_name,// "b_fix"
                            std::function<std::string(const gsm_object_xi_content&, const gsm_object&, T&)> hasher,
-                           const std::string& bucket_label, // "geohash"
+                          const std::string& bucket_label, // "geohash"
                            const std::function<std::vector<std::string>(T&)>& bucket_values
                            )
 {
@@ -413,29 +413,29 @@ int generate_notweather_bucket(gsm_inmemory_db& db,
     }
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - start);
-    std::cout << "generate_notweather_bucket: " << elapsed.count() << std::endl;
+    std::cout << "x,StructuralBucketing," << elapsed.count() << std::endl;
     return buckets_holder;
 }
 
 
 
 static inline
-void embed_with(gsm_inmemory_db& db,
-               int buckets_holder,
-               int& iterator,
-                               const std::function<void(gsm_inmemory_db &db,
+void incollection_map(gsm_inmemory_db& db,
+                      int buckets_holder,
+                      int& iterator,
+                      const std::function<void(gsm_inmemory_db &db,
                                                          int &iterator,
-                                                         gsm_object &current_object)>& embed_as
+                                                         gsm_object &current_object)>& transform_as
 )
 {
     auto start = std::chrono::high_resolution_clock::now();
     PHI_FOLD_BEGIN(buckets_holder, hash_value, record_list, current_record)
         auto& current_object = db.O[current_record.id];
-        embed_as(db, iterator, current_object);
+            transform_as(db, iterator, current_object);
     PHI_FOLD_END
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - start);
-    std::cout << "embed_weather_bucket: " << elapsed.count() << std::endl;
+    std::cout << "x,WeatherLFold," << elapsed.count() << std::endl;
 }
 
 /*
@@ -485,35 +485,31 @@ void embed_with(gsm_inmemory_db& db,
 //}
 
 static inline
-void bucketed_join_serialize(gsm_inmemory_db &db, const gsm_db_indices &idx, const std::string &left_collection,
-                             const std::string &right_collection, const std::set<std::string> &left,
-                             const std::set<std::string> &right, const std::set<std::string> &additional,
-                             const std::function<void(gsm_inmemory_db &, const gsm_db_indices &, const std::set<std::string> &,
-                                            const std::set<std::string> &, const std::set<std::string> &, const std::vector<std::string> &header,
-                                            const gsm_object_xi_content &,
-                                            const gsm_object &, const gsm_object_xi_content &, const gsm_object &,
-                                            std::unordered_map<std::string, std::string> &)> &expand,
-                             std::unordered_map<std::string, std::string> &row,
-                             const std::vector<std::string> &header, size_t collection_id, float &total_flat,
-                             float &total_expansion, float &total_rightiter, float &total_lefttiter) {
+void natural_join(gsm_inmemory_db &db, const gsm_db_indices &idx, const std::string &left_collection,
+                  const std::string &right_collection, const std::set<std::string> &left,
+                  const std::set<std::string> &right, const std::set<std::string> &additional,
+                  const std::function<void(gsm_inmemory_db& ,const gsm_db_indices &, const std::set<std::string> &, const std::set<std::string> &, const std::set<std::string> &, const std::vector<std::string> &, const gsm_object_xi_content &, const gsm_object &, const gsm_object_xi_content &, const gsm_object &, std::unordered_map<std::string, std::string>&)>expand,
+                  std::unordered_map<std::string, std::string> &row,
+                  const std::vector<std::string> &header, size_t collection_id/*, float &total_flat,
+                  float &total_expansion, float &total_rightiter, float &total_lefttiter*/) {
     const auto& two_collections_to_join = db.O.at(collection_id);
     const auto& LEFT = two_collections_to_join.phi.at(left_collection);
     const auto& RIGHT = two_collections_to_join.phi.at(right_collection);
 
     for (const auto& left_record : LEFT) {
-        auto start_leftiter = std::chrono::high_resolution_clock::now();
+//        auto start_leftiter = std::chrono::high_resolution_clock::now();
         const auto& left_object = db.O.at(left_record.id);
         for(int i = 0; i < left_object.ell.size(); i++) {
             const auto& label = left_object.ell.at(i);
             if (left.contains(label))
                 row[left_object.ell.at(i)] = (left_object.xi.at(i));
         }
-        auto end_leftiter= std::chrono::high_resolution_clock::now();
-        auto elapsed_leftiter = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_leftiter-start_leftiter);
-        total_lefttiter += elapsed_leftiter.count();
+//        auto end_leftiter= std::chrono::high_resolution_clock::now();
+//        auto elapsed_leftiter = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_leftiter-start_leftiter);
+//        total_lefttiter += elapsed_leftiter.count();
 
-        float consumed_bfix_iteration = 0.0;
-        auto start_bfixiter = std::chrono::high_resolution_clock::now();
+//        float consumed_bfix_iteration = 0.0;
+//        auto start_bfixiter = std::chrono::high_resolution_clock::now();
         for(const auto& right_record : RIGHT) {
             auto start_rightiter = std::chrono::high_resolution_clock::now();
             const auto& right_object = db.O.at(right_record.id);
@@ -521,37 +517,33 @@ void bucketed_join_serialize(gsm_inmemory_db &db, const gsm_db_indices &idx, con
                 if (right.contains(right_object.ell.at(i)))
                     row[right_object.ell.at(i)] =(right_object.xi.at(i));
             }
-            auto end_rightiter = std::chrono::high_resolution_clock::now();
-            auto elapsed_rightiter = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_rightiter - start_rightiter);
-            consumed_bfix_iteration += elapsed_rightiter.count();
-            total_rightiter += elapsed_rightiter.count();
+//            auto end_rightiter = std::chrono::high_resolution_clock::now();
+//            auto elapsed_rightiter = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_rightiter - start_rightiter);
+//            consumed_bfix_iteration += elapsed_rightiter.count();
+//            total_rightiter += elapsed_rightiter.count();
 
             // Expansion with the bFixes condition
-            auto start_expansion = std::chrono::high_resolution_clock::now();
+//            auto start_expansion = std::chrono::high_resolution_clock::now();
             expand(db, idx, left, right, additional, header, left_record, left_object, right_record, right_object, row);
-            auto end_expansion = std::chrono::high_resolution_clock::now();
-            auto elapsed_expansion = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_expansion - start_expansion);
-            total_expansion += elapsed_expansion.count();
-            consumed_bfix_iteration += elapsed_expansion.count();
+//            auto end_expansion = std::chrono::high_resolution_clock::now();
+//            auto elapsed_expansion = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_expansion - start_expansion);
+//            total_expansion += elapsed_expansion.count();
+//            consumed_bfix_iteration += elapsed_expansion.count();
         }
-        auto end_bfixiter = std::chrono::high_resolution_clock::now();
-        auto elapsed_bfixiter = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_bfixiter - start_bfixiter);
-        total_rightiter += (consumed_bfix_iteration - elapsed_bfixiter.count());
+//        auto end_bfixiter = std::chrono::high_resolution_clock::now();
+//        auto elapsed_bfixiter = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_bfixiter - start_bfixiter);
+//        total_rightiter += (consumed_bfix_iteration - elapsed_bfixiter.count());
     }
 }
 
-void export_csv(gsm_inmemory_db &db, int geoHashesIterator, const gsm_db_indices &idx,
-                const std::string &csvFileName, const std::string &left_collection, const std::string &right_collection,
-                const std::set<std::string> &left = {}, const std::set<std::string> &right = {},
-                const std::set<std::string> &additional = {},
-                const std::function<void(gsm_inmemory_db &, const gsm_db_indices &, const std::set<std::string> &,
-                                         const std::set<std::string> &, const std::set<std::string> &, const std::vector<std::string>&,
-                                         const gsm_object_xi_content &,
-                                         const gsm_object &, const gsm_object_xi_content &, const gsm_object &,
-                                         std::unordered_map<std::string, std::string> &)> &expand = {})
+void flat_natural_hash_join(gsm_inmemory_db &db, int geoHashesIterator, const gsm_db_indices &idx,
+                            const std::string &csvFileName, const std::string &left_collection, const std::string &right_collection,
+                            const std::set<std::string> &left = {}, const std::set<std::string> &right = {},
+                            const std::set<std::string> &additional = {},
+                            const std::function<void(gsm_inmemory_db&, const gsm_db_indices &, const std::set<std::string> &, const std::set<std::string> &, const std::set<std::string> &, const std::vector<std::string> &, const gsm_object_xi_content &, const gsm_object &, const gsm_object_xi_content &, const gsm_object &, std::unordered_map<std::string,std::string>&)> expand = {})
 {
 //    std::string headers;
-    float total_flat = 0.0, total_expansion = 0.0, total_rightiter = 0.0, total_lefttiter = 0.0;
+//    float total_flat = 0.0, total_expansion = 0.0, total_rightiter = 0.0, total_lefttiter = 0.0;
 
     auto start_all_time = std::chrono::high_resolution_clock::now();
     std::unordered_map<std::string, std::string> row;
@@ -559,43 +551,16 @@ void export_csv(gsm_inmemory_db &db, int geoHashesIterator, const gsm_db_indices
     header.insert(header.end(), right.begin(), right.end());
     header.insert(header.end(), additional.begin(), additional.end());
     PHI_FOLD_BEGIN(geoHashesIterator, collection_name, bucket, in_bucket_collection)
-            bucketed_join_serialize(db, idx, left_collection, right_collection, left, right, additional, expand,
-                                    row, header, in_bucket_collection.id, total_flat, total_expansion,
-                                    total_rightiter, total_lefttiter);
+            natural_join(db, idx, left_collection, right_collection, left, right, additional, expand,
+                         row, header, in_bucket_collection.id/*, total_flat, total_expansion,
+                         total_rightiter, total_lefttiter*/);
     PHI_FOLD_END
     auto end_all_time= std::chrono::high_resolution_clock::now();
     auto elapsed_all = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_all_time - start_all_time);
-    float time_bucket_and_left_iteration = elapsed_all.count() - total_flat - total_expansion - total_rightiter - total_lefttiter;
+    float time_bucket_and_left_iteration = elapsed_all.count();
 
-    std::cout << "total bucket+left iteration: " << time_bucket_and_left_iteration << std::endl;
-    std::cout << "total flat&serialize: " << total_flat << std::endl;
-    std::cout << "total expansion: " << total_expansion << std::endl;
-    std::cout << "total left-iteration: " << total_lefttiter << std::endl;
-    std::cout << "total right-iteration: " << total_rightiter << std::endl;
+    std::cout << "x,UnnestingHashJoin," << time_bucket_and_left_iteration << std::endl;
 
-#if 0
-    //TODO:delete
-    std::cout << "counter_export_csv of elements in lift:" << counter << '\n';
-    std::cout << "sum of bfix in geohash:" << sumOfBfix << '\n';
-    int liftInLiftSeries = 0;
-    std::set<size_t> bfigzIdset;
-    for(auto &lifto_series : db.O[liftsIterator].phi["lift_series"])
-    {
-        for(auto& lifto : db.O[lifto_series.id].phi["lift"])
-        {
-            liftInLiftSeries++;
 
-//            std::cerr << "lift " << lifto.id << " has: " << db.O[lifto.id].phi["b_fix"][0].id<< " and " << db.O[lifto.id].phi["b_fix"][1].id << std::endl;
-            for(auto& bfigz : db.O[lifto.id].phi["b_fix"])
-            {
-//                std::cout << db.O[lifto.id].phi["b_fix"].size() << std::endl;
-                bfigzIdset.insert(bfigz.id);
-            }
-        }
-    }
-    std::cout << "lift in lift series count:" << liftInLiftSeries << '\n';
-    std::cout << "unique bfix.id in each lift object:" << bfigzIdset.size() << '\n';
-    std::cout << "unique bfix.id in all GeoHash:" << bfigzIdset2.size() << '\n';
-#endif
 }
 #endif //GSM_GSQL_IGC_OPERATORS_H

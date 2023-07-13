@@ -193,7 +193,7 @@ int load_igcfile(gsm_inmemory_db &db, std::string pathToFile, int &iterator)
     create_fast(db, ++iterator, {"igc_file"}, {pathToFile}, {scoresIgc}, {{"fixes", {tablePhiIgc}}});
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - start);
-    std::cout << "load_igcfile: " << elapsed.count() << std::endl;
+    std::cout << "x,Loading," << elapsed.count() << std::endl;
     return bFixesIterator;
 }
 
@@ -257,7 +257,7 @@ int main() {
 
     std::string csvPath = "csv_files/";
     std::string jsonPath = "json_files/vc_6dk65ff_1673719200.json";
-    std::string igcPath = "igc_files/long_10000.igc";
+    std::string igcPath = "igc_files/long_10.igc";
 
     //load_jsonEllXiFile(db, jsonPath, iterator, {"currentConditions"}, "weather");
 
@@ -358,8 +358,9 @@ int main() {
             value_to_emplace = std::to_string(changeRate);
         }
     };
-    update_tuple_values<double, for_bearing_change>(db, multivariate_time_series_container, "b_fix", "bearing_rate", 0, extractor,
-                                                    update_current);
+    incollection_tuple_extend<double, for_bearing_change>(db, multivariate_time_series_container, "b_fix",
+                                                          "bearing_rate", 0, extractor,
+                                                          update_current);
     ///////////////////////////////////
     ///////////////////////////////////
 
@@ -388,7 +389,10 @@ int main() {
        return {values.geoHashString, std::to_string(values.unixTime), std::to_string(values.lat), std::to_string(values.lon)};
     };
     /// - Actual bucketing of obejcts within the collection
-    int structural_hash_join_via_buckets = generate_notweather_bucket<geo_hash_support>(db, multivariate_time_series_container, max_obj_id, "geohashes", "b_fix", hasher, "geohash", values);
+    int structural_hash_join_via_buckets = structural_hashbucket<geo_hash_support>(db,
+                                                                                   multivariate_time_series_container,
+                                                                                   max_obj_id, "geohashes", "b_fix",
+                                                                                   hasher, "geohash", values);
 
     ///// 1. Loading the weather information
     auto embedder = [](gsm_inmemory_db &db,
@@ -403,7 +407,7 @@ int main() {
     };
     ///// Magnani's embedding operator: extending an object with other objects at runtime
     ///// In particuilar, extending the structural hash join buckets with the second collection
-    embed_with(db, structural_hash_join_via_buckets, max_obj_id, embedder);
+    incollection_map(db, structural_hash_join_via_buckets, max_obj_id, embedder);
 
     auto start_indexing = std::chrono::high_resolution_clock::now();
     gsm_db_indices idx;
@@ -411,7 +415,7 @@ int main() {
     idx.valid_data();
     auto end_indexing = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end_indexing - start_indexing);
-    std::cout << "indexing: " << elapsed.count() << std::endl;
+    std::cout << "x,Indexing," << elapsed.count() << std::endl;
     bool getHeaders = true;
     std::string fn = "csv_files/lift10k.csv";
     std::ofstream fileOut(fn);
@@ -504,16 +508,18 @@ int main() {
 
     std::string csvOutputFileName = "lift10k.csv";
 
-    export_csv(db, structural_hash_join_via_buckets, idx, csvOutputFileName, "weather", "b_fix",
-               {"cloudcover", "dew", "feelslike", "humidity", "precip", "precipprob", "preciptype", "pressure",
-                /*"severerisk",*/ "snow", "snowdepth", "solarenergy", "solarradiation", "temp", "uvindex", "visibility",
-                "weather_vc", "winddir", "windgust", "windspeed"},
-               {"bearing_rate", "latitude_double", "longitude_double", "pressure_altitude", "unix_time"},
-               {"lift", "isbeginlift"},
-               calc_and_flat_to_disk);
+    flat_natural_hash_join(db, structural_hash_join_via_buckets, idx, csvOutputFileName, "weather", "b_fix",
+                           {"cloudcover", "dew", "feelslike", "humidity", "precip", "precipprob", "preciptype",
+                            "pressure",
+                                   /*"severerisk",*/ "snow", "snowdepth", "solarenergy", "solarradiation", "temp",
+                            "uvindex", "visibility",
+                            "weather_vc", "winddir", "windgust", "windspeed"},
+                           {"bearing_rate", "latitude_double", "longitude_double", "pressure_altitude", "unix_time"},
+                           {"lift", "isbeginlift"},
+                           calc_and_flat_to_disk);
 
     // Dumping the db into a XML format
-    dump_to_xml(db, idx, "question_mark.xml");
+//    dump_to_xml(db, idx, "question_mark.xml");
 //    std::cout << "Hello, World!" << std::endl;
     return 0;
 }
