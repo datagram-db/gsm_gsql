@@ -1137,7 +1137,21 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
         case CoerceE: {
             auto self = arrayList[0]->run();
             auto thisType = self->typeInference();
-            auto superType = arrayList[1];
+            auto superType = arrayList[1]->run();
+            if (superType->type == SigmaT) {
+                auto actualSuperType = superType->arrayList[0]->run();
+                auto result = subTyping(thisType, actualSuperType);
+                if (!result.has_value()) {
+                    throw std::runtime_error("ERROR (2): term \"" + self->toString(true) + "\" cannot be casted to " + actualSuperType->toString() + " as the term is of type " + thisType->toString() );
+                }
+                if (superType->arrayList[1]->toFunction()(self)->toBoolean()) {
+                    self = result.value()(std::move(self)); // Using the typecasting resulting from the inference step
+                    self->casted_type = superType; // Setting this as the resulting type anyway
+                    return self; // returning the casted object
+                } else {
+                    throw std::runtime_error("ERROR (2): term \"" + self->toString(true) + "\" cannot be casted to " + superType->toString() + " as the term does not satisfy its condition " );
+                }
+            }
             auto result = subTyping(thisType, superType);
             if (!result.has_value()) {
                 throw std::runtime_error("ERROR: term \"" + self->toString(true) + "\" cannot be casted to " + superType->toString() + " as the term is of type " + thisType->toString() );
@@ -1329,7 +1343,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::typeInference
 
 }
 
-DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(size_t id) const {
+DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(size_t id)  {
     StringMap<DPtr<ScriptAST>> vv;
     if (!db) {
         std::cerr << "WARNING: No DB being associated. Returning an empty array for Xi" << std::endl;
@@ -1352,15 +1366,16 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
                     xi.emplace_back(compiler::ScriptVisitor::eval(ss)->typeInference());
                 }
                 auto x = mgu(xi); // Actually this?
+                std::stringstream ss;
+                ss << db->ell(id);
+                auto lfst = compiler::ScriptVisitor::eval(ss);
+                if (!lfst->isType())
+                    throw std::runtime_error("ERROR: the label of an object should express a type!");
                 if (x->type == TupleT) {
-                    std::stringstream ss;
-                    ss << db->ell(id);
-                    auto lfst = compiler::ScriptVisitor::eval(ss);
-                    if (!lfst->isType())
-                        throw std::runtime_error("ERROR: the label of an object should express a type!");
                     return lex_type_(std::move(lfst), std::move(x->tuple));
-                } else
-                    return x;
+                } else {
+                    return binop_(optGamma, ANDT, std::move(lfst), std::move(x));;
+                }
             }
         } else {
             for (const auto& [k,v] : db->phi(id)) {

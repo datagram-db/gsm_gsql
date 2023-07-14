@@ -1,0 +1,2 @@
+natural := sigma int where fun x -> { x > -1 };
+typeof (coerce 2 as natural)

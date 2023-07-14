@@ -499,7 +499,7 @@ namespace script::structures {
          * @param id    Object Id within the database
          * @return      Associated LexT
          */
-        DPtr<ScriptAST> upTypeObjX(size_t id) const;
+        DPtr<ScriptAST> upTypeObjX(size_t id);
     };
 }
 

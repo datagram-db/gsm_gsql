@@ -174,8 +174,8 @@ DISJOINT : 'DISJOINT';
 FOLD : 'FOLD';
 ENFORCE: 'enforce_subtype';
 EscapedString : '"' (~[\\"] | '\\' [\\"])* '"';
-NUMBER : DecimalFloatingConstant | DIGIT;
-INTEGER : DIGIT;
+NUMBER : [+-]? DecimalFloatingConstant | [+-]? DIGIT;
+INTEGER : [+-]? DIGIT;
 SPACE : [ \t\r\n]+ -> skip;
 COMMENT
     : '/*' .*? '*/' -> skip

@@ -382,7 +382,7 @@ void other_scenario() {
     createFast(view, 2, "label \"timon\"", {}, {1.0}, {{"age", {{1,1.0}}}});
     createFast(view, 3, "label \"timon\"", {"< \"ciao\" >> \"bene\" ; \"tutta\" >> 2 ; \"dritta\" >> \"premiata\" >"}, {1.0});
     script::compiler::ScriptVisitor::bindGSM(database.get());
-    std::ifstream file{"/home/giacomo/CLionProjects/gsm_gsql/data/script/script_08.txt"};
+    std::ifstream file{"/home/giacomo/CLionProjects/gsm_gsql/data/script/script_10.txt"};
     std::cout << script::compiler::ScriptVisitor::eval(file)->toString() << std::endl;
 
 }
@@ -408,8 +408,8 @@ void graph_scenario() {
 }
 
 int main() {
-    // other_scenario();
-    graph_scenario();
+     other_scenario();
+//    graph_scenario();
     return 0;
 }
 
