@@ -135,12 +135,12 @@ std::string script::structures::ScriptAST::toString(bool quot) const {
             return arrayList[0]->toString(true) +" := ("+arrayList[1]->toString(true)+") ";
         case Function:
             if (function->body.size() == 1)
-                return function->parameter + " -> {" + function->body[0]->toString(true) + "}";
+                return "fun " + function->parameter + " -> {" + function->body[0]->toString(true) + "}";
             else
             {
                 auto it = function->body.begin();
 //                it++;
-                return function->parameter + " -> {" + std::accumulate(it,
+                return "fun " + function->parameter + " -> {" + std::accumulate(it,
                                 function->body.end(), std::string(""),
                                 [](const std::string& m, DPtr<script::structures::ScriptAST> obj) {
                                     return (m.empty() ? m : m+"; ") + obj->toString(true);
@@ -303,7 +303,7 @@ std::string script::structures::ScriptAST::toString(bool quot) const {
             return "(" + arrayList[0]->toString(true) +") != ("+ arrayList[1]->toString(true)+")";
 
         case PhiX:
-            return "phi (" + arrayList[0]->toString(true) +") * ("+ arrayList[1]->toString(true)+")";
+            return "(phi (" + arrayList[0]->toString(true) +")  ("+ arrayList[1]->toString(true)+"))";
 
         case VarPhiX:
             return "varphi (" + arrayList[0]->toString(true) +")";
@@ -966,7 +966,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
 //                        ArrayList<DPtr<script::structures::ScriptAST>> item;
 //                        item.emplace_back(v.emplace_back(script::structures::ScriptAST::integer_((long long)content.id)));
 //                        item.emplace_back(v.emplace_back(script::structures::ScriptAST::double_(content.score)));
-                        v.emplace_back(fromObjectContent(content));
+                        v.emplace_back(integer_(content.id));
                     }
                 }
             } else {
@@ -1122,8 +1122,9 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
         case EvalE: {
             std::stringstream ss;
             ss << arrayList[0]->run()->toString(false);
+            //std::cerr << ss.str() << std::endl;
             auto res = script::compiler::ScriptVisitor::eval(ss);
-            std::cerr << ss.str() << std::endl;
+
             return res;
         }
 
