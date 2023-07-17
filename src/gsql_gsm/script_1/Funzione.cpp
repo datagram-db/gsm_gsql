@@ -16,6 +16,17 @@ std::ostream &script::structures::operator<<(std::ostream &os, const Funzione &f
     return os;
 }
 
+
+void script::structures::Funzione::setDBRecursively(gsm_inmemory_db* db) {
+    database = db;
+    for (auto& ref : body)
+        ref->setDBRecursively(db);
+    if (externalToUpdate)
+        for (auto& [k,v] : *externalToUpdate) {
+            v->setDBRecursively(db);
+        }
+}
+
 script::structures::Funzione::Funzione(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& g, const std::string& x) : externalToUpdate{g}, parameter{x} {}
 
 void script::structures::Funzione::setContext(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& context,

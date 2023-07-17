@@ -122,6 +122,8 @@ namespace script::structures {
         ScriptAST& operator=(ScriptAST&&) = default;
 
 
+        void setDBRecursively( gsm_inmemory_db* datenbanken);
+
         inline bool isType() const {
             switch (type) {
                 case SigmaT:

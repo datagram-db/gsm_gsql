@@ -17,6 +17,20 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::BOTCCT;
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::NULLO;
 #include <gsql_gsm/script_1/Funzione.h>
 
+void script::structures::ScriptAST::setDBRecursively( gsm_inmemory_db* datenbanken) {
+    db = datenbanken;
+    for (auto & ref : arrayList)
+        ref->setDBRecursively(datenbanken);
+    for (auto & [k,v] : tuple)
+        v->setDBRecursively(datenbanken);
+    casted_type->setDBRecursively(datenbanken);
+    if (optGamma)
+        for (auto & [k,v] : *optGamma)
+            v->setDBRecursively(datenbanken);
+    if (function)
+        function->setDBRecursively(db);
+}
+
 bool script::structures::ScriptAST::toBoolean()  {
         switch (type) {
             case Boolean:
@@ -68,6 +82,8 @@ double script::structures::ScriptAST::toDouble()  {
 
 long long script::structures::ScriptAST::toInteger()   {
     switch (type) {
+        case ObjX:
+            return arrayList[0]->toInteger() ;
         case Boolean:
             return bool_ ? 1LL : 0LL;
         case Integer:
@@ -144,7 +160,7 @@ std::string script::structures::ScriptAST::toString(bool quot) const {
                                                                        }) + "}";
             }
         case ArrayOfT:
-            return "listof (" + arrayList[0]->toString(true) +")";
+            return "(listof (" + arrayList[0]->toString(true) +"))";
         case TupleT:
         case Tuple:
             if (tuple.size() == 1) {
@@ -198,13 +214,13 @@ std::string script::structures::ScriptAST::toString(bool quot) const {
             return "((" + arrayList[0]->toString(true) +")  ("+ arrayList[1]->toString(true)+"))";
 
         case AtE:
-            return "" + arrayList[0]->toString(true) +"  ["+ arrayList[1]->toString(true)+"]";
+            return "(" + arrayList[0]->toString(true) +")  ["+ arrayList[1]->toString(true)+"]";
 
         case ProjectE:
-            return "" + arrayList[0]->toString(true) +"  [["+ arrayList[1]->toString(true)+"]]";
+            return "(" + arrayList[0]->toString(true) +")  [["+ arrayList[1]->toString(true)+"]]";
 
         case PutE:
-            return "" + arrayList[0]->toString(true) +"  ["+ arrayList[1]->toString(true)+"]:= ("+ arrayList[2]->toString(true)+")";
+            return "(" + arrayList[0]->toString(true) +")  ["+ arrayList[1]->toString(true)+"]:= ("+ arrayList[2]->toString(true)+")";
 
         case RemoveE:
             return "remove (" + arrayList[0]->toString(true) +") from ("+ arrayList[1]->toString(true)+")";
@@ -317,7 +333,7 @@ std::string script::structures::ScriptAST::toString(bool quot) const {
             return "rfold(" + arrayList[0]->toString(true) +" , "+ arrayList[1]->toString(true)+" : " + arrayList[2]->toString(true)+")";
 
         case EvalE:
-            return "eval (" + arrayList[0]->toString(true) +")";
+            return "eval(" + arrayList[0]->toString(true) +")";
 
 
         case BotT:
@@ -509,6 +525,9 @@ void script::structures::ScriptAST::setContext(DPtr<std::unordered_map<std::stri
         for (auto & i : arrayList) {
             i->setContext(g, db);
         }
+        for (auto & [k,v] : tuple) {
+            v->setContext(g, db);
+        }
     }
 }
 
@@ -588,7 +607,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
         case InvokeE:
         case ApplyE:
         case AtE:
-            return arrayList[0]->toFunction()(arrayList[1]->run());
+            return arrayList[0]->run()->toFunction()(arrayList[1]->run());
 
         case ProjectE: {
             auto run = arrayList[0]->run();
@@ -607,8 +626,10 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
                 for (const auto& key : run2) {
                     auto songs = key->toString();
                     auto it = run->tuple.find(songs);
-                    if (it != run->tuple.end())
+                    if (it != run->tuple.end()) {
                         result[songs] = it->second;
+                        if (!result[songs]->db) result[songs]->db = db;
+                    }
                 }
                 if (run->type == TupleT)
                     return tuple_type_(std::move(result));
@@ -706,12 +727,14 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
                 auto cpy = run->tuple;
                 for (const auto& [k,v] : run2->tuple) {
                     cpy[k] = v;
+                    if (!cpy[k]->db) cpy[k]->db = db;
                 }
                 return tuple_(std::move(cpy));
             } else if ((run->type == TupleT) && (run2->type == TupleT)) {
                 auto cpy = run->tuple;
                 for (const auto& [k,v] : run2->tuple) {
                     cpy[k] = v;
+                    if (!cpy[k]->db) cpy[k]->db = db;
                 }
                 return tuple_type_(std::move(cpy));
             } else {
@@ -746,10 +769,13 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
                 StringMap<DPtr<script::structures::ScriptAST>> return_;
                 for (const auto& [k,v]: run->tuple) {
                     StringMap<DPtr<script::structures::ScriptAST>> map;
+                    bool isDb = v->db != nullptr;
                     map["key"] = string_(k);
                     map["value"] = v;
+                    if (!isDb) map["value"]->db = db;
                     if (prop(tuple_(std::move(map)))->toBoolean()) {
                         return_[k] = v;
+                        if (!isDb) return_[k]->db = db;
                     }
                 }
                 return (run->type == Tuple) ? tuple_(std::move(return_)) : tuple_type_(std::move(return_));
@@ -816,6 +842,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
                 auto last = ls.begin() + end;
                 while (first != last) {
                     cp[*first] = run2->tuple.at(*first);
+                    if (!cp[*first]->db) cp[*first]->db = db;
                     first++;
                 }
                 return (run2->type == Tuple) ? tuple_(std::move(cp)) : tuple_type_(std::move(cp));
@@ -1094,8 +1121,10 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
 
         case EvalE: {
             std::stringstream ss;
-            ss << arrayList[0]->toString(true);
-            return script::compiler::ScriptVisitor::eval(ss);
+            ss << arrayList[0]->run()->toString(false);
+            auto res = script::compiler::ScriptVisitor::eval(ss);
+            std::cerr << ss.str() << std::endl;
+            return res;
         }
 
         case TypeOf: {
@@ -1309,7 +1338,9 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::typeInference
             case Tuple: {
                 StringMap<DPtr<script::structures::ScriptAST>> type_tuple;
                 for (const auto&[k,v] : self->tuple) {
-                    type_tuple[k] = v->typeInference();
+                    auto cp = v;
+                    if (!cp->db) cp->db = db;
+                    type_tuple[k] = cp->typeInference();
                 }
                 result = tuple_type_(std::move(type_tuple));
                 break;
@@ -1494,11 +1525,13 @@ std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::str
                 auto rewriteRight = subTyping(L->arrayList[1], right_run->arrayList[1]);
                 if (!rewriteRight.has_value())
                     return {};
-                return [&right_run](DPtr<script::structures::ScriptAST> &&x) {
+                return [&right_run,this](DPtr<script::structures::ScriptAST> &&x) {
                     x->casted_type = right_run;
                     for (const auto& [k,v] : right_run->arrayList[1]->tuple)
-                        if (x->tuple.contains(k))
+                        if (x->tuple.contains(k)) {
                             (x->tuple[k])->casted_type = v; // forcibly casting the null to v
+                            if (!x->tuple[k]->casted_type->db) x->tuple[k]->casted_type->db = db;
+                        }
                     return x;
                 };
             } else {
@@ -1585,16 +1618,20 @@ std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::str
                 if (it == right_run->tuple.end())
                     return {};
                 auto cp = v;
+                if (!cp->db) cp->db = db;
                 auto tmp = subTyping(cp, it->second);
                 if (!tmp.has_value())
                     return {};
             }
             // Then, the super-typed tuple will have
-            return {[&right_run](DPtr<script::structures::ScriptAST> &&x) {
+            return {[&right_run,this](DPtr<script::structures::ScriptAST> &&x) {
                 x->casted_type = right_run;
-                for (const auto& [k,v] : right_run->tuple)
-                    if (!x->tuple.contains(k))
+                for (const auto& [k,v] : right_run->tuple) {
+                    if (!x->tuple.contains(k)) {
                         (x->tuple[k] = null_())->casted_type = v; // forcibly casting the null to v
+                        if (!x->tuple[k]->db) x->tuple[k]->db = db;
+                    }
+                }
                 return x;
             }};
         }

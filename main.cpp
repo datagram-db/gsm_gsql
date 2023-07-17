@@ -404,11 +404,34 @@ void graph_scenario() {
     script::compiler::ScriptVisitor::bindGSM(database.get());
     std::ifstream file{scripts_folder / "script_09.txt"};
     std::cout << script::compiler::ScriptVisitor::eval(file)->toString() << std::endl;
+}
 
+void structural_content_scenario() {
+    std::filesystem::path scripts_folder = std::filesystem::current_path() / "data" / "script";
+    auto database = std::make_shared<gsm_inmemory_db>();
+    gsm_inmemory_db_view view{0, database};
+    database->O[0].ell = "label \"Product\"";
+    database->O[0].xi.emplace_back("<\"root\" >> label \"Product\"; \"quantity\" >> ((varphi (OBJ 0)) + 0)>");
+    createFast(view, 1, "label \"House Cleaner\"", {"< \"type\" >> label \"House Cleaner\"; \"quantity\" >> ((varphi (OBJ 0)) + 0)>"}, {1.0});
+    createFast(view, 2, "label \"Foood\"", {"< \"type\" >> label \"Food\"; \"quantity\" >> ((varphi (OBJ 0)) +0)>"}, {1.0});
+    database->O[0].phi["type"].emplace_back(1);
+    database->O[0].phi["type"].emplace_back(2);
+    createFast(view, 3, "label \"Cleaner\"", {"< \"type\" >> label \"Cleaner\"; \"quantity\" >> ((varphi (OBJ 0)) +0) >"}, {1.0});
+    createFast(view, 4, "label \"Soap\"", {"< \"type\" >> label \"Soap\"; \"quantity\" >> ((varphi (OBJ 0)) +0)>"}, {1.0});
+    createFast(view, 5, "label \"Diary Product\"", {"< \"type\" >> label \"Diary Product\"; \"quantity\" >> ((varphi (OBJ 0))+0)>"}, {1.0});
+    createFast(view, 6, "label \"Drink\"", {"< \"type\" >> label \"Food\"; \"Drink\" >> ((varphi (OBJ 0)) +0)>"}, {1.0});
+    database->O[1].phi["type"].emplace_back(3);
+    database->O[1].phi["type"].emplace_back(4);
+    database->O[2].phi["type"].emplace_back(5);
+    database->O[2].phi["type"].emplace_back(6);
+    script::compiler::ScriptVisitor::bindGSM(database.get());
+    std::ifstream file{scripts_folder / "script_11.txt"};
+    std::cout << script::compiler::ScriptVisitor::eval(file)->toString() << std::endl;
 }
 
 int main() {
-     other_scenario();
+    structural_content_scenario();
+//     other_scenario();
 //    graph_scenario();
     return 0;
 }

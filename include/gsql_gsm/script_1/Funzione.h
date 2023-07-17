@@ -19,6 +19,8 @@ namespace script::structures {
         DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>> externalToUpdate;
         gsm_inmemory_db* database;
 
+        void setDBRecursively(gsm_inmemory_db* db);
+
         friend std::ostream &operator<<(std::ostream &os, const Funzione &funzione);
 
         Funzione(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& g, const std::string& x); // : externalToUpdate{g}, parameter{x} {}

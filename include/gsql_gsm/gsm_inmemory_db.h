@@ -45,6 +45,7 @@ struct gsm_inmemory_db {
     inline const std::vector<std::string>& xi(size_t i ) const { return O.at(i).xi; }
     inline const std::vector<double>& err(size_t i) const { return O.at(i).scores; }
     inline const std::unordered_map<std::string, std::vector<gsm_object_xi_content>>& phi(size_t i) const {return O.at(i).phi; }
+
     /**
      * Runtime calculation of varphi (as further operations might update it)
      * TODO: run-time updates!
@@ -53,13 +54,9 @@ struct gsm_inmemory_db {
      * @return
      */
     inline std::unordered_set<size_t> varphi(size_t i) const {
-        std::unordered_set<size_t> nav;
-        for (const auto& [k,v] : O.at(i).phi) {
-            for (const auto& cont : v) {
-                nav.insert(cont.id);
-            }
-        }
-        return nav;
+        auto result = varphi_plus(i);
+        result.erase(i);
+        return result;
     }
 
     /**

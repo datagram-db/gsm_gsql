@@ -424,7 +424,8 @@ namespace script {
             antlr4::CommonTokenStream tokens(&lexer);
             scriptParser parser(&tokens);
             ScriptVisitor ptr;
-            return std::any_cast<DPtr<script::structures::ScriptAST>>(ptr.visit(parser.script()));
+            auto result = std::any_cast<DPtr<script::structures::ScriptAST>>(ptr.visit(parser.script()));
+            return result;
         }
 
         std::any ScriptVisitor::visitCos(scriptParser::CosContext *context) {
