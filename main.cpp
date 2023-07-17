@@ -1,3 +1,25 @@
+/*
+ * main.cpp
+ * This file is part of gsm_gsql
+ *
+ * Copyright (C) 2023 - Giacomo Bergami, Wiktor Zegadło
+ *
+ * gsm_gsql is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * gsm_gsql is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with gsm_gsql. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+ 
+
 #include <iostream>
 #include "gsql_gsm/gsm_db_indices.h"
 #include <gsql_gsm/gsql_operators.h>
@@ -407,6 +429,8 @@ void graph_scenario() {
 }
 
 void structural_content_scenario() {
+    std::cout << "please change the 'hier' variable value in data/script/script_11.txt to change the outcome" << std::endl;
+
     std::filesystem::path scripts_folder = std::filesystem::current_path() / "data" / "script";
     auto database = std::make_shared<gsm_inmemory_db>();
     gsm_inmemory_db_view view{0, database};
@@ -457,10 +481,27 @@ void structural_content_scenario() {
     std::cout << script::compiler::ScriptVisitor::eval(file)->toString() << std::endl;
 }
 
+#include <stdio.h>
+
 int main() {
-    structural_content_scenario();
-//     other_scenario();
-//    graph_scenario();
+    int c = -1;
+    while ((c != '1') && (c != '2') && (c != '3')) {
+        std::cout << "Select an option (just type the number and hit return): " << std::endl;
+        std::cout << " 1. simulating the structural content scenario (Fig. 8) " << std::endl;
+        std::cout << " 2. simulating type coercion using sigma types (Fig. 9) " << std::endl;
+        std::cout << " 3. simulating the subtype inference scenario (Fig 6.) " << std::endl;
+        c = getchar();
+        if ((c != '1') && (c != '2') && (c != '3'))
+            std::cout << "Wrong first character: please try again" << std::endl;
+    }
+
+    if (c == '1')
+        structural_content_scenario();
+    else if (c == '2')
+        other_scenario();
+    else if (c == '3')
+        graph_scenario();
+
     return 0;
 }
 
