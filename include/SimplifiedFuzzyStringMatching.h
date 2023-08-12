@@ -75,11 +75,8 @@ class FuzzyMatchSerializer {
 
 
     void compareStringHashMap(const std::string& strMixed, std::unordered_map<std::string, size_t>& retMap, std::vector<size_t>& retList) const;
-
     void compareStringHashMap(const std::string& str, std::unordered_map<std::string, size_t>& retMap) const;
-
     void getTwoGramAndString(const std::string &argument, std::unordered_map<std::string, size_t> &map) const;
-
     void rankCollectionOf(std::set<std::pair<size_t,size_t>>& , std::unordered_map<std::string, size_t> &m1,
                                               unsigned long size, double threshold,
                           yaucl::structures::PollMap<double, std::pair<size_t,size_t>>  &pollMap) const;

@@ -26,8 +26,7 @@ bool result::operator>=(const result &rhs) const {
 
 bool result::operator==(const result &rhs) const {
     return graphid == rhs.graphid &&
-           eventid == rhs.eventid &&
-           score == rhs.score;
+           eventid == rhs.eventid;
 }
 
 bool result::operator!=(const result &rhs) const {

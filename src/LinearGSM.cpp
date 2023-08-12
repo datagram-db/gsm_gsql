@@ -50,7 +50,10 @@ static inline char* skipSpaces(char*buf, size_t* len ) {
 }
 
 #include <yaucl/data/json.h>
-static inline void parse(char* string, size_t len, gsm2::tables::LinearGSM& forloading) {
+static inline void parse(char* string,
+                         size_t len,
+                         gsm2::tables::LinearGSM& forloading,
+                         size_t& maxGraphId) {
     string = skipSpaces(string, &len);
 //    size_t graphId = 0;
     std::vector<std::string> ell, xi;
@@ -167,6 +170,7 @@ static inline void parse(char* string, size_t len, gsm2::tables::LinearGSM& forl
             if (!(string = skipSpaces(string, &len))) return;
         }
     }
+    maxGraphId = graphId_eventId.first;
     // TODO: indexing
 }
 
@@ -182,7 +186,8 @@ namespace gsm2 {
             buffer.resize(f.tellg());
             f.seekg(0);
             f.read(buffer.data(), buffer.size());
-            parse(buffer.data(), n, db);
+            parse(buffer.data(), n, db, db.nGraphs);
+            db.nGraphs++;
             db.index();
         }
 
@@ -203,9 +208,51 @@ namespace gsm2 {
                 table.index(idx);
             main_registry.indexing2();
             main_registry.sanityCheck();
+            result resolver{0,0,0,false};
+            all_indices.insert(all_indices.begin(), nGraphs, {});
+            for (const auto& entry : main_registry.table) {
+                auto id = entry.event_id;
+            }
+
+            for (const auto& [k1,v] : containment_tables) {
+                for (const auto& record_obj : v.table) {
+                    auto& gRef = all_indices[record_obj.graph_id];
+                    auto cDst = gRef.containedBy.addUniqueStateOrGetExisting(record_obj.object_id);
+                    auto oDst = gRef.containerOf.addUniqueStateOrGetExisting(record_obj.object_id);
+                    const auto& labels = ell(resolver);
+                    ssize_t act_label = labels.empty() ? getMappedValueFromAction("") : getMappedValueFromAction(labels.at(0));
+                    auto src = gRef.siblinghood.addUniqueStateOrGetExisting(record_obj.id_contained);
+                    auto cSrc = gRef.containedBy.addUniqueStateOrGetExisting(record_obj.id_contained);
+                    auto oSrc = gRef.containerOf.addUniqueStateOrGetExisting(record_obj.id_contained);
+                    gRef.containedBy.addNewEdgeFromId(cSrc, cDst, k1);
+                    gRef.containerOf.addNewEdgeFromId(oDst, oSrc, k1);
+                    resolver.graphid = record_obj.graph_id;
+                    resolver.eventid = record_obj.object_id;
+
+                    const auto& labels2 = ell(resolver);
+                    ssize_t act_label2 = labels.empty() ? getMappedValueFromAction("") : getMappedValueFromAction(labels2.at(0));
+                    for (const auto& [k2,v2] : containment_tables) {
+                        if (k2 == k1) continue;
+                        auto it2 = v.primary_index.find(act_label2);
+                        if (it2 == v.primary_index.end())
+                            continue;
+                        auto iterator = it2->second;
+                        iterator.second++;
+                        for (; iterator.first != iterator.second; iterator.first++) {
+                            auto dst = gRef.siblinghood.addUniqueStateOrGetExisting(iterator.first->id_contained);
+                            gRef.siblinghood.addNewEdgeFromId(src, dst, k2);
+                        }
+                    }
+                }
+            }
+            for (auto& ref : all_indices){
+                ref.containement_order = ref.containedBy.g.topological_sort(-1);
+                ref.container_order = ref.containerOf.g.topological_sort(ref.containerOf.getId(0));
+                ref.traversal_order = ref.siblinghood.g.topological_sort(-1);
+            }
         }
 
-        std::vector<result> LinearGSM::timed_dataless_exists(const std::string &act) const {
+        std::vector<result> LinearGSM::timed_dataless_exists(const std::string &act, bool removed) const {
             std::vector<result> foundData;
             ssize_t mappedVal = getMappedValueFromAction(act);
             if(mappedVal < 0){
@@ -216,17 +263,17 @@ namespace gsm2 {
                 return foundData;
             }
             for (auto it = main_registry.table.begin() + indexes.first; it != main_registry.table.begin() + indexes.second + 1; ++it) {
-                foundData.emplace_back(it->graph_id, it->event_id);
+                foundData.emplace_back(it->graph_id, it->event_id, removed);
             }
             return foundData;
         }
 
         std::vector<result>
-        LinearGSM::approx_value_query(double min_threshold, size_t nmax, const std::string &xi) const {
+        LinearGSM::approx_value_query(double min_threshold, size_t nmax, const std::string &xi, bool removed) const {
             std::vector<result> result;
-            std::function<void(const std::unordered_map<std::pair<size_t,size_t>, double>&)> f = [&result](const std::unordered_map<std::pair<size_t,size_t>, double>& m) {
+            std::function<void(const std::unordered_map<std::pair<size_t,size_t>, double>&)> f = [&result,removed](const std::unordered_map<std::pair<size_t,size_t>, double>& m) {
                 for (const auto& [k,v]: m) {
-                    result.emplace_back(k.first, k.second, v);
+                    result.emplace_back(k.first, k.second, v, removed);
                 }
                 std::sort(result.begin(), result.end());
             };
@@ -235,11 +282,11 @@ namespace gsm2 {
         }
 
         std::vector<result>
-        LinearGSM::approx_label_query(double min_threshold, size_t nmax, const std::string &xi) const {
+        LinearGSM::approx_label_query(double min_threshold, size_t nmax, const std::string &xi, bool removed) const {
             std::vector<result> result;
-            std::function<void(const std::unordered_map<std::pair<size_t,size_t>, double>&)> f = [&result](const std::unordered_map<std::pair<size_t,size_t>, double>& m) {
+            std::function<void(const std::unordered_map<std::pair<size_t,size_t>, double>&)> f = [&result,removed](const std::unordered_map<std::pair<size_t,size_t>, double>& m) {
                 for (const auto& [k,v]: m) {
-                    result.emplace_back(k.first, k.second, v);
+                    result.emplace_back(k.first, k.second, v, removed);
                 }
                 std::sort(result.begin(), result.end());
             };
@@ -251,29 +298,93 @@ namespace gsm2 {
                                                                       const std::string &phi_label,
                                                                       std::function<double(
                                                                               const std::vector<double> &)> aggregate_scores,
+                                                                      bool removed,
                                                                       bool container_containementOth) const {
             std::vector<result> result;
             std::unordered_map<std::pair<size_t,size_t>, std::vector<double>> int_result;
             ssize_t phi_label_id = getMappedValueFromAction(phi_label);
             if (phi_label_id<0)
                 return result;
-            auto it = containment_tables.find(container_object_label);
-            if (it == containment_tables.end())
-                return result;
-            auto it2 = it->second.primary_index.find(phi_label_id);
-            if (it2 == it->second.primary_index.end())
-                return result;
-            auto iterator = it2->second;
-            iterator.second++;
-            for (; iterator.first != iterator.second; iterator.first++) {
-                int_result[{iterator.first->graph_id,
-                            container_containementOth ? iterator.first->object_id : iterator.first->id_contained}]
-                        .emplace_back(iterator.first->w_contained);
+            if (container_object_label.empty()) {
+                for (const auto& [k,v] : containment_tables) {
+                    auto it2 = v.primary_index.find(phi_label_id);
+                    if (it2 == v.primary_index.end())
+                        return result;
+                    auto iterator = it2->second;
+                    iterator.second++;
+                    for (; iterator.first != iterator.second; iterator.first++) {
+                        int_result[{iterator.first->graph_id,
+                                    container_containementOth ? iterator.first->object_id : iterator.first->id_contained}]
+                                .emplace_back(iterator.first->w_contained);
+                    }
+                    for (const auto& [k2,v2] : int_result) {
+                        result.emplace_back(k2.first, k2.second, aggregate_scores(v2), removed);
+                    }
+                }
+            } else {
+                auto it = containment_tables.find(container_object_label);
+                if (it == containment_tables.end())
+                    return result;
+                auto it2 = it->second.primary_index.find(phi_label_id);
+                if (it2 == it->second.primary_index.end())
+                    return result;
+                auto iterator = it2->second;
+                iterator.second++;
+                for (; iterator.first != iterator.second; iterator.first++) {
+                    int_result[{iterator.first->graph_id,
+                                container_containementOth ? iterator.first->object_id : iterator.first->id_contained}]
+                            .emplace_back(iterator.first->w_contained);
+                }
+                for (const auto& [k,v] : int_result) {
+                    result.emplace_back(k.first, k.second, aggregate_scores(v), removed);
+                }
             }
-            for (const auto& [k,v] : int_result) {
-                result.emplace_back(k.first, k.second, aggregate_scores(v));
-            }
+
+
             std::sort(result.begin(), result.end());
+            return result;
+        }
+
+        std::unordered_map<std::pair<size_t, size_t>, std::vector<result>>
+        LinearGSM::query_container_or_containment(const std::string &container_object_label,
+                                                  const std::string &phi_label,
+                                                  bool removed) const {
+            std::unordered_map<std::pair<size_t,size_t>,std::vector<result>> result;
+            ssize_t phi_label_id = getMappedValueFromAction(phi_label);
+            if (phi_label_id<0)
+                return result;
+
+            if (container_object_label.empty()) {
+                for (const auto& [k,v] : containment_tables) {
+                    auto it2 = v.primary_index.find(phi_label_id);
+                    if (it2 == v.primary_index.end())
+                        return result;
+                    auto iterator = it2->second;
+                    iterator.second++;
+                    for (; iterator.first != iterator.second; iterator.first++) {
+                        result[{iterator.first->graph_id,iterator.first->object_id}]
+                                .emplace_back(iterator.first->graph_id,iterator.first->id_contained,iterator.first->w_contained, removed);
+                    }
+                }
+            } else {
+                auto it = containment_tables.find(container_object_label);
+                if (it == containment_tables.end())
+                    return result;
+                auto it2 = it->second.primary_index.find(phi_label_id);
+                if (it2 == it->second.primary_index.end())
+                    return result;
+                auto iterator = it2->second;
+                iterator.second++;
+                for (; iterator.first != iterator.second; iterator.first++) {
+                    result[{iterator.first->graph_id,iterator.first->object_id}]
+                            .emplace_back(iterator.first->graph_id,iterator.first->id_contained,iterator.first->w_contained, removed);
+                }
+            }
+
+
+            for (auto& [k,c] : result) {
+                std::sort(c.begin(), c.end());
+            }
             return result;
         }
     } // gsm2

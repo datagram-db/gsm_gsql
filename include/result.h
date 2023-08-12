@@ -9,12 +9,15 @@
 #include <ostream>
 
 struct result {
+    bool removed;
     size_t graphid;
     size_t eventid;
     double score;
+    std::vector<std::string> added_xis;
+    std::vector<std::string> added_ells;
 
-    result(size_t g, size_t e, double d) : graphid{g}, eventid{e}, score{d} {};
-    result(size_t g, size_t e) : graphid{g}, eventid{e}, score{1.0} {};
+    result(size_t g, size_t e, double d, bool removed) : graphid{g}, eventid{e}, score{d}, removed{removed} {};
+    result(size_t g, size_t e, bool removed) : graphid{g}, eventid{e}, score{1.0}, removed{removed} {};
     result(const result&) = default;
     result(result&& ) = default;
     result& operator=(const result&) = default;
