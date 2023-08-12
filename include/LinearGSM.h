@@ -160,7 +160,7 @@ namespace gsm2 {
              * @param removed       Whether the containments shall be removed
              * @return Contained obejcts
              */
-            inline std::vector<result> phi(const result&object, std::string& label_phi, bool removed) const {
+            inline std::vector<result> phi(const result&object, const std::string& label_phi, bool removed) const {
                 std::vector<result> result;
                 auto it = containment_tables.find(label_phi);
                 if (it == containment_tables.end())

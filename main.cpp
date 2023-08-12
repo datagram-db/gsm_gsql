@@ -26,12 +26,22 @@ int main() {
         }
     }
 
-    // Returning all
+    // Returning all the contents for the obejcts having "det" as a containment collection
     {
         auto result = forloading.query_container_or_containment("", "det",false);
     }
 
+    // Getting the content associated to the object {0,0}, first from the first graph
+    {
+        auto phi = forloading.phi({0,0,false}, "advmod", false);
+        for (const auto& x : phi) {
+            std::cout << x << std::endl;
+        } phi = forloading.phi({0,0,false}, "nsubj", false);
+        for (const auto& x : phi) {
+            std::cout << x << std::endl;
+        }
+    }
 
-    std::cout << "Hello, World!" << std::endl;
+
     return 0;
 }
