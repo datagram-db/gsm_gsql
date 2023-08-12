@@ -36,8 +36,13 @@ ActivityTable::record::record(size_t act, size_t id, size_t time, ActivityTable:
 
         void ActivityTable::load_record(size_t id, size_t act, size_t time) {
             {
-                const size_t N = builder.act_id_to_trace_id_and_time.size();
-                //DEBUG_ASSERT(N >= act);
+                size_t N = builder.act_id_to_trace_id_and_time.size();
+                if (N < act) {
+                    do {
+                        builder.act_id_to_trace_id_and_time.emplace_back();
+                        N = builder.act_id_to_trace_id_and_time.size();
+                    } while (N != act);
+                }
                 if (N == act) {
                     builder.act_id_to_trace_id_and_time.emplace_back().emplace_back(id, time);
                 } else if (N > act){
@@ -157,7 +162,7 @@ ActivityTable::record::record(size_t act, size_t id, size_t time, ActivityTable:
 //    }
 //}
 
-        std::pair<const uint32_t, const uint32_t> ActivityTable::resolve_index(size_t id) const {
+        std::pair<const size_t, const size_t> ActivityTable::resolve_index(size_t id) const {
             if (primary_index.size() < id)
                 return {-1, -1};
             else {

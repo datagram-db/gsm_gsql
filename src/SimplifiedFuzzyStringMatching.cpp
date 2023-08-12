@@ -9,6 +9,28 @@
 #include "SimplifiedFuzzyStringMatching.h"
 #include "yaucl/strings/string_utils.h"
 
+static inline
+void compareStringHashMap_Internal(const std::string& str, std::unordered_map<std::string, size_t>& retMap, std::vector<size_t>& retList) {
+    unsigned long numPairs = str.size() - 1;
+    if (numPairs == 0) {
+        retMap[str] = 0;
+        retList.emplace_back(1);
+    } else {
+        if (numPairs < 0)
+            numPairs = 0;
+        int singleGrams = 0;
+        for (unsigned long i= 0; i< numPairs; i++) {
+            auto s = str.substr(i, 2);
+            auto pos = retMap.find(s);
+            if (pos == retMap.cend()) {
+                retMap[s] = singleGrams++;
+                retList.emplace_back(1);
+            } else {
+                retList[pos->second]++;
+            }
+        }
+    }
+}
 
 static inline void compareStringHashmap1(const std::string& str,
                                          std::unordered_map<std::string, size_t> &map,
@@ -196,9 +218,9 @@ void SimplifiedFuzzyStringMatching::fuzzyMatch(double threshold, size_t topk, co
 }
 
 void
-FuzzyMatchSerializer::addGramsToMap(const std::string &string, size_t id, const std::vector<std::string> &associatedOtherStrings) {
+FuzzyMatchSerializer::addGramsToMap(const std::string &string,  const std::pair<size_t,size_t>& id, const std::vector<std::string> &associatedOtherStrings) {
     if (string.empty()) return;
-    SLHM_Primary_store(termObject, string, id);
+    termObject[string].emplace_back(id);
     objectMultipleStirngs[id].emplace_back(string);
     for (const std::string& x : associatedOtherStrings)
         objectMultipleStirngs[id].emplace_back(x);
@@ -211,11 +233,118 @@ FuzzyMatchSerializer::addGramsToMap(const std::string &string, size_t id, const 
     for (size_t& j : vec) {
         sum += j;
     }
-    SLHM_Primary_store(objectGramSize, string, sum);
+    objectGramSize[string].emplace_back(sum);
 
     for (auto & begin : cp) {
         std::string x = begin.first;
-        StringToTwoGramSizeHashMultimapIndexer_store(twogramAndStringMultiplicity, string, x, begin.second);
-        SLHM_Primary_store(gramToObject, x, id);
+        twogramAndStringMultiplicity[(string)][x] = begin.second;
+        gramToObject[x].emplace_back(id);
+    }
+}
+
+void FuzzyMatchSerializer::fuzzyMatch(double threshold, size_t topk, const std::string &objectString,
+                                      std::multimap<double, std::pair<size_t,size_t>>  &result) const {
+
+    yaucl::structures::PollMap<double, std::pair<size_t,size_t>>  toReturnTop{topk};
+    std::vector<std::string> objectGrams = compareString_wordLetterPairs(objectString);
+    std::set<std::pair<size_t,size_t>> candidates{};
+    std::unordered_map<std::string, size_t> m1;
+
+    // obtain all the objects that are assoicated to the gram that are within the current objectString in objectStrings
+    for (const std::string& gram : objectGrams) {
+        auto gramPtr = gramToObject.find((gram));
+        if (gramPtr != gramToObject.end()) {
+            candidates.insert(gramPtr->second.begin(), gramPtr->second.end());
+        }
+    }
+
+    // return the number of the occurences of the twoGrams within the current string
+    compareStringHashMap(objectString, m1);
+    size_t ogSize = 0;
+    for (auto it = m1.begin(); it != m1.cend(); it++) ogSize += it->second;
+
+    // Rank the similarity between all the candidates
+    rankCollectionOf(candidates, m1, ogSize, threshold, toReturnTop);
+
+    // providing the final result
+    toReturnTop.getPoll(result);
+}
+
+void FuzzyMatchSerializer::rankCollectionOf(std::set<std::pair<size_t,size_t>> &k, std::unordered_map<std::string, size_t> &m1,
+                                            unsigned long size, double threshold,
+                                            yaucl::structures::PollMap<double, std::pair<size_t,size_t>> &pollMap)const {
+    for (const auto& element : k) {
+        auto it = objectMultipleStirngs.find(element);
+        if (it != objectMultipleStirngs.end()) {
+            for (const auto& associatedToElement : it->second) {
+                std::unordered_map<std::string, size_t> m2;
+
+                getTwoGramAndString(associatedToElement, m2);
+
+                // Set intersection of the keys. Intersection while iterating
+                double score = 0;
+                double e = 0;
+                std::unordered_map<std::string, size_t>* lesser = m1.size() < m2.size() ? &m1 : &m2;
+                std::unordered_map<std::string, size_t>* greater = m1.size() < m2.size() ? &m2 : &m1;
+                for (auto it = lesser->begin(); it != lesser->cend(); it++) {
+                    auto it2 = greater->find(it->first);
+                    if (it2 != greater->cend()) {
+                        // key is in both elements
+                        e += std::min(it->second, it2->second)*1.0;
+                    }
+                }
+
+                // no memoization
+                auto ls = objectGramSize.find(associatedToElement);
+                double leftCount = 0;
+                //if (ls == nullptr) {
+                std::unordered_map<std::string, size_t> retMap;
+                std::vector<size_t> retList;
+                compareStringHashMap(associatedToElement, retMap, retList);
+                for (size_t& x : retList) leftCount+=x;
+                score = (e * 2.0) / ((leftCount + size)*1.0);
+                /*} else {
+                    size_t* ptr = LONG_ARRAY_ELEMENT(ls);
+                    score = (e * 2.0) / ((ptr[0] + size)*1.0);
+                }*/
+
+                if (threshold >= 0 && score >= threshold) {
+                    pollMap.add(score, element);
+                }
+            }
+        }
+
+    }
+}
+
+void
+FuzzyMatchSerializer::compareStringHashMap(const std::string &strMixed, std::unordered_map<std::string, size_t> &retMap,
+                                           std::vector<size_t> &retList) const {
+//        std::wstring wide = fmatch_converter.from_bytes(strMixed.c_str());
+//        std::transform(wide.begin(), wide.end(), wide.begin(), std::towlower);
+//        std::string str = fmatch_converter.to_bytes(wide);
+    std::istringstream iss(strMixed);
+    for(std::string s; iss >> s; )
+        compareStringHashMap_Internal(s, retMap, retList);
+    // Sanitizing
+    for (auto it = retMap.begin(); it != retMap.cend(); it++) {
+        it->second = retList[it->second];
+    }
+}
+
+void FuzzyMatchSerializer::compareStringHashMap(const std::string &str, std::unordered_map<std::string, size_t> &retMap) const {
+    std::vector<size_t> retList{};
+    compareStringHashMap(str, retMap, retList);
+}
+
+void
+FuzzyMatchSerializer::getTwoGramAndString(const std::string &argument, std::unordered_map<std::string, size_t> &map) const {
+    auto ls = twogramAndStringMultiplicity.find(argument);
+    if (ls != twogramAndStringMultiplicity.end()) {
+        // if the value is stored, then I use the hashmap
+        map.insert(ls->second.begin(), ls->second.end());
+    } else {
+        // if not, recompute everything and put it in the map
+        compareStringHashMap(argument, map);
     }
 }

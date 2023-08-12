@@ -13,7 +13,8 @@ namespace gsm2 {
         struct PhiTable {
             struct record {
                 size_t l0_id;
-                size_t node_id;
+                size_t graph_id;
+                size_t object_id;
                 double w_contained;
                 size_t id_contained;
 
@@ -21,7 +22,7 @@ namespace gsm2 {
                 record(record&&) = default;
                 record& operator=(const record&) = default;
                 record& operator=(record&&) = default;
-                record(size_t l0Id = 0, size_t nodeId = 0, double wContained = 1.0, size_t idContained = 1);
+                record(size_t l0Id = 0, const std::pair<size_t,size_t>& nodeId = {0,0}, double wContained = 1.0, size_t idContained = 1);
 
                 bool operator<(const record &rhs) const;
                 bool operator>(const record &rhs) const;
@@ -29,22 +30,22 @@ namespace gsm2 {
                 bool operator>=(const record &rhs) const;
             };
 
-            struct primary_index {
-                size_t l0_id;
-                const struct record* begin;
-                const struct record* end;
-
-                primary_index(const primary_index&) = default;
-                primary_index(primary_index&&) = default;
-                primary_index& operator=(const primary_index&) = default;
-                primary_index& operator=(primary_index&&) = default;
-                primary_index(size_t l0Id = 0, const record *begin = nullptr, const record *anEnd = nullptr);
-            };
+//            struct primary_index {
+//                size_t l0_id;
+//                const struct record* begin;
+//                const struct record* end;
+//
+//                primary_index(const primary_index&) = default;
+//                primary_index(primary_index&&) = default;
+//                primary_index& operator=(const primary_index&) = default;
+//                primary_index& operator=(primary_index&&) = default;
+//                primary_index(size_t l0Id = 0, const record *begin = nullptr, const record *anEnd = nullptr);
+//            };
 
             std::vector<struct record> table;
-            std::vector<struct primary_index> primary_index;
+            std::unordered_map<size_t, std::pair<const struct record*,const struct record*>> primary_index;
 
-            void add(size_t l0Id = 0, size_t nodeId = 0, double wContained = 1.0, size_t idContained = 1);
+            void add(size_t l0Id = 0, const std::pair<size_t,size_t>& nodeId = {0,0}, double wContained = 1.0, size_t idContained = 1);
 
             void index();
         };

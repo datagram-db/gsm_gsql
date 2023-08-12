@@ -5,12 +5,25 @@
 #ifndef KNOBAB_SIMPLIFIEDFUZZYSTRINGMATCHING_H
 #define KNOBAB_SIMPLIFIEDFUZZYSTRINGMATCHING_H
 
+#include <utility>
+#include <unordered_set>
+#include <unordered_map>
+
+namespace std {
+    template<> struct hash<std::pair<size_t, size_t>> {
+        size_t operator()(const std::pair<size_t,size_t>& x) const {
+            return x.first ^ x.second;
+        }
+    };
+}
+
 #include <string>
 #include <yaucl/structures/any_to_uint_bimap.h>
-#include <unordered_map>
 #include <vector>
 #include <yaucl/structures/PollMap.h>
-#include <unordered_set>
+#include "PollMap.h"
+
+
 
 std::vector<std::string> compareString_wordLetterPairs(const std::string& strMixed);
 
@@ -46,49 +59,79 @@ private:
 };
 
 
+
+
 #include <codecvt>
+#include <sstream>
 
 class FuzzyMatchSerializer {
-    std::hash<std::string> hfunc;
-    std::map<size_t, std::vector<std::pair<std::string, std::vector<size_t>>>> gramToObject, objectGramSize, termObject;
-    std::map<size_t, std::vector<std::string>> objectMultipleStirngs;
-    std::map<size_t, std::vector<std::pair<std::string, std::vector<std::pair<std::string, size_t>>>>> twogramAndStringMultiplicity;
+    const std::vector<std::string> empty_vector{};
+//    std::hash<std::string> hfunc;
+    std::unordered_map<std::string, std::vector<size_t>> objectGramSize;
+    std::unordered_map<std::string, std::vector<std::pair<size_t,size_t>>> gramToObject, termObject;
+    std::map<std::pair<size_t,size_t>, std::vector<std::string>> objectMultipleStirngs;
+    std::unordered_map<std::string, std::unordered_map<std::string, size_t>> twogramAndStringMultiplicity;
 //    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
-    inline void SLHM_Primary_store(std::map<size_t, std::vector<std::pair<std::string, std::vector<size_t>>>>& ordered_multimap, const std::string &elem, size_t value) {
-        auto& hashKey = ordered_multimap[hfunc(elem)];
-//        Node<LONG_NUMERIC, std::pair<std::string, std::vector<LONG_NUMERIC>>> *hashKey = ordered_multimap.insertKey(hfunc(elem));
-        if (!hashKey.empty()) {
-            for (std::pair<std::string, std::vector<size_t>> &x : hashKey) {
-                if (x.first == elem) {
-                    x.second.emplace_back(value);
-                    return;
-                }
-            }
-        }
-        std::vector<size_t> element;
-        element.push_back(value);
-        hashKey.emplace_back(elem, element);
-    }
-    inline void StringToTwoGramSizeHashMultimapIndexer_store(std::map<size_t, std::vector<std::pair<std::string, std::vector<std::pair<std::string, size_t>>>>>& ordered_multimap, const std::string &elem, const std::string &twogram, size_t value) {
-        auto&hashKey = ordered_multimap[hfunc(elem)];
-        if (!hashKey.empty()) {
-            for (std::pair<std::string, std::vector<std::pair<std::string, size_t>>> &x : hashKey) {
-                if (x.first == elem) {
-                    x.second.emplace_back(twogram, value);
-                    return;
-                }
-            }
-        }
-        std::vector<std::pair<std::string, size_t>> element;
-        element.emplace_back(twogram, value);
-        hashKey.emplace_back(elem, element);
-    }
+
+    void compareStringHashMap(const std::string& strMixed, std::unordered_map<std::string, size_t>& retMap, std::vector<size_t>& retList) const;
+
+    void compareStringHashMap(const std::string& str, std::unordered_map<std::string, size_t>& retMap) const;
+
+    void getTwoGramAndString(const std::string &argument, std::unordered_map<std::string, size_t> &map) const;
+
+    void rankCollectionOf(std::set<std::pair<size_t,size_t>>& , std::unordered_map<std::string, size_t> &m1,
+                                              unsigned long size, double threshold,
+                          yaucl::structures::PollMap<double, std::pair<size_t,size_t>>  &pollMap) const;
 public:
+
+    void clear() {
+        gramToObject.clear();
+        objectGramSize.clear();
+        termObject.clear();
+        objectMultipleStirngs.clear();
+        twogramAndStringMultiplicity.clear();
+    }
     // TODO: approximate fuzzy matching for this!
     void addGramsToMap(const std::string &string,
-                       size_t id,
+                       const std::pair<size_t,size_t>& id,
                        const std::vector<std::string> &associatedOtherStrings);
+
+    void fuzzyMatch(double threshold, size_t topk, const std::string& objectString,
+                    std::multimap<double, std::pair<size_t,size_t>>  &result) const;
+
+    template <typename Inserter>
+    void fuzzyMatch(double threshold, size_t topk, const std::string& objectString,
+                    Inserter  result) const {
+        yaucl::structures::PollMap<double, std::pair<size_t,size_t>>  toReturnTop{topk};
+        std::vector<std::string> objectGrams = compareString_wordLetterPairs(objectString);
+        std::set<std::pair<size_t,size_t>> candidates{};
+        std::unordered_map<std::string, size_t> m1;
+
+        // obtain all the objects that are assoicated to the gram that are within the current objectString in objectStrings
+        for (const std::string& gram : objectGrams) {
+            auto gramPtr = gramToObject.find((gram));
+            if (gramPtr != gramToObject.end()) {
+                candidates.insert(gramPtr->second.begin(), gramPtr->second.end());
+            }
+        }
+
+        // return the number of the occurences of the twoGrams within the current string
+        compareStringHashMap(objectString, m1);
+        size_t ogSize = 0;
+        for (auto it = m1.begin(); it != m1.cend(); it++) ogSize += it->second;
+
+        // Rank the similarity between all the candidates
+        rankCollectionOf(candidates, m1, ogSize, threshold, toReturnTop);
+
+        result(toReturnTop.getValueScore());
+    }
+
+    const std::vector<std::string>& resolve_object_id(const std::pair<size_t,size_t>& object_id) const {
+        auto it = objectMultipleStirngs.find(object_id);
+        if (it == objectMultipleStirngs.end()) return empty_vector;
+        else return it->second;
+    }
 };
 
 

@@ -6,7 +6,8 @@
 
 namespace gsm2 {
     namespace tables {
-        PhiTable::record::record(size_t l0Id, size_t nodeId, double wContained, size_t idContained) : l0_id(l0Id), node_id(nodeId),
+        PhiTable::record::record(size_t l0Id, const std::pair<size_t,size_t>& nodeId, double wContained, size_t idContained) : l0_id(l0Id), graph_id(nodeId.first),
+        object_id(nodeId.second),
                                                                                                       w_contained(wContained),
                                                                                                       id_contained(idContained) {}
 
@@ -15,9 +16,13 @@ namespace gsm2 {
                 return true;
             if (rhs.l0_id < l0_id)
                 return false;
-            if (node_id < rhs.node_id)
+            if (graph_id < rhs.graph_id)
                 return true;
-            if (rhs.node_id < node_id)
+            if (rhs.graph_id < graph_id)
+                return false;
+            if (object_id < rhs.object_id)
+                return true;
+            if (rhs.object_id < object_id)
                 return false;
             if (w_contained < rhs.w_contained)
                 return true;
@@ -38,10 +43,10 @@ namespace gsm2 {
             return !(*this < rhs);
         }
 
-        PhiTable::primary_index::primary_index(size_t l0Id, const PhiTable::record *begin,
-                                               const PhiTable::record *anEnd) : l0_id(l0Id), begin(begin), end(anEnd) {}
+//        PhiTable::primary_index::primary_index(size_t l0Id, const PhiTable::record *begin,
+//                                               const PhiTable::record *anEnd) : l0_id(l0Id), begin(begin), end(anEnd) {}
 
-        void PhiTable::add(size_t l0Id, size_t nodeId, double wContained, size_t idContained) {
+        void PhiTable::add(size_t l0Id, const std::pair<size_t,size_t>& nodeId, double wContained, size_t idContained) {
             table.emplace_back(l0Id, nodeId, wContained, idContained);
         }
 
@@ -56,12 +61,12 @@ namespace gsm2 {
                     lIdPrev = ref.l0_id;
                     begin = &ref;
                 } else if (ref.l0_id != lIdPrev) {
-                    primary_index.emplace_back(lIdPrev, begin, (&ref)-1);
+                    primary_index[lIdPrev] = {begin, (&ref)-1};
                     begin = &ref;
                     lIdPrev = ref.l0_id;
                 }
             }
-            primary_index.emplace_back(lIdPrev, begin, (&table[N-1]));
+            primary_index[lIdPrev] = {begin, (&table[N-1])};
         }
     } // gsm2
 } // tables
