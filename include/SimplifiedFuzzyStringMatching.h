@@ -67,8 +67,8 @@ private:
 class FuzzyMatchSerializer {
     const std::vector<std::string> empty_vector{};
 //    std::hash<std::string> hfunc;
-    std::unordered_map<std::string, std::vector<size_t>> objectGramSize;
-    std::unordered_map<std::string, std::vector<std::pair<size_t,size_t>>> gramToObject, termObject;
+    std::unordered_map<std::string, size_t> objectGramSize;
+    std::unordered_map<std::string, std::set<std::pair<size_t,size_t>>> gramToObject, termObject;
     std::map<std::pair<size_t,size_t>, std::vector<std::string>> objectMultipleStirngs;
     std::unordered_map<std::string, std::unordered_map<std::string, size_t>> twogramAndStringMultiplicity;
 //    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;

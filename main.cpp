@@ -12,7 +12,7 @@ int main() {
 
     // returning all the graphs and objects ids having det as a first label
     {
-        auto result = forloading.timed_dataless_exists("det", false);
+        auto result = forloading.timed_dataless_exists("det");
         for (const auto& x : result) {
             std::cout << x << std::endl;
         }
@@ -20,7 +20,7 @@ int main() {
 
     // Returning all nodes providing an approximate string matching on the node of the graph
     {
-        auto result = forloading.approx_value_query(0.4, 100, "testem", false);
+        auto result = forloading.approx_value_query(0.4, 100, "testem");
         for (const auto& x : result) {
             std::cout << x << std::endl;
         }
@@ -28,15 +28,15 @@ int main() {
 
     // Returning all the contents for the obejcts having "det" as a containment collection
     {
-        auto result = forloading.query_container_or_containment("", "det",false);
+        auto result = forloading.query_container_or_containment("", "det");
     }
 
     // Getting the content associated to the object {0,0}, first from the first graph
     {
-        auto phi = forloading.phi({0,0,false}, "advmod", false);
+        auto phi = forloading.phi({0,0,false}, "advmod");
         for (const auto& x : phi) {
             std::cout << x << std::endl;
-        } phi = forloading.phi({0,0,false}, "nsubj", false);
+        } phi = forloading.phi({0,0,false}, "nsubj");
         for (const auto& x : phi) {
             std::cout << x << std::endl;
         }

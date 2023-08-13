@@ -45,6 +45,8 @@ namespace gsm2 {
                 }
             }
 
+
+
             /**
              * Returns all the records associated to a given first label. Records not being associated to an activity
              * label are associated to an empty one
@@ -53,7 +55,7 @@ namespace gsm2 {
              * @param removed   Whether the matched elements should be removed in the final result or not
              * @return      Events with the given activity label and score
              */
-            std::vector<result> timed_dataless_exists(const std::string &act, bool removed) const;
+            std::vector<result> timed_dataless_exists(const std::string &act) const;
 
             /**
              * Returns the approximate match over the strings for the given value
@@ -63,7 +65,7 @@ namespace gsm2 {
              * @param removed   Whether the matched elements should be removed in the final result or not
              * @return  Objects in graph matching this
              */
-            std::vector<result> approx_value_query(double min_threshold, size_t nmax, const std::string& xi, bool removed) const;
+            std::vector<result> approx_value_query(double min_threshold, size_t nmax, const std::string& xi) const;
 
             /**
              * Returns the approximate match over the strings for the given label value
@@ -73,7 +75,7 @@ namespace gsm2 {
              * @param removed   Whether the matched elements should be removed in the final result or not
              * @return  Objects in graph matching this
              */
-            std::vector<result> approx_label_query(double min_threshold, size_t nmax, const std::string& xi, bool removed) const;
+            std::vector<result> approx_label_query(double min_threshold, size_t nmax, const std::string& xi) const;
 
 
             /**
@@ -89,7 +91,6 @@ namespace gsm2 {
             std::vector<result> query_container_or_containment(const std::string& container_object_label,
                                                                const std::string& phi_label,
                                                                std::function<double(const std::vector<double>&)> aggregate_scores,
-                                                               bool removed,
                                                                bool container_containementOth = false) const;
 
             /**
@@ -116,7 +117,7 @@ namespace gsm2 {
              * @param object
              * @return
              */
-            inline std::vector<result> phi_all_records(const result&object, bool removed) const {
+            inline std::vector<result> phi_all_records(const result&object) const {
                 std::vector<result> result;
                 const auto& labels = ell(object);
                 ssize_t act_label = labels.empty() ? getMappedValueFromAction("") : getMappedValueFromAction(labels.at(0));
@@ -128,7 +129,7 @@ namespace gsm2 {
                     iterator.second++;
                     for (; iterator.first != iterator.second; iterator.first++) {
                         result
-                                .emplace_back(iterator.first->graph_id,iterator.first->id_contained,iterator.first->w_contained, removed);
+                                .emplace_back(iterator.first->graph_id,iterator.first->id_contained,iterator.first->w_contained);
                     }
                 }
                 std::sort(result.begin(), result.end());
@@ -160,7 +161,7 @@ namespace gsm2 {
              * @param removed       Whether the containments shall be removed
              * @return Contained obejcts
              */
-            inline std::vector<result> phi(const result&object, const std::string& label_phi, bool removed) const {
+            inline std::vector<result> phi(const result&object, const std::string& label_phi) const {
                 std::vector<result> result;
                 auto it = containment_tables.find(label_phi);
                 if (it == containment_tables.end())
@@ -174,7 +175,7 @@ namespace gsm2 {
                 iterator.second++;
                 for (; iterator.first != iterator.second; iterator.first++) {
                     result
-                            .emplace_back(iterator.first->graph_id,iterator.first->id_contained,iterator.first->w_contained, removed);
+                            .emplace_back(iterator.first->graph_id,iterator.first->id_contained,iterator.first->w_contained);
                 }
                 std::sort(result.begin(), result.end());
                 return result;
@@ -189,8 +190,7 @@ namespace gsm2 {
              * @return
              */
             std::unordered_map<std::pair<size_t,size_t>,std::vector<result>> query_container_or_containment(const std::string &container_object_label,
-                                                                          const std::string &phi_label,
-                                                                          bool removed) const;
+                                                                          const std::string &phi_label) const;
         };
 
         void primary_memory_load_gsm2(const std::filesystem::path& path, gsm2::tables::LinearGSM& db);

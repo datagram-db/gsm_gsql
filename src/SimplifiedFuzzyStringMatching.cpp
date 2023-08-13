@@ -220,7 +220,7 @@ void SimplifiedFuzzyStringMatching::fuzzyMatch(double threshold, size_t topk, co
 void
 FuzzyMatchSerializer::addGramsToMap(const std::string &string,  const std::pair<size_t,size_t>& id, const std::vector<std::string> &associatedOtherStrings) {
     if (string.empty()) return;
-    termObject[string].emplace_back(id);
+    termObject[string].emplace(id);
     objectMultipleStirngs[id].emplace_back(string);
     for (const std::string& x : associatedOtherStrings)
         objectMultipleStirngs[id].emplace_back(x);
@@ -233,12 +233,12 @@ FuzzyMatchSerializer::addGramsToMap(const std::string &string,  const std::pair<
     for (size_t& j : vec) {
         sum += j;
     }
-    objectGramSize[string].emplace_back(sum);
+    objectGramSize[string] = sum;
 
     for (auto & begin : cp) {
         std::string x = begin.first;
         twogramAndStringMultiplicity[(string)][x] = begin.second;
-        gramToObject[x].emplace_back(id);
+        gramToObject[x].emplace(id);
     }
 }
 
@@ -295,7 +295,7 @@ void FuzzyMatchSerializer::rankCollectionOf(std::set<std::pair<size_t,size_t>> &
                 }
 
                 // no memoization
-                auto ls = objectGramSize.find(associatedToElement);
+//                auto ls = objectGramSize.find(associatedToElement);
                 double leftCount = 0;
                 //if (ls == nullptr) {
                 std::unordered_map<std::string, size_t> retMap;

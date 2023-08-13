@@ -92,8 +92,10 @@ static inline void parse(char* string,
         }
         if (!ell.empty()) {
             // Sending to fuzzy ell match
-            forloading.ell_values.addGramsToMap(ell[0], graphId_eventId, ell);
-            act_id = forloading.label_map.put(ell[0]).first;
+            std::string pop = ell.front();
+            ell.erase(ell.begin());
+            forloading.ell_values.addGramsToMap(pop, graphId_eventId, ell);
+            act_id = forloading.label_map.put(pop).first;
         } else {
             act_id = noLabel;
         }
@@ -208,7 +210,7 @@ namespace gsm2 {
                 table.index(idx);
             main_registry.indexing2();
             main_registry.sanityCheck();
-            result resolver{0,0,0,false};
+            result resolver{0,0,0};
             all_indices.insert(all_indices.begin(), nGraphs, {});
             for (const auto& entry : main_registry.table) {
                 auto id = entry.event_id;
@@ -252,7 +254,7 @@ namespace gsm2 {
             }
         }
 
-        std::vector<result> LinearGSM::timed_dataless_exists(const std::string &act, bool removed) const {
+        std::vector<result> LinearGSM::timed_dataless_exists(const std::string &act) const {
             std::vector<result> foundData;
             ssize_t mappedVal = getMappedValueFromAction(act);
             if(mappedVal < 0){
@@ -263,17 +265,17 @@ namespace gsm2 {
                 return foundData;
             }
             for (auto it = main_registry.table.begin() + indexes.first; it != main_registry.table.begin() + indexes.second + 1; ++it) {
-                foundData.emplace_back(it->graph_id, it->event_id, removed);
+                foundData.emplace_back(it->graph_id, it->event_id);
             }
             return foundData;
         }
 
         std::vector<result>
-        LinearGSM::approx_value_query(double min_threshold, size_t nmax, const std::string &xi, bool removed) const {
+        LinearGSM::approx_value_query(double min_threshold, size_t nmax, const std::string &xi) const {
             std::vector<result> result;
-            std::function<void(const std::unordered_map<std::pair<size_t,size_t>, double>&)> f = [&result,removed](const std::unordered_map<std::pair<size_t,size_t>, double>& m) {
+            std::function<void(const std::unordered_map<std::pair<size_t,size_t>, double>&)> f = [&result](const std::unordered_map<std::pair<size_t,size_t>, double>& m) {
                 for (const auto& [k,v]: m) {
-                    result.emplace_back(k.first, k.second, v, removed);
+                    result.emplace_back(k.first, k.second, v);
                 }
                 std::sort(result.begin(), result.end());
             };
@@ -282,11 +284,11 @@ namespace gsm2 {
         }
 
         std::vector<result>
-        LinearGSM::approx_label_query(double min_threshold, size_t nmax, const std::string &xi, bool removed) const {
+        LinearGSM::approx_label_query(double min_threshold, size_t nmax, const std::string &xi) const {
             std::vector<result> result;
-            std::function<void(const std::unordered_map<std::pair<size_t,size_t>, double>&)> f = [&result,removed](const std::unordered_map<std::pair<size_t,size_t>, double>& m) {
+            std::function<void(const std::unordered_map<std::pair<size_t,size_t>, double>&)> f = [&result](const std::unordered_map<std::pair<size_t,size_t>, double>& m) {
                 for (const auto& [k,v]: m) {
-                    result.emplace_back(k.first, k.second, v, removed);
+                    result.emplace_back(k.first, k.second, v);
                 }
                 std::sort(result.begin(), result.end());
             };
@@ -298,7 +300,6 @@ namespace gsm2 {
                                                                       const std::string &phi_label,
                                                                       std::function<double(
                                                                               const std::vector<double> &)> aggregate_scores,
-                                                                      bool removed,
                                                                       bool container_containementOth) const {
             std::vector<result> result;
             std::unordered_map<std::pair<size_t,size_t>, std::vector<double>> int_result;
@@ -318,7 +319,7 @@ namespace gsm2 {
                                 .emplace_back(iterator.first->w_contained);
                     }
                     for (const auto& [k2,v2] : int_result) {
-                        result.emplace_back(k2.first, k2.second, aggregate_scores(v2), removed);
+                        result.emplace_back(k2.first, k2.second, aggregate_scores(v2));
                     }
                 }
             } else {
@@ -336,7 +337,7 @@ namespace gsm2 {
                             .emplace_back(iterator.first->w_contained);
                 }
                 for (const auto& [k,v] : int_result) {
-                    result.emplace_back(k.first, k.second, aggregate_scores(v), removed);
+                    result.emplace_back(k.first, k.second, aggregate_scores(v));
                 }
             }
 
@@ -347,8 +348,7 @@ namespace gsm2 {
 
         std::unordered_map<std::pair<size_t, size_t>, std::vector<result>>
         LinearGSM::query_container_or_containment(const std::string &container_object_label,
-                                                  const std::string &phi_label,
-                                                  bool removed) const {
+                                                  const std::string &phi_label) const {
             std::unordered_map<std::pair<size_t,size_t>,std::vector<result>> result;
             ssize_t phi_label_id = getMappedValueFromAction(phi_label);
             if (phi_label_id<0)
@@ -363,7 +363,7 @@ namespace gsm2 {
                     iterator.second++;
                     for (; iterator.first != iterator.second; iterator.first++) {
                         result[{iterator.first->graph_id,iterator.first->object_id}]
-                                .emplace_back(iterator.first->graph_id,iterator.first->id_contained,iterator.first->w_contained, removed);
+                                .emplace_back(iterator.first->graph_id,iterator.first->id_contained,iterator.first->w_contained);
                     }
                 }
             } else {
@@ -377,7 +377,7 @@ namespace gsm2 {
                 iterator.second++;
                 for (; iterator.first != iterator.second; iterator.first++) {
                     result[{iterator.first->graph_id,iterator.first->object_id}]
-                            .emplace_back(iterator.first->graph_id,iterator.first->id_contained,iterator.first->w_contained, removed);
+                            .emplace_back(iterator.first->graph_id,iterator.first->id_contained,iterator.first->w_contained);
                 }
             }
 
