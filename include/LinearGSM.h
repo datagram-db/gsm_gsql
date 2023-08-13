@@ -191,6 +191,82 @@ namespace gsm2 {
              */
             std::unordered_map<std::pair<size_t,size_t>,std::vector<result>> query_container_or_containment(const std::string &container_object_label,
                                                                           const std::string &phi_label) const;
+
+
+            /**
+             * Performing range/propertyValue queries over the nodes
+             * @param field_name
+             * @param ActNameToPredicates
+             * @param Qs
+             */
+            void exact_range_query(const std::string &field_name,
+                                                  const std::unordered_map<std::string, std::vector<size_t>> &ActNameToPredicates,
+                                                  std::vector<std::pair<DataQuery, std::vector<result>>> &Qs) const {
+
+//                bool doTemporalMatchQuery = temporalTimeMatch.has_value();
+//                uint16_t isTemproalVal = temporalTimeMatch.value_or(0);
+                auto it = KeyValueContainment.find(field_name);
+                if (it == KeyValueContainment.end()) {
+                    // if no attribute is there, for the exact match I assume that no value was matched
+                    return;
+                } else {
+                    // The attribute exists within the dataset
+                    std::vector<std::pair<size_t, std::vector<DataQuery*>>> V;
+                    std::unordered_map<DataQuery*, size_t> qToItsId;
+                    for (const auto& mapRef : ActNameToPredicates) {
+                        std::pair<size_t, std::vector<DataQuery*>>& DQ = V.emplace_back(label_map.get(mapRef.first), std::vector<DataQuery*>{});
+                        for (const auto& qId : mapRef.second) {
+                            auto& prop = Qs.at(qId).first;
+                            auto it2 = qToItsId.emplace(&prop, qId);
+                            DEBUG_ASSERT(it2.second);
+                            DQ.second.emplace_back(&prop);
+                        }
+                        // I do not need to compare the pointers, rather than compare the values associated to those
+                        std::sort(DQ.second.begin(), DQ.second.end(), [](auto lhs, auto rhs) {return *lhs < *rhs;});
+                    }
+
+                    // TODO: this is just the concrete doing.
+                    auto tmp = it->second.exact_range_query(V);
+
+                    for (size_t i = 0, N = V.size(); i<N; i++) {
+                        const auto& actIdToPropList = V.at(i);
+                        auto v_actId = actIdToPropList.first;
+                        auto& v_propList = actIdToPropList.second;
+                        auto& tmpResult = tmp.at(i);
+                        DEBUG_ASSERT(v_propList.size() == tmpResult.size()); // We return the result for each query
+                        for (size_t j = 0, M = v_propList.size(); j<M; j++) {
+                            auto& tmpRef = tmpResult.at(j);
+                            if (!((tmpRef.first == tmpRef.second) && tmpRef.first == nullptr )) {
+                                auto qPTr = v_propList.at(j);
+                                auto qId = qToItsId.at(qPTr);
+                                auto& refQ = Qs.at(qId);
+                                DEBUG_ASSERT(refQ.first == *qPTr); // They are the same query
+//                    LeafType qT = refQ.first.t;
+
+                                auto& S = refQ.second;
+                                size_t Nx = std::distance(tmpRef.first, tmpRef.second);
+                                for (size_t k = 0; i<=Nx; k++) {
+                                    const auto& exactIt = tmpRef.first[k];
+                                    const auto& resolve = main_registry.table.at(exactIt.act_table_offset);
+// TODO: for the approximate match, in the later future
+//                        bool doInsert = true;
+//                        float satisfiability = 1.0;
+//                        if (doTemporalMatchQuery) {
+//                            auto L = resolve.event_id;
+//                            satisfiability = getSatisifiabilityBetweenValues(((L <= 1) ? 0 : isTemproalVal),
+//                                                                             cast_to_float2(resolve.event_id,L), approxConstant);
+//                            doInsert = satisfiability >= 1.0;
+//                        }
+//                        if (doInsert)
+                                    S.emplace_back(resolve.graph_id, resolve.event_id,1.0);
+                                }
+                                std::sort(S.begin(), S.end());
+                                S.erase(std::unique(S.begin(), S.end()), S.end());
+                            }
+                        }
+                    }
+                }
+            }
         };
 
         void primary_memory_load_gsm2(const std::filesystem::path& path, gsm2::tables::LinearGSM& db);

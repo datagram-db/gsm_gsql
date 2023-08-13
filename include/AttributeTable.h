@@ -14,6 +14,7 @@
 #include <map>
 #include <iostream>
 #include "SimplifiedFuzzyStringMatching.h"
+#include "DataQuery.h"
 
 namespace gsm2 {
     namespace tables {
@@ -71,6 +72,30 @@ namespace gsm2 {
             AttributeTableType type;
             std::unordered_map<std::string, std::vector<size_t>> string_offset_mapping;
 
+
+            /**
+             * If we want to perform approximate string matching, then this query is rewritten as a query among
+             * all the approximate matches that were provided in the single instance of the strings from the
+             * appropriate index
+             *
+             * @param ell0      Label associated to the node containing the object
+             * @param threshold Minimum match threshold
+             * @param topk      Maximum amount of scores to be returned
+             * @param x         String to be approximated
+             * @return Resulting interval queries expressing the approximate match (please observe that this cannot be
+             *         necessarily rewritten into a exact match)
+             */
+            std::vector<DataQuery> generateDataQueriesForApproximateString(const std::string& ell0, double threshold, size_t topk, const std::string& x) {
+                std::vector<DataQuery> v;
+                if (type != StringAtt) return v;
+                std::multimap<double, std::string> result;
+                ptr.fuzzyMatch(threshold, topk, x, result);
+                for (const auto& [score, match] : result) {
+                    v.emplace_back(DataQuery::RangeQuery(ell0, attr_name, match, match, score));
+                }
+                return v;
+            }
+
             struct record {
                 size_t act;
                 size_t value;
@@ -117,6 +142,11 @@ namespace gsm2 {
             void record_load(size_t act_id, const union_type &val, size_t tid, size_t eid);
             void index(const std::vector<std::vector<size_t>> &trace_id_to_event_id_to_offset);
             union_type resolve(const record &x) const;
+
+            std::vector<std::vector<std::pair<const AttributeTable::record *, const AttributeTable::record *>>>
+            exact_range_query(const std::vector<std::pair<size_t, std::vector<DataQuery*>>>& propList) const;
+
+
         private:
             size_t storeLoad(const union_type &x);
             bool assertVariant(const union_type &val);

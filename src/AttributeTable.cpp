@@ -165,5 +165,66 @@ namespace gsm2 {
             if (!ptr) return {};
             else return {resolveUnionMinimal(*this, *ptr)};
         }
+
+        std::vector<std::vector<std::pair<const AttributeTable::record *, const AttributeTable::record *>>>
+        AttributeTable::exact_range_query(
+                const std::vector<std::pair<size_t, std::vector<DataQuery *>>> &propList) const {
+            std::vector<std::vector<std::pair<const AttributeTable::record *, const AttributeTable::record *>>> finalResult;
+            //std::pair<const AttributeTable::record *, const AttributeTable::record *> thisResult{nullptr, nullptr};
+            for (const auto& cps : propList) {
+                auto& actualResult = finalResult.emplace_back();
+                size_t actId = cps.first;
+                if ((actId > primary_index.size())) {
+                    for (size_t i = 0, N = cps.second.size(); i<N; i++)
+                        actualResult.emplace_back(nullptr, nullptr);
+                }
+                auto it = primary_index.at(actId);
+                if (it.first == it.second) {
+                    for (size_t i = 0, N = cps.second.size(); i<N; i++)
+                        actualResult.emplace_back(nullptr, nullptr);
+                } else {
+                    DEBUG_ASSERT(table.size() >= it.first);
+                    DEBUG_ASSERT(table.size() >= it.second);
+                    const record* begin = table.data() + it.first;
+                    const record* end = table.data() + it.second;
+
+                    auto propRef = cps.second.begin(), propEnd = cps.second.end();
+                    do {
+                        const union_type prop_leftValue = cast_unions(type, (*propRef)->lower_bound);
+                        const union_type prop_rightValue = cast_unions(type, (*propRef)->upper_bound);
+
+                        const record* lb = std::lower_bound(begin, end, prop_leftValue, [&](const record &r, const union_type &value) {
+                            return resolve(r) < value;
+                        });
+
+                        if (lb != end) {
+                            const record* ub = std::upper_bound(begin, end, prop_rightValue, [&](const union_type &value, const record &r) {
+                                return resolve(r) > value;
+                            });
+
+                            auto tmpLeft = lb;
+                            auto tmpRight = ub;
+                            if (tmpRight != end) {
+                                tmpRight--;
+                            }
+                            else
+                                tmpRight = table.data() + (it.second-1);
+
+                            if (std::distance(tmpLeft, tmpRight) < 0) {
+                                actualResult.emplace_back(nullptr, nullptr);
+                            } else {
+                                actualResult.emplace_back(tmpLeft, tmpRight);
+                                begin = tmpRight;
+                            }
+                        } else {
+                            actualResult.emplace_back(nullptr, nullptr);
+                        }
+
+                        propRef++;
+                    } while (propRef != propEnd);
+                }
+            }
+            return finalResult;
+        }
     } // gsm2
 } // tables
