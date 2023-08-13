@@ -260,6 +260,7 @@ namespace gsm2 {
                 auto id = entry.event_id;
             }
 
+            // Creating a gsm_index
             for (const auto& [k1,v] : containment_tables) {
                 for (const auto& record_obj : v.table) {
                     auto& gRef = all_indices[record_obj.graph_id];
@@ -342,35 +343,30 @@ namespace gsm2 {
 
         std::vector<result> LinearGSM::query_container_or_containment(const std::string &container_object_label,
                                                                       const std::string &phi_label,
-                                                                      std::function<double(
-                                                                              const std::vector<double> &)> aggregate_scores,
+                                                                      std::function<double(const std::vector<double> &)> aggregate_scores,
                                                                       bool container_containementOth) const {
             std::vector<result> result;
-            std::unordered_map<std::pair<size_t,size_t>, std::vector<double>> int_result;
-            ssize_t phi_label_id = getMappedValueFromAction(phi_label);
-            if (phi_label_id<0)
+            ssize_t label_id = getMappedValueFromAction(container_object_label);
+            if (label_id<0)
                 return result;
+            std::unordered_map<std::pair<size_t,size_t>, std::vector<double>> int_result;
             if (container_object_label.empty()) {
-                for (const auto& [k,v] : containment_tables) {
-                    auto it2 = v.primary_index.find(phi_label_id);
-                    if (it2 == v.primary_index.end())
-                        return result;
-                    auto iterator = it2->second;
-                    iterator.second++;
-                    for (; iterator.first != iterator.second; iterator.first++) {
-                        int_result[{iterator.first->graph_id,
-                                    container_containementOth ? iterator.first->object_id : iterator.first->id_contained}]
-                                .emplace_back(iterator.first->w_contained);
-                    }
-                    for (const auto& [k2,v2] : int_result) {
-                        result.emplace_back(k2.first, k2.second, aggregate_scores(v2));
-                    }
-                }
-            } else {
-                auto it = containment_tables.find(container_object_label);
+                auto it = containment_tables.find(phi_label);
                 if (it == containment_tables.end())
                     return result;
-                auto it2 = it->second.primary_index.find(phi_label_id);
+                for (const auto& x : it->second.table) {
+                    int_result[{x.graph_id,
+                                container_containementOth ? x.object_id : x.id_contained}]
+                            .emplace_back(x.w_contained);
+                }
+                for (const auto& [k2,v2] : int_result) {
+                    result.emplace_back(k2.first, k2.second, aggregate_scores(v2));
+                }
+            } else {
+                auto it = containment_tables.find(phi_label);
+                if (it == containment_tables.end())
+                    return result;
+                auto it2 = it->second.primary_index.find(label_id);
                 if (it2 == it->second.primary_index.end())
                     return result;
                 auto iterator = it2->second;
@@ -394,27 +390,23 @@ namespace gsm2 {
         LinearGSM::query_container_or_containment(const std::string &container_object_label,
                                                   const std::string &phi_label) const {
             std::unordered_map<std::pair<size_t,size_t>,std::vector<result>> result;
-            ssize_t phi_label_id = getMappedValueFromAction(phi_label);
-            if (phi_label_id<0)
+            ssize_t label_id = getMappedValueFromAction(container_object_label);
+            if (label_id<0)
                 return result;
 
             if (container_object_label.empty()) {
-                for (const auto& [k,v] : containment_tables) {
-                    auto it2 = v.primary_index.find(phi_label_id);
-                    if (it2 == v.primary_index.end())
-                        return result;
-                    auto iterator = it2->second;
-                    iterator.second++;
-                    for (; iterator.first != iterator.second; iterator.first++) {
-                        result[{iterator.first->graph_id,iterator.first->object_id}]
-                                .emplace_back(iterator.first->graph_id,iterator.first->id_contained,iterator.first->w_contained);
-                    }
-                }
-            } else {
-                auto it = containment_tables.find(container_object_label);
+                auto it = containment_tables.find(phi_label);
                 if (it == containment_tables.end())
                     return result;
-                auto it2 = it->second.primary_index.find(phi_label_id);
+                for (const auto& x : it->second.table) {
+                    result[{x.graph_id,x.object_id}]
+                            .emplace_back(x.graph_id,x.id_contained,x.w_contained);
+                }
+            } else {
+                auto it = containment_tables.find(phi_label);
+                if (it == containment_tables.end())
+                    return result;
+                auto it2 = it->second.primary_index.find(label_id);
                 if (it2 == it->second.primary_index.end())
                     return result;
                 auto iterator = it2->second;

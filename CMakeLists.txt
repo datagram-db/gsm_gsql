@@ -50,5 +50,5 @@ add_library(yaucl_graph OBJECT
 target_link_libraries(yaucl_graph  yaucl_hashing roaring)
 
 
-add_executable(gsm2 main.cpp src/PhiTable.cpp include/PhiTable.h src/AttributeTable.cpp include/AttributeTable.h src/SimplifiedFuzzyStringMatching.cpp include/SimplifiedFuzzyStringMatching.h src/LinearGSM.cpp include/LinearGSM.h src/ActivityTable.cpp include/ActivityTable.h src/result.cpp include/result.h src/gsm_indices.cpp include/gsm_indices.h src/DataQuery.cpp include/DataQuery.h)
+add_executable(gsm2 main.cpp src/PhiTable.cpp include/PhiTable.h src/AttributeTable.cpp include/AttributeTable.h src/SimplifiedFuzzyStringMatching.cpp include/SimplifiedFuzzyStringMatching.h src/LinearGSM.cpp include/LinearGSM.h src/ActivityTable.cpp include/ActivityTable.h src/result.cpp include/result.h src/gsm_indices.cpp include/gsm_indices.h src/DataQuery.cpp include/DataQuery.h src/IntermediateView.cpp include/IntermediateView.h src/gsm_object_xi_content.cpp include/gsm_object_xi_content.h include/simple_pair_hash.h)
 target_link_libraries(gsm2 roaring yaucl_hashing yaucl_graph)

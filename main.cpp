@@ -28,7 +28,15 @@ int main() {
 
     // Returning all the contents for the obejcts having "det" as a containment collection
     {
-        auto result = forloading.query_container_or_containment("", "det");
+        std::unordered_map<std::pair<size_t, size_t>, std::vector<result>> resulted;
+        std::vector<std::unordered_map<std::pair<size_t, size_t>, std::vector<result>>> v;
+        v.emplace_back(forloading.query_container_or_containment("", "det"));
+        v.emplace_back(forloading.query_container_or_containment("", "aux"));
+        v.emplace_back(forloading.query_container_or_containment("", "nmod:poss"));
+        multi_map_union(v, resulted, [](double x, double y)->double {
+            return std::max(x,y);
+        });
+        v.clear();
     }
 
     // Getting the content associated to the object {0,0}, first from the first graph
