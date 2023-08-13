@@ -3,6 +3,7 @@ project(gsm2)
 set(CMAKE_CXX_STANDARD 23)
 
 include_directories(include)
+include_directories(submodules/yaucl/submodules/magic_enum/include)
 include_directories(submodules/yaucl/include)
 include_directories(submodules/yaucl/submodules/json/include)
 include_directories(submodules/yaucl/submodules/CRoaring/cpp)

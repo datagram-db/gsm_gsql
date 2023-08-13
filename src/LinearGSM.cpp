@@ -53,6 +53,7 @@ static inline char* skipSpaces(char*buf, size_t* len ) {
 static inline void parse(char* string,
                          size_t len,
                          gsm2::tables::LinearGSM& forloading,
+                         const std::unordered_map<std::string, gsm2::tables::AttributeTableType>& map_for_types,
                          size_t& maxGraphId) {
     string = skipSpaces(string, &len);
 //    size_t graphId = 0;
@@ -62,7 +63,7 @@ static inline void parse(char* string,
     size_t act_id = noLabel;
     int scanSkip = 0;
     constexpr char const * ID = "id:";
-    constexpr char const * DOT = ".";
+    constexpr char const  DOT = '.';
     constexpr char const * ELL = "ell:";
     constexpr char const * XI = "xi:";
     constexpr char const * PROP = "properties:";
@@ -84,7 +85,7 @@ static inline void parse(char* string,
 
         if (!(string = atreturn(string, &len))) return;
         if (!(string = skipSpaces(string, &len))) return;
-        while (*string != '.') {
+        while (*string != DOT) {
             char* beforeReturn = atreturn(string, &len);
             ell.emplace_back(string, beforeReturn-1);
             string = beforeReturn;
@@ -108,7 +109,7 @@ static inline void parse(char* string,
         xi.clear();
         if (!(string = atreturn(string, &len))) return;
         if (!(string = skipSpaces(string, &len))) return;
-        while (*string != '.') {
+        while (*string != DOT) {
             char* beforeReturn = atreturn(string, &len);
             xi.emplace_back(string, beforeReturn-1);
             string = beforeReturn;
@@ -124,7 +125,7 @@ static inline void parse(char* string,
 
         if (!(string = atreturn(string, &len))) return;
         if (!(string = skipSpaces(string, &len))) return;
-        while (*string != '.') {
+        while (*string != DOT) {
             char* beforeReturn = atreturn(string, &len);
             std::string tmp{string, beforeReturn-1};
             size_t idx = tmp.find("\t");
@@ -133,8 +134,28 @@ static inline void parse(char* string,
             std::string val = UNESCAPE(tmp.substr(idx+1));
             // Setting up the properties associated to the node
             auto& table = forloading.KeyValueContainment[key];
-            table.type = gsm2::tables::StringAtt;
-            table.record_load(act_id, val, graphId_eventId.first, graphId_eventId.second);
+            auto it = map_for_types.find(key);
+            if (it != map_for_types.end())
+                table.type = it->second;
+            else
+                table.type = gsm2::tables::StringAtt;
+            switch (table.type) {
+                case gsm2::tables::DoubleAtt:
+                    table.record_load(act_id, std::stod(val), graphId_eventId.first, graphId_eventId.second);
+                    break;
+                case gsm2::tables::SizeTAtt:
+                    table.record_load(act_id, std::stoull(val), graphId_eventId.first, graphId_eventId.second);
+                    break;
+                case gsm2::tables::LongAtt:
+                    table.record_load(act_id, std::stoll(val), graphId_eventId.first, graphId_eventId.second);
+                    break;
+                case gsm2::tables::StringAtt:
+                    table.record_load(act_id, val, graphId_eventId.first, graphId_eventId.second);
+                    break;
+                case gsm2::tables::BoolAtt:
+                    table.record_load(act_id, (val == "True" || val == "true" || val == "tt" || val == "t"), graphId_eventId.first, graphId_eventId.second);
+                    break;
+            }
             string = beforeReturn;
             if (!(string = skipSpaces(string, &len))) return;
         }
@@ -144,7 +165,7 @@ static inline void parse(char* string,
 
         if (!(string = atreturn(string, &len))) return;
         if (!(string = skipSpaces(string, &len))) return;
-        while (*string != '.') {
+        while (*string != DOT) {
             char* beforeReturn = atreturn(string, &len);
             std::string tmp{string, beforeReturn-1};
             tmp = UNESCAPE(tmp);
@@ -177,10 +198,33 @@ static inline void parse(char* string,
 }
 
 #include <fstream>
+#include <magic_enum.hpp>
 
 namespace gsm2 {
     namespace tables {
         void primary_memory_load_gsm2(const std::filesystem::path& path, gsm2::tables::LinearGSM& db) {
+            auto schema = path.parent_path() / "schema.txt";
+            std::unordered_map<std::string, gsm2::tables::AttributeTableType> propertyname_to_type;
+            if (exists(schema)) {
+                std::ifstream fschema{schema};
+                std::string line;
+                size_t count = 0;
+                std::string field_name;
+                gsm2::tables::AttributeTableType field_type = gsm2::tables::AttributeTableType::StringAtt;
+                while (std::getline(fschema, line)) {
+                    count++;
+                    if (count == 1)
+                        field_name = line;
+                    else {
+                        auto val = magic_enum::enum_cast<gsm2::tables::AttributeTableType>(line);
+                        if (val)
+                            field_type = val.value();
+                        else
+                            field_type = gsm2::tables::AttributeTableType::StringAtt;
+                        propertyname_to_type[field_name] = field_type;
+                    }
+                }
+            }
             std::string buffer;
             std::ifstream f(path);
             f.seekg(0, std::ios::end);
@@ -188,7 +232,7 @@ namespace gsm2 {
             buffer.resize(f.tellg());
             f.seekg(0);
             f.read(buffer.data(), buffer.size());
-            parse(buffer.data(), n, db, db.nGraphs);
+            parse(buffer.data(), n, db, propertyname_to_type, db.nGraphs);
             db.nGraphs++;
             db.index();
         }
