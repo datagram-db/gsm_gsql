@@ -1,0 +1,53 @@
+p1 = (X)--[l:aux||det||nmod_poss]->(Y)                   // Graph matching, First pattern
+
+     ↪  set (𝜋 l @ X) as (𝜉 0 @ Y)                        // Property extension
+       del Y                                             // Removing a node
+
+       (X);                                              // Instance of reference to be returned
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+p2 = (>> H)<-[∀l:]--(X)                                   // Graph matching, Second pattern
+           --[conj] hook
+           --[? case]->(K)
+           --[? c : cc]->(Z)
+           --[? g]->(Y)
+
+     ↪  new h                                             // Creating a new node standing for H
+       set (φ orig , h) as H                             // This node will contain all the grouped element (>>)
+       set (𝜋 conj @ h) as (𝜉 0 @ Z)                     // Optional, only if Z exists!
+       set (label lp) as (if ((label l ) = nmod) then    // Defining the label in function of K, if this exists,
+                                                         // otherwise using l
+                          (𝜉 0 @ K)
+                         else
+                          (label l)
+                         )
+
+     (h)<-[lp:]--(X)                                     // Replacing all the Hs being siblings in the same
+                                                         // lexicographical order by one node, and therefore one edge
+        --[g:]->(Y)                                   // Something that was grouped will be singlet
+        ;
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+p3 = (V)--[∀n:nsubj]->(>>S)
+        --[l:dobj||ccomp||nmod]->(Z)
+     (Z)--[? case]->(T)
+
+     ↪  new s
+       new v
+       set (φ orig , v) as s
+       set (φ orig , v) as X
+       set (φ orig , v) as V
+       set (φ orig , s) as S
+       set (𝜉 0 @ v) as (𝜉 0 @ V)
+       set (label lp) as (if ((label l ) = nmod) then    // Defining the label in function of T, if this exists,
+                                                         // otherwise using V
+                                 (𝜉 0 @ T)
+                                else
+                                 (𝜉 0 @ V)
+                                )
+
+       (v)                                               // Returned match
+       (s)--[lp:]->(X||V)                                // The remaining edges are expressed as join matches, one edge
+                                                         // at a time

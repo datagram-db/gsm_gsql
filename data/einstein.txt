@@ -1,0 +1,412 @@
+id:0
+ell:
+VBD
+root
+.
+xi:
+revealed
+.
+properties:
+"pos"	"15"
+"lemma"	"reveal"
+.
+phi:
+"ccomp"
+	1.0	1
+;"nsubj"
+	1.0	2
+	1.0	3
+;.
+
+id:2
+ell:
+noun
+.
+xi:
+discovery
+.
+properties:
+"number"	"singular"
+"pos"	"2"
+"specification"	"common"
+.
+phi:
+"cc"
+	1.0	4
+;"det"
+	1.0	5
+;"conj"
+	1.0	3
+;"nmod"
+	1.0	6
+;.
+
+id:5
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"1"
+.
+phi:
+.
+
+id:4
+ell:
+CC
+.
+xi:
+and
+.
+properties:
+"pos"	"3"
+.
+phi:
+.
+
+id:3
+ell:
+noun
+.
+xi:
+publication
+.
+properties:
+"number"	"singular"
+"pos"	"4"
+"specification"	"common"
+.
+phi:
+.
+
+id:6
+ell:
+CD
+.
+xi:
+1978
+.
+properties:
+"pos"	"6"
+.
+phi:
+"nmod"
+	1.0	7
+;"case"
+	1.0	8
+;.
+
+id:8
+ell:
+IN
+.
+xi:
+in
+.
+properties:
+"pos"	"5"
+.
+phi:
+.
+
+id:7
+ell:
+noun
+.
+xi:
+correspondence
+.
+properties:
+"number"	"singular"
+"pos"	"10"
+"specification"	"common"
+.
+phi:
+"det"
+	1.0	9
+;"nmod"
+	1.0	10
+	1.0	11
+;"amod"
+	1.0	12
+;"case"
+	1.0	13
+;.
+
+id:13
+ell:
+IN
+.
+xi:
+of
+.
+properties:
+"pos"	"7"
+.
+phi:
+.
+
+id:9
+ell:
+det
+.
+xi:
+an
+.
+properties:
+"pos"	"8"
+"lemma"	"a"
+.
+phi:
+.
+
+id:12
+ell:
+JJ
+.
+xi:
+early
+.
+properties:
+"pos"	"9"
+.
+phi:
+.
+
+id:11
+ell:
+noun
+.
+xi:
+einsten
+.
+properties:
+"number"	"singular"
+"pos"	"12"
+"specification"	"common"
+.
+phi:
+"cc"
+	1.0	14
+;"conj"
+	1.0	10
+;"case"
+	1.0	15
+;.
+
+id:15
+ell:
+IN
+.
+xi:
+between
+.
+properties:
+"pos"	"11"
+.
+phi:
+.
+
+id:14
+ell:
+CC
+.
+xi:
+and
+.
+properties:
+"pos"	"13"
+.
+phi:
+.
+
+id:10
+ell:
+noun
+.
+xi:
+maric
+.
+properties:
+"number"	"singular"
+"pos"	"14"
+"specification"	"common"
+.
+phi:
+.
+
+id:1
+ell:
+VBD
+.
+xi:
+had
+.
+properties:
+"pos"	"18"
+"lemma"	"have"
+.
+phi:
+"dobj"
+	1.0	16
+;"nsubj"
+	1.0	17
+;"mark"
+	1.0	18
+;.
+
+id:18
+ell:
+IN
+.
+xi:
+that
+.
+properties:
+"pos"	"16"
+.
+phi:
+.
+
+id:17
+ell:
+PRP
+.
+xi:
+they
+.
+properties:
+"pos"	"17"
+.
+phi:
+.
+
+id:16
+ell:
+noun
+.
+xi:
+daughter
+.
+properties:
+"number"	"singular"
+"pos"	"20"
+"specification"	"common"
+.
+phi:
+"det"
+	1.0	19
+;"acl_relcl"
+	1.0	20
+;.
+
+id:19
+ell:
+det
+.
+xi:
+a
+.
+properties:
+"pos"	"19"
+.
+phi:
+.
+
+id:20
+ell:
+VBG
+.
+xi:
+staying
+.
+properties:
+"pos"	"23"
+"lemma"	"stay"
+.
+phi:
+"aux"
+	1.0	21
+;"nmod"
+	1.0	22
+;"nsubj"
+	1.0	23
+;.
+
+id:23
+ell:
+var
+.
+xi:
+which
+.
+properties:
+"pos"	"21"
+.
+phi:
+.
+
+id:21
+ell:
+VBD
+.
+xi:
+was
+.
+properties:
+"pos"	"22"
+"lemma"	"be"
+.
+phi:
+.
+
+id:22
+ell:
+noun
+.
+xi:
+parents
+.
+properties:
+"number"	"plural"
+"pos"	"26"
+"specification"	"common"
+"lemma"	"parent"
+.
+phi:
+"nmod_poss"
+	1.0	24
+;"case"
+	1.0	25
+;.
+
+id:25
+ell:
+IN
+.
+xi:
+with
+.
+properties:
+"pos"	"24"
+.
+phi:
+.
+
+id:24
+ell:
+PRP$
+.
+xi:
+her
+.
+properties:
+"pos"	"25"
+"lemma"	"she"
+.
+phi:
+.
+
