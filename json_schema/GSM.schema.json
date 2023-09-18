@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/product.schema.json",
+    "title": "GSM Specification",
+    "description": "This document describes the JSON linearization of the GSM model",
+    "type": "object",
+    "javaInterfaces" : ["java.io.Serializable", "Cloneable"],
+    "properties": {
+        "id": {
+            "description": "A unique identifier for an GSM object",
+            "type": "integer"
+        },
+        "scores": {
+            "description": "list of confidence scores associated to the object",
+            "type": "array",
+            "items": {
+                 "description": "A single confidence score associated to the object",
+                 "type": "number"
+            },
+            "minItems": 1,
+            "uniqueItems": false,
+            "default": ["1"]
+        },
+        "ell": {
+            "description": "list of labels/types associated to the object",
+            "type": "array",
+            "items": {
+                 "description": "A single label/type associated to the object",
+                 "type": "string"
+            },
+            "minItems": 0,
+            "uniqueItems": false,
+            "default": []
+        },
+        "xi": {
+            "description": "list of string-based values associated to the object",
+            "type": "array",
+            "items": {
+                 "description": "A single string-based value associated to the object",
+                 "type": "string"
+            },
+            "minItems": 0,
+            "uniqueItems": false,
+            "default": []
+        },
+        "properties": {
+             "title": "Map<String,String>",
+    "existingJavaType" : "java.util.Map<String,String>",
+            "description": "key-value representation associated to each object",
+            "type": "object",            
+      "additionalProperties": {"type": "string"}
+        },
+        "phi": {
+             "title": "Map<String,List<Content>>",
+            "description": "associating a content label to some content",
+            "type": "array",
+    		           "items": {
+"type":"object",
+    		           "title": "Content",
+                 "description": "a single contained object",
+                 "type": "object",
+                 "properties": {
+                 "containment": {
+                 	"type":"string",
+                 	"description": "the containment relation associating the parent object to the included child"
+                 },
+                    "content": {
+                                  "type": "integer",
+                                  "description": "object id providing a content to the object"
+                               },
+                    "score": {
+                                  "type": "number",
+                                  "description": "confidence value of the parent object containing the content object",
+                                  "default": "1.0"
+                              }
+                 },
+                 "required": [  "content",  "containment"  ]
+    
+                            },
+            "minItems": 0
+        }
+    },
+    "required": [
+        "id",
+        "scores",
+        "ell",
+        "xi",
+        "properties",
+        "phi"
+    ],
+      "$defs": {
+    "address": {
+      "$id": "/schemas/address",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+
+      "type": "object",
+      "properties": {
+        "street_address": { "type": "string" },
+        "city": { "type": "string" },
+        "state": { "$ref": "#/definitions/state" }
+      },
+      "required": ["street_address", "city", "state"],
+
+      "definitions": {
+        "state": { "enum": ["CA", "NY", "... etc ..."] }
+      }
+    }
+  },
+ "additionalProperties": false
+}
+
