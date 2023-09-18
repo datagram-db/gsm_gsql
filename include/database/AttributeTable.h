@@ -15,6 +15,9 @@
 #include <iostream>
 #include "SimplifiedFuzzyStringMatching.h"
 #include "queries/DataQuery.h"
+#include "ActivityTable.h"
+
+
 
 namespace gsm2 {
     namespace tables {
@@ -33,6 +36,8 @@ namespace gsm2 {
 
         using union_type = std::variant<double, size_t, long long, std::string, bool>;
         using union_minimal = std::variant<std::string, double>;
+
+
 
         static inline union_type cast_unions(AttributeTableType type, const union_minimal &x) {
             switch (type) {
@@ -125,6 +130,7 @@ namespace gsm2 {
              * A.attr_name in the payload
              */
             std::unordered_map<size_t, size_t> secondary_index;
+            std::unordered_map<std::pair<size_t, size_t>, size_t> secondary_index2;
 
             AttributeTable() : attr_name(""), type{BoolAtt} {}
 
@@ -140,7 +146,7 @@ namespace gsm2 {
             std::optional<union_minimal> resolve_record_if_exists2(size_t actTableOffset) const;
             std::ostream &resolve_and_print(std::ostream &os, const AttributeTable::record &x) const;
             void record_load(size_t act_id, const union_type &val, size_t tid, size_t eid);
-            void index(const std::vector<std::vector<size_t>> &trace_id_to_event_id_to_offset);
+            void index(const ActivityTable&, const std::vector<std::vector<size_t>> &trace_id_to_event_id_to_offset);
             union_type resolve(const record &x) const;
 
             std::vector<std::vector<std::pair<const AttributeTable::record *, const AttributeTable::record *>>>
@@ -153,6 +159,24 @@ namespace gsm2 {
 
             std::vector<std::map<union_type, std::vector<std::pair<size_t, size_t>>>> elements;
         };
+
+        static inline
+        union_minimal resolveUnionMinimal(const AttributeTable &table, const AttributeTable::record &x) {
+            switch (table.type) {
+                case DoubleAtt:
+                    return *(double*)(&x.value);
+                case LongAtt:
+                    return (double)(*(long long*)(&x.value));
+                case StringAtt:
+                    return table.ptr.get(x.value);
+                case BoolAtt:
+                    return (x.value != 0 ? 0.0 : 1.0);
+                    //case SizeTAtt:
+                default:
+                    // TODO: hierarchical types!, https://dl.acm.org/doi/10.1145/3410566.3410583
+                    return (double)x.value;
+            }
+        }
 
     } // gsm2
 } // tables

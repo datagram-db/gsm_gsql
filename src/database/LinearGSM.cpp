@@ -267,7 +267,7 @@ namespace gsm2 {
             for (auto& [key, table]: containment_tables)
                 table.index();
             for (auto& [key, table] : KeyValueContainment)
-                table.index(idx);
+                table.index(main_registry, idx);
             main_registry.indexing2();
             main_registry.sanityCheck();
             result resolver{0,0,0};

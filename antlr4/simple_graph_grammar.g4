@@ -7,7 +7,7 @@ node: LPAR STAR? VEC? var=multiple_labels (COL OTHERS)? RPAR;
 centralmatch: var=OTHERS EQ src=node            // central match
                             e1=many_edges?           // ego-net patterns
                             edge_joining*   // join conditions
-                            (REWRITE_TO rewrite_to* dst=node e2=many_edges?)?
+                            (REWRITE_TO rewrite_to* dst=node)?
                             ;
 many_edges : edge+;
 
@@ -19,7 +19,7 @@ rewrite_to: 'del' OTHERS                                                        
 rewrite_expr: '𝜉' num=OTHERS '@' nodeVar=rewrite_expr #node_xi
             | 'ℓ' num=OTHERS '@' nodeVar=rewrite_expr #node_ell
             | '𝜋' key=rewrite_expr '@' nodeVar=rewrite_expr #node_prop
-            | 'φ' key=OTHERS ',' nodeVar=rewrite_expr #node_containment
+            | 'φ' key=rewrite_expr ',' nodeVar=rewrite_expr #node_containment
             | 'label' edgeVar=rewrite_expr            #edge_label
             | 'src'   edgeVar=rewrite_expr            #edge_src
             | 'dst'   edgeVar=rewrite_expr            #edge_dst

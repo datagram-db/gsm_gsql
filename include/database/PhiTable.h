@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <yaucl/hashing/pair_hash.h>
 
 namespace gsm2 {
     namespace tables {
@@ -44,6 +45,7 @@ namespace gsm2 {
 
             std::vector<struct record> table;
             std::unordered_map<size_t, std::pair<const struct record*,const struct record*>> primary_index;
+            std::unordered_map<std::pair<size_t,size_t>, std::vector<const struct record*>> secondary_index;
 
             void add(size_t l0Id = 0, const std::pair<size_t,size_t>& nodeId = {0,0}, double wContained = 1.0, size_t idContained = 1);
 

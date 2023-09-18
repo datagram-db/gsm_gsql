@@ -39,6 +39,10 @@ struct gsm_object_xi_content {
     gsm_object_xi_content& operator=(gsm_object_xi_content&&) = default;
     bool operator==(const gsm_object_xi_content &rhs) const;
     bool operator!=(const gsm_object_xi_content &rhs) const;
+
+    bool operator<(const gsm_object_xi_content &rhs) const {
+        return (id <rhs.id) || (id == rhs.id && (score == rhs.score));
+    }
 };
 
 

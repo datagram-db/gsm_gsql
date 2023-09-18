@@ -55,7 +55,7 @@ namespace gsm2 {
         }
 
 
-        void AttributeTable::index(const std::vector<std::vector<size_t>> &trace_id_to_event_id_to_offset) {
+        void AttributeTable::index(const ActivityTable& at, const std::vector<std::vector<size_t>> &trace_id_to_event_id_to_offset) {
             for (size_t act_id = 0, N = elements.size(); act_id < N; act_id++) {
                 auto& ref = elements[act_id];
                 size_t begin = table.size();
@@ -78,7 +78,9 @@ namespace gsm2 {
                         for (const auto& refx : it->second) {
                             if (type == StringAtt)
                                 string_offset_mapping[current_string].emplace_back(table.size());
-                            secondary_index[refx] = table.size();
+                            secondary_index[refx] =
+                                    secondary_index2[{at.table.at(refx).graph_id, at.table.at(refx).event_id}] =
+                                            table.size();
                             table.emplace_back(act_id, val, refx);
                         }
 //                it = valueToOffsetInTable.erase(it);
@@ -89,6 +91,8 @@ namespace gsm2 {
                 size_t end = table.size();
                 primary_index.emplace_back(begin, end);
             }
+
+
             elements.clear();
         }
 
@@ -143,22 +147,7 @@ namespace gsm2 {
             }
         }
 
-        union_minimal resolveUnionMinimal(const AttributeTable &table, const AttributeTable::record &x) {
-            switch (table.type) {
-                case DoubleAtt:
-                    return *(double*)(&x.value);
-                case LongAtt:
-                    return (double)(*(long long*)(&x.value));
-                case StringAtt:
-                    return table.ptr.get(x.value);
-                case BoolAtt:
-                    return (x.value != 0 ? 0.0 : 1.0);
-                    //case SizeTAtt:
-                default:
-                    // TODO: hierarchical types!, https://dl.acm.org/doi/10.1145/3410566.3410583
-                    return (double)x.value;
-            }
-        }
+
 
         std::optional<union_minimal> AttributeTable::resolve_record_if_exists2(size_t actTableOffset) const {
             auto ptr = resolve_record_if_exists(actTableOffset);

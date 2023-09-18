@@ -100,7 +100,6 @@ public:
     simple_graph_grammarParser::NodeContext *src = nullptr;
     simple_graph_grammarParser::Many_edgesContext *e1 = nullptr;
     simple_graph_grammarParser::NodeContext *dst = nullptr;
-    simple_graph_grammarParser::Many_edgesContext *e2 = nullptr;
     CentralmatchContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *EQ();
@@ -110,8 +109,7 @@ public:
     std::vector<Edge_joiningContext *> edge_joining();
     Edge_joiningContext* edge_joining(size_t i);
     antlr4::tree::TerminalNode *REWRITE_TO();
-    std::vector<Many_edgesContext *> many_edges();
-    Many_edgesContext* many_edges(size_t i);
+    Many_edgesContext *many_edges();
     std::vector<Rewrite_toContext *> rewrite_to();
     Rewrite_toContext* rewrite_to(size_t i);
 
@@ -210,10 +208,10 @@ public:
   public:
     Node_containmentContext(Rewrite_exprContext *ctx);
 
-    antlr4::Token *key = nullptr;
+    simple_graph_grammarParser::Rewrite_exprContext *key = nullptr;
     simple_graph_grammarParser::Rewrite_exprContext *nodeVar = nullptr;
-    antlr4::tree::TerminalNode *OTHERS();
-    Rewrite_exprContext *rewrite_expr();
+    std::vector<Rewrite_exprContext *> rewrite_expr();
+    Rewrite_exprContext* rewrite_expr(size_t i);
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
 

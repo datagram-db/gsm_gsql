@@ -10,8 +10,8 @@
 #include <unordered_set>
 #include <map>
 #include <string>
-#include "AttributeTable.h"
-#include "gsm_object_xi_content.h"
+#include <database/AttributeTable.h>
+#include <database/gsm_object_xi_content.h>
 
 
 struct property_content {

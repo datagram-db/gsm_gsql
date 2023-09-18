@@ -55,8 +55,12 @@ namespace gsm2 {
             size_t lIdPrev = 0;
             const struct record *begin;
             size_t N = table.size();
+            std::pair<size_t, size_t> cp;
             for (size_t i = 0; i<N; i++ ) {
                 const auto& ref = table[i];
+                cp.first = ref.graph_id;
+                cp.second = ref.object_id;
+                secondary_index[cp].emplace_back(&ref);
                 if (i == 0) {
                     lIdPrev = ref.l0_id;
                     begin = &ref;
