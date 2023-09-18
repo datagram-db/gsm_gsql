@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 /**
  * Generated with https://www.jsonschema2pojo.org/
+ * Command: './bin/jsonschema2pojo --source GSM.schema.json -t .'
  * GSM Specification
  * <p>
  * This document describes the JSON linearization of the GSM model
