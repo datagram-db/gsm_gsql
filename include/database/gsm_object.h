@@ -48,23 +48,13 @@ struct gsm_object  {
     std::unordered_map<std::string, std::vector<gsm_object_xi_content>> phi;
     std::unordered_map<std::string, std::string> content;
 
-    void updateWith(const gsm_object& old) {
-        if ((old.id != id) && (id == -1)) {
-            id = old.id;
-        }
-        if (ell.empty())
-            ell = old.ell;
-        if (xi.empty())
-            xi = old.xi;
-        if (scores.empty())
-            scores = old.scores;
-        for (const auto& [oldKey, oldValue] : old.content) {
-            content.emplace(oldKey, oldValue); // Inserting the old content only if something new is not available
-        }
-        for (const auto& [oldKey, oldValue] : old.phi) {
-            remove_duplicates(phi.emplace(oldKey, oldValue).first->second); // Inserting the old content only if something new is not available
-        }
-    }
+    /**
+     * Updating the current object with the values from the old one, if it does not exist (rough implementation,
+     * under the assumption that new data is merely inserted and never removed: this should be changed if we also
+     * postulate to remove information and we extend the language)
+     * @param old Old object
+     */
+    void updateWith(const gsm_object& old);
 
     gsm_object(uint_fast32_t id = 0, const std::vector<std::string> &ell = {}, const std::vector<std::string> &xi = {},
                const std::vector<double> &scores = {}, const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi = {});

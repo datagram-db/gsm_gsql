@@ -1,3 +1,24 @@
+/*
+ * delta_updates.h
+ * This file is part of gsm_gsql
+ *
+ * Copyright (C) 2023 - Giacomo Bergami
+ *
+ * gsm_gsql is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * gsm_gsql is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with gsm_gsql. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
 //
 // Created by giacomo on 17/09/23.
 //
@@ -21,52 +42,44 @@ struct delta_updates {
     roaring::Roaring64Map newIterationInsertedObjects;
     std::vector<size_t> no_inserted_node;
 
-    void clear_insertions(){
-        newly_inserted_vertices.clear();
-        newIterationInsertedObjects.clear();
-    }
 
+    void clear_insertions();
 
-    inline const std::vector<size_t>& getNewlyInsertedVertices(const std::string&x) const {
-        auto it = newly_inserted_vertices.find(x);
-        if (it == newly_inserted_vertices.end())
-            return no_inserted_node;
-        else
-            return it->second;
-    }
+    inline const std::vector<size_t>& getNewlyInsertedVertices(const std::string&x) const;
 
-    explicit delta_updates(size_t max_id)  {
-        delta_plus_db.max_id = max_id;
-    }
+    /**
+     * class constructor
+     * @param max_id        Id of the data existing
+     */
+    explicit delta_updates(size_t max_id);
 
-    inline void set_removed(size_t default_val) {
-        size_t toRemove =getOrDefault(replacement_map, default_val, default_val);
-                if (!newIterationInsertedObjects.contains(toRemove))
-        removed_objects.insert(toRemove);
-                else
-                    removed_objects.insert(default_val);
-    }
+    /**
+     * Remove an object id
+     * @param default_val
+     */
+    inline void set_removed(size_t default_val);
 
-    inline void replaceWith(size_t orig, size_t dest) {
-        DEBUG_ASSERT(!replacement_map.contains(orig));
-        replacement_map[orig] = dest;
-    }
+    /**
+     * Determining that "dest" should replace "orig"
+     * @param orig
+     * @param dest
+     */
+    inline void replaceWith(size_t orig, size_t dest);
 
-    inline void associateNewToVar(const std::string& name, size_t id) {
-        newly_inserted_vertices[name].emplace_back(id);
-        newIterationInsertedObjects.add(id);
-    }
+    /**
+     * Associating a variable name to an object id
+     * @param name
+     * @param id
+     */
+    inline void associateNewToVar(const std::string& name, size_t id);
 
-    inline gsm_object& getNewObject() {
-        delta_plus_db.max_id++;
-        auto& obj = delta_plus_db.O[delta_plus_db.max_id];
-        obj.id = delta_plus_db.max_id;
-        return obj;
-    }
+    /**
+     * Generates a new object from the delta-update
+     * @return
+     */
+    inline gsm_object& getNewObject();
 
-    inline bool hasXBeenRemoved(size_t obj) const {
-        return removed_objects.contains(obj);
-    }
+    inline bool hasXBeenRemoved(size_t obj) const;
 private:
 
     // Storing all the nodes that are removed

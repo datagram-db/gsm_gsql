@@ -30,6 +30,24 @@ gsm_object::gsm_object(uint_fast32_t id, const std::vector<std::string> &ell, co
                        const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi)
         : id(id), ell(ell), xi(xi), scores(scores), phi(phi) {}
 
+void gsm_object::updateWith(const gsm_object& old) {
+    if ((old.id != id) && (id == -1)) {
+        id = old.id;
+    }
+    if (ell.empty())
+        ell = old.ell;
+    if (xi.empty())
+        xi = old.xi;
+    if (scores.empty())
+        scores = old.scores;
+    for (const auto& [oldKey, oldValue] : old.content) {
+        content.emplace(oldKey, oldValue); // Inserting the old content only if something new is not available
+    }
+    for (const auto& [oldKey, oldValue] : old.phi) {
+        remove_duplicates(phi.emplace(oldKey, oldValue).first->second); // Inserting the old content only if something new is not available
+    }
+}
+
 bool gsm_object::operator==(const gsm_object &rhs) const {
     return id == rhs.id &&
            ell == rhs.ell &&

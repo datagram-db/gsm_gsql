@@ -34,22 +34,6 @@ void fill_vector_with_case(std::vector<T>& to_fill, const abstract_value& opts) 
         to_fill.emplace_back(std::get<T>(opts));
 }
 
-//struct MatchQueryType {
-//    enum type {
-//        OutgoingEdge,
-//        IngoingEdge,
-//        NodePropertyPredicate,
-//        NodeEllPredicate,
-//        NodeXiPredicate
-//    };
-//
-//    type t;
-//    std::string node_label_or_ellxi_match;
-//    std::string edge_label;
-//    double approx_ellxi;
-//    size_t maxn_ellxi;
-//    DataPredicate data_predicate;
-//};
 
 #include "database/delta_updates.h"
 
