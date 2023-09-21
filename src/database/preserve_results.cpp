@@ -137,8 +137,8 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
         } else if (matching_tables.size() == 2) {
             if ((!matching_tables.at(0).datum.empty()) && (!matching_tables.at(1).datum.empty())) {
                 if (verbose) {
-                    print_table(matching_tables.at(0), std::cout);
-                    print_table(matching_tables.at(1), std::cout);
+                    std::cout << print_table(matching_tables.at(0)) << std::endl;
+                    std::cout << print_table(matching_tables.at(1)) << std::endl;
                 }
                 result = natural_equijoin<value>(matching_tables.at(0), matching_tables.at(1));
             }
@@ -149,14 +149,14 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
             if (!matching_tables.at(0).datum.empty()) {
                 result = matching_tables.at(0);
                 if (verbose)
-                    print_table(result, std::cout);
+                    std::cout << print_table(result)<< std::endl;
                 for (size_t i = 1; i<matching_tables.size(); i++) {
                     if (verbose)
-                        print_table(matching_tables.at(i), std::cout);
+                        std::cout << print_table(matching_tables.at(i)) << std::endl;
                     result = natural_equijoin(result, matching_tables.at(i));
                     if (verbose) {
                         std::cout << "with previous:" << std::endl;
-                        print_table(result, std::cout);
+                        std::cout << print_table(result) << std::endl;
                         std::cout << ":end with previous" << std::endl;
                     }
                 }
@@ -318,18 +318,20 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                 break;
             }
         }
-        DEBUG_ASSERT(expectedOffset != -1);
-        for (const auto& record : result.datum) {
-            auto& local_results = morphisms[std::get<size_t>(record.at(graphInPos).val)][graph_grammar_entry_point.pattern_name];
-            if (local_results.second.empty() && local_results.first.empty()) {
-                local_results.first = result.Schema;
+        if (!result.datum.empty()) {
+            DEBUG_ASSERT(expectedOffset != -1);
+            for (const auto& record : result.datum) {
+                auto& local_results = morphisms[std::get<size_t>(record.at(graphInPos).val)][graph_grammar_entry_point.pattern_name];
+                if (local_results.second.empty() && local_results.first.empty()) {
+                    local_results.first = result.Schema;
+                }
+                local_results.second[std::get<size_t>(record.at(expectedOffset).val)].datum.emplace_back(record);
             }
-            local_results.second[std::get<size_t>(record.at(expectedOffset).val)].datum.emplace_back(record);
-        }
 
-        if (verbose) {
-            std::cout << print_table(result) << std::endl;
-            std::cout << "~~~~~~~~~~~~~~~~~~~~~~~" << std::endl<< std::endl<< std::endl;
+            if (verbose) {
+                std::cout << print_table(result) << std::endl;
+                std::cout << "~~~~~~~~~~~~~~~~~~~~~~~" << std::endl<< std::endl<< std::endl;
+            }
         }
         map_orig_offset++;
     }

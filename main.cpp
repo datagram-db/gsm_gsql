@@ -632,6 +632,8 @@ private:
                         std::cout << "debug" << std::endl;
                     for (size_t pattern_id = 0, M = vl.size(); pattern_id < M; pattern_id++) {
                         const auto& pattern = vl.at(pattern_id);
+                        if (morphs.find(pattern.pattern_name) == morphs.end())
+                            continue;
                         const auto& pattern_result = morphs.at(pattern.pattern_name);
                         DEBUG_ASSERT(pattern.var.size() == 1);
 
@@ -785,7 +787,7 @@ int main() {
     // Loading the data
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // setting up the database
-    result.load_data_from_file("./data/einstein.txt");
+    result.load_data_from_file("/home/giacomo/projects/tweetyPrEAF/broker/haxe/protocol/out.txt");
     // loading the data from the file specification
 
     std::vector<FlexibleGraph<std::string,std::string>> graphs;

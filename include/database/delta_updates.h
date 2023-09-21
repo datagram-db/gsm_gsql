@@ -45,7 +45,13 @@ struct delta_updates {
 
     void clear_insertions();
 
-    inline const std::vector<size_t>& getNewlyInsertedVertices(const std::string&x) const;
+    inline const std::vector<size_t>& getNewlyInsertedVertices(const std::string&x) const {
+        auto it = newly_inserted_vertices.find(x);
+        if (it == newly_inserted_vertices.end())
+            return no_inserted_node;
+        else
+            return it->second;
+    }
 
     /**
      * class constructor
@@ -57,29 +63,47 @@ struct delta_updates {
      * Remove an object id
      * @param default_val
      */
-    inline void set_removed(size_t default_val);
+    inline void set_removed(size_t default_val){
+        size_t toRemove = getOrDefault(replacement_map, default_val, default_val);
+        if (!newIterationInsertedObjects.contains(toRemove))
+            removed_objects.insert(toRemove);
+        else
+            removed_objects.insert(default_val);
+    }
 
     /**
      * Determining that "dest" should replace "orig"
      * @param orig
      * @param dest
      */
-    inline void replaceWith(size_t orig, size_t dest);
-
+    inline void replaceWith(size_t orig, size_t dest) {
+        DEBUG_ASSERT(!replacement_map.contains(orig));
+        replacement_map[orig] = dest;
+    }
     /**
      * Associating a variable name to an object id
      * @param name
      * @param id
      */
-    inline void associateNewToVar(const std::string& name, size_t id);
-
+    inline void associateNewToVar(const std::string& name, size_t id){
+        newly_inserted_vertices[name].emplace_back(id);
+        newIterationInsertedObjects.add(id);
+    }
     /**
      * Generates a new object from the delta-update
      * @return
      */
-    inline gsm_object& getNewObject();
+    inline gsm_object& getNewObject(){
+        delta_plus_db.max_id++;
+        auto& obj = delta_plus_db.O[delta_plus_db.max_id];
+        obj.id = delta_plus_db.max_id;
+        return obj;
+    }
 
-    inline bool hasXBeenRemoved(size_t obj) const;
+    inline bool hasXBeenRemoved(size_t obj) const {
+        return removed_objects.contains(obj);
+    }
+
 private:
 
     // Storing all the nodes that are removed
