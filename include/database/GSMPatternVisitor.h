@@ -36,6 +36,9 @@ struct rewrite_expr;
 using test_side = std::variant<std::shared_ptr<rewrite_expr>,std::string>;
 using test_eq = std::pair<test_side,test_side>;
 
+/**
+ * Part of the rewriting query appearing after the hook symbol
+ */
 struct rewrite_expr {
     enum cases {
         NONE_CASES_REWRITE = 0,
@@ -51,12 +54,13 @@ struct rewrite_expr {
         NODE_OR_EDGE
     };
 
-    cases t;
-    size_t id;
-    std::shared_ptr<rewrite_expr>   pi_key_arg_or_then=nullptr;
-    std::shared_ptr<rewrite_expr>   ptr_or_else=nullptr;
-    test_eq      ifcond;
-    std::string prop;
+    cases t;                                                    // Using enumeration instead of inheritance
+    size_t id;                                                  // Potential id associated to the match
+
+    std::shared_ptr<rewrite_expr>   pi_key_arg_or_then=nullptr; // If an IFTE_RW, this represents a then. Otherwise, represents the key property associated to an object function
+    std::shared_ptr<rewrite_expr>   ptr_or_else=nullptr;        // If an IFTE_RW, this represents the else branch. Otherwise, it represents the content from which retrieve the content to associate to the function
+    test_eq      ifcond;                                        // If an IFTE_RW, this represents the condition.
+    std::string prop;                                           // Variable name, or property text
 
     rewrite_expr() : t{NONE_CASES_REWRITE}, id{0}, ptr_or_else{nullptr}, pi_key_arg_or_then{nullptr}, prop{} {
         std::shared_ptr<rewrite_expr> o{nullptr};
@@ -72,13 +76,13 @@ struct rewrite_expr {
 
 
 struct edge_match {
-    bool forall{false};
-    bool question_mark{false};
-    std::optional<std::string> var;
-    std::vector<std::string> type;
+    bool forall{false};             // Whether the edge will lead to a grouped node
+    bool question_mark{false};      // Edge matching optionality
+    std::optional<std::string> var; // Variable associated to the edge
+    std::vector<std::string> type;  // Disjunction of possible labels associated to the edge
 
     DEFAULT_CONSTRUCTORS(edge_match);
-    std::vector<size_t> outputQuery;
+    std::vector<size_t> outputQuery;    // Queries that are going to need the associated information for this edge
 };
 
 static inline
@@ -104,20 +108,25 @@ struct rewrite_to {
     DEFAULT_COPY_ASSGN(rewrite_to);
 };
 
+/**
+ * This represents a single pattern
+ */
 struct node_match {
     bool star{false};
-    bool vec{false};
-    std::vector<std::string> var;
-    std::optional<std::string> type;
-    std::string pattern_name;
-    std::vector<std::pair<edge_match, node_match>> out;
-    std::vector<std::pair<node_match, edge_match>> in;
+    bool vec{false};                                            // Whether this will have to be grouped
+    std::vector<std::string> var;                               // Variable associated to a node
+    std::optional<std::string> type;                            // Label associated to the node to be matched
+    std::string pattern_name;                                   // Potential name of the pattern associated to the currently matched node
+    std::vector<std::pair<edge_match, node_match>> out;         // Outgoing edges from the matching node
+    std::vector<std::pair<node_match, edge_match>> in;          // Ingoing edges towards the matching node
     std::vector<edge_match> hook;
-    std::vector<node_match> join_edges;
+    std::vector<node_match> join_edges;                         // Additional edge traversing conditions that are ascendants/descendants of the matching node
 
-    bool has_rewrite{false};
-    std::shared_ptr<node_match> rewrite_match_dst{nullptr};
-    std::vector<rewrite_to> rwr_to;
+    /// Part appearing after the hook. If this is not there, then we need to assume (query-wise), that we are just
+    /// Returning what we have matched (todo: removing un-matched nodes that are in the ego-net, but not matched!)
+    bool has_rewrite{false};                                    // Whether there is a rewriting
+    std::shared_ptr<node_match> rewrite_match_dst{nullptr};     // The main node to substitute the entry-point match
+    std::vector<rewrite_to> rwr_to;                             // Set of rewriting actions providing the resulting graph to be matched
 
 
     node_match() : star{false}, vec{false}, has_rewrite{false}, var{}, type{}, pattern_name{}, out{}, in{}, hook{}, join_edges{}, rewrite_match_dst{nullptr} {};
