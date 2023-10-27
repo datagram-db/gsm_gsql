@@ -28,7 +28,7 @@ int main() {
     // Loading the data
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // setting up the database
-    result.load_data_from_file("/home/giacomo/projects/tweetyPrEAF/broker/haxe/protocol/out.txt");
+    result.load_data_from_file("./data/einstein.txt");
     // loading the data from the file specification
 
     std::vector<FlexibleGraph<std::string,std::string>> graphs;
