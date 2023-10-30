@@ -84,52 +84,8 @@ void closure::generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std:
 
 void closure::generate_materialised_view() {
     isMaterialised = true;
-    matchedNodes.clear();
     size_t N = pr.morphisms.size();
-    matchedNodes.resize(N);
-    for (size_t graphId = 0; graphId<N; graphId++) {
-        const auto& g = pr.morphisms.at(graphId);
-        for (const auto& [patternName, x] : g) {
-            size_t nestedOffsetN = x.first.size(), nestedOffset = 0, graphOffset = 0;
-            bool starFound = false, graphFound = false;
-            for (; nestedOffset<nestedOffsetN; nestedOffset++) {
-                if (x.first.at(nestedOffset) == "*") {
-                    starFound = true;
-                    if (starFound && graphFound) break;
-                } if (x.first.at(nestedOffset) == "graph") {
-                    graphOffset = nestedOffset;
-                    graphFound = true;
-                    if (starFound && graphFound) break;
-                }
-            }
-            for (const auto& [varName, table] : x.second) {
-                for (const auto& record : table.datum) {
-                    for (size_t idx = 0, M = record.size(); idx<M; idx++) {
-                        if (idx == graphOffset) continue;
-                        if (idx == nestedOffset) {
-                            for (const auto& nestedRecord : record.at(idx).table.datum) {
-                                for (size_t idx2 = 0, O = nestedRecord.size(); idx2<O; idx2++) {
-                                    auto& cell = nestedRecord.at(idx2);
-                                    if (std::holds_alternative<size_t>(cell.val)) {
-                                        matchedNodes[graphId].add(std::get<size_t>(cell.val));
-                                    }
-                                }
-                            }
-                        } else {
-                            auto& cell = record.at(idx);
-                            if (std::holds_alternative<size_t>(cell.val)) {
-                                matchedNodes[graphId].add(std::get<size_t>(cell.val));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        matchedNodes.at(graphId).printf();
-    }
-
     forloading.iterateOverObjects([this](size_t graphid, const gsm_object& legacy_object_old_data) {
-        auto& set = matchedNodes.at(graphid);
         auto& updates = delta_updates_per_graph[graphid];
         if ((!updates.hasXBeenRemoved(legacy_object_old_data.id))) {
             size_t new_id = legacy_object_old_data.id;

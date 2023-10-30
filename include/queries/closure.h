@@ -61,7 +61,6 @@ struct closure {
     std::vector<gsm_object_xi_content> empty_content;
     bool isMaterialised = false;
 
-    std::vector<roaring::Roaring64Map> matchedNodes;
 
     /**
      * Loading the query to be run on top of the data
