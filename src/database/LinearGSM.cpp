@@ -506,10 +506,12 @@ namespace gsm2 {
         void LinearGSM::iterateOverObjects(const std::function<void(size_t, const gsm_object &)> &f) {
             std::pair<size_t, size_t> cp;
             size_t offsetMainRegistryTable = 0;
+            gsm_object legacy_obj;
             for (const auto& record : main_registry.table) {
-                gsm_object legacy_obj;
                 cp.first = record.graph_id;
                 cp.second = legacy_obj.id = record.event_id;
+                legacy_obj.content.clear();
+                legacy_obj.phi.clear();
                 legacy_obj.ell = ell(cp.first, cp.second);
                 legacy_obj.xi = xi(cp.first, cp.second);
                 for (const auto& [keyAttribute, Table] : KeyValueContainment) {

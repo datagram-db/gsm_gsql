@@ -10,7 +10,7 @@ int main() {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Loading the query
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    std::ifstream stream{"./patterns.txt"};
+    std::ifstream stream{"./patterns2.txt"};
     result.load_query_from_file(stream);
 //    antlr4::ANTLRInputStream input(stream);
 //    simple_graph_grammarLexer lexer(&input);

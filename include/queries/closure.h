@@ -588,8 +588,6 @@ private:
             const auto& morphs = pr.morphisms.at(graph_id);
             auto& updates = delta_updates_per_graph.at(graph_id);
 
-//            delta_updates updates{};
-
             // For each graph in the actual graphs
             for (size_t time = 0, T = g.container_order.size(); time<T; time++)
                 for (const auto& vertex : g.container_order.at(T-time-1)) {
@@ -619,32 +617,29 @@ private:
                                         {
                                             // Removing objects from the final result
                                             auto idx = pr.resolve_entry_match(pattern_id, operation.others);
-                                            if (idx.second >= 0) {
-                                                if (idx.first) {
+                                            if (idx.second >= 0) { // If this is in the table
+                                                if (idx.first) { // If a nested variable, removing all the associated entries in the nested
                                                     for (const auto& sub_entries : entries.at(pr.nested_index.at(pattern_id)).table.datum) {
                                                         size_t default_val = std::get<size_t>(sub_entries.at(idx.second).val);
                                                         updates.set_removed(default_val);
-//                                                        removed_objects.add(getOrDefault(replacement_map, default_val, default_val));
                                                     }
-                                                } else {
+                                                } else { // Otherwise, just removing this instance
                                                     size_t default_val = std::get<size_t>(entries.at(idx.second).val);
                                                     updates.set_removed(default_val);
-//                                                    removed_objects.add(getOrDefault(replacement_map, default_val, default_val));
                                                 }
                                             }
                                         } break;
 
                                         case rewrite_to::NEU_RW: {
                                             // Allocating a new empty object, and returning this potentially in place of the previous one.
+                                            // Then, associating this to a new variable, not in the morphisms, but in the delta updates
 //                                            delta_plus_db.max_id++;
                                             auto& obj = updates.getNewObject(); //delta_plus_db.O[delta_plus_db.max_id];
 //                                            if (obj.id == 29)
 //                                                std::cout << "debug" << std::endl;
                                             updates.associateNewToVar(operation.others, obj.id);
 //                                            obj.id = delta_plus_db.max_id;
-
 //                                            auto idx = pr.resolve_entry_match(j, operation.others);
-
 //                                            newly_inserted_vertices[operation.others].emplace_back(obj.id);
 
                                         } break;

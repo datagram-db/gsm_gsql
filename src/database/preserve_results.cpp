@@ -30,8 +30,8 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
     abstract_value abstract_true = true;
     nested_index.clear();
     nested_index.insert(nested_index.end(), vl.size(), -1);
-    map_orig.resize(vl.size());
-    map_nested.resize(vl.size());
+    map_orig.resize(vl.size()); // One element per pattern
+    map_nested.resize(vl.size());   // One element per pattern
     size_t map_orig_offset = 0;
 
     for (const auto& graph_grammar_entry_point: vl) {
@@ -128,13 +128,16 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
             }
         }
 
-
+        /// Now, computing the join across all the tables
         nested_table result;
         if (matching_tables.empty()) {
+            /// No table associated to the pattern
             throw std::runtime_error("ERROR: you should have in pattern "+graph_grammar_entry_point.pattern_name+" at least one non-optional edge!");
         } else if (matching_tables.size() == 1) {
+            // Just one table: no join is required
             result = matching_tables.at(0);
         } else if (matching_tables.size() == 2) {
+            // Otherwise, you need to natural join the two tables
             if ((!matching_tables.at(0).datum.empty()) && (!matching_tables.at(1).datum.empty())) {
                 if (verbose) {
                     std::cout << print_table(matching_tables.at(0)) << std::endl;
@@ -143,10 +146,14 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                 result = natural_equijoin<value>(matching_tables.at(0), matching_tables.at(1));
             }
         } else {
+            // Having more than one table, sorting the tables by increasing size.
+            // This heuristic tries to minimise the chance of matches
             std::sort(matching_tables.begin(), matching_tables.end(), [](const auto& x, const auto& y) {
                 return x.datum.size() < y.datum.size();
             });
+            // If the first table is empty, I abort computing the join
             if (!matching_tables.at(0).datum.empty()) {
+                // Computing the equi-join across all the tables being provided
                 result = matching_tables.at(0);
                 if (verbose)
                     std::cout << print_table(result)<< std::endl;
@@ -154,6 +161,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                     if (verbose)
                         std::cout << print_table(matching_tables.at(i)) << std::endl;
                     result = natural_equijoin(result, matching_tables.at(i));
+                    if (result.datum.empty()) break; // Stopping as soon as I reckon the table becomes empty
                     if (verbose) {
                         std::cout << "with previous:" << std::endl;
                         std::cout << print_table(result) << std::endl;
@@ -164,6 +172,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
         }
 
         if ((!result.datum.empty()) && (!optional_match_tables.empty())) {
+            // Similarly, computing the left join against the optional tables for the optional matches
             std::sort(optional_match_tables.begin(), optional_match_tables.end(), [](const auto& x, const auto& y) {
                 return x.datum.size() < y.datum.size();
             });
@@ -174,9 +183,12 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                 }
             }
         }
+
+        /// If I need to group-by
         if (graph_grammar_entry_point.vec) {
-            std::map<std::pair<size_t, size_t>, std::set<size_t>> M;
-            std::map<size_t, std::set<std::set<size_t>>> M2;
+            // Indexing the hooks and the join edges
+            std::map<std::pair<size_t, size_t>, std::set<size_t>> M; // <graph,objId> --> <edgeTarget>
+            std::map<size_t, std::set<std::set<size_t>>> M2;         // <graph> --> [<edgeTarget>]
             for (const auto& t : hooks_for_vecs) {
                 DEBUG_ASSERT(t.Schema.at(0) == "graph");
                 DEBUG_ASSERT(t.Schema.at(1) == t.Schema.at(2));
@@ -195,6 +207,9 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                 M2[k.first].insert(v);
             }
             M.clear();
+
+            /// Looking in the schema of the result table, where the 'graph' variable is (graphPos), as well as the variable
+            /// associated to entrypoint for the match (foundInPos)
             size_t foundInPos = 0;
             size_t graphPos = 0;
             bool foundPos = false, foundGraph = false;
@@ -212,8 +227,10 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                 if (!foundGraph) graphPos++;
                 if (!foundPos) foundInPos++;
             }
+
             size_t recordToRemove = 0;
-            std::vector<size_t> idx_to_remove;
+            std::vector<size_t> idx_to_remove; // Indices for the rows to be removed in the main table, as they do not match
+            // with the other "spare" edges, for hooks or "join" edges (not within the ego-net)
             for (const auto& record : result.datum) {
                 auto fg = M2.find(std::get<size_t>(record.at(foundGraph).val));
                 if (fg == M2.end())
@@ -231,15 +248,19 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                 }
                 recordToRemove++;
             }
+            // Removing all the matches not matching with the join edges
             remove_index(result.datum, idx_to_remove);
             all.emplace_back("graph");
             std::reverse(all.begin(), all.end());
+            // Nesting the table using the variables associate to a .vec, alongside with their associated graph id.
+            // The remaining rows will be nested within the * node
             std::tie(result, nested_schema) = nest_or_groupby(result, all, "*");
             idx_to_remove.clear();
 
             recordToRemove = 0; foundInPos = -1; size_t graphInPos = -1;
             for (const auto& x : result.datum) {
                 if (graphInPos == -1) {
+                    // After the group-by, re-calculating the position of "graph" within the schema of the nested table
                     graphInPos = 0;
                     for (const auto& findH : result.Schema) {
                         if (findH == "graph") {
@@ -252,6 +273,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                 DEBUG_ASSERT(it != M2.end());
                 const auto& t = x.at(x.size()-1).table;
                 if (foundInPos == -1) {
+                    // After the group-by, re-calculating the position of the "variable" associated to the group by
                     foundInPos = 0;
                     for (const auto& findH : t.Schema) {
                         if (findH == graph_grammar_entry_point.var.at(0)) {
@@ -266,20 +288,25 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                 }
                 bool found = false;
                 for (auto& s : it->second) {
+                    // Hook intersection should target all the outputs that are associated to the aggregation, if any
                     if (ordered_intersection(s, offsets).size() == s.size()) {
                         found = true;
                         break;
                     }
                 }
-                if (!found) idx_to_remove.emplace_back(recordToRemove);
+                // If not found, then removing the entry from the match
+                if (!found)
+                    idx_to_remove.emplace_back(recordToRemove);
                 recordToRemove++;
             }
+            // Removing the records not matching the hook
             remove_index(result.datum, idx_to_remove);
         }
-
+        /// If I need to group-by: finish
 
         std::sort(result.datum.begin(), result.datum.end());
         size_t graphInPos = 0;
+        // Looking for where the "graph" is declared within the schema
         for (const auto& findH : result.Schema) {
             if (findH == "graph") {
                 break;
@@ -289,20 +316,29 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
         bool isFirst = false;
         std::string toLookFor;
         if (graph_grammar_entry_point.vec) {
+            // If the match is a vec (it was grouped-by), then  getting the variable within the nested element
+            // TODO: requiring that a vec has at least one ingoing edge (TODO: generalise!)
             DEBUG_ASSERT(graph_grammar_entry_point.in.size() == 1);
             DEBUG_ASSERT(graph_grammar_entry_point.in.at(0).first.var.size() == 1);
             toLookFor = graph_grammar_entry_point.in.at(0).first.var.at(0);
         } else {
+            // Otherwise, the variable is
             toLookFor = graph_grammar_entry_point.var.at(0);
         }
 
 
+        // Determining the mapping for the relevant element for the schema for eventually resolving the
+        // coordinates of the variables within the nested table
         size_t offsetForStar = 0;
         for (const auto& k : result.Schema) {
             if (k != "*") {
-                map_orig[map_orig_offset].put(k);
+                // Remembering that pattern map_orig_offset contains k in the current position
+                // This works under the assumption that * is always located at the last element of the table!
+                map_orig[map_orig_offset].put(k); // Used f
             } else {
+                // Remembering the location of the sole nested cell
                 nested_index[map_orig_offset] = offsetForStar;
+                // Remembering the offsets for the other nested cells
                 for (const auto& w : nested_schema) {
                     map_nested[map_orig_offset].put(w);
                 }
@@ -319,12 +355,18 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
             }
         }
         if (!result.datum.empty()) {
+            // Populating the morphisms
             DEBUG_ASSERT(expectedOffset != -1);
             for (const auto& record : result.datum) {
+                // Retrieving the graph of interest, registered at offset graphInPos
+                // Then, retrieving the results associated to the pattern
                 auto& local_results = morphisms[std::get<size_t>(record.at(graphInPos).val)][graph_grammar_entry_point.pattern_name];
                 if (local_results.second.empty() && local_results.first.empty()) {
+                    // Might not have a schema yet for efficiency purposes: now, I am setting this once and for all.
                     local_results.first = result.Schema;
                 }
+                // expectedOffset will contain now the information related to the main entry point.
+                // This will then contain the information related to the record of interest
                 local_results.second[std::get<size_t>(record.at(expectedOffset).val)].datum.emplace_back(record);
             }
 

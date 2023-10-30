@@ -52,7 +52,7 @@ struct gsm_object  {
      * Updating the current object with the values from the old one, if it does not exist (rough implementation,
      * under the assumption that new data is merely inserted and never removed: this should be changed if we also
      * postulate to remove information and we extend the language)
-     * @param old Old object
+     * @param old    Old object
      */
     void updateWith(const gsm_object& old);
 
