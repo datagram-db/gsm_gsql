@@ -251,44 +251,63 @@ private:
             case rewrite_expr::NONE_CASES_REWRITE:
                 break;
             case rewrite_expr::NODE_XI: {
-                size_t xi_offset = ptr->id;
-                auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id));
-                const auto& record = table.datum.at(record_id);
-                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
-                for (const auto& id : object_ids) {
-                    auto& xi = delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).xi;
-                    if (xi.size() <= xi_offset)
-                        xi.insert(xi.end(), xi.size()-xi_offset+1, "");
-                    xi[xi_offset] = std::any_cast<std::string>(match_rhs);
+                if (match_rhs.has_value()) {
+                    size_t xi_offset = ptr->id;
+                    auto hasVar = interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id);
+                    if (!hasVar.has_value()) return;
+                    auto variable_name = std::any_cast<std::string>(hasVar);
+                    const auto& record = table.datum.at(record_id);
+                    auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+                    for (const auto& id : object_ids) {
+                        auto& xi = delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).xi;
+                        if (xi.size() <= xi_offset)
+                            xi.insert(xi.end(), xi.size()-xi_offset+1, "");
+                        xi[xi_offset] = std::any_cast<std::string>(match_rhs);
+                    }
                 }
             } break;
 
             case rewrite_expr::NODE_ELL: {
-                size_t ell_offset = ptr->id;
-                auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id));
-                const auto& record = table.datum.at(record_id);
-                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
-                for (const auto& id : object_ids) {
-                    auto& ell = delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).ell;
-                    if (ell.size() <= ell_offset)
-                        ell.insert(ell.end(), ell.size()-ell_offset+1, "");
-                    ell[ell_offset] = std::any_cast<std::string>(match_rhs);
+                if (match_rhs.has_value()) {
+                    size_t ell_offset = ptr->id;
+                    auto hasVar = interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id);
+                    if (!hasVar.has_value()) return;
+                    auto variable_name = std::any_cast<std::string>(hasVar);
+                    const auto& record = table.datum.at(record_id);
+                    auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+                    for (const auto& id : object_ids) {
+                        auto& ell = delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).ell;
+                        if (ell.size() <= ell_offset)
+                            ell.insert(ell.end(), ell.size()-ell_offset+1, "");
+                        ell[ell_offset] = std::any_cast<std::string>(match_rhs);
+                    }
                 }
+
             } break;
 
             case rewrite_expr::NODE_PROP: {
-                auto prop_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), graph_id, pattern_id, schema, table, record_id));
-                auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id));
-                const auto& record = table.datum.at(record_id);
-                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
-                for (const auto& id : object_ids) {
-                    delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).content[prop_name] = std::any_cast<std::string>(match_rhs);
+                if (match_rhs.has_value()) {
+                    auto hasProp = interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), graph_id, pattern_id, schema, table, record_id);
+                    if (!hasProp.has_value()) return;
+                    auto prop_name = std::any_cast<std::string>(hasProp);
+                    auto hasVar = interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id);
+                    if (!hasVar.has_value()) return;
+                    auto variable_name = std::any_cast<std::string>(hasVar);
+                    const auto& record = table.datum.at(record_id);
+                    auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+                    for (const auto& id : object_ids) {
+                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).content[prop_name] = std::any_cast<std::string>(match_rhs);
+                    }
                 }
             } break;
 
             case rewrite_expr::NODE_CONT: {
-                auto prop_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), graph_id, pattern_id, schema, table, record_id));
-                auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id));
+                auto hasProp = interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), graph_id, pattern_id, schema, table, record_id);
+                if (!hasProp.has_value()) return;
+                auto prop_name = std::any_cast<std::string>(hasProp);
+                auto hasVar = interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id);
+                if (!hasVar.has_value()) return;
+                auto variable_name = std::any_cast<std::string>(hasVar);
                 const auto& record = table.datum.at(record_id);
                 auto isVariableName = get_v_opt<std::string>(match_rhs);
                 if (isVariableName.has_value()) {
@@ -365,6 +384,8 @@ private:
                 auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id));
                 const auto& record = table.datum.at(record_id);
                 auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+                if (object_ids.empty())
+                    return {};
 
                 // for each object_id in the vector, I continuously append
                 return std::accumulate(
@@ -387,6 +408,8 @@ private:
                 auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id,schema,  table, record_id));
                 const auto& record = table.datum.at(record_id);
                 auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+                if (object_ids.empty())
+                    return {};
 
                 // for each object_id in the vector, I continuously append
                 return std::accumulate(
@@ -409,6 +432,8 @@ private:
                 auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id,schema,  table, record_id));
                 const auto& record = table.datum.at(record_id);
                 auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+                if (object_ids.empty())
+                    return {};
 
                 // for each object_id in the vector, I continuously append
                 return std::accumulate(
@@ -444,6 +469,9 @@ private:
                 auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id));
                 const auto& record = table.datum.at(record_id);
                 auto object_ids = resolvelabelsOverVariableName(pattern_id, variable_name, record);
+                if (object_ids.empty())
+                    return {};
+
                 return std::accumulate(
                         object_ids.empty() ? object_ids.end() : std::next(object_ids.begin()),
                         object_ids.end(),
