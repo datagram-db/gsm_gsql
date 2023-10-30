@@ -24,6 +24,7 @@ p2 = (>> H)<-[∀l:]--(X)                                   // Graph matching, S
                                        (label l)
                                       ), X) as h
        set (φ (label g), h) as Y
+       del Z
 
 
      (h)
@@ -46,5 +47,6 @@ p3 = (V)--[∀n:nsubj]->(>>S)
         set(   φ orig , s) as S
         set(   𝜉 0 @ s) as (𝜉 0 @ S)
        del V
+       del T
 
        (s)

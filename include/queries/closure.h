@@ -61,6 +61,8 @@ struct closure {
     std::vector<gsm_object_xi_content> empty_content;
     bool isMaterialised = false;
 
+    std::vector<roaring::Roaring64Map> matchedNodes;
+
     /**
      * Loading the query to be run on top of the data
      *
@@ -620,12 +622,17 @@ private:
                                             if (idx.second >= 0) { // If this is in the table
                                                 if (idx.first) { // If a nested variable, removing all the associated entries in the nested
                                                     for (const auto& sub_entries : entries.at(pr.nested_index.at(pattern_id)).table.datum) {
-                                                        size_t default_val = std::get<size_t>(sub_entries.at(idx.second).val);
-                                                        updates.set_removed(default_val);
+                                                        if (!std::holds_alternative<bool>(sub_entries.at(idx.second).val)) { // If this was not an optional match
+                                                            size_t default_val = std::get<size_t>(sub_entries.at(idx.second).val);
+                                                            updates.set_removed(default_val);
+                                                        }
+
                                                     }
                                                 } else { // Otherwise, just removing this instance
-                                                    size_t default_val = std::get<size_t>(entries.at(idx.second).val);
-                                                    updates.set_removed(default_val);
+                                                    if (!std::holds_alternative<bool>(entries.at(idx.second).val)) {
+                                                        size_t default_val = std::get<size_t>(entries.at(idx.second).val);
+                                                        updates.set_removed(default_val);
+                                                    }
                                                 }
                                             }
                                         } break;
