@@ -105,7 +105,8 @@ struct closure {
      */
     void generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std::string,std::string>>& simpleGraphs);
 
-    void perform_query(bool materialise = false) {
+    void perform_query(bool verbose = false) {
+        bool materialise = false;
         isMaterialised = false;
         pr.init(); // For future reference, if this will become a query engine, we need to clear all intermediate results first!
         // TODO: rewrite the matching variables so to allow morphisms to be effectively queried
@@ -119,14 +120,14 @@ struct closure {
         // First, matching all the single patterns within the queries, as described in the cached results
         pr.run_simple_edge_queries(forloading);
         // Then, running each morphism separately (now, we are assuming any order will do)
-        pr.instantiate_morphisms(vl);
+        pr.instantiate_morphisms(vl, verbose);
         // Only afterwards, we are applying all of the transformations for each of the matches collected in the tables as morphisms
         run_transformations(hasDelRewrite);
         // The previous run just generate delta updates. If we want to better see the results, then we need to materialise such intermediate results
         // while providing a cohesive view of the graph.
-        if (materialise) {
-            generate_materialised_view();
-        }
+//        if (materialise) {
+//            generate_materialised_view();
+//        }
     }
 
     /**

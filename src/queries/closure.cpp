@@ -49,10 +49,18 @@ void closure::generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std:
     std::pair<size_t, size_t> cp;
     std::vector<yaucl::structures::any_to_uint_bimap<size_t>> nodesBeingInsertedAlready(delta_updates_per_graph.size());
     size_t offsetMainRegistryTable = 0;
+    std::vector<std::vector<size_t>> initialNodes(delta_updates_per_graph.size());
+    std::vector<std::unordered_map<size_t, size_t>> time(delta_updates_per_graph.size());
     for (size_t i = 0, N = delta_updates_per_graph.size(); i<N; i++) {
+        const auto& graph_index = forloading.all_indices.at(i).container_order.at(0);
+        initialNodes[i].reserve(N);
+        for (size_t j = 0, M = graph_index.size(); j<M; j++) {
+            initialNodes[i][j] = getOrDefault(delta_updates_per_graph.at(i).replacement_map, graph_index.at(j), graph_index.at(j));
+        }
+
         for (const auto& [idX,object] : delta_updates_per_graph.at(i).delta_plus_db.O) {
             if (delta_updates_per_graph.at(i).hasXBeenRemoved(idX)) {
-                std::cout << idX << std::endl;
+//                std::cout << idX << std::endl;
                 continue;
             }
             cp.first = i;
@@ -92,9 +100,53 @@ void closure::generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std:
                     if (dst >= 0) {
                         auto& g = simpleGraphs[i];
                         g.addNewEdgeFromId(src, dst, edgelabel);
-                    } else {
-                        std::cout<< idX << "--["<< edgelabel << "]-->" << record.id << std::endl;
                     }
+//                    else {
+//                        std::cout<< idX << "--["<< edgelabel << "]-->" << record.id << std::endl;
+//                    }
+                }
+            }
+        }
+
+
+    }
+    for (size_t k = 0, N = delta_updates_per_graph.size(); k<N; k++) {
+        roaring::Roaring64Map visited;
+        std::vector<size_t> Stack;
+        auto& g = simpleGraphs[k];
+        for (size_t start_from : initialNodes[k]) {
+            g.g.topologicalSortUtil(start_from, visited, Stack);
+        }
+        for (size_t i = 0; i < g.g.V_size; i++)
+            if (!visited.contains(i))
+                g.g.topologicalSortUtil(i, visited, Stack);
+        bool firstVisit = true;
+        std::reverse(Stack.begin(), Stack.end());
+        for (size_t v : Stack) {
+            if (firstVisit) {
+                time[k][v] = 0;
+                firstVisit = false;
+            } else {
+                time[k][v] = 0;
+                auto it = g.g.ingoing_edges.find(v);
+                if (it != g.g.ingoing_edges.end()) {
+                    for (size_t edgeId : it->second)
+                        time[k][v] = std::max(time[k][g.g.edge_ids.at(edgeId).first], time[k][v]);
+                    time[k][v]++;
+                }
+            }
+        }
+        for (size_t v = 0, vN = g.vertexSize(); v<vN; v++) {
+            size_t vt = time[k][v];
+            std::vector<size_t> edgesToRemove;
+            for (size_t edgeId : g.g.nodes.at(v)) {
+                if (time[k][g.g.edge_ids.at(edgeId).second] <= vt) {
+                    edgesToRemove.emplace_back(edgeId);
+                }
+            }
+            if (!edgesToRemove.empty()) {
+                for (size_t edgeId : edgesToRemove) {
+                    remove_edge(&g.g, edgeId);
                 }
             }
         }

@@ -92,7 +92,7 @@ struct preserve_results {
      *
      * @param vl    Collection of patterns
      */
-    void instantiate_morphisms(const std::vector<node_match>& vl, bool verbose = true);
+    void instantiate_morphisms(const std::vector<node_match>& vl, bool verbose = false);
 
     /**
      * Preparing teh hook queries edges
