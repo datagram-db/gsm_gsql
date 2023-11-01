@@ -31,6 +31,8 @@
 #include <yaucl/structures/default_constructors.h>
 #include <memory>
 #include <variant>
+#include "yaucl/functional/assert.h"
+
 
 struct rewrite_expr;
 using test_side = std::variant<std::shared_ptr<rewrite_expr>,std::string>;
@@ -122,14 +124,88 @@ struct node_match {
     std::vector<edge_match> hook;
     std::vector<node_match> join_edges;                         // Additional edge traversing conditions that are ascendants/descendants of the matching node
 
+    bool compiled_node_variables_optionality;
+    std::unordered_set<std::string> hasRequiredMatch;
+    inline bool compileNodeVariableOptionality() {
+
+        // Determining the required (non-optional) node matches
+        std::unordered_set<std::string> optional_node_vars;
+        DEBUG_ASSERT(var.size() == 1);
+        const auto& mainMatchVarName = var.at(0);
+        if (!compiled_node_variables_optionality) {
+            for (const auto& [e,n] : out) {
+                DEBUG_ASSERT(n.var.size() == 1);
+                const auto& candidateNodeMatch = n.var.at(0);
+                if ((candidateNodeMatch != mainMatchVarName) && (!hasRequiredMatch.contains(n.var.at(0)))) {
+                    if (e.question_mark) {
+                        optional_node_vars.insert(candidateNodeMatch);
+                    } else {
+                        hasRequiredMatch.insert(candidateNodeMatch);
+                        optional_node_vars.erase(candidateNodeMatch);
+                    }
+                }
+            }
+            for (const auto& [n,e] : in) {
+                DEBUG_ASSERT(n.var.size() == 1);
+                const auto& candidateNodeMatch = n.var.at(0);
+                if ((candidateNodeMatch != mainMatchVarName) && (!hasRequiredMatch.contains(n.var.at(0)))) {
+                    if (e.question_mark) {
+                        optional_node_vars.insert(candidateNodeMatch);
+                    } else {
+                        hasRequiredMatch.insert(candidateNodeMatch);
+                        optional_node_vars.erase(candidateNodeMatch);
+                    }
+                }
+            }
+            for (const auto& n_orig : join_edges) {
+                DEBUG_ASSERT(n_orig.var.size() == 1);
+                for (const auto& [e,n] : out) {
+                    DEBUG_ASSERT(n.var.size() == 1);
+                    const auto& candidateNodeMatch = n.var.at(0);
+                    if ((!hasRequiredMatch.contains(candidateNodeMatch)) && (!hasRequiredMatch.contains(n_orig.var.at(0)))) {
+                        if ((candidateNodeMatch != mainMatchVarName) && (!hasRequiredMatch.contains(candidateNodeMatch))) {
+                            if (e.question_mark) {
+                                optional_node_vars.insert(candidateNodeMatch);
+                            } else {
+                                hasRequiredMatch.insert(candidateNodeMatch);
+                                optional_node_vars.erase(candidateNodeMatch);
+                            }
+                        }
+                    }
+
+                }
+                for (const auto& [n,e] : in) {
+                    DEBUG_ASSERT(n.var.size() == 1);
+                    const auto& candidateNodeMatch = n.var.at(0);
+                    if ((!hasRequiredMatch.contains(candidateNodeMatch)) || (!hasRequiredMatch.contains(n_orig.var.at(0)))) {
+                        if ((candidateNodeMatch != mainMatchVarName) && (!hasRequiredMatch.contains(candidateNodeMatch))) {
+                            if (e.question_mark) {
+                                optional_node_vars.insert(candidateNodeMatch);
+                            } else {
+                                hasRequiredMatch.insert(candidateNodeMatch);
+                                optional_node_vars.erase(candidateNodeMatch);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Determining whether there are deletion rewriting matches;
+
+            compiled_node_variables_optionality = true;
+        }
+        return has_del_rewrite;
+    }
+
     /// Part appearing after the hook. If this is not there, then we need to assume (query-wise), that we are just
     /// Returning what we have matched (todo: removing un-matched nodes that are in the ego-net, but not matched!)
     bool has_rewrite{false};                                    // Whether there is a rewriting
+    bool has_del_rewrite{false};                                // Whether
     std::shared_ptr<node_match> rewrite_match_dst{nullptr};     // The main node to substitute the entry-point match
     std::vector<rewrite_to> rwr_to;                             // Set of rewriting actions providing the resulting graph to be matched
 
 
-    node_match() : star{false}, vec{false}, has_rewrite{false}, var{}, type{}, pattern_name{}, out{}, in{}, hook{}, join_edges{}, rewrite_match_dst{nullptr} {};
+    node_match() : compiled_node_variables_optionality{false}, star{false}, vec{false}, has_rewrite{false}, var{}, type{}, pattern_name{}, out{}, in{}, hook{}, join_edges{}, rewrite_match_dst{nullptr} {};
     DEFAULT_COPY_ASSGN(node_match);
 };
 

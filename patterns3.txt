@@ -1,0 +1,15 @@
+p1 = (X)--[e: l]->(Y)                   // Graph matching, First pattern
+
+     ↪
+       del X                                             // Removing a node
+
+       (Y);                                              // Instance of reference to be returned
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+p2 = (X) --[e: x]->(Y)
+         --[f: y]->(Z)
+        ;
+        ↪  del Z
+
+        (X)

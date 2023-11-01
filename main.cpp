@@ -10,7 +10,7 @@ int main() {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Loading the query
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    std::ifstream stream{"./patterns.txt"};
+    std::ifstream stream{"./patterns3bis.txt"};
     result.load_query_from_file(stream);
 //    antlr4::ANTLRInputStream input(stream);
 //    simple_graph_grammarLexer lexer(&input);
@@ -28,7 +28,7 @@ int main() {
     // Loading the data
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // setting up the database
-    result.load_data_from_file("./data/einstein.txt");
+    result.load_data_from_file("./data/tests/removing_root.yaml.gsm"); // "./data/einstein.txt"
     // loading the data from the file specification
 
     std::vector<FlexibleGraph<std::string,std::string>> graphs;
@@ -55,52 +55,6 @@ int main() {
     for (const auto& g : graphs){
         g.dot(std::cout, false, "record"); std::cout << std::endl;
     }
-
-//    std::cout << "<" << std::endl;
-//
-//
-//    // returning all the graphs and objects ids having det as a first label
-//    {
-//        auto result = forloading.timed_dataless_exists("det");
-//        for (const auto& x : result) {
-//            std::cout << x << std::endl;
-//        }
-//    }
-//
-//    // Returning all nodes providing an approximate string matching on the node of the graph
-//    {
-//        auto result = forloading.approx_value_query(0.4, 100, "testem");
-//        for (const auto& x : result) {
-//            std::cout << x << std::endl;
-//        }
-//    }
-//
-//    // Returning all the contents for the objects having "det" as a containment collection
-//    {
-//        std::unordered_map<std::pair<size_t, size_t>, std::vector<result>> resulted;
-//
-//        // Temporary Data
-//        std::vector<std::unordered_map<std::pair<size_t, size_t>, std::vector<result>>> v;
-//        forloading.query_container_or_containment(v.emplace_back(), "", "det");
-//        forloading.query_container_or_containment(v.emplace_back(),"", "aux");
-//        forloading.query_container_or_containment(v.emplace_back(),"", "nmod:poss");
-//        multi_map_union(v, resulted, [](double x, double y)->double {
-//            return std::max(x,y);
-//        });
-//        v.clear();
-//    }
-//
-//    // Getting the content associated to the object {0,0}, first from the first graph
-//    {
-//        auto phi = forloading.phi({0,0,false}, "advmod");
-//        for (const auto& x : phi) {
-//            std::cout << x << std::endl;
-//        } phi = forloading.phi({0,0,false}, "nsubj");
-//        for (const auto& x : phi) {
-//            std::cout << x << std::endl;
-//        }
-//    }
-
 
     return 0;
 }

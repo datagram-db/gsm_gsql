@@ -55,6 +55,8 @@ class gsm_object():
                                 L.append(tuple([1.0,int(x[0])]))
                             elif (n>=2):
                                 L.append(tuple([float(x[0]), int(x[1])]))
+                    elif isinstance(x, int) or isinstance(x, str):
+                        L.append(tuple([1.0, int(x)]))
                 this.containment[k] = L
 
     def addLabel(this,x):
