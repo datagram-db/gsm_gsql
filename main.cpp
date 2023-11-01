@@ -14,6 +14,7 @@ int main(int argc, char **argv) {
     args::Flag outdot(group, "outdot", "Generating dot files representing the materialised views for the graphs", {'o', "outdot"});
     args::Flag print(group, "print", "Printing the matching edges", {'p', "print"});
     args::Flag verbose(group, "verbose", "Verbose table generation", {'v', "verbose"});
+    args::ValueFlag<std::string> benchmark_log(group, "benchmark", "Prints out the benchmark log", {'b', "benchmark"});
     try
     {
         parser.ParseCLI(argc, argv);
@@ -39,8 +40,8 @@ int main(int argc, char **argv) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Loading the query
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    std::ifstream stream{args::get(pattern)};
-    result.load_query_from_file(stream);
+//    std::ifstream stream{args::get(pattern)};
+    result.load_query_from_file(args::get(pattern));
 //    antlr4::ANTLRInputStream input(stream);
 //    simple_graph_grammarLexer lexer(&input);
 //    antlr4::CommonTokenStream tokens(&lexer);
@@ -98,6 +99,28 @@ int main(int argc, char **argv) {
             idx++;
         }
     }
+
+    if (benchmark_log) {
+        std::filesystem::path file_name = args::get(benchmark_log);
+        bool doHeader = !exists(file_name);
+        std::cout << "Loading: " << result.loading_time << " (ms)" << std::endl;
+        std::cout << "Indexing: " << result.indexing_time << " (ms)" << std::endl << std::endl;
+        std::cout << "Querying: " << std::endl << "----------" << std::endl;
+        std::cout << "* node matching: " << result.query_collect_node_match << " (ms)" << std::endl;
+        std::cout << "* edge matching: " << result.query_collect_edge_match << " (ms)" << std::endl;
+        std::cout << "* ν-morphism gen: " << result.generate_nested_morphisms << " (ms)" << std::endl;
+        std::cout << "* transformations: " << result.run_transform << " (ms)" << std::endl;
+        std::cout << "=>  TOTAL: " << result.query_collect_node_match+result.query_collect_edge_match+result.generate_nested_morphisms+result.run_transform << " (ms)" << std::endl << std::endl;;
+        std::cout << "Materialisation: " << std::endl << "-----------------" << std::endl;
+        std::cout << " * Old data migration to old representation: " << result.materialise_time_collection << " (ms)" << std::endl;
+        std::cout << " * Merging old data with updates: " << result.materialise_time_final << " (ms)" << std::endl;
+        std::cout << "=>  TOTAL: " << result.materialise_time_collection+result.materialise_time_final << " (ms)" << std::endl;
+        std::ofstream file(file_name);
+        if (doHeader)
+            result.log_header(file);
+        result.log_data(file);
+    }
+
 
 
     return 0;

@@ -71,7 +71,6 @@ struct closure {
     std::vector<node_match> vl;
 
     gsm2::tables::LinearGSM forloading;
-
     preserve_results pr;
 
     std::vector<delta_updates> delta_updates_per_graph;
@@ -80,13 +79,29 @@ struct closure {
     std::vector<gsm_object_xi_content> empty_content;
     bool isMaterialised = false;
 
+    double loading_time = -1.0, indexing_time = -1.0, materialise_time_collection = -1.0, materialise_time_final = -1.0;
+    double query_collect_node_match = -1.0, query_collect_edge_match = -1.0, generate_nested_morphisms = -1.0, run_transform = -1.0;
+    size_t n_patterns = 0, n_graphs = 0, n_total_objects = 0;
+    std::string query_name, data_name;
+
+    void log_data(std::ostream& f) const {
+        f << query_name << "," << data_name << "," << n_patterns << "," << n_graphs << "," << n_total_objects << ","
+          << loading_time << "," << indexing_time << ","<< materialise_time_collection << ","<< materialise_time_final<< ","
+          << query_collect_node_match << "," << query_collect_edge_match << "," << generate_nested_morphisms << "," << run_transform << std::endl;
+    }
+    void log_header(std::ostream& f) const {
+        f << "query_name" << "," << "data_name" << "," << "n_patterns" << "," << "n_graphs" << "," << "n_total_objects" << ","
+          << "loading_time" << "," << "indexing_time" << ","<< "materialise_time_collection" << ","<< "materialise_time_final" << ","
+          << "query_collect_node_match" << "," << "query_collect_edge_match" << "," << "generate_nested_morphisms" << "," << "run_transform" << std::endl;
+    }
+
 
     /**
      * Loading the query to be run on top of the data
      *
      * @param stream:       Filestream from which read the file
      */
-    void load_query_from_file(std::ifstream& stream);
+    void load_query_from_file(const std::string& stream);
 
     /**
      * Loading the data to be queried
@@ -111,18 +126,41 @@ struct closure {
         pr.init(); // For future reference, if this will become a query engine, we need to clear all intermediate results first!
         // TODO: rewrite the matching variables so to allow morphisms to be effectively queried
         bool hasDelRewrite = false;
-        for (auto& nm : vl) {
-            hasDelRewrite = hasDelRewrite || nm.compileNodeVariableOptionality();
-            pr.collect_node_match(nm, forloading);
+        {
+            auto node_q_start = std::chrono::high_resolution_clock::now();
+            for (auto& nm : vl) {
+                hasDelRewrite = hasDelRewrite || nm.compileNodeVariableOptionality();
+                pr.collect_node_match(nm, forloading);
+            }
+            // Inialising the morphisms, substantiating the match for the nodes (just resizing and clearing)
+            pr.finalise_after_all_collections(forloading.all_indices.size());
+            auto node_q_end = std::chrono::high_resolution_clock::now();
+            query_collect_node_match = std::chrono::duration<double, std::milli>(node_q_end-node_q_start).count();
         }
-        // Inialising the morphisms, substantiating the match for the nodes (just resizing and clearing)
-        pr.finalise_after_all_collections(forloading.all_indices.size());
+
         // First, matching all the single patterns within the queries, as described in the cached results
-        pr.run_simple_edge_queries(forloading);
+        {
+            auto edge_q_start = std::chrono::high_resolution_clock::now();
+            pr.run_simple_edge_queries(forloading);
+            auto edge_q_end = std::chrono::high_resolution_clock::now();
+            query_collect_edge_match = std::chrono::duration<double, std::milli>(edge_q_end-edge_q_start).count();
+        }
+
         // Then, running each morphism separately (now, we are assuming any order will do)
-        pr.instantiate_morphisms(vl, verbose);
+        {
+            auto nmorph_start = std::chrono::high_resolution_clock::now();
+            pr.instantiate_morphisms(vl, verbose);
+            auto nmorph_end = std::chrono::high_resolution_clock::now();
+            generate_nested_morphisms = std::chrono::duration<double, std::milli>(nmorph_end-nmorph_start).count();
+        }
+
         // Only afterwards, we are applying all of the transformations for each of the matches collected in the tables as morphisms
-        run_transformations(hasDelRewrite);
+        {
+            auto t_start = std::chrono::high_resolution_clock::now();
+            run_transformations(hasDelRewrite);
+            auto t_end = std::chrono::high_resolution_clock::now();
+            run_transform = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+        }
         // The previous run just generate delta updates. If we want to better see the results, then we need to materialise such intermediate results
         // while providing a cohesive view of the graph.
 //        if (materialise) {

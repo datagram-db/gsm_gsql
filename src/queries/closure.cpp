@@ -23,7 +23,8 @@
 
 #include "queries/closure.h"
 
-void closure::load_query_from_file(std::ifstream& stream) {
+void closure::load_query_from_file(const std::string& filename) {
+    std::ifstream stream(filename);
     antlr4::ANTLRInputStream input(stream);
     simple_graph_grammarLexer lexer(&input);
     antlr4::CommonTokenStream tokens(&lexer);
@@ -31,10 +32,16 @@ void closure::load_query_from_file(std::ifstream& stream) {
     GSMPatternVisitor pv;
     // Loading the query from the visitor
     vl = std::any_cast<std::vector<node_match>>(pv.visit(parser.all_matches()));
+    n_patterns = vl.size();
+    query_name = filename;
 }
 
 void closure::load_data_from_file(const std::string &filename) {
-    gsm2::tables::primary_memory_load_gsm2( filename, forloading);
+    std::tie(loading_time,indexing_time) = gsm2::tables::primary_memory_load_gsm2( filename, forloading);
+    isMaterialised = false;
+    n_graphs = forloading.nGraphs;
+    n_total_objects = forloading.main_registry.table.size();
+    data_name = filename;
 }
 
 void closure::asGraphs(std::vector<FlexibleGraph<std::string, std::string>> &graphs) const {
@@ -42,8 +49,7 @@ void closure::asGraphs(std::vector<FlexibleGraph<std::string, std::string>> &gra
 }
 
 void closure::generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std::string, std::string>> &simpleGraphs) {
-    if (!isMaterialised)
-        generate_materialised_view();
+    generate_materialised_view();
     simpleGraphs.clear();
     simpleGraphs.resize(delta_updates_per_graph.size());
     std::pair<size_t, size_t> cp;
@@ -51,6 +57,7 @@ void closure::generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std:
     size_t offsetMainRegistryTable = 0;
     std::vector<std::vector<size_t>> initialNodes(delta_updates_per_graph.size());
     std::vector<std::unordered_map<size_t, size_t>> time(delta_updates_per_graph.size());
+    auto real_time_start = std::chrono::high_resolution_clock::now();
     for (size_t i = 0, N = delta_updates_per_graph.size(); i<N; i++) {
         const auto& graph_index = forloading.all_indices.at(i).container_order.at(0);
         initialNodes[i].reserve(N);
@@ -151,26 +158,36 @@ void closure::generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std:
             }
         }
     }
+    auto real_time_end = std::chrono::high_resolution_clock::now();
+    materialise_time_final = std::chrono::duration<double, std::milli>(real_time_end-real_time_start).count();
 }
 
+#include <chrono>
+
 void closure::generate_materialised_view() {
-    isMaterialised = true;
-    size_t N = pr.morphisms.size();
-    forloading.iterateOverObjects([this](size_t graphid, const gsm_object& legacy_object_old_data) {
-        auto& updates = delta_updates_per_graph[graphid];
-        if ((!updates.hasXBeenRemoved(legacy_object_old_data.id))) {
-            size_t new_id = legacy_object_old_data.id;
-            auto& obj = updates.delta_plus_db.O[new_id];
-            obj.id = new_id;
-            obj.updateWith(legacy_object_old_data);
-            for (auto& [k, v] :obj.phi) {
-                for (auto& w : v) {
-                    auto it = updates.replacement_map.find(w.id);
-                    if (it != updates.replacement_map.end()) {
-                        w.id = it->second;
+    if (!isMaterialised) {
+        auto real_time_start = std::chrono::high_resolution_clock::now();
+        isMaterialised = true;
+//    size_t N = pr.morphisms.size();
+        forloading.iterateOverObjects([this](size_t graphid, const gsm_object& legacy_object_old_data) {
+            auto& updates = delta_updates_per_graph[graphid];
+            if ((!updates.hasXBeenRemoved(legacy_object_old_data.id))) {
+                size_t new_id = legacy_object_old_data.id;
+                auto& obj = updates.delta_plus_db.O[new_id];
+                obj.id = new_id;
+                obj.updateWith(legacy_object_old_data);
+                for (auto& [k, v] :obj.phi) {
+                    for (auto& w : v) {
+                        auto it = updates.replacement_map.find(w.id);
+                        if (it != updates.replacement_map.end()) {
+                            w.id = it->second;
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+        auto real_time_end = std::chrono::high_resolution_clock::now();
+        materialise_time_collection = std::chrono::duration<double, std::milli>(real_time_end-real_time_start).count();
+    }
+
 }

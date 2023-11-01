@@ -292,7 +292,7 @@ namespace gsm2 {
          * @param path
          * @param db
          */
-        void primary_memory_load_gsm2(const std::filesystem::path& path, gsm2::tables::LinearGSM& db);
+        std::pair<double,double> primary_memory_load_gsm2(const std::filesystem::path& path, gsm2::tables::LinearGSM& db);
     } // gsm2
 } // structures
 
