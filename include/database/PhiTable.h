@@ -28,6 +28,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
 #include <yaucl/hashing/pair_hash.h>
 
 namespace gsm2 {
