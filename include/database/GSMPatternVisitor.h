@@ -191,6 +191,12 @@ struct node_match {
             }
 
             // Determining whether there are deletion rewriting matches;
+            for (const auto& operations : rwr_to) {
+                if (operations.t == rewrite_to::DEL_RW) {
+                    has_del_rewrite = true;
+                    break;
+                }
+            }
 
             compiled_node_variables_optionality = true;
         }

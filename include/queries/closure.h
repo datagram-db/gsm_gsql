@@ -79,7 +79,7 @@ struct closure {
     std::vector<gsm_object_xi_content> empty_content;
     bool isMaterialised = false;
 
-    void sortVL() {
+    inline void sortVL() {
         std::vector<std::unordered_set<std::string>> outgoing(vl.size());
         std::unordered_map<std::string, std::unordered_set<size_t>> ingoing;
         NodeLabelBijectionGraph<std::string, std::string> dependencies;
@@ -87,6 +87,20 @@ struct closure {
         for (size_t i = 0; i<N; i++) {
             const auto& pattern = vl.at(i);
             dependencies.addUniqueStateOrGetExisting(pattern.pattern_name);
+            bool hasActions = !pattern.rwr_to.empty();
+            std::unordered_set<std::string> generated_variables, removed_variables;
+            for (const auto& actions: pattern.rwr_to) {
+                switch (actions.t) {
+                    case rewrite_to::DEL_RW:
+                        removed_variables.insert(actions.others);
+                        break;
+                    case rewrite_to::NEU_RW:
+                        generated_variables.insert(actions.others);
+                        break;
+                    default:
+                        continue;
+                }
+            }
             if (pattern.var.size() != 1) {
                 std::cerr << "ERROR: the entrypoint variable should be associated to just one variable (pattern #" << i << ")" << std::endl;
                 exit(1);
@@ -108,8 +122,12 @@ struct closure {
                     }
                 }
             } else {
+                auto varName = pattern.var.at(0);
+                if (pattern.rewrite_match_dst && !generated_variables.contains(pattern.rewrite_match_dst->var.at(0))) {
+                    varName = pattern.rewrite_match_dst->var.at(0);
+                }
                 if (pattern.var.at(0) != "ANY")
-                    outgoing[i].insert(pattern.var.at(0));
+                    outgoing[i].insert(varName);
                 for (const auto& [n,e] : vl.at(i).in) {
                     for (const auto& varName : n.var) {
                         if (varName != "ANY")
@@ -156,7 +174,7 @@ struct closure {
                 }
             }
         }
-//        dependencies.dot(std::cout);
+        dependencies.dot(std::cout);
         std::unordered_map<std::string, size_t> memento;
         auto tso = dependencies.g.topological_sort2(-1);
         for (size_t i = 0; i<N; i++) {
@@ -287,7 +305,8 @@ struct closure {
         {
             auto node_q_start = std::chrono::high_resolution_clock::now();
             for (auto& nm : vl) {
-                hasDelRewrite = hasDelRewrite || nm.compileNodeVariableOptionality();
+                auto outcome = nm.compileNodeVariableOptionality();
+                hasDelRewrite = hasDelRewrite || outcome;
                 pr.collect_node_match(nm, forloading);
             }
             // Inialising the morphisms, substantiating the match for the nodes (just resizing and clearing)
@@ -859,11 +878,11 @@ private:
                                 // Otherwise, we can skip this check.
                                 if (hasDelRewrite) {
                                     // Now, I am checking whether the current entry has some elements that are
-                                    DEBUG_ASSERT(!it->second.Schema.empty());
+                                    DEBUG_ASSERT(!pattern_result.first.empty());
                                     DEBUG_ASSERT(pattern.compiled_node_variables_optionality);
                                     bool skip = false;
-                                    for (size_t i = 0, O = it->second.Schema.size(); i<O; i++) {
-                                        const auto& colName = it->second.Schema.at(i);
+                                    for (size_t i = 0, O = pattern_result.first.size(); i<O; i++) {
+                                        const auto& colName = pattern_result.first.at(i);
                                         if (colName == "*") {
                                             std::vector<size_t> internal_cell_indices_to_remove;
                                             for (size_t k = 0, Q =  entries.at(i).table.datum.size(); k<Q; k++) {
