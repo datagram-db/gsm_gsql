@@ -43,3 +43,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
+/gsm_example.yaml.gsm
+/cmake-build-debug/
+/cmake-build-release/

@@ -32,6 +32,7 @@ void closure::load_query_from_file(const std::string& filename) {
     GSMPatternVisitor pv;
     // Loading the query from the visitor
     vl = std::any_cast<std::vector<node_match>>(pv.visit(parser.all_matches()));
+    sortVL();
     n_patterns = vl.size();
     query_name = filename;
 }

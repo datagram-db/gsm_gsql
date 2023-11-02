@@ -1,0 +1,54 @@
+p2 = (>> H)<-[∀l:]--(X||V||C)                                   // Graph matching, Second pattern
+           --[conj] hook
+           --[? case]->(K)
+           --[? c : cc]->(Z)
+           --[? g]->(Y)
+
+     ↪  new h                                             // Creating a new node standing for H
+       set (φ orig , h) as H                             // This node will contain all the grouped element (>>)
+       set (𝜋 conj @ h) as (𝜉 0 @ Z)                     // Optional, only if Z exists!
+       set (𝜉 0 @ h) as (𝜉 0 @ H)
+       set (φ (if ((label l ) = nmod) then    // Defining the label in function of K, if this exists,
+                                                                      // otherwise using l
+                                       (𝜉 0 @ K)
+                                      else
+                                       (label l)
+                                      ), X) as h
+       set (φ (label g), h) as Y
+       del Z
+
+
+     (h)
+        ;
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+p1 = (ANY)--[l:aux||det||nmod_poss||amod]->(M)                   // Graph matching, First pattern
+
+     ↪  set (𝜋 (label l) @ ANY) as (𝜉 0 @ M)                        // Property extension
+       del M                                             // Removing a node
+
+       (ANY);                                              // Instance of reference to be returned
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+p3 = (V)--[∀n:nsubj]->(>>S)
+        --[? mark]->(M)
+        --[l:dobj||ccomp||nmod]->(C||V)
+     (C||V)--[? case]->(T)
+
+     ↪
+     new s
+        set(φ (if ((label l ) = nmod) then    // Defining the label in function of T, if this exists,
+                                                                      // otherwise using V
+                                              (𝜉 0 @ T)
+                                             else
+                                              (𝜉 0 @ V)
+                                             ), s) as C_V
+        set(   𝜋 mark @ s) as (𝜉 0 @ M)
+        set(   φ orig , s) as S
+        set(   𝜉 0 @ s) as (𝜉 0 @ S)
+       del V
+       del T
+       del M
+
+       (s)

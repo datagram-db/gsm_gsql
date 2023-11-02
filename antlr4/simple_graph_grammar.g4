@@ -28,7 +28,13 @@ rewrite_expr: '𝜉' num=OTHERS '@' nodeVar=rewrite_expr #node_xi
             | LPAR rewrite_expr RPAR                  #just_par
             ;
 
-test_expr: src=test_expr_side '=' dst=test_expr_side;
+test_expr: src=test_expr_side '=' dst=test_expr_side /*TODO: #eq_test
+         | src=test_expr_side '≠' dst=test_expr_side #neq_test
+         | src=test_expr_side '<' dst=test_expr_side #lt_test
+         | src=test_expr_side '≤' dst=test_expr_side #leq_test
+         | src=test_expr '∨' dst=test_expr #or
+         | src=test_expr '∧' dst=test_expr #and*/
+         ;
 
 test_expr_side : rewrite_expr #test_data
                | OTHERS       #test_value

@@ -115,13 +115,13 @@ int main(int argc, char **argv) {
         std::cout << " * Old data migration to old representation: " << result.materialise_time_collection << " (ms)" << std::endl;
         std::cout << " * Merging old data with updates: " << result.materialise_time_final << " (ms)" << std::endl;
         std::cout << "=>  TOTAL: " << result.materialise_time_collection+result.materialise_time_final << " (ms)" << std::endl;
+        std::cout << "Serialising into a csv file..." << std::flush;
         std::ofstream file(file_name);
         if (doHeader)
             result.log_header(file);
         result.log_data(file);
+        std::cout << " done " << std::endl;
     }
-
-
 
     return 0;
 }

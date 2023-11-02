@@ -79,11 +79,168 @@ struct closure {
     std::vector<gsm_object_xi_content> empty_content;
     bool isMaterialised = false;
 
+    void sortVL() {
+        std::vector<std::unordered_set<std::string>> outgoing(vl.size());
+        std::unordered_map<std::string, std::unordered_set<size_t>> ingoing;
+        NodeLabelBijectionGraph<std::string, std::string> dependencies;
+        auto  N = vl.size();
+        for (size_t i = 0; i<N; i++) {
+            const auto& pattern = vl.at(i);
+            dependencies.addUniqueStateOrGetExisting(pattern.pattern_name);
+            if (pattern.var.size() != 1) {
+                std::cerr << "ERROR: the entrypoint variable should be associated to just one variable (pattern #" << i << ")" << std::endl;
+                exit(1);
+            }
+            if (pattern.vec) {
+                if (pattern.in.empty()) {
+                    std::cerr << "ERROR: a vec entry-point requires some ingoing edges for the aggregation!"<< std::endl;
+                    exit(2);
+                } else {
+                    for (const auto& [n,e] : vl.at(i).in) {
+                        for (const auto& varName : n.var) {
+                            if (varName != "ANY") {
+                                if (e.forall) {
+                                    outgoing[i].insert(varName);
+                                } else
+                                    ingoing[varName].insert(i);
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (pattern.var.at(0) != "ANY")
+                    outgoing[i].insert(pattern.var.at(0));
+                for (const auto& [n,e] : vl.at(i).in) {
+                    for (const auto& varName : n.var) {
+                        if (varName != "ANY")
+                            ingoing[varName].insert(i);
+                    }
+                }
+            }
+            for (const auto& [e,n] : vl.at(i).out) {
+                for (const auto& varName : n.var) {
+                    if (varName != "ANY")
+                        ingoing[varName].insert(i);
+                }
+            }
+
+            for (const auto& nOther : vl.at(i).join_edges) {
+                for (const auto& varName : nOther.var) {
+                    if (varName != "ANY")
+                        ingoing[varName].insert(i);
+                }
+                for (const auto& [e,n] : nOther.out) {
+                    for (const auto& varName : n.var) {
+                        if (varName != "ANY")
+                            ingoing[varName].insert(i);
+                    }
+                }
+                for (const auto& [n,e] : nOther.in) {
+                    for (const auto& varName : n.var) {
+                        if (varName != "ANY")
+                            ingoing[varName].insert(i);
+                    }
+                }
+            }
+        }
+        for (size_t i = 0, N = vl.size(); i<N; i++) {
+            for (const auto& reacher : outgoing.at(i)) {
+                if (!reacher.empty()) {
+                    auto it = ingoing.find(reacher);
+                    if (it != ingoing.end()) {
+                        for (const auto& tgt : it->second) {
+                            if (i != tgt)
+                                dependencies.addNewEdgeFromId(i, tgt, reacher);
+                        }
+                    }
+                }
+            }
+        }
+//        dependencies.dot(std::cout);
+        std::unordered_map<std::string, size_t> memento;
+        auto tso = dependencies.g.topological_sort2(-1);
+        for (size_t i = 0; i<N; i++) {
+            if ((!dependencies.outgoingEdges(i).empty()) || (!dependencies.ingoingEdges(i).empty())) {
+                memento[vl.at(i).pattern_name] = tso.at(i)+1;
+            } else {
+                DEBUG_ASSERT(tso.at(i) == 0);
+                memento[vl.at(i).pattern_name] = 0;
+            }
+        }
+        std::sort(vl.begin(), vl.end(), [&memento](const auto& objL, const auto& objR) {
+            return memento.at(objL.pattern_name) < memento.at(objR.pattern_name);
+        });
+        for (size_t i = 0; i<N; i++) {
+            for (auto& [n,e] : vl.at(i).in) {
+                std::set<std::string> vars{n.var.begin(), n.var.end()};
+                n.var = {std::accumulate(
+                        vars.begin(),
+                        vars.end(),
+                        std::string(""),
+                        [](const std::string& b, const std::string& a) {
+                            if (b.empty())
+                                return a;
+                            else
+                                return  b + (a.empty() ? "" : "_"+a);
+                        }
+                )};
+            }
+            for (auto& [e,n] : vl.at(i).out) {
+                std::set<std::string> vars{n.var.begin(), n.var.end()};
+                n.var = {std::accumulate(
+                        vars.begin(),
+                        vars.end(),
+                        std::string(""),
+                        [](const std::string& b, const std::string& a) {
+                            if (b.empty())
+                                return a;
+                            else
+                                return  b + (a.empty() ? "" : "_"+a);
+                        }
+                )};
+            }
+            for (auto& nOther : vl.at(i).join_edges) {
+                std::set<std::string> vars{nOther.var.begin(), nOther.var.end()};
+                nOther.var = {std::accumulate(
+                        vars.begin(),
+                        vars.end(),
+                        std::string(""),
+                        [](const std::string& b, const std::string& a) {
+                            if (b.empty())
+                                return a;
+                            else
+                                return  b + (a.empty() ? "" : "_"+a);
+                        }
+                )};
+                for (auto& [e,n] : nOther.out) {
+                    for (const auto& varName : n.var) {
+                        if (varName != "ANY")
+                            ingoing[varName].insert(i);
+                    }
+                }
+                for (auto& [n,e] : nOther.in) {
+                    std::set<std::string> vars{n.var.begin(), n.var.end()};
+                    n.var = {std::accumulate(
+                            vars.begin(),
+                            vars.end(),
+                            std::string(""),
+                            [](const std::string& b, const std::string& a) {
+                                if (b.empty())
+                                    return a;
+                                else
+                                    return  b + (a.empty() ? "" : "_"+a);
+                            }
+                    )};
+                }
+            }
+        }
+    }
+
+#pragma region BENCHMARKING
     double loading_time = -1.0, indexing_time = -1.0, materialise_time_collection = -1.0, materialise_time_final = -1.0;
     double query_collect_node_match = -1.0, query_collect_edge_match = -1.0, generate_nested_morphisms = -1.0, run_transform = -1.0;
     size_t n_patterns = 0, n_graphs = 0, n_total_objects = 0;
     std::string query_name, data_name;
-
     void log_data(std::ostream& f) const {
         f << query_name << "," << data_name << "," << n_patterns << "," << n_graphs << "," << n_total_objects << ","
           << loading_time << "," << indexing_time << ","<< materialise_time_collection << ","<< materialise_time_final<< ","
@@ -94,6 +251,7 @@ struct closure {
           << "loading_time" << "," << "indexing_time" << ","<< "materialise_time_collection" << ","<< "materialise_time_final" << ","
           << "query_collect_node_match" << "," << "query_collect_edge_match" << "," << "generate_nested_morphisms" << "," << "run_transform" << std::endl;
     }
+#pragma endregion BENCHMARKING
 
 
     /**
