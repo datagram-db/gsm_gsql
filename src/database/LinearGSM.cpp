@@ -23,6 +23,7 @@
 // Created by giacomo on 28/05/23.
 //
 
+#include <chrono>
 #include "database/LinearGSM.h"
 extern "C" {
 #include <string.h>
@@ -238,7 +239,7 @@ void convertMap(const NodeLabelBijectionGraph<size_t, std::string>& map,
 
 namespace gsm2 {
     namespace tables {
-        void primary_memory_load_gsm2(const std::filesystem::path& path, gsm2::tables::LinearGSM& db) {
+        std::pair<double,double> primary_memory_load_gsm2(const std::filesystem::path& path, gsm2::tables::LinearGSM& db) {
             auto schema = path.parent_path() / "schema.txt";
             std::unordered_map<std::string, gsm2::tables::AttributeTableType> propertyname_to_type;
             if (exists(schema)) {
@@ -261,16 +262,29 @@ namespace gsm2 {
                     }
                 }
             }
-            std::string buffer;
-            std::ifstream f(path);
-            f.seekg(0, std::ios::end);
-            size_t n = f.tellg();
-            buffer.resize(f.tellg());
-            f.seekg(0);
-            f.read(buffer.data(), buffer.size());
-            parse(buffer.data(), n, db, propertyname_to_type, db.nGraphs);
-            db.nGraphs++;
-            db.index();
+
+            double loading = 0.0, indexing = 0.0;
+            {
+                auto loading_start = std::chrono::high_resolution_clock::now();
+                std::string buffer;
+                std::ifstream f(path);
+                f.seekg(0, std::ios::end);
+                size_t n = f.tellg();
+                buffer.resize(f.tellg());
+                f.seekg(0);
+                f.read(buffer.data(), buffer.size());
+                parse(buffer.data(), n, db, propertyname_to_type, db.nGraphs);
+                db.nGraphs++;
+                auto loading_end = std::chrono::high_resolution_clock::now();
+                loading = std::chrono::duration<double, std::milli>(loading_end-loading_start).count();
+            }
+            {
+                auto indexing_start = std::chrono::high_resolution_clock::now();
+                db.index();
+                auto indexing_end = std::chrono::high_resolution_clock::now();
+                indexing = std::chrono::duration<double, std::milli>(indexing_end-indexing_start).count();
+            }
+            return {loading, indexing};
         }
 
         void LinearGSM::clear() {

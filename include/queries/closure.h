@@ -1,3 +1,22 @@
+/*
+ * closure.h
+ * This file is part of gsm_gsql
+ *
+ * Copyright (C) 2023 - Giacomo Bergami
+ *
+ * fuzzyStringMatching is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * fuzzyStringMatching is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with fuzzyStringMatching. If not, see <http://www.gnu.org/licenses/>.
+ */
 //
 // Created by giacomo on 27/10/23.
 //
@@ -52,7 +71,6 @@ struct closure {
     std::vector<node_match> vl;
 
     gsm2::tables::LinearGSM forloading;
-
     preserve_results pr;
 
     std::vector<delta_updates> delta_updates_per_graph;
@@ -61,13 +79,205 @@ struct closure {
     std::vector<gsm_object_xi_content> empty_content;
     bool isMaterialised = false;
 
+    inline void sortVL() {
+        std::vector<std::unordered_set<std::string>> outgoing(vl.size());
+        std::unordered_map<std::string, std::unordered_set<size_t>> ingoing;
+        NodeLabelBijectionGraph<std::string, std::string> dependencies;
+        auto  N = vl.size();
+        for (size_t i = 0; i<N; i++) {
+            const auto& pattern = vl.at(i);
+            dependencies.addUniqueStateOrGetExisting(pattern.pattern_name);
+            bool hasActions = !pattern.rwr_to.empty();
+            std::unordered_set<std::string> generated_variables, removed_variables;
+            for (const auto& actions: pattern.rwr_to) {
+                switch (actions.t) {
+                    case rewrite_to::DEL_RW:
+                        removed_variables.insert(actions.others);
+                        break;
+                    case rewrite_to::NEU_RW:
+                        generated_variables.insert(actions.others);
+                        break;
+                    default:
+                        continue;
+                }
+            }
+            if (pattern.var.size() != 1) {
+                std::cerr << "ERROR: the entrypoint variable should be associated to just one variable (pattern #" << i << ")" << std::endl;
+                exit(1);
+            }
+            if (pattern.vec) {
+                if (pattern.in.empty()) {
+                    std::cerr << "ERROR: a vec entry-point requires some ingoing edges for the aggregation!"<< std::endl;
+                    exit(2);
+                } else {
+                    for (const auto& [n,e] : vl.at(i).in) {
+                        for (const auto& varName : n.var) {
+                            if (varName != "ANY") {
+                                if (e.forall) {
+                                    outgoing[i].insert(varName);
+                                } else
+                                    ingoing[varName].insert(i);
+                            }
+                        }
+                    }
+                }
+            } else {
+                auto varName = pattern.var.at(0);
+                if (pattern.rewrite_match_dst && !generated_variables.contains(pattern.rewrite_match_dst->var.at(0))) {
+                    varName = pattern.rewrite_match_dst->var.at(0);
+                }
+                if (pattern.var.at(0) != "ANY")
+                    outgoing[i].insert(varName);
+                for (const auto& [n,e] : vl.at(i).in) {
+                    for (const auto& varName : n.var) {
+                        if (varName != "ANY")
+                            ingoing[varName].insert(i);
+                    }
+                }
+            }
+            for (const auto& [e,n] : vl.at(i).out) {
+                for (const auto& varName : n.var) {
+                    if (varName != "ANY")
+                        ingoing[varName].insert(i);
+                }
+            }
+
+            for (const auto& nOther : vl.at(i).join_edges) {
+                for (const auto& varName : nOther.var) {
+                    if (varName != "ANY")
+                        ingoing[varName].insert(i);
+                }
+                for (const auto& [e,n] : nOther.out) {
+                    for (const auto& varName : n.var) {
+                        if (varName != "ANY")
+                            ingoing[varName].insert(i);
+                    }
+                }
+                for (const auto& [n,e] : nOther.in) {
+                    for (const auto& varName : n.var) {
+                        if (varName != "ANY")
+                            ingoing[varName].insert(i);
+                    }
+                }
+            }
+        }
+        for (size_t i = 0, N = vl.size(); i<N; i++) {
+            for (const auto& reacher : outgoing.at(i)) {
+                if (!reacher.empty()) {
+                    auto it = ingoing.find(reacher);
+                    if (it != ingoing.end()) {
+                        for (const auto& tgt : it->second) {
+                            if (i != tgt)
+                                dependencies.addNewEdgeFromId(i, tgt, reacher);
+                        }
+                    }
+                }
+            }
+        }
+        dependencies.dot(std::cout);
+        std::unordered_map<std::string, size_t> memento;
+        auto tso = dependencies.g.topological_sort2(-1);
+        for (size_t i = 0; i<N; i++) {
+            if ((!dependencies.outgoingEdges(i).empty()) || (!dependencies.ingoingEdges(i).empty())) {
+                memento[vl.at(i).pattern_name] = tso.at(i)+1;
+            } else {
+                DEBUG_ASSERT(tso.at(i) == 0);
+                memento[vl.at(i).pattern_name] = 0;
+            }
+        }
+        std::sort(vl.begin(), vl.end(), [&memento](const auto& objL, const auto& objR) {
+            return memento.at(objL.pattern_name) < memento.at(objR.pattern_name);
+        });
+        for (size_t i = 0; i<N; i++) {
+            for (auto& [n,e] : vl.at(i).in) {
+                std::set<std::string> vars{n.var.begin(), n.var.end()};
+                n.var = {std::accumulate(
+                        vars.begin(),
+                        vars.end(),
+                        std::string(""),
+                        [](const std::string& b, const std::string& a) {
+                            if (b.empty())
+                                return a;
+                            else
+                                return  b + (a.empty() ? "" : "_"+a);
+                        }
+                )};
+            }
+            for (auto& [e,n] : vl.at(i).out) {
+                std::set<std::string> vars{n.var.begin(), n.var.end()};
+                n.var = {std::accumulate(
+                        vars.begin(),
+                        vars.end(),
+                        std::string(""),
+                        [](const std::string& b, const std::string& a) {
+                            if (b.empty())
+                                return a;
+                            else
+                                return  b + (a.empty() ? "" : "_"+a);
+                        }
+                )};
+            }
+            for (auto& nOther : vl.at(i).join_edges) {
+                std::set<std::string> vars{nOther.var.begin(), nOther.var.end()};
+                nOther.var = {std::accumulate(
+                        vars.begin(),
+                        vars.end(),
+                        std::string(""),
+                        [](const std::string& b, const std::string& a) {
+                            if (b.empty())
+                                return a;
+                            else
+                                return  b + (a.empty() ? "" : "_"+a);
+                        }
+                )};
+                for (auto& [e,n] : nOther.out) {
+                    for (const auto& varName : n.var) {
+                        if (varName != "ANY")
+                            ingoing[varName].insert(i);
+                    }
+                }
+                for (auto& [n,e] : nOther.in) {
+                    std::set<std::string> vars{n.var.begin(), n.var.end()};
+                    n.var = {std::accumulate(
+                            vars.begin(),
+                            vars.end(),
+                            std::string(""),
+                            [](const std::string& b, const std::string& a) {
+                                if (b.empty())
+                                    return a;
+                                else
+                                    return  b + (a.empty() ? "" : "_"+a);
+                            }
+                    )};
+                }
+            }
+        }
+    }
+
+#pragma region BENCHMARKING
+    double loading_time = -1.0, indexing_time = -1.0, materialise_time_collection = -1.0, materialise_time_final = -1.0;
+    double query_collect_node_match = -1.0, query_collect_edge_match = -1.0, generate_nested_morphisms = -1.0, run_transform = -1.0;
+    size_t n_patterns = 0, n_graphs = 0, n_total_objects = 0;
+    std::string query_name, data_name;
+    void log_data(std::ostream& f) const {
+        f << query_name << "," << data_name << "," << n_patterns << "," << n_graphs << "," << n_total_objects << ","
+          << loading_time << "," << indexing_time << ","<< materialise_time_collection << ","<< materialise_time_final<< ","
+          << query_collect_node_match << "," << query_collect_edge_match << "," << generate_nested_morphisms << "," << run_transform << std::endl;
+    }
+    void log_header(std::ostream& f) const {
+        f << "query_name" << "," << "data_name" << "," << "n_patterns" << "," << "n_graphs" << "," << "n_total_objects" << ","
+          << "loading_time" << "," << "indexing_time" << ","<< "materialise_time_collection" << ","<< "materialise_time_final" << ","
+          << "query_collect_node_match" << "," << "query_collect_edge_match" << "," << "generate_nested_morphisms" << "," << "run_transform" << std::endl;
+    }
+#pragma endregion BENCHMARKING
+
 
     /**
      * Loading the query to be run on top of the data
      *
      * @param stream:       Filestream from which read the file
      */
-    void load_query_from_file(std::ifstream& stream);
+    void load_query_from_file(const std::string& stream);
 
     /**
      * Loading the data to be queried
@@ -86,27 +296,53 @@ struct closure {
      */
     void generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std::string,std::string>>& simpleGraphs);
 
-    void perform_query(bool materialise = false) {
+    void perform_query(bool verbose = false) {
+        bool materialise = false;
         isMaterialised = false;
         pr.init(); // For future reference, if this will become a query engine, we need to clear all intermediate results first!
         // TODO: rewrite the matching variables so to allow morphisms to be effectively queried
-        for (auto& nm : vl) {
-            pr.collect_node_match(nm, forloading);
+        bool hasDelRewrite = false;
+        {
+            auto node_q_start = std::chrono::high_resolution_clock::now();
+            for (auto& nm : vl) {
+                auto outcome = nm.compileNodeVariableOptionality();
+                hasDelRewrite = hasDelRewrite || outcome;
+                pr.collect_node_match(nm, forloading);
+            }
+            // Inialising the morphisms, substantiating the match for the nodes (just resizing and clearing)
+            pr.finalise_after_all_collections(forloading.all_indices.size());
+            auto node_q_end = std::chrono::high_resolution_clock::now();
+            query_collect_node_match = std::chrono::duration<double, std::milli>(node_q_end-node_q_start).count();
         }
-        // Inialising the morphisms, substantiating the match for the nodes
-        pr.finalise_after_all_collections(forloading.all_indices.size());
+
         // First, matching all the single patterns within the queries, as described in the cached results
-        pr.run_simple_edge_queries(forloading);
+        {
+            auto edge_q_start = std::chrono::high_resolution_clock::now();
+            pr.run_simple_edge_queries(forloading);
+            auto edge_q_end = std::chrono::high_resolution_clock::now();
+            query_collect_edge_match = std::chrono::duration<double, std::milli>(edge_q_end-edge_q_start).count();
+        }
+
         // Then, running each morphism separately (now, we are assuming any order will do)
-        // TODO: infer the application order of the matching for generating the tables. Does this matter?
-        pr.instantiate_morphisms(vl);
+        {
+            auto nmorph_start = std::chrono::high_resolution_clock::now();
+            pr.instantiate_morphisms(vl, verbose);
+            auto nmorph_end = std::chrono::high_resolution_clock::now();
+            generate_nested_morphisms = std::chrono::duration<double, std::milli>(nmorph_end-nmorph_start).count();
+        }
+
         // Only afterwards, we are applying all of the transformations for each of the matches collected in the tables as morphisms
-        run_transformations();
+        {
+            auto t_start = std::chrono::high_resolution_clock::now();
+            run_transformations(hasDelRewrite);
+            auto t_end = std::chrono::high_resolution_clock::now();
+            run_transform = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+        }
         // The previous run just generate delta updates. If we want to better see the results, then we need to materialise such intermediate results
         // while providing a cohesive view of the graph.
-        if (materialise) {
-            generate_materialised_view();
-        }
+//        if (materialise) {
+//            generate_materialised_view();
+//        }
     }
 
     /**
@@ -243,7 +479,7 @@ private:
                                const std::vector<std::string>& schema,
                                const nested_table& table,
                                size_t record_id,
-                               std::any match_rhs) {
+                               std::any match_rhs) /** non-const!*/ {
         if (!ptr)
             return;
         switch (ptr->t) {
@@ -373,7 +609,7 @@ private:
                                         size_t pattern_id,
                                         const std::vector<std::string>& schema,
                                         const nested_table& table,
-                                        size_t record_id) {
+                                        size_t record_id) const {
         if (!ptr)
             return {};
         switch (ptr->t) {
@@ -511,17 +747,13 @@ private:
                 }
             } break;
 
-//            case rewrite_expr::EDGE_SRC:
-//            case rewrite_expr::EDGE_DST:
-//            case rewrite_expr::NODE_OR_EDGE:
             default:
                 throw std::runtime_error("UNSUPPORTED OPERATION (FUTURE)");
-                break;
         }
     }
 
     std::vector<std::string>
-    resolvelabelsOverVariableName(size_t pattern_id, const std::string &variable_name, const std::vector<value> &record) {
+    resolvelabelsOverVariableName(size_t pattern_id, const std::string &variable_name, const std::vector<value> &record) const {
         std::vector<std::string> object_id;
         auto offset = pr.resolve_entry_match(pattern_id, variable_name);
         if (offset.second<0)
@@ -559,7 +791,7 @@ private:
 
 
     std::vector<size_t>
-    resolveIdsOverVariableName(size_t graph_id, size_t pattern_id, const std::string &variable_name, const std::vector<value> &record) {
+    resolveIdsOverVariableName(size_t graph_id, size_t pattern_id, const std::string &variable_name, const std::vector<value> &record) const {
         std::vector<size_t> object_id;
         auto v = delta_updates_per_graph.at(graph_id).getNewlyInsertedVertices(variable_name);
         if (!v.empty())
@@ -606,7 +838,7 @@ private:
         return object_id;
     }
 
-    void run_transformations() {
+    inline void run_transformations(bool hasDelRewrite) {
         delta_updates_per_graph.clear();
         for (size_t i = 0, N = forloading.all_indices.size(); i<N; i++) {
             delta_updates_per_graph.emplace_back(forloading.main_registry.secondary_index.at(i).second->event_id);
@@ -614,19 +846,21 @@ private:
         for (size_t graph_id = 0, N = forloading.all_indices.size(); graph_id < N; graph_id++) { // on parallel...do
             // For each graph in the collection
             const auto& g = forloading.all_indices.at(graph_id);
-            const auto& morphs = pr.morphisms.at(graph_id);
+            /*const*/ auto& morphs = pr.morphisms.at(graph_id);
             auto& updates = delta_updates_per_graph.at(graph_id);
 
-            // For each graph in the actual graphs
+            // For each graph in the actual graphs, visitn the nodes in lexicographic order
             for (size_t time = 0, T = g.container_order.size(); time<T; time++)
+                // Visiting all the vertices associated to the same time
                 for (const auto& vertex : g.container_order.at(T-time-1)) {
-//                    if (vertex == 16)
-//                        std::cout << "debug" << std::endl;
+
+                    /// TODO: sort the patterns in dependency order, i.e., depending which should be run first
+                    ///       This needs to be inferred previously
                     for (size_t pattern_id = 0, M = vl.size(); pattern_id < M; pattern_id++) {
                         const auto& pattern = vl.at(pattern_id);
                         if (morphs.find(pattern.pattern_name) == morphs.end())
-                            continue;
-                        const auto& pattern_result = morphs.at(pattern.pattern_name);
+                            continue; // Skipping if there are no results
+                        /*const*/ auto& pattern_result = morphs.at(pattern.pattern_name);
                         DEBUG_ASSERT(pattern.var.size() == 1);
 
                         // Ignoring the match if this was removed!
@@ -638,7 +872,53 @@ private:
                             updates.clear_insertions();
 //                            DEBUG_ASSERT(updates.replacement_map.find(vertex) == updates.replacement_map.end());
                             size_t table_offset = 0;
-                            for (const auto& entries : it->second.datum) {
+                            for (auto& entries : it->second.datum) {
+
+                                // this operation needs to be performed only if some rewriting have a deletion operation
+                                // Otherwise, we can skip this check.
+                                if (hasDelRewrite) {
+                                    // Now, I am checking whether the current entry has some elements that are
+                                    DEBUG_ASSERT(!pattern_result.first.empty());
+                                    DEBUG_ASSERT(pattern.compiled_node_variables_optionality);
+                                    bool skip = false;
+                                    for (size_t i = 0, O = pattern_result.first.size(); i<O; i++) {
+                                        const auto& colName = pattern_result.first.at(i);
+                                        if (colName == "*") {
+                                            std::vector<size_t> internal_cell_indices_to_remove;
+                                            for (size_t k = 0, Q =  entries.at(i).table.datum.size(); k<Q; k++) {
+                                                const auto& entries2 = entries.at(i).table.datum.at(k);
+                                                bool removeRow = false;
+                                                for (size_t j = 0, P = entries.at(i).table.Schema.size(); j<P; j++) {
+                                                    const auto& colName2 = entries.at(i).table.Schema.at(j);
+                                                    if (pattern.hasRequiredMatch.contains(colName2)) {
+                                                        if (updates.hasXBeenRemoved(std::get<size_t>(entries2.at(j).val))) {
+                                                            removeRow = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                if (removeRow)
+                                                    internal_cell_indices_to_remove.emplace_back(k);
+                                            }
+                                            if (!internal_cell_indices_to_remove.empty()) {
+                                                if (internal_cell_indices_to_remove.size() == entries[i].table.datum.size()) {
+                                                    skip = true;
+                                                    break;
+                                                } else {
+                                                    remove_index(entries[i].table.datum, internal_cell_indices_to_remove);
+                                                }
+                                            }
+                                        } else if (pattern.hasRequiredMatch.contains(colName)) {
+                                            if (updates.hasXBeenRemoved(std::get<size_t>(entries.at(i).val))) {
+                                                skip = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if (skip)
+                                        continue;
+                                }
+
                                 for (const auto& operation : pattern.rwr_to) {
                                     switch (operation.t) {
 

@@ -1,0 +1,10 @@
+db:
+  - id: 87
+    ell:
+      - hello
+      - world
+    xi:
+      - ciao
+  - id: 23
+exdb:
+  - id: 20

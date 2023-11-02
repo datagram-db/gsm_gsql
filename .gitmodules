@@ -4,3 +4,6 @@
 [submodule "submodules/tabulate"]
 	path = submodules/tabulate
 	url = https://github.com/p-ranav/tabulate
+[submodule "submodules/args"]
+	path = submodules/args
+	url = https://github.com/Taywee/args

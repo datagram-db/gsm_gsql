@@ -1,0 +1,73 @@
+id:0
+ell:
+a
+.
+xi:
+a
+.
+properties:
+.
+phi:
+"z"
+	1.0	1
+	1.0	2
+;.
+
+id:1
+ell:
+c
+.
+xi:
+c
+.
+properties:
+.
+phi:
+"x"
+	1.0	3
+;"y"
+	1.0	4
+;.
+
+id:2
+ell:
+b
+.
+xi:
+b
+.
+properties:
+.
+phi:
+"x"
+	1.0	4
+;"y"
+	1.0	4
+;.
+
+id:3
+ell:
+d
+.
+xi:
+d
+.
+properties:
+.
+phi:
+"l"
+	1.0	4
+;.
+
+id:4
+ell:
+e
+.
+xi:
+e
+.
+properties:
+.
+phi:
+.
+

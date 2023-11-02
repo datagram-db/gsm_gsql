@@ -11,7 +11,7 @@ else()
     set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
-
+include_directories(submodules/args)
 include_directories(include)
 include_directories(antlr4)
 include_directories(submodules/yaucl/submodules/magic_enum/include)

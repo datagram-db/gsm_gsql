@@ -1,0 +1,43 @@
+db:
+  - id: 0
+    ell:
+      - a
+    xi:
+      - a
+    containment:
+      z:
+        - 1
+        - 2
+  - id: 1
+    ell:
+      - c
+    xi:
+      - c
+    containment:
+      x:
+        - 3
+      y:
+        - 4
+  - id: 2
+    ell:
+      - b
+    xi:
+      - b
+    containment:
+      x:
+        - 4
+      z:
+        - 4
+  - id: 3
+    ell:
+      - d
+    xi:
+      - d
+    containment:
+      l:
+        - 4
+  - id: 4
+    ell:
+      - e
+    xi:
+      - e
