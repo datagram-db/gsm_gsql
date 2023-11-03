@@ -23,7 +23,7 @@
 // Created by giacomo on 17/09/23.
 //
 
-#include "database/preserve_results.h"
+#include "queries/preserve_results.h"
 #include "database/utility.h"
 
 void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, bool verbose) {

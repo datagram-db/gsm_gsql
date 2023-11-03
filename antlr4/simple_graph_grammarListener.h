@@ -65,8 +65,26 @@ public:
   virtual void enterJust_par(simple_graph_grammarParser::Just_parContext *ctx) = 0;
   virtual void exitJust_par(simple_graph_grammarParser::Just_parContext *ctx) = 0;
 
-  virtual void enterTest_expr(simple_graph_grammarParser::Test_exprContext *ctx) = 0;
-  virtual void exitTest_expr(simple_graph_grammarParser::Test_exprContext *ctx) = 0;
+  virtual void enterLeq_test(simple_graph_grammarParser::Leq_testContext *ctx) = 0;
+  virtual void exitLeq_test(simple_graph_grammarParser::Leq_testContext *ctx) = 0;
+
+  virtual void enterOr_test(simple_graph_grammarParser::Or_testContext *ctx) = 0;
+  virtual void exitOr_test(simple_graph_grammarParser::Or_testContext *ctx) = 0;
+
+  virtual void enterPar_test(simple_graph_grammarParser::Par_testContext *ctx) = 0;
+  virtual void exitPar_test(simple_graph_grammarParser::Par_testContext *ctx) = 0;
+
+  virtual void enterEq_test(simple_graph_grammarParser::Eq_testContext *ctx) = 0;
+  virtual void exitEq_test(simple_graph_grammarParser::Eq_testContext *ctx) = 0;
+
+  virtual void enterNeq_test(simple_graph_grammarParser::Neq_testContext *ctx) = 0;
+  virtual void exitNeq_test(simple_graph_grammarParser::Neq_testContext *ctx) = 0;
+
+  virtual void enterLt_test(simple_graph_grammarParser::Lt_testContext *ctx) = 0;
+  virtual void exitLt_test(simple_graph_grammarParser::Lt_testContext *ctx) = 0;
+
+  virtual void enterAnd_test(simple_graph_grammarParser::And_testContext *ctx) = 0;
+  virtual void exitAnd_test(simple_graph_grammarParser::And_testContext *ctx) = 0;
 
   virtual void enterTest_data(simple_graph_grammarParser::Test_dataContext *ctx) = 0;
   virtual void exitTest_data(simple_graph_grammarParser::Test_dataContext *ctx) = 0;

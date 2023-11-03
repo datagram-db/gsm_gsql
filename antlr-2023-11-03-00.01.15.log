@@ -1,0 +1,125 @@
+2023-11-03 00:01:14:758 grammar LogManager.java:25 before: (COMBINED_GRAMMAR simple_graph_grammar (RULES (RULE all_matches (BLOCK (ALT (* (BLOCK (ALT centralmatch ';'))) centralmatch))) (RULE node (BLOCK (ALT LPAR (? (BLOCK (ALT STAR))) (? (BLOCK (ALT VEC))) (= var multiple_labels) (? (BLOCK (ALT COL OTHERS))) RPAR))) (RULE centralmatch (BLOCK (ALT (= var OTHERS) EQ (= src node) (? (BLOCK (ALT (= e1 many_edges)))) (* (BLOCK (ALT edge_joining))) (? (BLOCK (ALT WHERE test_expr))) (? (BLOCK (ALT REWRITE_TO (* (BLOCK (ALT rewrite_to))) (= dst node))))))) (RULE many_edges (BLOCK (ALT (+ (BLOCK (ALT edge)))))) (RULE rewrite_to (BLOCK (ALT 'del' OTHERS) (ALT 'new' (= dst OTHERS)) (ALT 'set' (= to rewrite_expr) 'as' (= from rewrite_expr)))) (RULE rewrite_expr (BLOCK (ALT '𝜉' (= num OTHERS) '@' (= nodeVar rewrite_expr)) (ALT 'ℓ' (= num OTHERS) '@' (= nodeVar rewrite_expr)) (ALT '𝜋' (= key rewrite_expr) '@' (= nodeVar rewrite_expr)) (ALT 'φ' (= key rewrite_expr) ',' (= nodeVar rewrite_expr)) (ALT 'label' (= edgeVar rewrite_expr)) (ALT 'src' (= edgeVar rewrite_expr)) (ALT 'dst' (= edgeVar rewrite_expr)) (ALT IF LPAR (= ifcond test_expr) RPAR THEN (= then_effect rewrite_expr) (? (BLOCK (ALT ELSE (= else_effect rewrite_expr))))) (ALT OTHERS) (ALT LPAR rewrite_expr RPAR))) (RULE test_expr (BLOCK (ALT (= src test_expr_side) '=' (= dst test_expr_side)) (ALT (= src test_expr_side) '≠' (= dst test_expr_side)) (ALT (= src test_expr_side) '<' (= dst test_expr_side)) (ALT (= src test_expr_side) '≤' (= dst test_expr_side)) (ALT (= src test_expr) '∨' (= dst test_expr)) (ALT (= src test_expr) '∧' (= dst test_expr)) (ALT LPAR test_expr RPAR))) (RULE test_expr_side (BLOCK (ALT rewrite_expr) (ALT OTHERS))) (RULE edge (BLOCK (ALT '--' edgelabel '->' node) (ALT '<-' edgelabel '--' node) (ALT '--' edgelabel 'hook'))) (RULE edge_joining (BLOCK (ALT node edge))) (RULE edgelabel (BLOCK (ALT QPAR (BLOCK (ALT (? (BLOCK (ALT FORALL)))) (ALT (? (BLOCK (ALT QM))))) (? (BLOCK (ALT (= var OTHERS) COL))) (? (BLOCK (ALT multiple_labels))) PPAR))) (RULE multiple_labels (BLOCK (ALT (* (BLOCK (ALT OTHERS '||'))) OTHERS))) (RULE WHERE (BLOCK (ALT 'where'))) (RULE IF (BLOCK (ALT 'if'))) (RULE THEN (BLOCK (ALT 'then'))) (RULE ELSE (BLOCK (ALT 'else'))) (RULE AS (BLOCK (ALT 'as'))) (RULE VEC (BLOCK (ALT '>>'))) (RULE REWRITE_TO (BLOCK (ALT '↪'))) (RULE FORALL (BLOCK (ALT '∀'))) (RULE QM (BLOCK (ALT '?'))) (RULE EQ (BLOCK (ALT '='))) (RULE STAR (BLOCK (ALT '*'))) (RULE LPAR (BLOCK (ALT '('))) (RULE RPAR (BLOCK (ALT ')'))) (RULE COL (BLOCK (ALT ':'))) (RULE QPAR (BLOCK (ALT '['))) (RULE PPAR (BLOCK (ALT ']'))) (RULE OTHERS (BLOCK (ALT (+ (BLOCK (ALT (~ (SET [;*():=\][|∀> \t\r\n-])))))))) (RULE SPACE (BLOCK (LEXER_ALT_ACTION (ALT (+ (BLOCK (ALT [ \t\r\n])))) skip))) (RULE COMMENT (BLOCK (LEXER_ALT_ACTION (ALT '/*' (* (BLOCK (ALT .))) '*/') skip))) (RULE LINE_COMMENT (BLOCK (LEXER_ALT_ACTION (ALT '//' (* (BLOCK (ALT (~ (SET [\r\n])))))) skip)))))
+2023-11-03 00:01:14:771 grammar LogManager.java:25 after: (COMBINED_GRAMMAR simple_graph_grammar (RULES (RULE all_matches (BLOCK (ALT (* (BLOCK (ALT centralmatch ';'))) centralmatch))) (RULE node (BLOCK (ALT LPAR (? (BLOCK (ALT STAR))) (? (BLOCK (ALT VEC))) (= var multiple_labels) (? (BLOCK (ALT COL OTHERS))) RPAR))) (RULE centralmatch (BLOCK (ALT (= var OTHERS) EQ (= src node) (? (BLOCK (ALT (= e1 many_edges)))) (* (BLOCK (ALT edge_joining))) (? (BLOCK (ALT WHERE test_expr))) (? (BLOCK (ALT REWRITE_TO (* (BLOCK (ALT rewrite_to))) (= dst node))))))) (RULE many_edges (BLOCK (ALT (+ (BLOCK (ALT edge)))))) (RULE rewrite_to (BLOCK (ALT 'del' OTHERS) (ALT 'new' (= dst OTHERS)) (ALT 'set' (= to rewrite_expr) 'as' (= from rewrite_expr)))) (RULE rewrite_expr (BLOCK (ALT '𝜉' (= num OTHERS) '@' (= nodeVar rewrite_expr)) (ALT 'ℓ' (= num OTHERS) '@' (= nodeVar rewrite_expr)) (ALT '𝜋' (= key rewrite_expr) '@' (= nodeVar rewrite_expr)) (ALT 'φ' (= key rewrite_expr) ',' (= nodeVar rewrite_expr)) (ALT 'label' (= edgeVar rewrite_expr)) (ALT 'src' (= edgeVar rewrite_expr)) (ALT 'dst' (= edgeVar rewrite_expr)) (ALT IF LPAR (= ifcond test_expr) RPAR THEN (= then_effect rewrite_expr) (? (BLOCK (ALT ELSE (= else_effect rewrite_expr))))) (ALT OTHERS) (ALT LPAR rewrite_expr RPAR))) (RULE test_expr (BLOCK (ALT (= src test_expr_side) '=' (= dst test_expr_side)) (ALT (= src test_expr_side) '≠' (= dst test_expr_side)) (ALT (= src test_expr_side) '<' (= dst test_expr_side)) (ALT (= src test_expr_side) '≤' (= dst test_expr_side)) (ALT (= src test_expr) '∨' (= dst test_expr)) (ALT (= src test_expr) '∧' (= dst test_expr)) (ALT LPAR test_expr RPAR))) (RULE test_expr_side (BLOCK (ALT rewrite_expr) (ALT OTHERS))) (RULE edge (BLOCK (ALT '--' edgelabel '->' node) (ALT '<-' edgelabel '--' node) (ALT '--' edgelabel 'hook'))) (RULE edge_joining (BLOCK (ALT node edge))) (RULE edgelabel (BLOCK (ALT QPAR (BLOCK (ALT (? (BLOCK (ALT FORALL)))) (ALT (? (BLOCK (ALT QM))))) (? (BLOCK (ALT (= var OTHERS) COL))) (? (BLOCK (ALT multiple_labels))) PPAR))) (RULE multiple_labels (BLOCK (ALT (* (BLOCK (ALT OTHERS '||'))) OTHERS))) (RULE WHERE (BLOCK (ALT 'where'))) (RULE IF (BLOCK (ALT 'if'))) (RULE THEN (BLOCK (ALT 'then'))) (RULE ELSE (BLOCK (ALT 'else'))) (RULE AS (BLOCK (ALT 'as'))) (RULE VEC (BLOCK (ALT '>>'))) (RULE REWRITE_TO (BLOCK (ALT '↪'))) (RULE FORALL (BLOCK (ALT '∀'))) (RULE QM (BLOCK (ALT '?'))) (RULE EQ (BLOCK (ALT '='))) (RULE STAR (BLOCK (ALT '*'))) (RULE LPAR (BLOCK (ALT '('))) (RULE RPAR (BLOCK (ALT ')'))) (RULE COL (BLOCK (ALT ':'))) (RULE QPAR (BLOCK (ALT '['))) (RULE PPAR (BLOCK (ALT ']'))) (RULE OTHERS (BLOCK (ALT (+ (BLOCK (ALT (~ (SET [;*():=\][|∀> \t\r\n-])))))))) (RULE SPACE (BLOCK (LEXER_ALT_ACTION (ALT (+ (BLOCK (ALT [ \t\r\n])))) skip))) (RULE COMMENT (BLOCK (LEXER_ALT_ACTION (ALT '/*' (* (BLOCK (ALT .))) '*/') skip))) (RULE LINE_COMMENT (BLOCK (LEXER_ALT_ACTION (ALT '//' (* (BLOCK (ALT (~ (SET [\r\n])))))) skip)))))
+2023-11-03 00:01:14:787 grammar LogManager.java:25 after extract implicit lexer =(COMBINED_GRAMMAR simple_graph_grammar (RULES (RULE all_matches (BLOCK (ALT (* (BLOCK (ALT centralmatch ';'))) centralmatch))) (RULE node (BLOCK (ALT LPAR (? (BLOCK (ALT STAR))) (? (BLOCK (ALT VEC))) (= var multiple_labels) (? (BLOCK (ALT COL OTHERS))) RPAR))) (RULE centralmatch (BLOCK (ALT (= var OTHERS) EQ (= src node) (? (BLOCK (ALT (= e1 many_edges)))) (* (BLOCK (ALT edge_joining))) (? (BLOCK (ALT WHERE test_expr))) (? (BLOCK (ALT REWRITE_TO (* (BLOCK (ALT rewrite_to))) (= dst node))))))) (RULE many_edges (BLOCK (ALT (+ (BLOCK (ALT edge)))))) (RULE rewrite_to (BLOCK (ALT 'del' OTHERS) (ALT 'new' (= dst OTHERS)) (ALT 'set' (= to rewrite_expr) 'as' (= from rewrite_expr)))) (RULE rewrite_expr (BLOCK (ALT '𝜉' (= num OTHERS) '@' (= nodeVar rewrite_expr)) (ALT 'ℓ' (= num OTHERS) '@' (= nodeVar rewrite_expr)) (ALT '𝜋' (= key rewrite_expr) '@' (= nodeVar rewrite_expr)) (ALT 'φ' (= key rewrite_expr) ',' (= nodeVar rewrite_expr)) (ALT 'label' (= edgeVar rewrite_expr)) (ALT 'src' (= edgeVar rewrite_expr)) (ALT 'dst' (= edgeVar rewrite_expr)) (ALT IF LPAR (= ifcond test_expr) RPAR THEN (= then_effect rewrite_expr) (? (BLOCK (ALT ELSE (= else_effect rewrite_expr))))) (ALT OTHERS) (ALT LPAR rewrite_expr RPAR))) (RULE test_expr (BLOCK (ALT (= src test_expr_side) '=' (= dst test_expr_side)) (ALT (= src test_expr_side) '≠' (= dst test_expr_side)) (ALT (= src test_expr_side) '<' (= dst test_expr_side)) (ALT (= src test_expr_side) '≤' (= dst test_expr_side)) (ALT (= src test_expr) '∨' (= dst test_expr)) (ALT (= src test_expr) '∧' (= dst test_expr)) (ALT LPAR test_expr RPAR))) (RULE test_expr_side (BLOCK (ALT rewrite_expr) (ALT OTHERS))) (RULE edge (BLOCK (ALT '--' edgelabel '->' node) (ALT '<-' edgelabel '--' node) (ALT '--' edgelabel 'hook'))) (RULE edge_joining (BLOCK (ALT node edge))) (RULE edgelabel (BLOCK (ALT QPAR (BLOCK (ALT (? (BLOCK (ALT FORALL)))) (ALT (? (BLOCK (ALT QM))))) (? (BLOCK (ALT (= var OTHERS) COL))) (? (BLOCK (ALT multiple_labels))) PPAR))) (RULE multiple_labels (BLOCK (ALT (* (BLOCK (ALT OTHERS '||'))) OTHERS)))))
+2023-11-03 00:01:14:787 grammar LogManager.java:25 lexer =(LEXER_GRAMMAR simple_graph_grammarLexer (RULES (RULE T__0 (BLOCK (ALT ';'))) (RULE T__1 (BLOCK (ALT 'del'))) (RULE T__2 (BLOCK (ALT 'new'))) (RULE T__3 (BLOCK (ALT 'set'))) (RULE T__4 (BLOCK (ALT '𝜉'))) (RULE T__5 (BLOCK (ALT '@'))) (RULE T__6 (BLOCK (ALT 'ℓ'))) (RULE T__7 (BLOCK (ALT '𝜋'))) (RULE T__8 (BLOCK (ALT 'φ'))) (RULE T__9 (BLOCK (ALT ','))) (RULE T__10 (BLOCK (ALT 'label'))) (RULE T__11 (BLOCK (ALT 'src'))) (RULE T__12 (BLOCK (ALT 'dst'))) (RULE T__13 (BLOCK (ALT '≠'))) (RULE T__14 (BLOCK (ALT '<'))) (RULE T__15 (BLOCK (ALT '≤'))) (RULE T__16 (BLOCK (ALT '∨'))) (RULE T__17 (BLOCK (ALT '∧'))) (RULE T__18 (BLOCK (ALT '--'))) (RULE T__19 (BLOCK (ALT '->'))) (RULE T__20 (BLOCK (ALT '<-'))) (RULE T__21 (BLOCK (ALT 'hook'))) (RULE T__22 (BLOCK (ALT '||'))) (RULE WHERE (BLOCK (ALT 'where'))) (RULE IF (BLOCK (ALT 'if'))) (RULE THEN (BLOCK (ALT 'then'))) (RULE ELSE (BLOCK (ALT 'else'))) (RULE AS (BLOCK (ALT 'as'))) (RULE VEC (BLOCK (ALT '>>'))) (RULE REWRITE_TO (BLOCK (ALT '↪'))) (RULE FORALL (BLOCK (ALT '∀'))) (RULE QM (BLOCK (ALT '?'))) (RULE EQ (BLOCK (ALT '='))) (RULE STAR (BLOCK (ALT '*'))) (RULE LPAR (BLOCK (ALT '('))) (RULE RPAR (BLOCK (ALT ')'))) (RULE COL (BLOCK (ALT ':'))) (RULE QPAR (BLOCK (ALT '['))) (RULE PPAR (BLOCK (ALT ']'))) (RULE OTHERS (BLOCK (ALT (+ (BLOCK (ALT (~ (SET [;*():=\][|∀> \t\r\n-])))))))) (RULE SPACE (BLOCK (LEXER_ALT_ACTION (ALT (+ (BLOCK (ALT [ \t\r\n])))) skip))) (RULE COMMENT (BLOCK (LEXER_ALT_ACTION (ALT '/*' (* (BLOCK (ALT .))) '*/') skip))) (RULE LINE_COMMENT (BLOCK (LEXER_ALT_ACTION (ALT '//' (* (BLOCK (ALT (~ (SET [\r\n])))))) skip)))))
+2023-11-03 00:01:14:987 left-recursion LogManager.java:25 test_expr
+    :   ( {} src=test_expr_side<tokenIndex=298> '='<tokenIndex=300> dst=test_expr_side<tokenIndex=304>  
+        | src=test_expr_side<tokenIndex=313> '≠'<tokenIndex=315> dst=test_expr_side<tokenIndex=319>  
+        | src=test_expr_side<tokenIndex=328> '<'<tokenIndex=330> dst=test_expr_side<tokenIndex=334>  
+        | src=test_expr_side<tokenIndex=343> '≤'<tokenIndex=345> dst=test_expr_side<tokenIndex=349>  
+        | LPAR<tokenIndex=386> test_expr<tokenIndex=388> RPAR<tokenIndex=390>                        
+        )
+        (
+          {precpred(_ctx, 3)}?<p=3> '∨'<tokenIndex=360> dst=test_expr<tokenIndex=364,p=4>
+                  | {precpred(_ctx, 2)}?<p=2> '∧'<tokenIndex=375> dst=test_expr<tokenIndex=379,p=3>
+        )*
+    ;
+2023-11-03 00:01:14:996 grammar LogManager.java:25 added: (RULE test_expr (BLOCK (ALT (BLOCK (ALT {} (= src (test_expr_side (ELEMENT_OPTIONS (= tokenIndex 298)))) ('=' (ELEMENT_OPTIONS (= tokenIndex 300))) (= dst (test_expr_side (ELEMENT_OPTIONS (= tokenIndex 304))))) (ALT (= src (test_expr_side (ELEMENT_OPTIONS (= tokenIndex 313)))) ('≠' (ELEMENT_OPTIONS (= tokenIndex 315))) (= dst (test_expr_side (ELEMENT_OPTIONS (= tokenIndex 319))))) (ALT (= src (test_expr_side (ELEMENT_OPTIONS (= tokenIndex 328)))) ('<' (ELEMENT_OPTIONS (= tokenIndex 330))) (= dst (test_expr_side (ELEMENT_OPTIONS (= tokenIndex 334))))) (ALT (= src (test_expr_side (ELEMENT_OPTIONS (= tokenIndex 343)))) ('≤' (ELEMENT_OPTIONS (= tokenIndex 345))) (= dst (test_expr_side (ELEMENT_OPTIONS (= tokenIndex 349))))) (ALT (LPAR (ELEMENT_OPTIONS (= tokenIndex 386))) (test_expr (ELEMENT_OPTIONS (= tokenIndex 388))) (RPAR (ELEMENT_OPTIONS (= tokenIndex 390))))) (* (BLOCK (ALT ({precpred(_ctx, 3)}? (ELEMENT_OPTIONS (= p 3))) ('∨' (ELEMENT_OPTIONS (= tokenIndex 360))) (= dst (test_expr (ELEMENT_OPTIONS (= tokenIndex 364) (= p 4))))) (ALT ({precpred(_ctx, 2)}? (ELEMENT_OPTIONS (= p 2))) ('∧' (ELEMENT_OPTIONS (= tokenIndex 375))) (= dst (test_expr (ELEMENT_OPTIONS (= tokenIndex 379) (= p 3))))))))))
+2023-11-03 00:01:14:999 semantics LogManager.java:25 tokens={EOF=-1, T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, T__8=9, T__9=10, T__10=11, T__11=12, T__12=13, T__13=14, T__14=15, T__15=16, T__16=17, T__17=18, T__18=19, T__19=20, T__20=21, T__21=22, T__22=23, WHERE=24, IF=25, THEN=26, ELSE=27, AS=28, VEC=29, REWRITE_TO=30, FORALL=31, QM=32, EQ=33, STAR=34, LPAR=35, RPAR=36, COL=37, QPAR=38, PPAR=39, OTHERS=40, SPACE=41, COMMENT=42, LINE_COMMENT=43}
+2023-11-03 00:01:14:999 semantics LogManager.java:25 strings={';'=1, 'del'=2, 'new'=3, 'set'=4, '𝜉'=5, '@'=6, 'ℓ'=7, '𝜋'=8, 'φ'=9, ','=10, 'label'=11, 'src'=12, 'dst'=13, '≠'=14, '<'=15, '≤'=16, '∨'=17, '∧'=18, '--'=19, '->'=20, '<-'=21, 'hook'=22, '||'=23, 'where'=24, 'if'=25, 'then'=26, 'else'=27, 'as'=28, '>>'=29, '↪'=30, '∀'=31, '?'=32, '='=33, '*'=34, '('=35, ')'=36, ':'=37, '['=38, ']'=39}
+2023-11-03 00:01:15:011 LL1 LogManager.java:25 
+DECISION 0 in rule all_matches
+2023-11-03 00:01:15:011 LL1 LogManager.java:25 look=[40, 40]
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 LL(1)? false
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 
+DECISION 1 in rule node
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 look=[34, {29, 40}]
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 LL(1)? true
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 
+DECISION 2 in rule node
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 look=[29, 40]
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 LL(1)? true
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 
+DECISION 3 in rule node
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 look=[37, 36]
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 LL(1)? true
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 
+DECISION 4 in rule centralmatch
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 look=[{19, 21}, {<EOF>, 1, 24, 30, 35}]
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 LL(1)? true
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 
+DECISION 5 in rule centralmatch
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 look=[35, {<EOF>, 1, 24, 30}]
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 LL(1)? true
+2023-11-03 00:01:15:012 LL1 LogManager.java:25 
+DECISION 6 in rule centralmatch
+2023-11-03 00:01:15:013 LL1 LogManager.java:25 look=[24, {<EOF>, 1, 30}]
+2023-11-03 00:01:15:013 LL1 LogManager.java:25 LL(1)? true
+2023-11-03 00:01:15:013 LL1 LogManager.java:25 
+DECISION 7 in rule centralmatch
+2023-11-03 00:01:15:013 LL1 LogManager.java:25 look=[{2..4}, 35]
+2023-11-03 00:01:15:013 LL1 LogManager.java:25 LL(1)? true
+2023-11-03 00:01:15:013 LL1 LogManager.java:25 
+DECISION 8 in rule centralmatch
+2023-11-03 00:01:15:013 LL1 LogManager.java:25 look=[30, {<EOF>, 1}]
+2023-11-03 00:01:15:013 LL1 LogManager.java:25 LL(1)? true
+2023-11-03 00:01:15:013 LL1 LogManager.java:25 
+DECISION 9 in rule many_edges
+2023-11-03 00:01:15:013 LL1 LogManager.java:25 look=[{19, 21}, {<EOF>, 1, 24, 30, 35}]
+2023-11-03 00:01:15:013 LL1 LogManager.java:25 LL(1)? true
+2023-11-03 00:01:15:013 LL1 LogManager.java:25 
+DECISION 10 in rule rewrite_to
+2023-11-03 00:01:15:013 LL1 LogManager.java:25 look=[2, 3, 4]
+2023-11-03 00:01:15:013 LL1 LogManager.java:25 LL(1)? true
+2023-11-03 00:01:15:013 LL1 LogManager.java:25 
+DECISION 11 in rule rewrite_expr
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 look=[27, null]
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 LL(1)? false
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 
+DECISION 12 in rule rewrite_expr
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 look=[5, 7, 8, 9, 11, 12, 13, 25, 40, 35]
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 LL(1)? true
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 
+DECISION 13 in rule test_expr
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 look=[{5, 7..9, 11..13, 25, 35, 40}, {5, 7..9, 11..13, 25, 35, 40}, {5, 7..9, 11..13, 25, 35, 40}, {5, 7..9, 11..13, 25, 35, 40}, 35]
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 LL(1)? false
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 
+DECISION 14 in rule test_expr
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 look=[null, null]
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 LL(1)? false
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 
+DECISION 15 in rule test_expr
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 look=[null, null]
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 LL(1)? false
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 
+DECISION 16 in rule test_expr_side
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 look=[{5, 7..9, 11..13, 25, 35, 40}, 40]
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 LL(1)? false
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 
+DECISION 17 in rule edge
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 look=[19, 21, 19]
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 LL(1)? false
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 
+DECISION 18 in rule edgelabel
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 look=[31, {39..40}]
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 LL(1)? true
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 
+DECISION 19 in rule edgelabel
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 look=[32, {39..40}]
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 LL(1)? true
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 
+DECISION 20 in rule edgelabel
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 look=[{31, 39..40}, {32, 39..40}]
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 LL(1)? false
+2023-11-03 00:01:15:014 LL1 LogManager.java:25 
+DECISION 21 in rule edgelabel
+2023-11-03 00:01:15:015 LL1 LogManager.java:25 look=[40, {39..40}]
+2023-11-03 00:01:15:015 LL1 LogManager.java:25 LL(1)? false
+2023-11-03 00:01:15:015 LL1 LogManager.java:25 
+DECISION 22 in rule edgelabel
+2023-11-03 00:01:15:015 LL1 LogManager.java:25 look=[40, 39]
+2023-11-03 00:01:15:015 LL1 LogManager.java:25 LL(1)? true
+2023-11-03 00:01:15:015 LL1 LogManager.java:25 
+DECISION 23 in rule multiple_labels
+2023-11-03 00:01:15:015 LL1 LogManager.java:25 look=[40, 40]
+2023-11-03 00:01:15:015 LL1 LogManager.java:25 LL(1)? false
+2023-11-03 00:01:15:035 action-translator LogManager.java:25 translate 
+2023-11-03 00:01:15:036 action-translator LogManager.java:25 translate precpred(_ctx, 3)
+2023-11-03 00:01:15:036 action-translator LogManager.java:25 translate precpred(_ctx, 2)
+2023-11-03 00:01:15:037 action-translator LogManager.java:25 translate precpred(_ctx, 3)
+2023-11-03 00:01:15:037 action-translator LogManager.java:25 translate precpred(_ctx, 2)
+2023-11-03 00:01:15:066 action-translator LogManager.java:25 translate 
+2023-11-03 00:01:15:067 action-translator LogManager.java:25 translate precpred(_ctx, 3)
+2023-11-03 00:01:15:067 action-translator LogManager.java:25 translate precpred(_ctx, 2)
+2023-11-03 00:01:15:067 action-translator LogManager.java:25 translate precpred(_ctx, 3)
+2023-11-03 00:01:15:067 action-translator LogManager.java:25 translate precpred(_ctx, 2)

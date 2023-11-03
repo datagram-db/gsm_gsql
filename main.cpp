@@ -88,7 +88,6 @@ int main(int argc, char **argv) {
         result.pr.print_preliminary_edge_match_results(f);
     }
 
-    //    result.generate_materialised_view();
     if (outdot) {
         std::vector<FlexibleGraph<std::string,std::string>> graphs;
         result.generateGraphsFromMaterialisedViews(graphs);

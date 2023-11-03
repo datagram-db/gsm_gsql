@@ -36,7 +36,23 @@
 
 struct rewrite_expr;
 using test_side = std::variant<std::shared_ptr<rewrite_expr>,std::string>;
-using test_eq = std::pair<test_side,test_side>;
+struct test_pred {
+    enum cases {
+        TEST_PRED_CASE_EQ,
+        TEST_PRED_CASE_NEQ,
+        TEST_PRED_CASE_LT,
+        TEST_PRED_CASE_LEQ,
+        TEST_PRED_CASE_AND,
+        TEST_PRED_CASE_OR,
+        TRUE
+    };
+    cases t = TRUE;
+    std::vector<test_side> args;
+    std::vector<test_pred> child_logic;
+    DEFAULT_CONSTRUCTORS(test_pred)
+};
+
+//using test_eq = std::pair<test_side,test_side>;
 
 /**
  * Part of the rewriting query appearing after the hook symbol
@@ -61,12 +77,12 @@ struct rewrite_expr {
 
     std::shared_ptr<rewrite_expr>   pi_key_arg_or_then=nullptr; // If an IFTE_RW, this represents a then. Otherwise, represents the key property associated to an object function
     std::shared_ptr<rewrite_expr>   ptr_or_else=nullptr;        // If an IFTE_RW, this represents the else branch. Otherwise, it represents the content from which retrieve the content to associate to the function
-    test_eq      ifcond;                                        // If an IFTE_RW, this represents the condition.
+    test_pred      ifcond;                                        // If an IFTE_RW, this represents the condition.
     std::string prop;                                           // Variable name, or property text
 
     rewrite_expr() : t{NONE_CASES_REWRITE}, id{0}, ptr_or_else{nullptr}, pi_key_arg_or_then{nullptr}, prop{} {
-        std::shared_ptr<rewrite_expr> o{nullptr};
-        ifcond.first = ifcond.second = o;
+//        std::shared_ptr<rewrite_expr> o{nullptr};
+//        ifcond.args[0] = ifcond.args[1] = o;
     };
     DEFAULT_COPY_ASSGN(rewrite_expr);
 };
@@ -127,7 +143,6 @@ struct node_match {
     bool compiled_node_variables_optionality;
     std::unordered_set<std::string> hasRequiredMatch;
     inline bool compileNodeVariableOptionality() {
-
         // Determining the required (non-optional) node matches
         std::unordered_set<std::string> optional_node_vars;
         DEBUG_ASSERT(var.size() == 1);
@@ -197,7 +212,6 @@ struct node_match {
                     break;
                 }
             }
-
             compiled_node_variables_optionality = true;
         }
         return has_del_rewrite;
@@ -207,11 +221,12 @@ struct node_match {
     /// Returning what we have matched (todo: removing un-matched nodes that are in the ego-net, but not matched!)
     bool has_rewrite{false};                                    // Whether there is a rewriting
     bool has_del_rewrite{false};                                // Whether
+    bool has_where{false};
     std::shared_ptr<node_match> rewrite_match_dst{nullptr};     // The main node to substitute the entry-point match
     std::vector<rewrite_to> rwr_to;                             // Set of rewriting actions providing the resulting graph to be matched
+    test_pred where;
 
-
-    node_match() : compiled_node_variables_optionality{false}, star{false}, vec{false}, has_rewrite{false}, var{}, type{}, pattern_name{}, out{}, in{}, hook{}, join_edges{}, rewrite_match_dst{nullptr} {};
+    node_match() : compiled_node_variables_optionality{false}, star{false}, vec{false}, has_rewrite{false}, has_where{false}, var{}, type{}, pattern_name{}, out{}, in{}, hook{}, join_edges{}, rewrite_match_dst{nullptr} {};
     DEFAULT_COPY_ASSGN(node_match);
 };
 
@@ -220,9 +235,6 @@ struct node_match {
 
 class GSMPatternVisitor : public simple_graph_grammarBaseVisitor {
 public:
-
-
-
     std::any visitNeu_obj(simple_graph_grammarParser::Neu_objContext *ctx) override {
         if (ctx) {
             rewrite_to result;
@@ -277,7 +289,7 @@ public:
         if (ctx) {
             std::shared_ptr<rewrite_expr> result = std::make_shared<rewrite_expr>();
             result->t = rewrite_expr::IFTE_RW;
-            result->ifcond = std::any_cast<test_eq>(visit(ctx->ifcond));
+            result->ifcond = std::move(std::any_cast<test_pred>(visit(ctx->ifcond)));
             result->pi_key_arg_or_then = std::any_cast< std::shared_ptr<rewrite_expr>>(visit(ctx->then_effect));
             if (ctx->else_effect) {
                 result->ptr_or_else = std::any_cast< std::shared_ptr<rewrite_expr>>(visit(ctx->else_effect));
@@ -376,14 +388,81 @@ public:
         return {ptr};
     }
 
-    std::any visitTest_expr(simple_graph_grammarParser::Test_exprContext *ctx) override {
+    std::any visitLeq_test(simple_graph_grammarParser::Leq_testContext *ctx) override {
         if (ctx) {
-            return {std::make_pair(std::any_cast<test_side>(visit(ctx->src)),
-                                   std::any_cast<test_side>(visit(ctx->dst)))
-            };
+            test_pred ptr;
+            ptr.t = test_pred::TEST_PRED_CASE_LEQ;
+            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->src)));
+            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->dst)));
+        }
+    }
+
+    std::any visitOr_test(simple_graph_grammarParser::Or_testContext *ctx) override {
+        if (ctx) {
+            test_pred pred;
+            pred.t = test_pred::TEST_PRED_CASE_OR;
+            pred.child_logic.emplace_back(std::move(std::any_cast<test_pred>(visit(ctx->src))));
+            pred.child_logic.emplace_back(std::move(std::any_cast<test_pred>(visit(ctx->dst))));
         }
         return {};
     }
+
+    std::any visitPar_test(simple_graph_grammarParser::Par_testContext *ctx) override {
+        std::shared_ptr<test_pred> ptr{nullptr};
+        if (ctx) {
+            return visit(ctx->test_expr());
+        }
+        return {ptr};
+    }
+
+    std::any visitEq_test(simple_graph_grammarParser::Eq_testContext *ctx) override {
+        if (ctx) {
+            test_pred ptr;
+            ptr.t = test_pred::TEST_PRED_CASE_EQ;
+            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->src)));
+            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->dst)));
+        }
+        return {};
+    }
+
+    std::any visitNeq_test(simple_graph_grammarParser::Neq_testContext *ctx) override {
+        if (ctx) {
+            test_pred ptr;
+            ptr.t = test_pred::TEST_PRED_CASE_NEQ;
+            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->src)));
+            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->dst)));
+        }
+        return {};
+    }
+
+    std::any visitLt_test(simple_graph_grammarParser::Lt_testContext *ctx) override {
+        if (ctx) {
+            test_pred ptr;
+            ptr.t = test_pred::TEST_PRED_CASE_LT;
+            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->src)));
+            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->dst)));
+        }
+        return {};
+    }
+
+    std::any visitAnd_test(simple_graph_grammarParser::And_testContext *ctx) override {
+                if (ctx) {
+                    test_pred pred;
+                    pred.t = test_pred::TEST_PRED_CASE_AND;
+                    pred.child_logic.emplace_back(std::move(std::any_cast<test_pred>(visit(ctx->src))));
+                    pred.child_logic.emplace_back(std::move(std::any_cast<test_pred>(visit(ctx->dst))));
+                }
+                return {};
+    }
+
+//    std::any visitTest_expr(simple_graph_grammarParser::Test_exprContext *ctx) override {
+//        if (ctx) {
+//            return {std::make_pair(std::any_cast<test_side>(visit(ctx->src)),
+//                                   std::any_cast<test_side>(visit(ctx->dst)))
+//            };
+//        }
+//        return {};
+//    }
 
     std::any visitTest_data(simple_graph_grammarParser::Test_dataContext *ctx) override {
         if (ctx) {
@@ -446,6 +525,12 @@ public:
 
             for (const auto& join_edges : ctx->edge_joining()) {
                 result.join_edges.emplace_back(std::any_cast<node_match>(visitEdge_joining(join_edges)));
+            }
+
+            auto test_exp = ctx->test_expr();
+            if (test_exp) {
+                result.has_where = true;
+                result.where = std::move(std::any_cast<test_pred>(visit(test_exp)));
             }
 
             if (ctx->REWRITE_TO()) {

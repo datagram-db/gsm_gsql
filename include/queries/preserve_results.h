@@ -26,14 +26,14 @@
 #ifndef GSM2_PRESERVE_RESULTS_H
 #define GSM2_PRESERVE_RESULTS_H
 
-#include <database/utility.h>
-#include <yaucl/structures/any_to_uint_bimap.h>
+#include "database/utility.h"
+#include "yaucl/structures/any_to_uint_bimap.h"
 #include <vector>
 #include <string>
 #include <unordered_set>
-#include <database/LinearGSM.h>
-#include <database/GSMPatternVisitor.h>
-#include <database/GraphEdgeMatchTable.h>
+#include "database/LinearGSM.h"
+#include "database/GSMPatternVisitor.h"
+#include "database/GraphEdgeMatchTable.h"
 
 /**
  * Preserves the representation of the morphisms from the pattern match

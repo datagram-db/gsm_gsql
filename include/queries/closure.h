@@ -51,7 +51,7 @@ std::optional<T> get_v_opt(const std::any & tmp)
 }
 
 
-#include "database/preserve_results.h"
+#include "preserve_results.h"
 
 template <typename T>
 void fill_vector_with_case(std::vector<T>& to_fill, const abstract_value& opts) {
@@ -60,7 +60,7 @@ void fill_vector_with_case(std::vector<T>& to_fill, const abstract_value& opts) 
 }
 
 
-#include "database/delta_updates.h"
+#include "delta_updates.h"
 
 /**
  * This class is referred to Closure as it wraps around both the loaded data and the intermediate values generating
@@ -482,13 +482,14 @@ private:
                                std::any match_rhs) /** non-const!*/ {
         if (!ptr)
             return;
+        Interpret I(graph_id, pattern_id, schema, table, record_id, *this);
         switch (ptr->t) {
             case rewrite_expr::NONE_CASES_REWRITE:
                 break;
             case rewrite_expr::NODE_XI: {
                 if (match_rhs.has_value()) {
                     size_t xi_offset = ptr->id;
-                    auto hasVar = interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id);
+                    auto hasVar = I.interpret_closure_evaluate(ptr->ptr_or_else.get());
                     if (!hasVar.has_value()) return;
                     auto variable_name = std::any_cast<std::string>(hasVar);
                     const auto& record = table.datum.at(record_id);
@@ -505,7 +506,7 @@ private:
             case rewrite_expr::NODE_ELL: {
                 if (match_rhs.has_value()) {
                     size_t ell_offset = ptr->id;
-                    auto hasVar = interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id);
+                    auto hasVar = I.interpret_closure_evaluate(ptr->ptr_or_else.get());
                     if (!hasVar.has_value()) return;
                     auto variable_name = std::any_cast<std::string>(hasVar);
                     const auto& record = table.datum.at(record_id);
@@ -522,10 +523,10 @@ private:
 
             case rewrite_expr::NODE_PROP: {
                 if (match_rhs.has_value()) {
-                    auto hasProp = interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), graph_id, pattern_id, schema, table, record_id);
+                    auto hasProp = I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get());
                     if (!hasProp.has_value()) return;
                     auto prop_name = std::any_cast<std::string>(hasProp);
-                    auto hasVar = interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id);
+                    auto hasVar = I.interpret_closure_evaluate(ptr->ptr_or_else.get());
                     if (!hasVar.has_value()) return;
                     auto variable_name = std::any_cast<std::string>(hasVar);
                     const auto& record = table.datum.at(record_id);
@@ -537,10 +538,10 @@ private:
             } break;
 
             case rewrite_expr::NODE_CONT: {
-                auto hasProp = interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), graph_id, pattern_id, schema, table, record_id);
+                auto hasProp = I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get());
                 if (!hasProp.has_value()) return;
                 auto prop_name = std::any_cast<std::string>(hasProp);
-                auto hasVar = interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id);
+                auto hasVar = I.interpret_closure_evaluate(ptr->ptr_or_else.get());
                 if (!hasVar.has_value()) return;
                 auto variable_name = std::any_cast<std::string>(hasVar);
                 const auto& record = table.datum.at(record_id);
@@ -578,23 +579,10 @@ private:
             } break;
 
             case rewrite_expr::IFTE_RW: {
-                std::string L, R;
-                if (std::holds_alternative<std::string>(ptr->ifcond.first)) {
-                    L = std::get<std::string>(ptr->ifcond.first);
+                if (I.interpret(ptr->ifcond)) {
+                    interpret_closure_set(ptr->pi_key_arg_or_then.get(), graph_id, pattern_id, schema, table, record_id, match_rhs);
                 } else {
-                    auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr->ifcond.first).get();
-                    L = std::any_cast<std::string>(interpret_closure_evaluate(j, graph_id, pattern_id, schema, table, record_id));
-                }
-                if (std::holds_alternative<std::string>(ptr->ifcond.second)) {
-                    R = std::get<std::string>(ptr->ifcond.second);
-                } else {
-                    auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr->ifcond.second).get();
-                    R = std::any_cast<std::string>(interpret_closure_evaluate(j, graph_id, pattern_id, schema, table, record_id));
-                }
-                if (L == R) {
-                    return interpret_closure_set(ptr->pi_key_arg_or_then.get(), graph_id, pattern_id, schema, table, record_id, match_rhs);
-                } else {
-                    return interpret_closure_set(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id, match_rhs);
+                    interpret_closure_set(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id, match_rhs);
                 }
             } break;
 
@@ -603,154 +591,252 @@ private:
         }
     }
 
+    class Interpret {
+        size_t graph_id;
+        size_t pattern_id;
+        const std::vector<std::string>& schema;
+        const nested_table& table;
+        size_t record_id;
+        const closure& clos;
 
-    std::any interpret_closure_evaluate(rewrite_expr* ptr,
-                                        size_t graph_id,
-                                        size_t pattern_id,
-                                        const std::vector<std::string>& schema,
-                                        const nested_table& table,
-                                        size_t record_id) const {
-        if (!ptr)
-            return {};
-        switch (ptr->t) {
-            // Returning the specific XI for the nodes
-            case rewrite_expr::NODE_XI: {
-                size_t xi_offset = ptr->id;
-                auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id));
-                const auto& record = table.datum.at(record_id);
-                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
-                if (object_ids.empty())
-                    return {};
+    public:
+        Interpret(size_t graphId, size_t patternId, const std::vector<std::string> &schema, const nested_table &table,
+                  size_t recordId, const closure &clos) : graph_id(graphId), pattern_id(patternId), schema(schema),
+                                                          table(table), record_id(recordId), clos(clos) {}
 
-                // for each object_id in the vector, I continuously append
-                return std::accumulate(
-                        object_ids.begin(),
-                        object_ids.end(),
-                        std::string(""),
-                        [this,graph_id,xi_offset](const std::string& b, size_t a) {
-                            const auto& resolution = resolve_xi(graph_id,a);
-                            if (b.empty())
-                                return resolution.empty() ? "" : resolution.at(xi_offset);
-                            else
-                                return  b + (resolution.empty() ? "" : " "+resolution.at(xi_offset));
-                        }
-                );
-            } break;
+        std::any interpret_closure_evaluate(rewrite_expr* ptr) const {
+            if (!ptr)
+                return {};
+            switch (ptr->t) {
+                // Returning the specific XI for the nodes
+                case rewrite_expr::NODE_XI: {
+                    size_t xi_offset = ptr->id;
+                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+                    const auto& record = table.datum.at(record_id);
+                    auto object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+                    if (object_ids.empty())
+                        return {};
 
-                // Returning the specific ELLS for the nodes
-            case rewrite_expr::NODE_ELL: {
-                size_t ell_offset = ptr->id;
-                auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id,schema,  table, record_id));
-                const auto& record = table.datum.at(record_id);
-                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
-                if (object_ids.empty())
-                    return {};
+                    // for each object_id in the vector, I continuously append
+                    return std::accumulate(
+                            object_ids.begin(),
+                            object_ids.end(),
+                            std::string(""),
+                            [this,xi_offset](const std::string& b, size_t a) {
+                                const auto& resolution = clos.resolve_xi(graph_id,a);
+                                if (b.empty())
+                                    return resolution.empty() ? "" : resolution.at(xi_offset);
+                                else
+                                    return  b + (resolution.empty() ? "" : " "+resolution.at(xi_offset));
+                            }
+                    );
+                } break;
 
-                // for each object_id in the vector, I continuously append
-                return std::accumulate(
-                        object_ids.begin(),
-                        object_ids.end(),
-                        std::string(""),
-                        [this,graph_id,ell_offset](const std::string& b, size_t a) {
-                            const auto& resolution = resolve_ell(graph_id,a);
-                            if (b.empty())
-                                return resolution.empty() ? "" : resolution.at(ell_offset);
-                            else
-                                return  b + (resolution.empty() ? "" : " "+resolution.at(ell_offset));
-                        }
-                );
+                    // Returning the specific ELLS for the nodes
+                case rewrite_expr::NODE_ELL: {
+                    size_t ell_offset = ptr->id;
+                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+                    const auto& record = table.datum.at(record_id);
+                    auto object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+                    if (object_ids.empty())
+                        return {};
+
+                    // for each object_id in the vector, I continuously append
+                    return std::accumulate(
+                            object_ids.begin(),
+                            object_ids.end(),
+                            std::string(""),
+                            [this,ell_offset](const std::string& b, size_t a) {
+                                const auto& resolution = clos.resolve_ell(graph_id,a);
+                                if (b.empty())
+                                    return resolution.empty() ? "" : resolution.at(ell_offset);
+                                else
+                                    return  b + (resolution.empty() ? "" : " "+resolution.at(ell_offset));
+                            }
+                    );
+                }
+
+                    // Returning the property associated to a node
+                case rewrite_expr::NODE_PROP: {
+                    auto prop_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->pi_key_arg_or_then.get()));
+                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+                    const auto& record = table.datum.at(record_id);
+                    auto object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+                    if (object_ids.empty())
+                        return {};
+
+                    // for each object_id in the vector, I continuously append
+                    return std::accumulate(
+                            object_ids.begin(),
+                            object_ids.end(),
+                            std::string(""),
+                            [this,prop_name](const std::string& b, size_t a) {
+                                if (b.empty())
+                                    return clos.resolve_prop(graph_id, a, prop_name);
+                                else
+                                    return  b + " " + clos.resolve_prop(graph_id, a, prop_name);
+                            }
+                    );
+                } break;
+
+                case rewrite_expr::NODE_CONT: {
+                    size_t ell_offset = ptr->id;
+                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+                    const auto& record = table.datum.at(record_id);
+                    auto object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+
+                    std::vector<gsm_object_xi_content> collected;
+                    for (size_t id : object_ids) {
+                        auto local = clos.resolve_content(graph_id, id, variable_name);
+                        collected.insert(collected.end(), local.begin(), local.end());
+                    }
+                    remove_duplicates(collected);
+                    return collected;
+                } break;
+
+                    // Returning the edge label (if nested, imploding the collection into a string!) TODO: what if we need singled out?
+                case rewrite_expr::EDGE_LABEL: {
+                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+                    const auto& record = table.datum.at(record_id);
+                    auto object_ids = clos.resolvelabelsOverVariableName(pattern_id, variable_name, record);
+                    if (object_ids.empty())
+                        return {};
+
+                    return std::accumulate(
+                            object_ids.empty() ? object_ids.end() : std::next(object_ids.begin()),
+                            object_ids.end(),
+                            object_ids.empty() ? std::string("") : object_ids.at(0),
+                            [](const std::string& b, const std::string& a) {
+                                if (b.empty())
+                                    return a;
+                                else
+                                    return  b + " " + a;
+                            }
+                    );
+                } break;
+
+
+                    // Just returning the variable name associated to the object
+                case rewrite_expr::VARIABLE:
+                    return {ptr->prop};
+                    break;
+
+                case rewrite_expr::IFTE_RW: {
+                    return interpret(ptr->ifcond);
+                } break;
+
+                default:
+                    throw std::runtime_error("UNSUPPORTED OPERATION (FUTURE)");
             }
-
-                // Returning the property associated to a node
-            case rewrite_expr::NODE_PROP: {
-                auto prop_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), graph_id, pattern_id,schema,  table, record_id));
-                auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id,schema,  table, record_id));
-                const auto& record = table.datum.at(record_id);
-                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
-                if (object_ids.empty())
-                    return {};
-
-                // for each object_id in the vector, I continuously append
-                return std::accumulate(
-                        object_ids.begin(),
-                        object_ids.end(),
-                        std::string(""),
-                        [this,graph_id,prop_name](const std::string& b, size_t a) {
-                            if (b.empty())
-                                return resolve_prop(graph_id, a, prop_name);
-                            else
-                                return  b + " " + resolve_prop(graph_id, a, prop_name);
-                        }
-                );
-            } break;
-
-            case rewrite_expr::NODE_CONT: {
-                size_t ell_offset = ptr->id;
-                auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id));
-                const auto& record = table.datum.at(record_id);
-                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
-
-                std::vector<gsm_object_xi_content> collected;
-                for (size_t id : object_ids) {
-                    auto local = resolve_content(graph_id, id, variable_name);
-                    collected.insert(collected.end(), local.begin(), local.end());
-                }
-                remove_duplicates(collected);
-                return collected;
-            } break;
-
-                // Returning the edge label (if nested, imploding the collection into a string!) TODO: what if we need singled out?
-            case rewrite_expr::EDGE_LABEL: {
-                auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id));
-                const auto& record = table.datum.at(record_id);
-                auto object_ids = resolvelabelsOverVariableName(pattern_id, variable_name, record);
-                if (object_ids.empty())
-                    return {};
-
-                return std::accumulate(
-                        object_ids.empty() ? object_ids.end() : std::next(object_ids.begin()),
-                        object_ids.end(),
-                        object_ids.empty() ? std::string("") : object_ids.at(0),
-                        [](const std::string& b, const std::string& a) {
-                            if (b.empty())
-                                return a;
-                            else
-                                return  b + " " + a;
-                        }
-                );
-            } break;
-
-
-                // Just returning the variable name associated to the object
-            case rewrite_expr::VARIABLE:
-                return {ptr->prop};
-                break;
-
-            case rewrite_expr::IFTE_RW: {
-                std::string L, R;
-                if (std::holds_alternative<std::string>(ptr->ifcond.first)) {
-                    L = std::get<std::string>(ptr->ifcond.first);
-                } else {
-                    auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr->ifcond.first).get();
-                    L = std::any_cast<std::string>(interpret_closure_evaluate(j, graph_id, pattern_id,schema,  table, record_id));
-                }
-                if (std::holds_alternative<std::string>(ptr->ifcond.second)) {
-                    R = std::get<std::string>(ptr->ifcond.second);
-                } else {
-                    auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr->ifcond.second).get();
-                    R = std::any_cast<std::string>(interpret_closure_evaluate(j, graph_id, pattern_id, schema, table, record_id));
-                }
-                if (L == R) {
-                    return interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), graph_id, pattern_id,schema,  table, record_id);
-                } else {
-                    return interpret_closure_evaluate(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id);
-                }
-            } break;
-
-            default:
-                throw std::runtime_error("UNSUPPORTED OPERATION (FUTURE)");
         }
-    }
+
+        bool interpret(const test_pred& ptr) const {
+            switch (ptr.t) {
+                case test_pred::TEST_PRED_CASE_EQ: {
+                    std::string L, R;
+                    if (std::holds_alternative<std::string>(ptr.args.at(0))) {
+                        L = std::get<std::string>(ptr.args.at(0));
+                    } else {
+                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(0)).get();
+                        L = std::any_cast<std::string>(interpret_closure_evaluate(j));
+                    }
+                    if (std::holds_alternative<std::string>(ptr.args.at(1))) {
+                        R = std::get<std::string>(ptr.args.at(1));
+                    } else {
+                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(1)).get();
+                        R = std::any_cast<std::string>(interpret_closure_evaluate(j));
+                    }
+                    return L == R;
+                }
+                    break;
+                case test_pred::TEST_PRED_CASE_NEQ: {
+                    std::string L, R;
+                    if (std::holds_alternative<std::string>(ptr.args.at(0))) {
+                        L = std::get<std::string>(ptr.args.at(0));
+                    } else {
+                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(0)).get();
+                        L = std::any_cast<std::string>(interpret_closure_evaluate(j));
+                    }
+                    if (std::holds_alternative<std::string>(ptr.args.at(1))) {
+                        R = std::get<std::string>(ptr.args.at(1));
+                    } else {
+                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(1)).get();
+                        R = std::any_cast<std::string>(interpret_closure_evaluate(j));
+                    }
+                    return L != R;
+                } break;
+                case test_pred::TEST_PRED_CASE_LT: {
+                    std::string L, R;
+                    if (std::holds_alternative<std::string>(ptr.args.at(0))) {
+                        L = std::get<std::string>(ptr.args.at(0));
+                    } else {
+                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(0)).get();
+                        L = std::any_cast<std::string>(interpret_closure_evaluate(j));
+                    }
+                    if (std::holds_alternative<std::string>(ptr.args.at(1))) {
+                        R = std::get<std::string>(ptr.args.at(1));
+                    } else {
+                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(1)).get();
+                        R = std::any_cast<std::string>(interpret_closure_evaluate(j));
+                    }
+                    try
+                    {
+                        return std::stod(L) < std::stod(R);
+                    }
+                    catch(...)
+                    {
+                        return false;
+                    }
+                }
+                    break;
+                case test_pred::TEST_PRED_CASE_LEQ: {
+                    std::string L, R;
+                    if (std::holds_alternative<std::string>(ptr.args.at(0))) {
+                        L = std::get<std::string>(ptr.args.at(0));
+                    } else {
+                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(0)).get();
+                        L = std::any_cast<std::string>(interpret_closure_evaluate(j));
+                    }
+                    if (std::holds_alternative<std::string>(ptr.args.at(1))) {
+                        R = std::get<std::string>(ptr.args.at(1));
+                    } else {
+                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(1)).get();
+                        R = std::any_cast<std::string>(interpret_closure_evaluate(j));
+                    }
+                    try
+                    {
+                        return std::stod(L) <= std::stod(R);
+                    }
+                    catch(...)
+                    {
+                        return false;
+                    }
+                }
+                    break;
+                case test_pred::TEST_PRED_CASE_AND:
+                {
+                    auto l = interpret(ptr.child_logic.at(0));
+                    if (!l) return false;
+                    return interpret(ptr.child_logic.at(1));
+                }
+                    break;
+                case test_pred::TEST_PRED_CASE_OR: {
+                    auto l = interpret(ptr.child_logic.at(0));
+                    if (l) return true;
+                    return interpret(ptr.child_logic.at(1));
+                }
+                    break;
+                case test_pred::TRUE:
+                    return true;
+                    break;
+            }
+        }
+    };
+    
+
+
+
+
 
     std::vector<std::string>
     resolvelabelsOverVariableName(size_t pattern_id, const std::string &variable_name, const std::vector<value> &record) const {
@@ -919,6 +1005,11 @@ private:
                                         continue;
                                 }
 
+                                Interpret I(graph_id, pattern_id, pattern_result.first, it->second, table_offset, *this);
+                                if (pattern.has_where) {
+                                    if (!I.interpret(pattern.where)) continue;
+                                }
+
                                 for (const auto& operation : pattern.rwr_to) {
                                     switch (operation.t) {
 
@@ -962,7 +1053,8 @@ private:
                                             DEBUG_ASSERT(operation.from);
                                             DEBUG_ASSERT(operation.to);
 
-                                            std::any rhs = interpret_closure_evaluate(operation.from.get(), graph_id, pattern_id, pattern_result.first, it->second, table_offset);
+
+                                            std::any rhs = I.interpret_closure_evaluate(operation.from.get());
                                             interpret_closure_set(operation.to.get(), graph_id, pattern_id, pattern_result.first, it->second, table_offset, rhs);
                                         } break;
 

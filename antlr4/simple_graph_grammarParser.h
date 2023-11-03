@@ -14,10 +14,11 @@ public:
   enum {
     T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, 
     T__7 = 8, T__8 = 9, T__9 = 10, T__10 = 11, T__11 = 12, T__12 = 13, T__13 = 14, 
-    T__14 = 15, T__15 = 16, T__16 = 17, T__17 = 18, IF = 19, THEN = 20, 
-    ELSE = 21, AS = 22, VEC = 23, REWRITE_TO = 24, FORALL = 25, QM = 26, 
-    EQ = 27, STAR = 28, LPAR = 29, RPAR = 30, COL = 31, QPAR = 32, PPAR = 33, 
-    OTHERS = 34, SPACE = 35, COMMENT = 36, LINE_COMMENT = 37
+    T__14 = 15, T__15 = 16, T__16 = 17, T__17 = 18, T__18 = 19, T__19 = 20, 
+    T__20 = 21, T__21 = 22, T__22 = 23, WHERE = 24, IF = 25, THEN = 26, 
+    ELSE = 27, AS = 28, VEC = 29, REWRITE_TO = 30, FORALL = 31, QM = 32, 
+    EQ = 33, STAR = 34, LPAR = 35, RPAR = 36, COL = 37, QPAR = 38, PPAR = 39, 
+    OTHERS = 40, SPACE = 41, COMMENT = 42, LINE_COMMENT = 43
   };
 
   enum {
@@ -108,6 +109,8 @@ public:
     NodeContext* node(size_t i);
     std::vector<Edge_joiningContext *> edge_joining();
     Edge_joiningContext* edge_joining(size_t i);
+    antlr4::tree::TerminalNode *WHERE();
+    Test_exprContext *test_expr();
     antlr4::tree::TerminalNode *REWRITE_TO();
     Many_edgesContext *many_edges();
     std::vector<Rewrite_toContext *> rewrite_to();
@@ -345,23 +348,117 @@ public:
 
   class  Test_exprContext : public antlr4::ParserRuleContext {
   public:
+    Test_exprContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+   
+    Test_exprContext() = default;
+    void copyFrom(Test_exprContext *context);
+    using antlr4::ParserRuleContext::copyFrom;
+
+    virtual size_t getRuleIndex() const override;
+
+   
+  };
+
+  class  Leq_testContext : public Test_exprContext {
+  public:
+    Leq_testContext(Test_exprContext *ctx);
+
     simple_graph_grammarParser::Test_expr_sideContext *src = nullptr;
     simple_graph_grammarParser::Test_expr_sideContext *dst = nullptr;
-    Test_exprContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *EQ();
     std::vector<Test_expr_sideContext *> test_expr_side();
     Test_expr_sideContext* test_expr_side(size_t i);
-
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
+  };
+
+  class  Or_testContext : public Test_exprContext {
+  public:
+    Or_testContext(Test_exprContext *ctx);
+
+    simple_graph_grammarParser::Test_exprContext *src = nullptr;
+    simple_graph_grammarParser::Test_exprContext *dst = nullptr;
+    std::vector<Test_exprContext *> test_expr();
+    Test_exprContext* test_expr(size_t i);
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Par_testContext : public Test_exprContext {
+  public:
+    Par_testContext(Test_exprContext *ctx);
+
+    antlr4::tree::TerminalNode *LPAR();
+    Test_exprContext *test_expr();
+    antlr4::tree::TerminalNode *RPAR();
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Eq_testContext : public Test_exprContext {
+  public:
+    Eq_testContext(Test_exprContext *ctx);
+
+    simple_graph_grammarParser::Test_expr_sideContext *src = nullptr;
+    simple_graph_grammarParser::Test_expr_sideContext *dst = nullptr;
+    antlr4::tree::TerminalNode *EQ();
+    std::vector<Test_expr_sideContext *> test_expr_side();
+    Test_expr_sideContext* test_expr_side(size_t i);
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Neq_testContext : public Test_exprContext {
+  public:
+    Neq_testContext(Test_exprContext *ctx);
+
+    simple_graph_grammarParser::Test_expr_sideContext *src = nullptr;
+    simple_graph_grammarParser::Test_expr_sideContext *dst = nullptr;
+    std::vector<Test_expr_sideContext *> test_expr_side();
+    Test_expr_sideContext* test_expr_side(size_t i);
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Lt_testContext : public Test_exprContext {
+  public:
+    Lt_testContext(Test_exprContext *ctx);
+
+    simple_graph_grammarParser::Test_expr_sideContext *src = nullptr;
+    simple_graph_grammarParser::Test_expr_sideContext *dst = nullptr;
+    std::vector<Test_expr_sideContext *> test_expr_side();
+    Test_expr_sideContext* test_expr_side(size_t i);
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  And_testContext : public Test_exprContext {
+  public:
+    And_testContext(Test_exprContext *ctx);
+
+    simple_graph_grammarParser::Test_exprContext *src = nullptr;
+    simple_graph_grammarParser::Test_exprContext *dst = nullptr;
+    std::vector<Test_exprContext *> test_expr();
+    Test_exprContext* test_expr(size_t i);
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
   Test_exprContext* test_expr();
-
+  Test_exprContext* test_expr(int precedence);
   class  Test_expr_sideContext : public antlr4::ParserRuleContext {
   public:
     Test_expr_sideContext(antlr4::ParserRuleContext *parent, size_t invokingState);
@@ -503,6 +600,10 @@ public:
 
   Multiple_labelsContext* multiple_labels();
 
+
+  bool sempred(antlr4::RuleContext *_localctx, size_t ruleIndex, size_t predicateIndex) override;
+
+  bool test_exprSempred(Test_exprContext *_localctx, size_t predicateIndex);
 
   // By default the static state used to implement the parser is lazily initialized during the first
   // call to the constructor. You can call this function if you wish to initialize the static state

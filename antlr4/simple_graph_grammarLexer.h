@@ -14,10 +14,11 @@ public:
   enum {
     T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, 
     T__7 = 8, T__8 = 9, T__9 = 10, T__10 = 11, T__11 = 12, T__12 = 13, T__13 = 14, 
-    T__14 = 15, T__15 = 16, T__16 = 17, T__17 = 18, IF = 19, THEN = 20, 
-    ELSE = 21, AS = 22, VEC = 23, REWRITE_TO = 24, FORALL = 25, QM = 26, 
-    EQ = 27, STAR = 28, LPAR = 29, RPAR = 30, COL = 31, QPAR = 32, PPAR = 33, 
-    OTHERS = 34, SPACE = 35, COMMENT = 36, LINE_COMMENT = 37
+    T__14 = 15, T__15 = 16, T__16 = 17, T__17 = 18, T__18 = 19, T__19 = 20, 
+    T__20 = 21, T__21 = 22, T__22 = 23, WHERE = 24, IF = 25, THEN = 26, 
+    ELSE = 27, AS = 28, VEC = 29, REWRITE_TO = 30, FORALL = 31, QM = 32, 
+    EQ = 33, STAR = 34, LPAR = 35, RPAR = 36, COL = 37, QPAR = 38, PPAR = 39, 
+    OTHERS = 40, SPACE = 41, COMMENT = 42, LINE_COMMENT = 43
   };
 
   explicit simple_graph_grammarLexer(antlr4::CharStream *input);

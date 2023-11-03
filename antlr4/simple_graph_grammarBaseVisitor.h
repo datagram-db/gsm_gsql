@@ -83,7 +83,31 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitTest_expr(simple_graph_grammarParser::Test_exprContext *ctx) override {
+  virtual std::any visitLeq_test(simple_graph_grammarParser::Leq_testContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitOr_test(simple_graph_grammarParser::Or_testContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitPar_test(simple_graph_grammarParser::Par_testContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitEq_test(simple_graph_grammarParser::Eq_testContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitNeq_test(simple_graph_grammarParser::Neq_testContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitLt_test(simple_graph_grammarParser::Lt_testContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitAnd_test(simple_graph_grammarParser::And_testContext *ctx) override {
     return visitChildren(ctx);
   }
 

@@ -1,0 +1,14 @@
+p1 = (A)--[l]->(T)                   // Graph matching, First pattern
+     WHERE (𝜉 0 @ A) = k
+
+     ↪
+       del A                                             // Removing a node
+
+       (T);                                              // Instance of reference to be returned
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+p2 = (X) --[x]->(A)
+         --[ y]->(Z)
+
+        ↪  (X)

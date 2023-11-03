@@ -4,9 +4,10 @@ all_matches: (centralmatch ';')* centralmatch;
 
 node: LPAR STAR? VEC? var=multiple_labels (COL OTHERS)? RPAR;
 
-centralmatch: var=OTHERS EQ src=node            // central match
-                            e1=many_edges?           // ego-net patterns
-                            edge_joining*   // join conditions
+centralmatch: var=OTHERS EQ src=node                        // central match
+                            e1=many_edges?                  // ego-net patterns
+                            edge_joining*                   // join conditions
+                            (WHERE test_expr)?             // data conditions
                             (REWRITE_TO rewrite_to* dst=node)?
                             ;
 many_edges : edge+;
@@ -28,12 +29,13 @@ rewrite_expr: '𝜉' num=OTHERS '@' nodeVar=rewrite_expr #node_xi
             | LPAR rewrite_expr RPAR                  #just_par
             ;
 
-test_expr: src=test_expr_side '=' dst=test_expr_side /*TODO: #eq_test
+test_expr: src=test_expr_side '=' dst=test_expr_side #eq_test
          | src=test_expr_side '≠' dst=test_expr_side #neq_test
          | src=test_expr_side '<' dst=test_expr_side #lt_test
          | src=test_expr_side '≤' dst=test_expr_side #leq_test
-         | src=test_expr '∨' dst=test_expr #or
-         | src=test_expr '∧' dst=test_expr #and*/
+         | src=test_expr '∨' dst=test_expr           #or_test
+         | src=test_expr '∧' dst=test_expr           #and_test
+         | LPAR test_expr RPAR                       #par_test
          ;
 
 test_expr_side : rewrite_expr #test_data
@@ -49,6 +51,7 @@ edge_joining: node edge;
 edgelabel: QPAR (FORALL? | QM?) (var=OTHERS COL)? multiple_labels? PPAR;
 multiple_labels: (OTHERS '||')* OTHERS;
 
+WHERE: 'where';
 IF: 'if';
 THEN: 'then';
 ELSE: 'else';

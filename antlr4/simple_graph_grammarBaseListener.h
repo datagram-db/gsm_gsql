@@ -67,8 +67,26 @@ public:
   virtual void enterJust_par(simple_graph_grammarParser::Just_parContext * /*ctx*/) override { }
   virtual void exitJust_par(simple_graph_grammarParser::Just_parContext * /*ctx*/) override { }
 
-  virtual void enterTest_expr(simple_graph_grammarParser::Test_exprContext * /*ctx*/) override { }
-  virtual void exitTest_expr(simple_graph_grammarParser::Test_exprContext * /*ctx*/) override { }
+  virtual void enterLeq_test(simple_graph_grammarParser::Leq_testContext * /*ctx*/) override { }
+  virtual void exitLeq_test(simple_graph_grammarParser::Leq_testContext * /*ctx*/) override { }
+
+  virtual void enterOr_test(simple_graph_grammarParser::Or_testContext * /*ctx*/) override { }
+  virtual void exitOr_test(simple_graph_grammarParser::Or_testContext * /*ctx*/) override { }
+
+  virtual void enterPar_test(simple_graph_grammarParser::Par_testContext * /*ctx*/) override { }
+  virtual void exitPar_test(simple_graph_grammarParser::Par_testContext * /*ctx*/) override { }
+
+  virtual void enterEq_test(simple_graph_grammarParser::Eq_testContext * /*ctx*/) override { }
+  virtual void exitEq_test(simple_graph_grammarParser::Eq_testContext * /*ctx*/) override { }
+
+  virtual void enterNeq_test(simple_graph_grammarParser::Neq_testContext * /*ctx*/) override { }
+  virtual void exitNeq_test(simple_graph_grammarParser::Neq_testContext * /*ctx*/) override { }
+
+  virtual void enterLt_test(simple_graph_grammarParser::Lt_testContext * /*ctx*/) override { }
+  virtual void exitLt_test(simple_graph_grammarParser::Lt_testContext * /*ctx*/) override { }
+
+  virtual void enterAnd_test(simple_graph_grammarParser::And_testContext * /*ctx*/) override { }
+  virtual void exitAnd_test(simple_graph_grammarParser::And_testContext * /*ctx*/) override { }
 
   virtual void enterTest_data(simple_graph_grammarParser::Test_dataContext * /*ctx*/) override { }
   virtual void exitTest_data(simple_graph_grammarParser::Test_dataContext * /*ctx*/) override { }

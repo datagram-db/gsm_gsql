@@ -1,5 +1,5 @@
 /*
- * IntermediateView.cpp
+ * delta_updates.cpp
  * This file is part of gsm_gsql
  *
  * Copyright (C) 2023 - Giacomo Bergami
@@ -20,7 +20,16 @@
 
  
 //
-// Created by giacomo on 13/08/23.
+// Created by giacomo on 17/09/23.
 //
 
-#include "database/IntermediateView.h"
+#include "queries/delta_updates.h"
+
+void delta_updates::clear_insertions() {
+    newly_inserted_vertices.clear();
+    newIterationInsertedObjects.clear();
+}
+
+delta_updates::delta_updates(size_t max_id) {
+    delta_plus_db.max_id = max_id;
+}
