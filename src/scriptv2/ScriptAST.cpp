@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include <utility>
-#include <gsql_gsm/script_1/ScriptAST.h>
+#include <scriptv2/ScriptAST.h>
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::TRUE;
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::FALSE;
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::DOUBLET;
@@ -15,7 +15,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::START;
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::ANYT;
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::BOTCCT;
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::NULLO;
-#include <gsql_gsm/script_1/Funzione.h>
+#include <scriptv2/Funzione.h>
 
 void script::structures::ScriptAST::setDBRecursively( gsm_inmemory_db* datenbanken) {
     db = datenbanken;
@@ -532,7 +532,7 @@ void script::structures::ScriptAST::setContext(DPtr<std::unordered_map<std::stri
 }
 
 #include <math.h>
-#include "gsql_gsm/script_1/ScriptVisitor.h"
+#include "scriptv2/ScriptVisitor.h"
 #include "yaucl/strings/string_utils.h"
 #include "yaucl/functional/iterators.h"
 #include "yaucl/structures/setoids/basics.h"
@@ -989,13 +989,22 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
 
         case EllX: {
             auto id = (size_t) arrayList[0]->toInteger();
-//            ArrayList<DPtr<script::structures::ScriptAST>> v;
+            ArrayList<DPtr<script::structures::ScriptAST>> v;
             if (db) {
-                return string_(db->ell(id));
+                for (const std::string& val : db->ell(id))
+                    v.emplace_back(script::structures::ScriptAST::string_(val));
             } else {
-                std::cerr << "WARNING: No DB being associated. Returning an empty array for Ell" << std::endl;
+                std::cerr << "WARNING: No DB being associated. Returning an empty array for Xi" << std::endl;
             }
-            return string_("");
+            return script::structures::ScriptAST::array_(std::move(v));
+//            auto id = (size_t) arrayList[0]->toInteger();
+////            ArrayList<DPtr<script::structures::ScriptAST>> v;
+//            if (db) {
+//                return string_(db->ell(id));
+//            } else {
+//                std::cerr << "WARNING: No DB being associated. Returning an empty array for Ell" << std::endl;
+//            }
+//            return string_("");
         }
 
         case XiX:{
@@ -1017,11 +1026,13 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
                 std::cerr << "WARNING: No DB being associated. Returning an empty array for Xi" << std::endl;
             } else {
 //                DPtr<script::structures::ScriptAST> ell;
-                ArrayList<DPtr<script::structures::ScriptAST>> xi, errs;
+                ArrayList<DPtr<script::structures::ScriptAST>> xi, ells, errs;
                 for (const std::string& val : db->xi(id))
                     xi.emplace_back(script::structures::ScriptAST::string_(val));
+                for (const std::string& val : db->ell(id))
+                    ells.emplace_back(script::structures::ScriptAST::string_(val));
                 vv["@xi"] = array_(std::move(xi));
-                vv["@ell"] = string_(db->ell(id));
+                vv["@ell"] = array_(std::move(ells));
 //                for (const std::string& val : db->ell(id))
 //                    ell.emplace_back(script::structures::ScriptAST::string_(val));
 //                vv["@ell"] = array_(std::move(ell));
@@ -1385,7 +1396,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
             const auto& XI = db->xi(id);
             if (XI.empty()) {
                 std::stringstream ss;
-                ss << db->ell(id);
+                ss << db->ell(id)[0];
                 auto lfst = compiler::ScriptVisitor::eval(ss);
                 if (!lfst->isType())
                     throw std::runtime_error("ERROR: the label of an object should express a type!");
@@ -1399,7 +1410,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
                 }
                 auto x = mgu(xi); // Actually this?
                 std::stringstream ss;
-                ss << db->ell(id);
+                ss << db->ell(id)[0];
                 auto lfst = compiler::ScriptVisitor::eval(ss);
                 if (!lfst->isType())
                     throw std::runtime_error("ERROR: the label of an object should express a type!");
@@ -1417,7 +1428,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
                 vv[k] = mgu(local);
             }
             std::stringstream ss;
-            ss << db->ell(id);
+            ss << db->ell(id)[0];
             auto lfst = compiler::ScriptVisitor::eval(ss);
             if (!lfst->isType())
                 throw std::runtime_error("ERROR: the label of an object should express a type!");

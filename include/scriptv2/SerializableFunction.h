@@ -7,7 +7,7 @@
 
 #include <string>
 #include <vector>
-#include <gsql_gsm/script_1/java_types.h>
+#include <scriptv2/java_types.h>
 struct ScriptAST;
 
 struct SerializableFunction {

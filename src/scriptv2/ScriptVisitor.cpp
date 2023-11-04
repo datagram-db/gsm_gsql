@@ -2,13 +2,14 @@
 // Created by giacomo on 10/04/23.
 //
 
-#include <yaucl/graphs/NodeLabelBijectionGraph.h>
-#include <gsql_gsm/script_1/ScriptVisitor.h>
-#include <gsql_gsm/script_1/ScriptAST.h>
-#include <gsql_gsm/script_1/Funzione.h>
-#include "scriptLexer.h"
+#include "yaucl/graphs/NodeLabelBijectionGraph.h"
+#include <scriptv2/ScriptVisitor.h>
+#include <scriptv2/ScriptAST.h>
+#include <scriptv2/Funzione.h>
+#include "scriptv2/scriptLexer.h"
 
 
+#include "yaucl/strings/string_utils.h"
 
 namespace script {
     namespace compiler {
@@ -294,7 +295,6 @@ namespace script {
             return std::any();
         }
 
-#include "yaucl/strings/string_utils.h"
 
         std::any ScriptVisitor::visitAtom_string(scriptParser::Atom_stringContext *context) {
             std::string result;

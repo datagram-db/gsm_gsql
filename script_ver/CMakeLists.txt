@@ -15,13 +15,13 @@ find_package(CURL REQUIRED)
 
 include_directories(antlr4/cpp/antlr4/script/)
 include_directories(submodules/yaucl/submodules/antlr4/runtime/Cpp/runtime/src)
-add_library(gsm_script antlr4/cpp/antlr4/script/scriptBaseListener.cpp
-        antlr4/cpp/antlr4/script/scriptBaseVisitor.cpp
-        antlr4/cpp/antlr4/script/scriptLexer.cpp
-        antlr4/cpp/antlr4/script/scriptParser.cpp
-        antlr4/cpp/antlr4/script/scriptVisitor.cpp
-        antlr4/cpp/antlr4/script/scriptListener.cpp
-        src/gsql_gsm/script_1/ScriptAST.cpp include/gsql_gsm/script_1/ScriptAST.h src/gsql_gsm/script_1/Funzione.cpp include/gsql_gsm/script_1/Funzione.h src/gsql_gsm/script_1/Javification.cpp include/gsql_gsm/script_1/Javification.h src/gsql_gsm/script_1/ScriptVisitor.cpp include/gsql_gsm/script_1/ScriptVisitor.h)
+add_library(gsm_script ../antlr4/scriptv2/scriptBaseListener.cpp
+        ../antlr4/scriptv2/scriptBaseVisitor.cpp
+        ../antlr4/scriptv2/scriptLexer.cpp
+        ../antlr4/scriptv2/scriptParser.cpp
+        ../antlr4/scriptv2/scriptVisitor.cpp
+        ../antlr4/scriptv2/scriptListener.cpp
+        ../src/scriptv2/ScriptAST.cpp ../include/scriptv2/ScriptAST.h ../src/scriptv2/Funzione.cpp ../include/scriptv2/Funzione.h ../src/scriptv2/Javification.cpp ../include/scriptv2/Javification.h ../src/scriptv2/ScriptVisitor.cpp ../include/scriptv2/ScriptVisitor.h)
 target_link_libraries(gsm_script antlr4_static)
 
 
@@ -37,6 +37,6 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/lib)
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
-add_executable(gsm_gsql_script src/tests/script_runs.cpp)
+add_executable(gsm_gsql_script ../src/tests/script_runs.cpp)
 target_link_libraries(gsm_gsql_script gtest_main gsm_script gsm_gsql)
 gtest_discover_tests(gsm_gsql_script)

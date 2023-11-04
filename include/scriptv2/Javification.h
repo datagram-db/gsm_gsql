@@ -5,7 +5,7 @@
 #ifndef GSM_GSQL_JAVIFICATION_H
 #define GSM_GSQL_JAVIFICATION_H
 
-#include <gsql_gsm/script_1/ScriptAST.h>
+#include <scriptv2/ScriptAST.h>
 
 namespace script::structures {
     struct Javification {

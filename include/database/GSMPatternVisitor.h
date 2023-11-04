@@ -26,7 +26,7 @@
 #ifndef GSM2_GSMPATTERNVISITOR_H
 #define GSM2_GSMPATTERNVISITOR_H
 
-#include <simple_graph_grammarBaseVisitor.h>
+#include <graph_grammar/simple_graph_grammarBaseVisitor.h>
 #include <optional>
 #include <yaucl/structures/default_constructors.h>
 #include <memory>

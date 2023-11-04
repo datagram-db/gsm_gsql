@@ -2,8 +2,8 @@
 // Created by giacomo on 09/04/23.
 //
 
-#include <gsql_gsm/script_1/Funzione.h>
-#include <gsql_gsm/script_1/ScriptAST.h>
+#include <scriptv2//Funzione.h>
+#include <scriptv2//ScriptAST.h>
 
 std::ostream &script::structures::operator<<(std::ostream &os, const Funzione &funzione) {
     os << funzione.parameter << " -> {";

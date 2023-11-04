@@ -30,8 +30,8 @@
 #include "database/LinearGSM.h"
 #include "queries/DataPredicate.h"
 #include "ANTLRInputStream.h"
-#include "simple_graph_grammarLexer.h"
-#include "simple_graph_grammarParser.h"
+#include "graph_grammar/simple_graph_grammarLexer.h"
+#include "graph_grammar/simple_graph_grammarParser.h"
 #include "database/GSMPatternVisitor.h"
 
 // https://stackoverflow.com/a/66969964/1376095

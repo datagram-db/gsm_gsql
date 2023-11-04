@@ -1,5 +1,5 @@
-#include <gsql_gsm/script_1/ScriptVisitor.h>
-#include <gsql_gsm/script_1/ScriptAST.h>
+#include <scriptv2/ScriptVisitor.h>
+#include <scriptv2/ScriptAST.h>
 #include <fstream>
 #include <filesystem>
 #include <gtest/gtest.h>

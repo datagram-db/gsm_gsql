@@ -7,8 +7,8 @@
 
 
 #include <ostream>
-#include <gsql_gsm/script_1/java_types.h>
-#include <gsql_gsm/gsm_inmemory_db.h>
+#include <scriptv2/java_types.h>
+#include <database//gsm_inmemory_db.h>
 
 namespace script::structures {
     struct ScriptAST;

@@ -5,9 +5,9 @@
 #ifndef GSM_GSQL_SCRIPTAST_H
 #define GSM_GSQL_SCRIPTAST_H
 
-#include <gsql_gsm/script_1/java_types.h>
-#include <gsql_gsm/script_1/SerializableFunction.h>
-#include <gsql_gsm/gsm_inmemory_db.h>
+#include <scriptv2/java_types.h>
+#include <scriptv2/SerializableFunction.h>
+#include <database/gsm_inmemory_db.h>
 #include <functional>
 #include <optional>
 
