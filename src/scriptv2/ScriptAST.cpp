@@ -285,7 +285,7 @@ std::string script::structures::ScriptAST::toString(bool quot) const {
             return "|-" + arrayList[0]->toString(true) +"-|";
 
         case ConcatE:
-            return "(" + arrayList[0]->toString(true) +") @ ("+ arrayList[1]->toString(true)+")";
+            return "(" + arrayList[0]->toString(true) +") ++ ("+ arrayList[1]->toString(true)+")";
 
         case GtE:
             return "(" + arrayList[0]->toString(true) +") > ("+ arrayList[1]->toString(true)+")";
@@ -916,7 +916,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
             return double_(std::ceil(arrayList[0]->toDouble()));
 
         case ConcatE:
-            return string_(arrayList[0]->toString()+arrayList[1]->toString());
+            return string_(arrayList[0]->run()->toString()+arrayList[1]->run()->toString());
 
         case GtE:
         {

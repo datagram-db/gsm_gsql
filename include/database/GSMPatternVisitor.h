@@ -420,6 +420,7 @@ public:
             ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->src)));
             ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->dst)));
         }
+        return {};
     }
 
     std::any visitOr_test(simple_graph_grammarParser::Or_testContext *ctx) override {

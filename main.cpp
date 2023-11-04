@@ -1,7 +1,45 @@
 #include <vector>
 #include <fstream>
 #include <queries/closure.h>
+#include <scriptv2//ScriptAST.h>
 #include <args.hxx>
+
+#include <string>
+#include <iostream>
+#include <sstream>
+
+#include <string_view>
+static bool endsWith(std::string_view str, std::string_view suffix)
+{
+    return str.size() >= suffix.size() && 0 == str.compare(str.size()-suffix.size(), suffix.size(), suffix);
+}
+
+static bool startsWith(std::string_view str, std::string_view prefix)
+{
+    return str.size() >= prefix.size() && 0 == str.compare(0, prefix.size(), prefix);
+}
+
+std::string getLine() {
+    std::cout << "> " << std::flush;
+    std::stringstream s;
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        if (endsWith(line, ";")) {
+            s << line;
+            std::string tmp = s.str();
+            tmp.pop_back();
+            return tmp;
+        } else {
+            s << line << std::endl;
+        }
+    }
+    std::string tmp;
+    if (endsWith(line, ";")) {
+        tmp = s.str();
+        tmp.pop_back();
+    }
+    return tmp;
+}
 
 
 int main(int argc, char **argv) {
@@ -15,6 +53,7 @@ int main(int argc, char **argv) {
     args::Flag print(group, "print", "Printing the matching edges", {'p', "print"});
     args::Flag verbose(group, "verbose", "Verbose table generation", {'v', "verbose"});
     args::ValueFlag<std::string> benchmark_log(group, "benchmark", "Prints out the benchmark log", {'b', "benchmark"});
+    args::ValueFlag<size_t> script(group, "script", "runs script2 on the terminal over a specified DB", {'s', "script"});
     try
     {
         parser.ParseCLI(argc, argv);
@@ -36,7 +75,22 @@ int main(int argc, char **argv) {
     }
 
     closure result;
+    script::compiler::ScriptVisitor::bindGSM(&result);
 
+    if (script) {
+        result.load_data_from_file(args::get(data)); // "./data/einstein.txt"
+        size_t graphId = args::get(script);
+        std::string str;
+        DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> map = std::make_shared<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>>();
+        map->insert(std::make_pair("graph", script::structures::ScriptAST::integer_(graphId)));
+        while ((str = getLine()) != "quit!") {
+            std::stringstream  ss;
+            ss << str;
+            auto program = script::compiler::ScriptVisitor::eval(ss, map);
+            std::cout << program->run()->toString() << std::endl;
+        }
+        return 0;
+    }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Loading the query
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

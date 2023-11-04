@@ -354,20 +354,22 @@ struct closure {
     inline bool has_content(size_t graphid,
                                                               size_t id,
                                                               const std::string& key_content) const {
-        auto& updates = delta_updates_per_graph.at(graphid);
-        {
-            auto it = updates.replacement_map.find(id);
-            if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
-                id = it->second;
-        }
-        if (updates.hasXBeenRemoved(id))
-            return false;
-        {
-            auto it = updates.delta_plus_db.O.find(id);
-            if (it != updates.delta_plus_db.O.end()) {
-                auto it2 =  it->second.phi.find(key_content);
-                if (it2 != it->second.phi.end()) {
-                    return true;
+        if (!delta_updates_per_graph.empty()) {
+            auto& updates = delta_updates_per_graph.at(graphid);
+            {
+                auto it = updates.replacement_map.find(id);
+                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
+                    id = it->second;
+            }
+            if (updates.hasXBeenRemoved(id))
+                return false;
+            {
+                auto it = updates.delta_plus_db.O.find(id);
+                if (it != updates.delta_plus_db.O.end()) {
+                    auto it2 =  it->second.phi.find(key_content);
+                    if (it2 != it->second.phi.end()) {
+                        return true;
+                    }
                 }
             }
         }
@@ -377,19 +379,21 @@ struct closure {
     inline std::vector<std::string> phi_keys(size_t graphid,
                                              size_t id) {
         std::unordered_set<std::string> result;
-        auto& updates = delta_updates_per_graph.at(graphid);
-        {
-            auto it = updates.replacement_map.find(id);
-            if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
-                id = it->second;
-        }
-        if (updates.hasXBeenRemoved(id))
-            return {};
-        {
-            auto it = updates.delta_plus_db.O.find(id);
-            if (it != updates.delta_plus_db.O.end()) {
-                for (const auto& [key_content,v] : it->second.phi) {
-                    result.insert(key_content);
+        if (!delta_updates_per_graph.empty()) {
+            auto& updates = delta_updates_per_graph.at(graphid);
+            {
+                auto it = updates.replacement_map.find(id);
+                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
+                    id = it->second;
+            }
+            if (updates.hasXBeenRemoved(id))
+                return {};
+            {
+                auto it = updates.delta_plus_db.O.find(id);
+                if (it != updates.delta_plus_db.O.end()) {
+                    for (const auto& [key_content,v] : it->second.phi) {
+                        result.insert(key_content);
+                    }
                 }
             }
         }
@@ -414,31 +418,35 @@ struct closure {
     inline std::vector<gsm_object_xi_content> resolve_content(size_t graphid,
                                                               size_t id,
                                                               const std::string& key_content) const {
-        auto& updates = delta_updates_per_graph.at(graphid);
-        {
-            auto it = updates.replacement_map.find(id);
-            if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
-                id = it->second;
-        }
-        if (updates.hasXBeenRemoved(id))
-            return empty_content;
-        {
-            auto it = updates.delta_plus_db.O.find(id);
-            if (it != updates.delta_plus_db.O.end()) {
-                auto it2 =  it->second.phi.find(key_content);
-                if (it2 != it->second.phi.end()) {
-                    return it2->second;
+        if (!delta_updates_per_graph.empty()) {
+            auto& updates = delta_updates_per_graph.at(graphid);
+            {
+                auto it = updates.replacement_map.find(id);
+                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
+                    id = it->second;
+            }
+            if (updates.hasXBeenRemoved(id))
+                return empty_content;
+            {
+                auto it = updates.delta_plus_db.O.find(id);
+                if (it != updates.delta_plus_db.O.end()) {
+                    auto it2 =  it->second.phi.find(key_content);
+                    if (it2 != it->second.phi.end()) {
+                        return it2->second;
+                    }
                 }
             }
         }
         auto legacy = forloading.resolveContent(graphid, id, key_content);
         bool subst=false;
-        for (auto& ref : legacy) {
-            auto& map = delta_updates_per_graph.at(graphid).replacement_map;
-            auto it =  (map.find(ref.id));
-            if (it != map.end()) {
-                ref.id = it->second;
-                subst = true;
+        if (!delta_updates_per_graph.empty()) {
+            for (auto& ref : legacy) {
+                auto& map = delta_updates_per_graph.at(graphid).replacement_map;
+                auto it =  (map.find(ref.id));
+                if (it != map.end()) {
+                    ref.id = it->second;
+                    subst = true;
+                }
             }
         }
         if (subst)
@@ -455,23 +463,25 @@ struct closure {
      * @return
      */
     inline std::string resolve_prop(size_t graphid, size_t id, const std::string& key_prop) const {
-        auto& updates = delta_updates_per_graph.at(graphid);
-        {
-            auto it = updates.replacement_map.find(id);
-            if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
-                id = it->second;
-        }
-        if (updates.hasXBeenRemoved(id))
-            return empty_string;
-        {
-            auto it = updates.delta_plus_db.O.find(id);
-            if (it != updates.delta_plus_db.O.end()) {
-                auto it2 = it->second.content.find(key_prop);
-                if (it2 != it->second.content.end()) {
-                    if (std::holds_alternative<std::string>(it2->second))
-                        return std::get<std::string>(it2->second);
-                    else
-                        return std::to_string(std::get<double>(it2->second));
+        if (!delta_updates_per_graph.empty()) {
+            auto& updates = delta_updates_per_graph.at(graphid);
+            {
+                auto it = updates.replacement_map.find(id);
+                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
+                    id = it->second;
+            }
+            if (updates.hasXBeenRemoved(id))
+                return empty_string;
+            {
+                auto it = updates.delta_plus_db.O.find(id);
+                if (it != updates.delta_plus_db.O.end()) {
+                    auto it2 = it->second.content.find(key_prop);
+                    if (it2 != it->second.content.end()) {
+                        if (std::holds_alternative<std::string>(it2->second))
+                            return std::get<std::string>(it2->second);
+                        else
+                            return std::to_string(std::get<double>(it2->second));
+                    }
                 }
             }
         }
@@ -487,19 +497,21 @@ struct closure {
 
     inline std::vector<std::string> objProperties(size_t graphid, size_t id) const {
         std::unordered_set<std::string> result;
-        auto& updates = delta_updates_per_graph.at(graphid);
-        {
-            auto it = updates.replacement_map.find(id);
-            if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
-                id = it->second;
-        }
-        if (updates.hasXBeenRemoved(id))
-            return {};
-        {
-            auto it = updates.delta_plus_db.O.find(id);
-            if (it != updates.delta_plus_db.O.end()) {
-                for (const auto& [k,v] : it->second.content) {
-                    result.insert(k);
+        if (!delta_updates_per_graph.empty()) {
+            auto& updates = delta_updates_per_graph.at(graphid);
+            {
+                auto it = updates.replacement_map.find(id);
+                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
+                    id = it->second;
+            }
+            if (updates.hasXBeenRemoved(id))
+                return {};
+            {
+                auto it = updates.delta_plus_db.O.find(id);
+                if (it != updates.delta_plus_db.O.end()) {
+                    for (const auto& [k,v] : it->second.content) {
+                        result.insert(k);
+                    }
                 }
             }
         }
@@ -507,23 +519,26 @@ struct closure {
         result.insert(v.begin(), v.end());
         v.clear();
         v.insert(v.begin(), result.begin(), result.end());
+        return v;
     }
 
     inline std::optional<union_minimal> resolve_GoodProp(size_t graphid, size_t id, const std::string& key_prop) const {
-        auto& updates = delta_updates_per_graph.at(graphid);
-        {
-            auto it = updates.replacement_map.find(id);
-            if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
-                id = it->second;
-        }
-        if (updates.hasXBeenRemoved(id))
-            return empty_string;
-        {
-            auto it = updates.delta_plus_db.O.find(id);
-            if (it != updates.delta_plus_db.O.end()) {
-                auto it2 = it->second.content.find(key_prop);
-                if (it2 != it->second.content.end()) {
-                    return it2->second;
+        if (!delta_updates_per_graph.empty()) {
+            auto& updates = delta_updates_per_graph.at(graphid);
+            {
+                auto it = updates.replacement_map.find(id);
+                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
+                    id = it->second;
+            }
+            if (updates.hasXBeenRemoved(id))
+                return empty_string;
+            {
+                auto it = updates.delta_plus_db.O.find(id);
+                if (it != updates.delta_plus_db.O.end()) {
+                    auto it2 = it->second.content.find(key_prop);
+                    if (it2 != it->second.content.end()) {
+                        return it2->second;
+                    }
                 }
             }
         }
@@ -541,6 +556,7 @@ struct closure {
 private:
 
     inline const std::vector<std::string>& resolve_ellxi(size_t graphid, size_t id, bool isXiEllOtherwise) const {
+        if (!delta_updates_per_graph.empty()) {
         auto& updates = delta_updates_per_graph.at(graphid);
         {
             auto it = updates.replacement_map.find(id);
@@ -563,6 +579,7 @@ private:
                 }
 
             }
+        }
         }
         return isXiEllOtherwise ? forloading.xi(graphid, id) : forloading.ell(graphid, id);
     }

@@ -1,8 +1,8 @@
 p1 = (A)--[l]->(T)                   // Graph matching, First pattern
 
      ↪
+       set (𝜉 0 @ T) as SCRIPT "((xi var(\"A\"))[0]) ++ ((xi var(\"T\"))[0])"
        del A                                             // Removing a node
-       set (𝜉 0 @ T) as SCRIPT "f := fun x -> { x + 2.0 }; g := fun y -> { (y[0]) + (y[1]) }; (g { (f 0) ; 3 } ) "
        (T);                                              // Instance of reference to be returned
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

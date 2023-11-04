@@ -139,7 +139,9 @@ static inline void parse(char* string,
         }
         if (!xi.empty()) {
             // Sending to fuzzy xi match
-            forloading.xi_values.addGramsToMap(xi[0], graphId_eventId, xi);
+            std::string front = xi[0];
+            xi.erase(xi.begin());
+            forloading.xi_values.addGramsToMap(front, graphId_eventId, xi);
         }
         string++; len--;
         if (!(string = skipSpaces(string, &len))) return;
