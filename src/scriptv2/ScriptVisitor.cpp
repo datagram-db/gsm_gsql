@@ -1,7 +1,7 @@
 //
 // Created by giacomo on 10/04/23.
 //
-
+#include <queries/closure.h>
 #include "yaucl/graphs/NodeLabelBijectionGraph.h"
 #include <scriptv2/ScriptVisitor.h>
 #include <scriptv2/ScriptAST.h>

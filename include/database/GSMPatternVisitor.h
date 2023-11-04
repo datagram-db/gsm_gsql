@@ -32,6 +32,7 @@
 #include <memory>
 #include <variant>
 #include "yaucl/functional/assert.h"
+#include "yaucl/data/json.h"
 
 
 struct rewrite_expr;
@@ -44,11 +45,13 @@ struct test_pred {
         TEST_PRED_CASE_LEQ,
         TEST_PRED_CASE_AND,
         TEST_PRED_CASE_OR,
+        TEST_PRED_CASE_SCRIPT,
         TRUE
     };
     cases t = TRUE;
     std::vector<test_side> args;
     std::vector<test_pred> child_logic;
+    std::string nsoe;
     DEFAULT_CONSTRUCTORS(test_pred)
 };
 
@@ -69,7 +72,8 @@ struct rewrite_expr {
         EDGE_DST,
         VARIABLE,
         IFTE_RW,
-        NODE_OR_EDGE
+        NODE_OR_EDGE,
+        SCRIPT_CASE
     };
 
     cases t;                                                    // Using enumeration instead of inheritance
@@ -235,6 +239,27 @@ struct node_match {
 
 class GSMPatternVisitor : public simple_graph_grammarBaseVisitor {
 public:
+
+    std::any visitScript(simple_graph_grammarParser::ScriptContext *ctx) override {
+        std::shared_ptr<rewrite_expr> ptr{nullptr};
+        if (ctx) {
+            ptr = std::make_shared<rewrite_expr>();
+            ptr->prop = UNESCAPE(ctx->EscapedString()->getText());
+            ptr->t = rewrite_expr::SCRIPT_CASE;
+        }
+        return {ptr};
+    }
+
+    std::any visitScript_test(simple_graph_grammarParser::Script_testContext *ctx) override {
+        if (ctx) {
+            test_pred ptr;
+            ptr.t = test_pred::TEST_PRED_CASE_SCRIPT;
+            ptr.nsoe = UNESCAPE(ctx->EscapedString()->getText());
+            return ptr;
+        }
+        return {};
+    }
+
     std::any visitNeu_obj(simple_graph_grammarParser::Neu_objContext *ctx) override {
         if (ctx) {
             rewrite_to result;

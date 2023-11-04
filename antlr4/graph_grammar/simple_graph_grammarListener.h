@@ -1,5 +1,5 @@
 
-// Generated from antlr4/simple_graph_grammar.g4 by ANTLR 4.11.1
+// Generated from antlr4/graph_grammar/simple_graph_grammar.g4 by ANTLR 4.11.1
 
 #pragma once
 
@@ -65,8 +65,14 @@ public:
   virtual void enterJust_par(simple_graph_grammarParser::Just_parContext *ctx) = 0;
   virtual void exitJust_par(simple_graph_grammarParser::Just_parContext *ctx) = 0;
 
+  virtual void enterScript(simple_graph_grammarParser::ScriptContext *ctx) = 0;
+  virtual void exitScript(simple_graph_grammarParser::ScriptContext *ctx) = 0;
+
   virtual void enterLeq_test(simple_graph_grammarParser::Leq_testContext *ctx) = 0;
   virtual void exitLeq_test(simple_graph_grammarParser::Leq_testContext *ctx) = 0;
+
+  virtual void enterScript_test(simple_graph_grammarParser::Script_testContext *ctx) = 0;
+  virtual void exitScript_test(simple_graph_grammarParser::Script_testContext *ctx) = 0;
 
   virtual void enterOr_test(simple_graph_grammarParser::Or_testContext *ctx) = 0;
   virtual void exitOr_test(simple_graph_grammarParser::Or_testContext *ctx) = 0;

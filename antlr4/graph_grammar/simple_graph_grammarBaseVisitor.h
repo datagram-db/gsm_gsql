@@ -1,5 +1,5 @@
 
-// Generated from antlr4/simple_graph_grammar.g4 by ANTLR 4.11.1
+// Generated from antlr4/graph_grammar/simple_graph_grammar.g4 by ANTLR 4.11.1
 
 #pragma once
 
@@ -83,7 +83,15 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitScript(simple_graph_grammarParser::ScriptContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitLeq_test(simple_graph_grammarParser::Leq_testContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitScript_test(simple_graph_grammarParser::Script_testContext *ctx) override {
     return visitChildren(ctx);
   }
 

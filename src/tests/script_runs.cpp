@@ -1,5 +1,5 @@
-#include <scriptv2/ScriptVisitor.h>
 #include <scriptv2/ScriptAST.h>
+#include <scriptv2/ScriptVisitor.h>
 #include <fstream>
 #include <filesystem>
 #include <gtest/gtest.h>

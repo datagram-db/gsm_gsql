@@ -27,6 +27,7 @@ rewrite_expr: '𝜉' num=OTHERS '@' nodeVar=rewrite_expr #node_xi
             | IF LPAR ifcond=test_expr RPAR THEN then_effect=rewrite_expr (ELSE else_effect=rewrite_expr)?  #ifte_expr
             | OTHERS                                  #node_or_edge
             | LPAR rewrite_expr RPAR                  #just_par
+            | 'SCRIPT' EscapedString                  #script
             ;
 
 test_expr: src=test_expr_side '=' dst=test_expr_side #eq_test
@@ -36,6 +37,7 @@ test_expr: src=test_expr_side '=' dst=test_expr_side #eq_test
          | src=test_expr '∨' dst=test_expr           #or_test
          | src=test_expr '∧' dst=test_expr           #and_test
          | LPAR test_expr RPAR                       #par_test
+         | 'TEST' EscapedString                      #script_test
          ;
 
 test_expr_side : rewrite_expr #test_data
@@ -67,6 +69,7 @@ RPAR: ')';
 COL: ':';
 QPAR: '[';
 PPAR: ']';
+EscapedString : '"' (~[\\"] | '\\' [\\"])* '"';
 OTHERS: ~[;*():=\][|∀> \t\r\n-]+;
 SPACE : [ \t\r\n]+ -> skip;
 

@@ -1,5 +1,5 @@
 
-// Generated from antlr4/simple_graph_grammar.g4 by ANTLR 4.11.1
+// Generated from antlr4/graph_grammar/simple_graph_grammar.g4 by ANTLR 4.11.1
 
 #pragma once
 
@@ -15,10 +15,11 @@ public:
     T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, 
     T__7 = 8, T__8 = 9, T__9 = 10, T__10 = 11, T__11 = 12, T__12 = 13, T__13 = 14, 
     T__14 = 15, T__15 = 16, T__16 = 17, T__17 = 18, T__18 = 19, T__19 = 20, 
-    T__20 = 21, T__21 = 22, T__22 = 23, WHERE = 24, IF = 25, THEN = 26, 
-    ELSE = 27, AS = 28, VEC = 29, REWRITE_TO = 30, FORALL = 31, QM = 32, 
-    EQ = 33, STAR = 34, LPAR = 35, RPAR = 36, COL = 37, QPAR = 38, PPAR = 39, 
-    OTHERS = 40, SPACE = 41, COMMENT = 42, LINE_COMMENT = 43
+    T__20 = 21, T__21 = 22, T__22 = 23, T__23 = 24, T__24 = 25, WHERE = 26, 
+    IF = 27, THEN = 28, ELSE = 29, AS = 30, VEC = 31, REWRITE_TO = 32, FORALL = 33, 
+    QM = 34, EQ = 35, STAR = 36, LPAR = 37, RPAR = 38, COL = 39, QPAR = 40, 
+    PPAR = 41, EscapedString = 42, OTHERS = 43, SPACE = 44, COMMENT = 45, 
+    LINE_COMMENT = 46
   };
 
   explicit simple_graph_grammarLexer(antlr4::CharStream *input);

@@ -1,5 +1,5 @@
 
-// Generated from antlr4/simple_graph_grammar.g4 by ANTLR 4.11.1
+// Generated from antlr4/graph_grammar/simple_graph_grammar.g4 by ANTLR 4.11.1
 
 #pragma once
 
@@ -53,7 +53,11 @@ public:
 
     virtual std::any visitJust_par(simple_graph_grammarParser::Just_parContext *context) = 0;
 
+    virtual std::any visitScript(simple_graph_grammarParser::ScriptContext *context) = 0;
+
     virtual std::any visitLeq_test(simple_graph_grammarParser::Leq_testContext *context) = 0;
+
+    virtual std::any visitScript_test(simple_graph_grammarParser::Script_testContext *context) = 0;
 
     virtual std::any visitOr_test(simple_graph_grammarParser::Or_testContext *context) = 0;
 

@@ -6,8 +6,9 @@
 #define GSM_GSQL_SCRIPTVISITOR_H
 
 
-#include <queries/closure.h>
+class closure;
 #include "yaucl/graphs/NodeLabelBijectionGraph.h"
+#include "database/utility.h"
 #include <scriptv2/scriptVisitor.h>
 #include <scriptv2/java_types.h>
 #include <optional>

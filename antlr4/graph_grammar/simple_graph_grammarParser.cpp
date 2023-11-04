@@ -1,5 +1,5 @@
 
-// Generated from antlr4/simple_graph_grammar.g4 by ANTLR 4.11.1
+// Generated from antlr4/graph_grammar/simple_graph_grammar.g4 by ANTLR 4.11.1
 
 
 #include "simple_graph_grammarListener.h"
@@ -51,20 +51,21 @@ void simple_graph_grammarParserInitialize() {
     std::vector<std::string>{
       "", "';'", "'del'", "'new'", "'set'", "'\\U0001D709'", "'@'", "'\\u2113'", 
       "'\\U0001D70B'", "'\\u03C6'", "','", "'label'", "'src'", "'dst'", 
-      "'\\u2260'", "'<'", "'\\u2264'", "'\\u2228'", "'\\u2227'", "'--'", 
-      "'->'", "'<-'", "'hook'", "'||'", "'where'", "'if'", "'then'", "'else'", 
-      "'as'", "'>>'", "'\\u21AA'", "'\\u2200'", "'\\u003F'", "'='", "'*'", 
-      "'('", "')'", "':'", "'['", "']'"
+      "'SCRIPT'", "'\\u2260'", "'<'", "'\\u2264'", "'\\u2228'", "'\\u2227'", 
+      "'TEST'", "'--'", "'->'", "'<-'", "'hook'", "'||'", "'where'", "'if'", 
+      "'then'", "'else'", "'as'", "'>>'", "'\\u21AA'", "'\\u2200'", "'\\u003F'", 
+      "'='", "'*'", "'('", "')'", "':'", "'['", "']'"
     },
     std::vector<std::string>{
       "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", 
-      "", "", "", "", "", "", "", "WHERE", "IF", "THEN", "ELSE", "AS", "VEC", 
-      "REWRITE_TO", "FORALL", "QM", "EQ", "STAR", "LPAR", "RPAR", "COL", 
-      "QPAR", "PPAR", "OTHERS", "SPACE", "COMMENT", "LINE_COMMENT"
+      "", "", "", "", "", "", "", "", "", "WHERE", "IF", "THEN", "ELSE", 
+      "AS", "VEC", "REWRITE_TO", "FORALL", "QM", "EQ", "STAR", "LPAR", "RPAR", 
+      "COL", "QPAR", "PPAR", "EscapedString", "OTHERS", "SPACE", "COMMENT", 
+      "LINE_COMMENT"
     }
   );
   static const int32_t serializedATNSegment[] = {
-  	4,1,43,216,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,
+  	4,1,46,220,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,
   	7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,1,0,1,0,1,0,5,0,28,8,0,10,0,
   	12,0,31,9,0,1,0,1,0,1,1,1,1,3,1,37,8,1,1,1,3,1,40,8,1,1,1,1,1,1,1,3,1,
   	45,8,1,1,1,1,1,1,2,1,2,1,2,1,2,3,2,53,8,2,1,2,5,2,56,8,2,10,2,12,2,59,
@@ -72,68 +73,70 @@ void simple_graph_grammarParserInitialize() {
   	8,2,1,3,4,3,76,8,3,11,3,12,3,77,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,3,
   	4,89,8,4,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,
   	1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,3,
-  	5,123,8,5,1,5,1,5,1,5,1,5,1,5,3,5,130,8,5,1,6,1,6,1,6,1,6,1,6,1,6,1,6,
-  	1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,3,6,153,8,6,1,
-  	6,1,6,1,6,1,6,1,6,1,6,5,6,161,8,6,10,6,12,6,164,9,6,1,7,1,7,3,7,168,8,
-  	7,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,3,8,184,8,8,
-  	1,9,1,9,1,9,1,10,1,10,3,10,191,8,10,1,10,3,10,194,8,10,3,10,196,8,10,
-  	1,10,1,10,3,10,200,8,10,1,10,3,10,203,8,10,1,10,1,10,1,11,1,11,5,11,209,
-  	8,11,10,11,12,11,212,9,11,1,11,1,11,1,11,0,1,12,12,0,2,4,6,8,10,12,14,
-  	16,18,20,22,0,0,240,0,29,1,0,0,0,2,34,1,0,0,0,4,48,1,0,0,0,6,75,1,0,0,
-  	0,8,88,1,0,0,0,10,129,1,0,0,0,12,152,1,0,0,0,14,167,1,0,0,0,16,183,1,
-  	0,0,0,18,185,1,0,0,0,20,188,1,0,0,0,22,210,1,0,0,0,24,25,3,4,2,0,25,26,
-  	5,1,0,0,26,28,1,0,0,0,27,24,1,0,0,0,28,31,1,0,0,0,29,27,1,0,0,0,29,30,
-  	1,0,0,0,30,32,1,0,0,0,31,29,1,0,0,0,32,33,3,4,2,0,33,1,1,0,0,0,34,36,
-  	5,35,0,0,35,37,5,34,0,0,36,35,1,0,0,0,36,37,1,0,0,0,37,39,1,0,0,0,38,
-  	40,5,29,0,0,39,38,1,0,0,0,39,40,1,0,0,0,40,41,1,0,0,0,41,44,3,22,11,0,
-  	42,43,5,37,0,0,43,45,5,40,0,0,44,42,1,0,0,0,44,45,1,0,0,0,45,46,1,0,0,
-  	0,46,47,5,36,0,0,47,3,1,0,0,0,48,49,5,40,0,0,49,50,5,33,0,0,50,52,3,2,
-  	1,0,51,53,3,6,3,0,52,51,1,0,0,0,52,53,1,0,0,0,53,57,1,0,0,0,54,56,3,18,
-  	9,0,55,54,1,0,0,0,56,59,1,0,0,0,57,55,1,0,0,0,57,58,1,0,0,0,58,62,1,0,
-  	0,0,59,57,1,0,0,0,60,61,5,24,0,0,61,63,3,12,6,0,62,60,1,0,0,0,62,63,1,
-  	0,0,0,63,72,1,0,0,0,64,68,5,30,0,0,65,67,3,8,4,0,66,65,1,0,0,0,67,70,
-  	1,0,0,0,68,66,1,0,0,0,68,69,1,0,0,0,69,71,1,0,0,0,70,68,1,0,0,0,71,73,
-  	3,2,1,0,72,64,1,0,0,0,72,73,1,0,0,0,73,5,1,0,0,0,74,76,3,16,8,0,75,74,
-  	1,0,0,0,76,77,1,0,0,0,77,75,1,0,0,0,77,78,1,0,0,0,78,7,1,0,0,0,79,80,
-  	5,2,0,0,80,89,5,40,0,0,81,82,5,3,0,0,82,89,5,40,0,0,83,84,5,4,0,0,84,
-  	85,3,10,5,0,85,86,5,28,0,0,86,87,3,10,5,0,87,89,1,0,0,0,88,79,1,0,0,0,
-  	88,81,1,0,0,0,88,83,1,0,0,0,89,9,1,0,0,0,90,91,5,5,0,0,91,92,5,40,0,0,
-  	92,93,5,6,0,0,93,130,3,10,5,0,94,95,5,7,0,0,95,96,5,40,0,0,96,97,5,6,
-  	0,0,97,130,3,10,5,0,98,99,5,8,0,0,99,100,3,10,5,0,100,101,5,6,0,0,101,
-  	102,3,10,5,0,102,130,1,0,0,0,103,104,5,9,0,0,104,105,3,10,5,0,105,106,
-  	5,10,0,0,106,107,3,10,5,0,107,130,1,0,0,0,108,109,5,11,0,0,109,130,3,
-  	10,5,0,110,111,5,12,0,0,111,130,3,10,5,0,112,113,5,13,0,0,113,130,3,10,
-  	5,0,114,115,5,25,0,0,115,116,5,35,0,0,116,117,3,12,6,0,117,118,5,36,0,
-  	0,118,119,5,26,0,0,119,122,3,10,5,0,120,121,5,27,0,0,121,123,3,10,5,0,
-  	122,120,1,0,0,0,122,123,1,0,0,0,123,130,1,0,0,0,124,130,5,40,0,0,125,
-  	126,5,35,0,0,126,127,3,10,5,0,127,128,5,36,0,0,128,130,1,0,0,0,129,90,
-  	1,0,0,0,129,94,1,0,0,0,129,98,1,0,0,0,129,103,1,0,0,0,129,108,1,0,0,0,
-  	129,110,1,0,0,0,129,112,1,0,0,0,129,114,1,0,0,0,129,124,1,0,0,0,129,125,
-  	1,0,0,0,130,11,1,0,0,0,131,132,6,6,-1,0,132,133,3,14,7,0,133,134,5,33,
-  	0,0,134,135,3,14,7,0,135,153,1,0,0,0,136,137,3,14,7,0,137,138,5,14,0,
-  	0,138,139,3,14,7,0,139,153,1,0,0,0,140,141,3,14,7,0,141,142,5,15,0,0,
-  	142,143,3,14,7,0,143,153,1,0,0,0,144,145,3,14,7,0,145,146,5,16,0,0,146,
-  	147,3,14,7,0,147,153,1,0,0,0,148,149,5,35,0,0,149,150,3,12,6,0,150,151,
-  	5,36,0,0,151,153,1,0,0,0,152,131,1,0,0,0,152,136,1,0,0,0,152,140,1,0,
-  	0,0,152,144,1,0,0,0,152,148,1,0,0,0,153,162,1,0,0,0,154,155,10,3,0,0,
-  	155,156,5,17,0,0,156,161,3,12,6,4,157,158,10,2,0,0,158,159,5,18,0,0,159,
-  	161,3,12,6,3,160,154,1,0,0,0,160,157,1,0,0,0,161,164,1,0,0,0,162,160,
-  	1,0,0,0,162,163,1,0,0,0,163,13,1,0,0,0,164,162,1,0,0,0,165,168,3,10,5,
-  	0,166,168,5,40,0,0,167,165,1,0,0,0,167,166,1,0,0,0,168,15,1,0,0,0,169,
-  	170,5,19,0,0,170,171,3,20,10,0,171,172,5,20,0,0,172,173,3,2,1,0,173,184,
-  	1,0,0,0,174,175,5,21,0,0,175,176,3,20,10,0,176,177,5,19,0,0,177,178,3,
-  	2,1,0,178,184,1,0,0,0,179,180,5,19,0,0,180,181,3,20,10,0,181,182,5,22,
-  	0,0,182,184,1,0,0,0,183,169,1,0,0,0,183,174,1,0,0,0,183,179,1,0,0,0,184,
-  	17,1,0,0,0,185,186,3,2,1,0,186,187,3,16,8,0,187,19,1,0,0,0,188,195,5,
-  	38,0,0,189,191,5,31,0,0,190,189,1,0,0,0,190,191,1,0,0,0,191,196,1,0,0,
-  	0,192,194,5,32,0,0,193,192,1,0,0,0,193,194,1,0,0,0,194,196,1,0,0,0,195,
-  	190,1,0,0,0,195,193,1,0,0,0,196,199,1,0,0,0,197,198,5,40,0,0,198,200,
-  	5,37,0,0,199,197,1,0,0,0,199,200,1,0,0,0,200,202,1,0,0,0,201,203,3,22,
-  	11,0,202,201,1,0,0,0,202,203,1,0,0,0,203,204,1,0,0,0,204,205,5,39,0,0,
-  	205,21,1,0,0,0,206,207,5,40,0,0,207,209,5,23,0,0,208,206,1,0,0,0,209,
-  	212,1,0,0,0,210,208,1,0,0,0,210,211,1,0,0,0,211,213,1,0,0,0,212,210,1,
-  	0,0,0,213,214,5,40,0,0,214,23,1,0,0,0,24,29,36,39,44,52,57,62,68,72,77,
-  	88,122,129,152,160,162,167,183,190,193,195,199,202,210
+  	5,123,8,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,3,5,132,8,5,1,6,1,6,1,6,1,6,1,6,
+  	1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,
+  	6,3,6,157,8,6,1,6,1,6,1,6,1,6,1,6,1,6,5,6,165,8,6,10,6,12,6,168,9,6,1,
+  	7,1,7,3,7,172,8,7,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,
+  	1,8,3,8,188,8,8,1,9,1,9,1,9,1,10,1,10,3,10,195,8,10,1,10,3,10,198,8,10,
+  	3,10,200,8,10,1,10,1,10,3,10,204,8,10,1,10,3,10,207,8,10,1,10,1,10,1,
+  	11,1,11,5,11,213,8,11,10,11,12,11,216,9,11,1,11,1,11,1,11,0,1,12,12,0,
+  	2,4,6,8,10,12,14,16,18,20,22,0,0,246,0,29,1,0,0,0,2,34,1,0,0,0,4,48,1,
+  	0,0,0,6,75,1,0,0,0,8,88,1,0,0,0,10,131,1,0,0,0,12,156,1,0,0,0,14,171,
+  	1,0,0,0,16,187,1,0,0,0,18,189,1,0,0,0,20,192,1,0,0,0,22,214,1,0,0,0,24,
+  	25,3,4,2,0,25,26,5,1,0,0,26,28,1,0,0,0,27,24,1,0,0,0,28,31,1,0,0,0,29,
+  	27,1,0,0,0,29,30,1,0,0,0,30,32,1,0,0,0,31,29,1,0,0,0,32,33,3,4,2,0,33,
+  	1,1,0,0,0,34,36,5,37,0,0,35,37,5,36,0,0,36,35,1,0,0,0,36,37,1,0,0,0,37,
+  	39,1,0,0,0,38,40,5,31,0,0,39,38,1,0,0,0,39,40,1,0,0,0,40,41,1,0,0,0,41,
+  	44,3,22,11,0,42,43,5,39,0,0,43,45,5,43,0,0,44,42,1,0,0,0,44,45,1,0,0,
+  	0,45,46,1,0,0,0,46,47,5,38,0,0,47,3,1,0,0,0,48,49,5,43,0,0,49,50,5,35,
+  	0,0,50,52,3,2,1,0,51,53,3,6,3,0,52,51,1,0,0,0,52,53,1,0,0,0,53,57,1,0,
+  	0,0,54,56,3,18,9,0,55,54,1,0,0,0,56,59,1,0,0,0,57,55,1,0,0,0,57,58,1,
+  	0,0,0,58,62,1,0,0,0,59,57,1,0,0,0,60,61,5,26,0,0,61,63,3,12,6,0,62,60,
+  	1,0,0,0,62,63,1,0,0,0,63,72,1,0,0,0,64,68,5,32,0,0,65,67,3,8,4,0,66,65,
+  	1,0,0,0,67,70,1,0,0,0,68,66,1,0,0,0,68,69,1,0,0,0,69,71,1,0,0,0,70,68,
+  	1,0,0,0,71,73,3,2,1,0,72,64,1,0,0,0,72,73,1,0,0,0,73,5,1,0,0,0,74,76,
+  	3,16,8,0,75,74,1,0,0,0,76,77,1,0,0,0,77,75,1,0,0,0,77,78,1,0,0,0,78,7,
+  	1,0,0,0,79,80,5,2,0,0,80,89,5,43,0,0,81,82,5,3,0,0,82,89,5,43,0,0,83,
+  	84,5,4,0,0,84,85,3,10,5,0,85,86,5,30,0,0,86,87,3,10,5,0,87,89,1,0,0,0,
+  	88,79,1,0,0,0,88,81,1,0,0,0,88,83,1,0,0,0,89,9,1,0,0,0,90,91,5,5,0,0,
+  	91,92,5,43,0,0,92,93,5,6,0,0,93,132,3,10,5,0,94,95,5,7,0,0,95,96,5,43,
+  	0,0,96,97,5,6,0,0,97,132,3,10,5,0,98,99,5,8,0,0,99,100,3,10,5,0,100,101,
+  	5,6,0,0,101,102,3,10,5,0,102,132,1,0,0,0,103,104,5,9,0,0,104,105,3,10,
+  	5,0,105,106,5,10,0,0,106,107,3,10,5,0,107,132,1,0,0,0,108,109,5,11,0,
+  	0,109,132,3,10,5,0,110,111,5,12,0,0,111,132,3,10,5,0,112,113,5,13,0,0,
+  	113,132,3,10,5,0,114,115,5,27,0,0,115,116,5,37,0,0,116,117,3,12,6,0,117,
+  	118,5,38,0,0,118,119,5,28,0,0,119,122,3,10,5,0,120,121,5,29,0,0,121,123,
+  	3,10,5,0,122,120,1,0,0,0,122,123,1,0,0,0,123,132,1,0,0,0,124,132,5,43,
+  	0,0,125,126,5,37,0,0,126,127,3,10,5,0,127,128,5,38,0,0,128,132,1,0,0,
+  	0,129,130,5,14,0,0,130,132,5,42,0,0,131,90,1,0,0,0,131,94,1,0,0,0,131,
+  	98,1,0,0,0,131,103,1,0,0,0,131,108,1,0,0,0,131,110,1,0,0,0,131,112,1,
+  	0,0,0,131,114,1,0,0,0,131,124,1,0,0,0,131,125,1,0,0,0,131,129,1,0,0,0,
+  	132,11,1,0,0,0,133,134,6,6,-1,0,134,135,3,14,7,0,135,136,5,35,0,0,136,
+  	137,3,14,7,0,137,157,1,0,0,0,138,139,3,14,7,0,139,140,5,15,0,0,140,141,
+  	3,14,7,0,141,157,1,0,0,0,142,143,3,14,7,0,143,144,5,16,0,0,144,145,3,
+  	14,7,0,145,157,1,0,0,0,146,147,3,14,7,0,147,148,5,17,0,0,148,149,3,14,
+  	7,0,149,157,1,0,0,0,150,151,5,37,0,0,151,152,3,12,6,0,152,153,5,38,0,
+  	0,153,157,1,0,0,0,154,155,5,20,0,0,155,157,5,42,0,0,156,133,1,0,0,0,156,
+  	138,1,0,0,0,156,142,1,0,0,0,156,146,1,0,0,0,156,150,1,0,0,0,156,154,1,
+  	0,0,0,157,166,1,0,0,0,158,159,10,4,0,0,159,160,5,18,0,0,160,165,3,12,
+  	6,5,161,162,10,3,0,0,162,163,5,19,0,0,163,165,3,12,6,4,164,158,1,0,0,
+  	0,164,161,1,0,0,0,165,168,1,0,0,0,166,164,1,0,0,0,166,167,1,0,0,0,167,
+  	13,1,0,0,0,168,166,1,0,0,0,169,172,3,10,5,0,170,172,5,43,0,0,171,169,
+  	1,0,0,0,171,170,1,0,0,0,172,15,1,0,0,0,173,174,5,21,0,0,174,175,3,20,
+  	10,0,175,176,5,22,0,0,176,177,3,2,1,0,177,188,1,0,0,0,178,179,5,23,0,
+  	0,179,180,3,20,10,0,180,181,5,21,0,0,181,182,3,2,1,0,182,188,1,0,0,0,
+  	183,184,5,21,0,0,184,185,3,20,10,0,185,186,5,24,0,0,186,188,1,0,0,0,187,
+  	173,1,0,0,0,187,178,1,0,0,0,187,183,1,0,0,0,188,17,1,0,0,0,189,190,3,
+  	2,1,0,190,191,3,16,8,0,191,19,1,0,0,0,192,199,5,40,0,0,193,195,5,33,0,
+  	0,194,193,1,0,0,0,194,195,1,0,0,0,195,200,1,0,0,0,196,198,5,34,0,0,197,
+  	196,1,0,0,0,197,198,1,0,0,0,198,200,1,0,0,0,199,194,1,0,0,0,199,197,1,
+  	0,0,0,200,203,1,0,0,0,201,202,5,43,0,0,202,204,5,39,0,0,203,201,1,0,0,
+  	0,203,204,1,0,0,0,204,206,1,0,0,0,205,207,3,22,11,0,206,205,1,0,0,0,206,
+  	207,1,0,0,0,207,208,1,0,0,0,208,209,5,41,0,0,209,21,1,0,0,0,210,211,5,
+  	43,0,0,211,213,5,25,0,0,212,210,1,0,0,0,213,216,1,0,0,0,214,212,1,0,0,
+  	0,214,215,1,0,0,0,215,217,1,0,0,0,216,214,1,0,0,0,217,218,5,43,0,0,218,
+  	23,1,0,0,0,24,29,36,39,44,52,57,62,68,72,77,88,122,131,156,164,166,171,
+  	187,194,197,199,203,206,214
   };
   staticData->serializedATN = antlr4::atn::SerializedATNView(serializedATNSegment, sizeof(serializedATNSegment) / sizeof(serializedATNSegment[0]));
 
@@ -481,9 +484,9 @@ simple_graph_grammarParser::CentralmatchContext* simple_graph_grammarParser::cen
     _errHandler->sync(this);
 
     _la = _input->LA(1);
-    if (_la == simple_graph_grammarParser::T__18
+    if (_la == simple_graph_grammarParser::T__20
 
-    || _la == simple_graph_grammarParser::T__20) {
+    || _la == simple_graph_grammarParser::T__22) {
       setState(51);
       antlrcpp::downCast<CentralmatchContext *>(_localctx)->e1 = many_edges();
     }
@@ -601,9 +604,9 @@ simple_graph_grammarParser::Many_edgesContext* simple_graph_grammarParser::many_
       setState(77); 
       _errHandler->sync(this);
       _la = _input->LA(1);
-    } while (_la == simple_graph_grammarParser::T__18
+    } while (_la == simple_graph_grammarParser::T__20
 
-    || _la == simple_graph_grammarParser::T__20);
+    || _la == simple_graph_grammarParser::T__22);
    
   }
   catch (RecognitionException &e) {
@@ -1093,6 +1096,31 @@ std::any simple_graph_grammarParser::Edge_labelContext::accept(tree::ParseTreeVi
   else
     return visitor->visitChildren(this);
 }
+//----------------- ScriptContext ------------------------------------------------------------------
+
+tree::TerminalNode* simple_graph_grammarParser::ScriptContext::EscapedString() {
+  return getToken(simple_graph_grammarParser::EscapedString, 0);
+}
+
+simple_graph_grammarParser::ScriptContext::ScriptContext(Rewrite_exprContext *ctx) { copyFrom(ctx); }
+
+void simple_graph_grammarParser::ScriptContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<simple_graph_grammarListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterScript(this);
+}
+void simple_graph_grammarParser::ScriptContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<simple_graph_grammarListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitScript(this);
+}
+
+std::any simple_graph_grammarParser::ScriptContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<simple_graph_grammarVisitor*>(visitor))
+    return parserVisitor->visitScript(this);
+  else
+    return visitor->visitChildren(this);
+}
 simple_graph_grammarParser::Rewrite_exprContext* simple_graph_grammarParser::rewrite_expr() {
   Rewrite_exprContext *_localctx = _tracker.createInstance<Rewrite_exprContext>(_ctx, getState());
   enterRule(_localctx, 10, simple_graph_grammarParser::RuleRewrite_expr);
@@ -1105,7 +1133,7 @@ simple_graph_grammarParser::Rewrite_exprContext* simple_graph_grammarParser::rew
     exitRule();
   });
   try {
-    setState(129);
+    setState(131);
     _errHandler->sync(this);
     switch (_input->LA(1)) {
       case simple_graph_grammarParser::T__4: {
@@ -1247,6 +1275,16 @@ simple_graph_grammarParser::Rewrite_exprContext* simple_graph_grammarParser::rew
         break;
       }
 
+      case simple_graph_grammarParser::T__13: {
+        _localctx = _tracker.createInstance<simple_graph_grammarParser::ScriptContext>(_localctx);
+        enterOuterAlt(_localctx, 11);
+        setState(129);
+        match(simple_graph_grammarParser::T__13);
+        setState(130);
+        match(simple_graph_grammarParser::EscapedString);
+        break;
+      }
+
     default:
       throw NoViableAltException(this);
     }
@@ -1302,6 +1340,31 @@ void simple_graph_grammarParser::Leq_testContext::exitRule(tree::ParseTreeListen
 std::any simple_graph_grammarParser::Leq_testContext::accept(tree::ParseTreeVisitor *visitor) {
   if (auto parserVisitor = dynamic_cast<simple_graph_grammarVisitor*>(visitor))
     return parserVisitor->visitLeq_test(this);
+  else
+    return visitor->visitChildren(this);
+}
+//----------------- Script_testContext ------------------------------------------------------------------
+
+tree::TerminalNode* simple_graph_grammarParser::Script_testContext::EscapedString() {
+  return getToken(simple_graph_grammarParser::EscapedString, 0);
+}
+
+simple_graph_grammarParser::Script_testContext::Script_testContext(Test_exprContext *ctx) { copyFrom(ctx); }
+
+void simple_graph_grammarParser::Script_testContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<simple_graph_grammarListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterScript_test(this);
+}
+void simple_graph_grammarParser::Script_testContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<simple_graph_grammarListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitScript_test(this);
+}
+
+std::any simple_graph_grammarParser::Script_testContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<simple_graph_grammarVisitor*>(visitor))
+    return parserVisitor->visitScript_test(this);
   else
     return visitor->visitChildren(this);
 }
@@ -1513,7 +1576,7 @@ simple_graph_grammarParser::Test_exprContext* simple_graph_grammarParser::test_e
   try {
     size_t alt;
     enterOuterAlt(_localctx, 1);
-    setState(152);
+    setState(156);
     _errHandler->sync(this);
     switch (getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 13, _ctx)) {
     case 1: {
@@ -1521,11 +1584,11 @@ simple_graph_grammarParser::Test_exprContext* simple_graph_grammarParser::test_e
       _ctx = _localctx;
       previousContext = _localctx;
 
-      setState(132);
-      antlrcpp::downCast<Eq_testContext *>(_localctx)->src = test_expr_side();
-      setState(133);
-      match(simple_graph_grammarParser::EQ);
       setState(134);
+      antlrcpp::downCast<Eq_testContext *>(_localctx)->src = test_expr_side();
+      setState(135);
+      match(simple_graph_grammarParser::EQ);
+      setState(136);
       antlrcpp::downCast<Eq_testContext *>(_localctx)->dst = test_expr_side();
       break;
     }
@@ -1534,11 +1597,11 @@ simple_graph_grammarParser::Test_exprContext* simple_graph_grammarParser::test_e
       _localctx = _tracker.createInstance<Neq_testContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(136);
-      antlrcpp::downCast<Neq_testContext *>(_localctx)->src = test_expr_side();
-      setState(137);
-      match(simple_graph_grammarParser::T__13);
       setState(138);
+      antlrcpp::downCast<Neq_testContext *>(_localctx)->src = test_expr_side();
+      setState(139);
+      match(simple_graph_grammarParser::T__14);
+      setState(140);
       antlrcpp::downCast<Neq_testContext *>(_localctx)->dst = test_expr_side();
       break;
     }
@@ -1547,11 +1610,11 @@ simple_graph_grammarParser::Test_exprContext* simple_graph_grammarParser::test_e
       _localctx = _tracker.createInstance<Lt_testContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(140);
-      antlrcpp::downCast<Lt_testContext *>(_localctx)->src = test_expr_side();
-      setState(141);
-      match(simple_graph_grammarParser::T__14);
       setState(142);
+      antlrcpp::downCast<Lt_testContext *>(_localctx)->src = test_expr_side();
+      setState(143);
+      match(simple_graph_grammarParser::T__15);
+      setState(144);
       antlrcpp::downCast<Lt_testContext *>(_localctx)->dst = test_expr_side();
       break;
     }
@@ -1560,11 +1623,11 @@ simple_graph_grammarParser::Test_exprContext* simple_graph_grammarParser::test_e
       _localctx = _tracker.createInstance<Leq_testContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(144);
-      antlrcpp::downCast<Leq_testContext *>(_localctx)->src = test_expr_side();
-      setState(145);
-      match(simple_graph_grammarParser::T__15);
       setState(146);
+      antlrcpp::downCast<Leq_testContext *>(_localctx)->src = test_expr_side();
+      setState(147);
+      match(simple_graph_grammarParser::T__16);
+      setState(148);
       antlrcpp::downCast<Leq_testContext *>(_localctx)->dst = test_expr_side();
       break;
     }
@@ -1573,12 +1636,23 @@ simple_graph_grammarParser::Test_exprContext* simple_graph_grammarParser::test_e
       _localctx = _tracker.createInstance<Par_testContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
-      setState(148);
-      match(simple_graph_grammarParser::LPAR);
-      setState(149);
-      test_expr(0);
       setState(150);
+      match(simple_graph_grammarParser::LPAR);
+      setState(151);
+      test_expr(0);
+      setState(152);
       match(simple_graph_grammarParser::RPAR);
+      break;
+    }
+
+    case 6: {
+      _localctx = _tracker.createInstance<Script_testContext>(_localctx);
+      _ctx = _localctx;
+      previousContext = _localctx;
+      setState(154);
+      match(simple_graph_grammarParser::T__19);
+      setState(155);
+      match(simple_graph_grammarParser::EscapedString);
       break;
     }
 
@@ -1586,7 +1660,7 @@ simple_graph_grammarParser::Test_exprContext* simple_graph_grammarParser::test_e
       break;
     }
     _ctx->stop = _input->LT(-1);
-    setState(162);
+    setState(166);
     _errHandler->sync(this);
     alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 15, _ctx);
     while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER) {
@@ -1594,7 +1668,7 @@ simple_graph_grammarParser::Test_exprContext* simple_graph_grammarParser::test_e
         if (!_parseListeners.empty())
           triggerExitRuleEvent();
         previousContext = _localctx;
-        setState(160);
+        setState(164);
         _errHandler->sync(this);
         switch (getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 14, _ctx)) {
         case 1: {
@@ -1602,13 +1676,13 @@ simple_graph_grammarParser::Test_exprContext* simple_graph_grammarParser::test_e
           _localctx = newContext;
           newContext->src = previousContext;
           pushNewRecursionContext(newContext, startState, RuleTest_expr);
-          setState(154);
+          setState(158);
 
-          if (!(precpred(_ctx, 3))) throw FailedPredicateException(this, "precpred(_ctx, 3)");
-          setState(155);
-          match(simple_graph_grammarParser::T__16);
-          setState(156);
-          antlrcpp::downCast<Or_testContext *>(_localctx)->dst = test_expr(4);
+          if (!(precpred(_ctx, 4))) throw FailedPredicateException(this, "precpred(_ctx, 4)");
+          setState(159);
+          match(simple_graph_grammarParser::T__17);
+          setState(160);
+          antlrcpp::downCast<Or_testContext *>(_localctx)->dst = test_expr(5);
           break;
         }
 
@@ -1617,13 +1691,13 @@ simple_graph_grammarParser::Test_exprContext* simple_graph_grammarParser::test_e
           _localctx = newContext;
           newContext->src = previousContext;
           pushNewRecursionContext(newContext, startState, RuleTest_expr);
-          setState(157);
+          setState(161);
 
-          if (!(precpred(_ctx, 2))) throw FailedPredicateException(this, "precpred(_ctx, 2)");
-          setState(158);
-          match(simple_graph_grammarParser::T__17);
-          setState(159);
-          antlrcpp::downCast<And_testContext *>(_localctx)->dst = test_expr(3);
+          if (!(precpred(_ctx, 3))) throw FailedPredicateException(this, "precpred(_ctx, 3)");
+          setState(162);
+          match(simple_graph_grammarParser::T__18);
+          setState(163);
+          antlrcpp::downCast<And_testContext *>(_localctx)->dst = test_expr(4);
           break;
         }
 
@@ -1631,7 +1705,7 @@ simple_graph_grammarParser::Test_exprContext* simple_graph_grammarParser::test_e
           break;
         } 
       }
-      setState(164);
+      setState(168);
       _errHandler->sync(this);
       alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 15, _ctx);
     }
@@ -1721,13 +1795,13 @@ simple_graph_grammarParser::Test_expr_sideContext* simple_graph_grammarParser::t
     exitRule();
   });
   try {
-    setState(167);
+    setState(171);
     _errHandler->sync(this);
     switch (getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 16, _ctx)) {
     case 1: {
       _localctx = _tracker.createInstance<simple_graph_grammarParser::Test_dataContext>(_localctx);
       enterOuterAlt(_localctx, 1);
-      setState(165);
+      setState(169);
       rewrite_expr();
       break;
     }
@@ -1735,7 +1809,7 @@ simple_graph_grammarParser::Test_expr_sideContext* simple_graph_grammarParser::t
     case 2: {
       _localctx = _tracker.createInstance<simple_graph_grammarParser::Test_valueContext>(_localctx);
       enterOuterAlt(_localctx, 2);
-      setState(166);
+      setState(170);
       match(simple_graph_grammarParser::OTHERS);
       break;
     }
@@ -1864,19 +1938,19 @@ simple_graph_grammarParser::EdgeContext* simple_graph_grammarParser::edge() {
     exitRule();
   });
   try {
-    setState(183);
+    setState(187);
     _errHandler->sync(this);
     switch (getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 17, _ctx)) {
     case 1: {
       _localctx = _tracker.createInstance<simple_graph_grammarParser::OutedgeContext>(_localctx);
       enterOuterAlt(_localctx, 1);
-      setState(169);
-      match(simple_graph_grammarParser::T__18);
-      setState(170);
+      setState(173);
+      match(simple_graph_grammarParser::T__20);
+      setState(174);
       edgelabel();
-      setState(171);
-      match(simple_graph_grammarParser::T__19);
-      setState(172);
+      setState(175);
+      match(simple_graph_grammarParser::T__21);
+      setState(176);
       node();
       break;
     }
@@ -1884,13 +1958,13 @@ simple_graph_grammarParser::EdgeContext* simple_graph_grammarParser::edge() {
     case 2: {
       _localctx = _tracker.createInstance<simple_graph_grammarParser::InedgeContext>(_localctx);
       enterOuterAlt(_localctx, 2);
-      setState(174);
-      match(simple_graph_grammarParser::T__20);
-      setState(175);
+      setState(178);
+      match(simple_graph_grammarParser::T__22);
+      setState(179);
       edgelabel();
-      setState(176);
-      match(simple_graph_grammarParser::T__18);
-      setState(177);
+      setState(180);
+      match(simple_graph_grammarParser::T__20);
+      setState(181);
       node();
       break;
     }
@@ -1898,12 +1972,12 @@ simple_graph_grammarParser::EdgeContext* simple_graph_grammarParser::edge() {
     case 3: {
       _localctx = _tracker.createInstance<simple_graph_grammarParser::HookContext>(_localctx);
       enterOuterAlt(_localctx, 3);
-      setState(179);
-      match(simple_graph_grammarParser::T__18);
-      setState(180);
+      setState(183);
+      match(simple_graph_grammarParser::T__20);
+      setState(184);
       edgelabel();
-      setState(181);
-      match(simple_graph_grammarParser::T__21);
+      setState(185);
+      match(simple_graph_grammarParser::T__23);
       break;
     }
 
@@ -1973,9 +2047,9 @@ simple_graph_grammarParser::Edge_joiningContext* simple_graph_grammarParser::edg
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(185);
+    setState(189);
     node();
-    setState(186);
+    setState(190);
     edge();
    
   }
@@ -2061,30 +2135,30 @@ simple_graph_grammarParser::EdgelabelContext* simple_graph_grammarParser::edgela
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(188);
+    setState(192);
     match(simple_graph_grammarParser::QPAR);
-    setState(195);
+    setState(199);
     _errHandler->sync(this);
     switch (getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 20, _ctx)) {
     case 1: {
-      setState(190);
+      setState(194);
       _errHandler->sync(this);
 
       _la = _input->LA(1);
       if (_la == simple_graph_grammarParser::FORALL) {
-        setState(189);
+        setState(193);
         match(simple_graph_grammarParser::FORALL);
       }
       break;
     }
 
     case 2: {
-      setState(193);
+      setState(197);
       _errHandler->sync(this);
 
       _la = _input->LA(1);
       if (_la == simple_graph_grammarParser::QM) {
-        setState(192);
+        setState(196);
         match(simple_graph_grammarParser::QM);
       }
       break;
@@ -2093,14 +2167,14 @@ simple_graph_grammarParser::EdgelabelContext* simple_graph_grammarParser::edgela
     default:
       break;
     }
-    setState(199);
+    setState(203);
     _errHandler->sync(this);
 
     switch (getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 21, _ctx)) {
     case 1: {
-      setState(197);
+      setState(201);
       antlrcpp::downCast<EdgelabelContext *>(_localctx)->var = match(simple_graph_grammarParser::OTHERS);
-      setState(198);
+      setState(202);
       match(simple_graph_grammarParser::COL);
       break;
     }
@@ -2108,15 +2182,15 @@ simple_graph_grammarParser::EdgelabelContext* simple_graph_grammarParser::edgela
     default:
       break;
     }
-    setState(202);
+    setState(206);
     _errHandler->sync(this);
 
     _la = _input->LA(1);
     if (_la == simple_graph_grammarParser::OTHERS) {
-      setState(201);
+      setState(205);
       multiple_labels();
     }
-    setState(204);
+    setState(208);
     match(simple_graph_grammarParser::PPAR);
    
   }
@@ -2182,21 +2256,21 @@ simple_graph_grammarParser::Multiple_labelsContext* simple_graph_grammarParser::
   try {
     size_t alt;
     enterOuterAlt(_localctx, 1);
-    setState(210);
+    setState(214);
     _errHandler->sync(this);
     alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 23, _ctx);
     while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER) {
       if (alt == 1) {
-        setState(206);
+        setState(210);
         match(simple_graph_grammarParser::OTHERS);
-        setState(207);
-        match(simple_graph_grammarParser::T__22); 
+        setState(211);
+        match(simple_graph_grammarParser::T__24); 
       }
-      setState(212);
+      setState(216);
       _errHandler->sync(this);
       alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 23, _ctx);
     }
-    setState(213);
+    setState(217);
     match(simple_graph_grammarParser::OTHERS);
    
   }
@@ -2221,8 +2295,8 @@ bool simple_graph_grammarParser::sempred(RuleContext *context, size_t ruleIndex,
 
 bool simple_graph_grammarParser::test_exprSempred(Test_exprContext *_localctx, size_t predicateIndex) {
   switch (predicateIndex) {
-    case 0: return precpred(_ctx, 3);
-    case 1: return precpred(_ctx, 2);
+    case 0: return precpred(_ctx, 4);
+    case 1: return precpred(_ctx, 3);
 
   default:
     break;
