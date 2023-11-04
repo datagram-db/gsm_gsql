@@ -1,0 +1,9 @@
+(label "user") enforce_subtype  (label "entity");
+(label "follows") enforce_subtype  (label "relationship");
+(label "name") enforce_subtype  string;
+string enforce_subtype (label "name");
+(label "date") enforce_subtype  string;
+string enforce_subtype (label "date");
+assert ((typeof (OBJ 1) <: label "entity") &&
+        (typeof (OBJ 1) <: label "user") &&
+        ((typeof (OBJ 1)) <: (ObjT (label "user") (t< "name" >> label "name" >))))

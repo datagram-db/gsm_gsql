@@ -1,0 +1,3 @@
+/* String concatenation */
+
+"Hello" ++ ", world!" // "Hello, world!"

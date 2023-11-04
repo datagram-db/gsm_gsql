@@ -1,0 +1,18 @@
+digraph finite_state_machine {
+    rankdir=LR;
+    size="8,5"
+node [shape = record, label="e=4", fontsize=10] q0;
+node [shape = record, label="d=3", fontsize=10] q1;
+node [shape = record, label="b=2", fontsize=10] q2;
+node [shape = record, label="c=1", fontsize=10] q3;
+node [shape = record, label="a=0", fontsize=10] q4;
+
+
+q1 -> q0 [ label = "l"];
+q2 -> q0 [ label = "x"];
+q2 -> q0 [ label = "z"];
+q3 -> q0 [ label = "y"];
+q3 -> q1 [ label = "x"];
+q4 -> q3 [ label = "z"];
+q4 -> q2 [ label = "z"];
+}

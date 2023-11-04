@@ -1,0 +1,44 @@
+digraph finite_state_machine {
+    rankdir=LR;
+    size="8,5"
+node [shape = record, label="which=23|pos=21.000000", fontsize=10] q0;
+node [shape = record, label="they=17|pos=17.000000", fontsize=10] q1;
+node [shape = record, label="with=25|pos=24.000000", fontsize=10] q2;
+node [shape = record, label="between=15|pos=11.000000", fontsize=10] q3;
+node [shape = record, label="of=13|pos=7.000000", fontsize=10] q4;
+node [shape = record, label="in=8|pos=5.000000", fontsize=10] q5;
+node [shape = record, label="1978=6|pos=6.000000", fontsize=10] q6;
+node [shape = record, label="maric einsten=26|conj=and", fontsize=10] q7;
+node [shape = record, label="parents=22|specification=common|number=plural|lemma=parent|pos=26.000000|nmod_poss=her", fontsize=10] q8;
+node [shape = record, label="staying=20|pos=23.000000|lemma=stay|aux=was", fontsize=10] q9;
+node [shape = record, label="correspondence=7|specification=common|number=singular|pos=10.000000|det=an|amod=early", fontsize=10] q10;
+node [shape = record, label="daughter=16|specification=common|number=singular|pos=20.000000|det=a", fontsize=10] q11;
+node [shape = record, label="discovery publication=29", fontsize=10] q12;
+node [shape = record, label="publication=3|specification=common|number=singular|pos=4.000000", fontsize=10] q13;
+node [shape = record, label="discovery=2|specification=common|number=singular|pos=2.000000|det=the", fontsize=10] q14;
+node [shape = record, label="discovery publication=28|conj=and", fontsize=10] q15;
+node [shape = record, label="they=27|mark=that", fontsize=10] q16;
+node [shape = record, label="einsten=11|specification=common|number=singular|pos=12.000000", fontsize=10] q17;
+node [shape = record, label="maric=10|specification=common|number=singular|pos=14.000000", fontsize=10] q18;
+
+
+q6 -> q5 [ label = "case"];
+q6 -> q10 [ label = "nmod"];
+q7 -> q18 [ label = "orig"];
+q7 -> q17 [ label = "orig"];
+q8 -> q2 [ label = "case"];
+q9 -> q8 [ label = "nmod"];
+q9 -> q0 [ label = "nsubj"];
+q10 -> q4 [ label = "case"];
+q10 -> q7 [ label = "nmod"];
+q10 -> q7 [ label = "nmod"];
+q11 -> q9 [ label = "acl_relcl"];
+q12 -> q15 [ label = "orig"];
+q12 -> q16 [ label = "revealed"];
+q14 -> q6 [ label = "nmod"];
+q15 -> q14 [ label = "orig"];
+q15 -> q13 [ label = "orig"];
+q16 -> q1 [ label = "orig"];
+q16 -> q11 [ label = "had"];
+q17 -> q3 [ label = "case"];
+}

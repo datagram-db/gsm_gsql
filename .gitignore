@@ -46,3 +46,6 @@ build/
 /gsm_example.yaml.gsm
 /cmake-build-debug/
 /cmake-build-release/
+/cmake-build-debug/
+/dist/
+

@@ -1,0 +1,6 @@
+//x := 14; eval( (((eval((xi (OBJ 14)) [0])))) ["quantity"] )} )
+//f := fun x -> { y := (x [0]); z:=(x [1]); eval( (((eval((xi (OBJ y)) [0])))) ["quantity"] )};  lfold(  f  , 0 : (phi (OBJ 5)))
+//lfold(  fun x -> { (x[0]) + (eval( (((eval((xi ((x[1]))) [0])))) ["quantity"] )) }  , 0 : (phi 5 "type"))
+//eval( (((eval((xi (OBJ 6)) [0])))) ["quantity"] )} )
+//eval(((eval((xi (OBJ 3)) [0])) ["quantity"]))
+hier:= 8; eval(((eval((xi (OBJ hier)) [0])) ["quantity"]))

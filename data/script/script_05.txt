@@ -1,0 +1,3 @@
+stringa := string;
+complexo := t< "ciao" >> string; "tutta" >> int >;
+(typeof (< "ciao" >> "bene" ; "tutta" >> 2 >) [ "ciao" ]) == (complexo ["ciao"])
