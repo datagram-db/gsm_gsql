@@ -1,0 +1,60 @@
+digraph finite_state_machine {
+    rankdir=LR;
+    size="8,5"
+node [shape = circle, label="revealed:0", fontsize=10] q0;
+node [shape = circle, label="had:1", fontsize=10] q1;
+node [shape = circle, label="was:21", fontsize=10] q2;
+node [shape = circle, label="discovery:2", fontsize=10] q3;
+node [shape = circle, label="publication:3", fontsize=10] q4;
+node [shape = circle, label="correspondence:7", fontsize=10] q5;
+node [shape = circle, label="einsten:11", fontsize=10] q6;
+node [shape = circle, label="maric:10", fontsize=10] q7;
+node [shape = circle, label="daughter:16", fontsize=10] q8;
+node [shape = circle, label="parents:22", fontsize=10] q9;
+node [shape = circle, label="the:5", fontsize=10] q10;
+node [shape = circle, label="an:9", fontsize=10] q11;
+node [shape = circle, label="a:19", fontsize=10] q12;
+node [shape = circle, label="and:4", fontsize=10] q13;
+node [shape = circle, label="and:14", fontsize=10] q14;
+node [shape = circle, label="1978:6", fontsize=10] q15;
+node [shape = circle, label="in:8", fontsize=10] q16;
+node [shape = circle, label="of:13", fontsize=10] q17;
+node [shape = circle, label="between:15", fontsize=10] q18;
+node [shape = circle, label="that:18", fontsize=10] q19;
+node [shape = circle, label="with:25", fontsize=10] q20;
+node [shape = circle, label="early:12", fontsize=10] q21;
+node [shape = circle, label="they:17", fontsize=10] q22;
+node [shape = circle, label="staying:20", fontsize=10] q23;
+node [shape = circle, label="which:23", fontsize=10] q24;
+node [shape = circle, label="her:24", fontsize=10] q25;
+
+
+q0 -> q3 [ label = "nsubj"];
+q0 -> q4 [ label = "nsubj"];
+q0 -> q1 [ label = "ccomp"];
+q1 -> q8 [ label = "dobj"];
+q1 -> q19 [ label = "mark"];
+q1 -> q22 [ label = "nsubj"];
+q3 -> q15 [ label = "nmod"];
+q3 -> q4 [ label = "conj"];
+q3 -> q10 [ label = "det"];
+q3 -> q13 [ label = "cc"];
+q5 -> q21 [ label = "amod"];
+q5 -> q17 [ label = "case"];
+q5 -> q7 [ label = "nmod"];
+q5 -> q6 [ label = "nmod"];
+q5 -> q11 [ label = "det"];
+q6 -> q18 [ label = "case"];
+q6 -> q7 [ label = "conj"];
+q6 -> q14 [ label = "cc"];
+q8 -> q23 [ label = "acl_relcl"];
+q8 -> q12 [ label = "det"];
+q9 -> q20 [ label = "case"];
+q9 -> q25 [ label = "nmod_poss"];
+q15 -> q16 [ label = "case"];
+q15 -> q5 [ label = "nmod"];
+q23 -> q9 [ label = "nmod"];
+q23 -> q2 [ label = "aux"];
+q23 -> q24 [ label = "nsubj"];
+}
+

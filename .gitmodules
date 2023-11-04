@@ -1,6 +1,6 @@
 [submodule "submodules/tinyxml2"]
-	path = submodules/tinyxml2
+	path = script_ver/submodules/tinyxml2
 	url = https://github.com/leethomason/tinyxml2.git
 [submodule "submodules/yaucl"]
-	path = submodules/yaucl
+	path = script_ver/submodules/yaucl
 	url = git@github.com:datagramdb/yaucl.git
