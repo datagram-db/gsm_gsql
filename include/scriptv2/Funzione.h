@@ -6,6 +6,7 @@
 #define GSM_GSQL_FUNZIONE_H
 
 
+#include <queries/closure.h>
 #include <ostream>
 #include <scriptv2/java_types.h>
 #include <database//gsm_inmemory_db.h>
@@ -17,9 +18,9 @@ namespace script::structures {
         std::string parameter;
         ArrayList<DPtr<ScriptAST>> body;
         DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>> externalToUpdate;
-        gsm_inmemory_db* database;
+        closure* database;
 
-        void setDBRecursively(gsm_inmemory_db* db);
+        void setDBRecursively(closure* db);
 
         friend std::ostream &operator<<(std::ostream &os, const Funzione &funzione);
 
@@ -35,7 +36,7 @@ namespace script::structures {
 
 //
         void setContext(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& context,
-                        gsm_inmemory_db* db);
+                        closure* db);
     };
 }
 

@@ -31,6 +31,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "yaucl/structures/setoids/basics.h"
+#include "queries/DataPredicate.h"
 
 #include <database/gsm_object_xi_content.h>
 
@@ -46,7 +47,7 @@ struct gsm_object  {
     std::vector<double>                                   scores;
     // Object's containment
     std::unordered_map<std::string, std::vector<gsm_object_xi_content>> phi;
-    std::unordered_map<std::string, std::string> content;
+    std::unordered_map<std::string, union_minimal> content;
 
     /**
      * Updating the current object with the values from the old one, if it does not exist (rough implementation,

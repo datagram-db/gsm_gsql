@@ -89,7 +89,11 @@ void closure::generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std:
                 // Otherwise, using the first value
                 tmp = object.xi[0]+"="+std::to_string(idX);
             for (const auto& [keyAttribute, value] : object.content) {
-                tmp = tmp+"|"+keyAttribute+"="+(value);
+                if (std::holds_alternative<std::string>(value)) {
+                    tmp = tmp+"|"+keyAttribute+"="+(std::get<std::string>(value));
+                } else {
+                    tmp = tmp+"|"+keyAttribute+"="+std::to_string(std::get<double>(value));
+                }
             }
             gid = g.addNewNodeWithLabel(tmp);
             DEBUG_ASSERT(id == gid);

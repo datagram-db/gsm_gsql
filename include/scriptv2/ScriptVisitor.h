@@ -5,10 +5,11 @@
 #ifndef GSM_GSQL_SCRIPTVISITOR_H
 #define GSM_GSQL_SCRIPTVISITOR_H
 
+
+#include <queries/closure.h>
 #include "yaucl/graphs/NodeLabelBijectionGraph.h"
 #include <scriptv2/scriptVisitor.h>
 #include <scriptv2/java_types.h>
-#include <database/gsm_inmemory_db.h>
 #include <optional>
 
 namespace script {
@@ -20,10 +21,14 @@ namespace script {
         struct ScriptVisitor : public scriptVisitor {
             static NodeLabelBijectionGraph<std::string,std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>> typecaster;
             DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> context;
-            static gsm_inmemory_db* db; // WARNING: THIS CANNOT BE USED IN CONCURRENT SETTINGS WHERE MULTIPLE DATABASES ARE USED!
+            static closure* db; // WARNING: THIS CANNOT BE USED IN CONCURRENT SETTINGS WHERE MULTIPLE DATABASES ARE USED!
             ScriptVisitor();
-            static void bindGSM(gsm_inmemory_db* gsm) { db = gsm; }
-            static DPtr<script::structures::ScriptAST> eval(std::istream& is);
+            static void bindGSM(closure* gsm) {
+                typecaster.clear();
+                db = gsm;
+            }
+            static DPtr<script::structures::ScriptAST> eval(std::istream& is, const std::vector<std::string>& schema, const std::vector<value>& nestedRow);
+            static DPtr<script::structures::ScriptAST> eval(std::istream& is, DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> context);
 
             static size_t isEnforced(const DPtr<script::structures::ScriptAST>& left,
                                    const DPtr<script::structures::ScriptAST>& right);

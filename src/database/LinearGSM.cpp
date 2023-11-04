@@ -489,6 +489,8 @@ namespace gsm2 {
             return; // result;
         }
 
+
+
         std::vector<gsm_object_xi_content>
         LinearGSM::resolveContent(size_t graphid, size_t id, const std::string &key_content) const {
             auto it = (containment_tables.find(key_content));

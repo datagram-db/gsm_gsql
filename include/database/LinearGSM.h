@@ -178,6 +178,37 @@ namespace gsm2 {
                 return ell_values.resolve_object_id({graphid, eventid});
             }
 
+            inline std::vector<std::string> resolveContainmentLabels(size_t graphid, size_t id) const {
+                std::vector<std::string> result;
+                std::pair<size_t,size_t>cp{graphid, id};
+                for (const auto& [key, table] : containment_tables) {
+                    if (table.secondary_index.find(cp)!= table.secondary_index.end())
+                        result.emplace_back(key);
+                }
+                return result;
+            }
+
+            inline std::vector<std::string> resolvePropertyLabels(size_t graphid, size_t id ) const {
+                std::pair<size_t,size_t>cp{graphid, id};
+                std::vector<std::string> result;
+                for (const auto& [key, table] : KeyValueContainment) {
+                    if (table.secondary_index2.find(cp)!= table.secondary_index2.end())
+                        result.emplace_back(key);
+                }
+                return result;
+            }
+
+           inline bool hasContent(size_t graphid, size_t id, const std::string &key_content) const {
+                auto it = (containment_tables.find(key_content));
+                if (it == containment_tables.end())
+                    return false;
+                std::vector<gsm_object_xi_content> result;
+                auto it3 = it->second.secondary_index.find({graphid, id});
+                if (it3 == it->second.secondary_index.end())
+                    return false;
+                else return true;
+            }
+
             /**
              * Returning the values associated to the object
              * @param object    Graph and object association

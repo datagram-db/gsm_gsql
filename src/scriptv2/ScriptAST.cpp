@@ -17,7 +17,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::BOTCCT;
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::NULLO;
 #include <scriptv2/Funzione.h>
 
-void script::structures::ScriptAST::setDBRecursively( gsm_inmemory_db* datenbanken) {
+void script::structures::ScriptAST::setDBRecursively( closure* datenbanken) {
     db = datenbanken;
     for (auto & ref : arrayList)
         ref->setDBRecursively(datenbanken);
@@ -516,7 +516,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::variableEval(
     }
 }
 
-void script::structures::ScriptAST::setContext(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& g, gsm_inmemory_db* db) {
+void script::structures::ScriptAST::setContext(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& g, closure* db) {
     optGamma = g;
     this->db = db;
     if (type == Function) {
@@ -958,17 +958,18 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
             auto label = arrayList[1]->toString();
             ArrayList<DPtr<script::structures::ScriptAST>> v;
             if (db) {
-                const auto& m = db->phi(id);
-                auto it = m.find(label);
-                if (it != m.cend()) {
-                    for (const auto& content : it->second) {
-//                        StringMap<DPtr<script::structures::ScriptAST>> content;
+                ;
+//                const auto& m = db->phi(id);
+//                auto it = m.find(label);
+//                if (it != m.cend()) {
+                    for (const auto& content2 : db->resolve_content((size_t)optGamma->at("graph")->toInteger(), id, label)) {
+                        StringMap<DPtr<script::structures::ScriptAST>> content;
 //                        ArrayList<DPtr<script::structures::ScriptAST>> item;
-//                        item.emplace_back(v.emplace_back(script::structures::ScriptAST::integer_((long long)content.id)));
-//                        item.emplace_back(v.emplace_back(script::structures::ScriptAST::double_(content.score)));
-                        v.emplace_back(integer_(content.id));
+                        content["id"] = ((script::structures::ScriptAST::integer_((long long)content2.id)));
+                        content["score"] = ((script::structures::ScriptAST::double_(content2.score)));
+                        v.emplace_back(tuple_(std::move(content)));
                     }
-                }
+//                }
             } else {
                 std::cerr << "WARNING: No DB being associated. Returning an empty array for Phi" << std::endl;
             }
@@ -979,8 +980,17 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
             auto id = (size_t) arrayList[0]->toInteger();
             ArrayList<DPtr<script::structures::ScriptAST>> v;
             if (db) {
-                for (size_t val : db->varphi(id))
-                    v.emplace_back(script::structures::ScriptAST::integer_((long long)val));
+                for (const std::string& label : db->phi_keys((size_t)optGamma->at("graph")->toInteger(), id)) {
+                    for (const auto& content2 : db->resolve_content((size_t)optGamma->at("graph")->toInteger(), id, label)) {
+//                        StringMap<DPtr<script::structures::ScriptAST>> content;
+////                        ArrayList<DPtr<script::structures::ScriptAST>> item;
+//                        content["id"] = ((script::structures::ScriptAST::integer_((long long)content2.id)));
+//                        content["score"] = ((script::structures::ScriptAST::double_(content2.score)));
+                        v.emplace_back((script::structures::ScriptAST::integer_((long long)content2.id)));
+                    }
+                }
+//                for (size_t val : db->varphi(id))
+//                    v.emplace_back(script::structures::ScriptAST::integer_((long long)val));
             } else {
                 std::cerr << "WARNING: No DB being associated. Returning an empty array for VarPhi" << std::endl;
             }
@@ -991,7 +1001,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
             auto id = (size_t) arrayList[0]->toInteger();
             ArrayList<DPtr<script::structures::ScriptAST>> v;
             if (db) {
-                for (const std::string& val : db->ell(id))
+                for (const std::string& val :  db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id))
                     v.emplace_back(script::structures::ScriptAST::string_(val));
             } else {
                 std::cerr << "WARNING: No DB being associated. Returning an empty array for Xi" << std::endl;
@@ -1011,7 +1021,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
             auto id = (size_t) arrayList[0]->toInteger();
             ArrayList<DPtr<script::structures::ScriptAST>> v;
             if (db) {
-                for (const std::string& val : db->xi(id))
+                for (const std::string& val : db->resolve_xi((size_t)optGamma->at("graph")->toInteger(), id))
                     v.emplace_back(script::structures::ScriptAST::string_(val));
             } else {
                 std::cerr << "WARNING: No DB being associated. Returning an empty array for Xi" << std::endl;
@@ -1027,24 +1037,61 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
             } else {
 //                DPtr<script::structures::ScriptAST> ell;
                 ArrayList<DPtr<script::structures::ScriptAST>> xi, ells, errs;
-                for (const std::string& val : db->xi(id))
+                for (const std::string& val : db->resolve_xi((size_t)optGamma->at("graph")->toInteger(), id))
                     xi.emplace_back(script::structures::ScriptAST::string_(val));
-                for (const std::string& val : db->ell(id))
+                for (const std::string& val : db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id))
                     ells.emplace_back(script::structures::ScriptAST::string_(val));
                 vv["@xi"] = array_(std::move(xi));
                 vv["@ell"] = array_(std::move(ells));
+                StringMap<DPtr<script::structures::ScriptAST>> cont;
+                for (const std::string& label : db->objProperties((size_t)optGamma->at("graph")->toInteger(), id)) {
+//                    ArrayList<DPtr<script::structures::ScriptAST>> local;
+                    auto val = db->resolve_GoodProp((size_t)optGamma->at("graph")->toInteger(), id, label);
+                    if (val.has_value()) {
+                        if (std::holds_alternative<std::string>(val.value())) {
+                            cont[label] = string_(std::get<std::string>(val.value()));
+                        } else {
+                            cont[label] = double_(std::get<double>(val.value()));
+                        }
+                    }
+//
+//                    for (const auto& content2 : ) {
+//                        StringMap<DPtr<script::structures::ScriptAST>> content;
+//////                        ArrayList<DPtr<script::structures::ScriptAST>> item;
+//                        content["id"] = ((script::structures::ScriptAST::integer_((long long)content2.id)));
+//                        content["score"] = ((script::structures::ScriptAST::double_(content2.score)));
+//                        local.emplace_back(tuple_(std::move(content)));
+//
+////                        v.emplace_back((script::structures::ScriptAST::integer_((long long)content2.id)));
+//                    }
+//                    cont[label] = array_(std::move(local));
+                }
+                vv["@pi"] = tuple_(std::move(cont));
 //                for (const std::string& val : db->ell(id))
 //                    ell.emplace_back(script::structures::ScriptAST::string_(val));
 //                vv["@ell"] = array_(std::move(ell));
-                for (const double val : db->err(id))
-                    errs.emplace_back(script::structures::ScriptAST::double_(val));
-                vv["@err"] = array_(std::move(errs));
-                for (const auto& [k,v] : db->phi(id)) {
+//                for (const double val : db->err(id))
+//                    errs.emplace_back(script::structures::ScriptAST::double_(val));
+//                vv["@err"] = array_(std::move(errs));
+                for (const std::string& label : db->phi_keys((size_t)optGamma->at("graph")->toInteger(), id)) {
                     ArrayList<DPtr<script::structures::ScriptAST>> local;
-                    for (const auto& content : v)
-                        local.emplace_back(std::move(fromObjectContent(content)));
-                    vv[k] = array_(std::move(local));
+                    for (const auto& content2 : db->resolve_content((size_t)optGamma->at("graph")->toInteger(), id, label)) {
+                        StringMap<DPtr<script::structures::ScriptAST>> content;
+////                        ArrayList<DPtr<script::structures::ScriptAST>> item;
+                        content["id"] = ((script::structures::ScriptAST::integer_((long long)content2.id)));
+                        content["score"] = ((script::structures::ScriptAST::double_(content2.score)));
+                        local.emplace_back(tuple_(std::move(content)));
+
+//                        v.emplace_back((script::structures::ScriptAST::integer_((long long)content2.id)));
+                    }
+                    vv[label] = array_(std::move(local));
                 }
+//                for (const auto& [k,v] : db->phi(id)) {
+//                    ArrayList<DPtr<script::structures::ScriptAST>> local;
+//                    for (const auto& content : v)
+//                        local.emplace_back(std::move(fromObjectContent(content)));
+//                    vv[k] = array_(std::move(local));
+//                }
             }
             return script::structures::ScriptAST::tuple_(std::move(vv));
         }
@@ -1134,7 +1181,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
             std::stringstream ss;
             ss << arrayList[0]->run()->toString(false);
             //std::cerr << ss.str() << std::endl;
-            auto res = script::compiler::ScriptVisitor::eval(ss);
+            auto res = script::compiler::ScriptVisitor::eval(ss, optGamma);
 
             return res;
         }
@@ -1391,29 +1438,42 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
     if (!db) {
         std::cerr << "WARNING: No DB being associated. Returning an empty array for Xi" << std::endl;
     } else {
-        const auto& phi_object = db->phi(id);
+        auto phi_object = db->phi_keys((size_t)optGamma->at("graph")->toInteger(), id);
+//        const auto& phi_object = db->resolve_content(id);
         if (phi_object.empty()) {
-            const auto& XI = db->xi(id);
-            if (XI.empty()) {
+            auto objProps = db->objProperties((size_t)optGamma->at("graph")->toInteger(), id);
+            const auto& XI = db->resolve_xi((size_t)optGamma->at("graph")->toInteger(), id);
+            if (objProps.empty()) {
                 std::stringstream ss;
-                ss << db->ell(id)[0];
-                auto lfst = compiler::ScriptVisitor::eval(ss);
+                ss << db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id)[0];
+                auto lfst = compiler::ScriptVisitor::eval(ss, optGamma);
+                if (!lfst->isType()) {
+                    ArrayList<DPtr<ScriptAST>> xi;
+                    for (const std::string& val : XI) {
+                        std::stringstream ss2;
+                        ss2 << val;
+                        xi.emplace_back(compiler::ScriptVisitor::eval(ss2, optGamma)->typeInference());
+                    }
+                    auto x = mgu(xi); // Actually this?
+                    if (!x->isType())
+                        throw std::runtime_error("ERROR: the xi of an object should be uniform!");
+                    else
+                        return x;
+                } else
+                    return lfst;
+            } else {
+                std::stringstream ss;
+                ss <<  db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id)[0];
+                auto lfst = compiler::ScriptVisitor::eval(ss, optGamma);
                 if (!lfst->isType())
                     throw std::runtime_error("ERROR: the label of an object should express a type!");
-                return lfst;
-            } else {
                 ArrayList<DPtr<ScriptAST>> xi;
                 for (const std::string& val : XI) {
-                    std::stringstream ss;
-                    ss << val;
-                    xi.emplace_back(compiler::ScriptVisitor::eval(ss)->typeInference());
+                    std::stringstream ss2;
+                    ss2 << val;
+                    xi.emplace_back(compiler::ScriptVisitor::eval(ss2, optGamma)->typeInference());
                 }
                 auto x = mgu(xi); // Actually this?
-                std::stringstream ss;
-                ss << db->ell(id)[0];
-                auto lfst = compiler::ScriptVisitor::eval(ss);
-                if (!lfst->isType())
-                    throw std::runtime_error("ERROR: the label of an object should express a type!");
                 if (x->type == TupleT) {
                     return lex_type_(std::move(lfst), std::move(x->tuple));
                 } else {
@@ -1421,15 +1481,22 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
                 }
             }
         } else {
-            for (const auto& [k,v] : db->phi(id)) {
+            for (const std::string& label : phi_object) {
+                auto v = db->resolve_content((size_t)optGamma->at("graph")->toInteger(), id, label);
                 ArrayList<DPtr<ScriptAST>> local;
                 for (const auto& content : v)
                     local.emplace_back(upTypeObjX(content.id));
-                vv[k] = mgu(local);
+                vv[label] = mgu(local);
             }
+//            for (const auto& [k,v] : db->phi(id)) {
+//                ArrayList<DPtr<ScriptAST>> local;
+//                for (const auto& content : v)
+//                    local.emplace_back(upTypeObjX(content.id));
+//                vv[k] = mgu(local);
+//            }
             std::stringstream ss;
-            ss << db->ell(id)[0];
-            auto lfst = compiler::ScriptVisitor::eval(ss);
+            ss <<  db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id)[0];
+            auto lfst = compiler::ScriptVisitor::eval(ss, optGamma);
             if (!lfst->isType())
                 throw std::runtime_error("ERROR: the label of an object should express a type!");
             return lex_type_(std::move(lfst), std::move(vv));

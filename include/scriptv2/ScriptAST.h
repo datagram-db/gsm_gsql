@@ -8,6 +8,7 @@
 #include <scriptv2/java_types.h>
 #include <scriptv2/SerializableFunction.h>
 #include <database/gsm_inmemory_db.h>
+#include <queries/closure.h>
 #include <functional>
 #include <optional>
 
@@ -112,7 +113,7 @@ namespace script::structures {
         DPtr<Funzione> function;
         t type;
         DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>> optGamma;
-        gsm_inmemory_db* db{nullptr};
+        closure* db{nullptr};
         DPtr<ScriptAST> casted_type;
 
         ScriptAST() { }
@@ -122,7 +123,7 @@ namespace script::structures {
         ScriptAST& operator=(ScriptAST&&) = default;
 
 
-        void setDBRecursively( gsm_inmemory_db* datenbanken);
+        void setDBRecursively( closure* datenbanken);
 
         inline bool isType() const {
             switch (type) {
@@ -148,7 +149,7 @@ namespace script::structures {
         }
 
     void setContext(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& g,
-                    gsm_inmemory_db* db);
+                    closure* db);
 
         static inline DPtr<ScriptAST> function_(DPtr<Funzione>&& v) {
             auto val = std::make_shared<ScriptAST>();
