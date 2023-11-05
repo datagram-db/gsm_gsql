@@ -72,6 +72,83 @@ static inline char* skipSpaces(char*buf, size_t* len ) {
 }
 
 #include "yaucl/data/json.h"
+
+static inline size_t loadObjectEll(gsm2::tables::LinearGSM &db,
+                            std::vector<std::string> &ell,
+                            size_t noLabel,
+                            const std::pair<size_t, size_t> &graphId_eventId) {
+    size_t act_id;
+    if (!ell.empty()) {
+        // Sending to fuzzy ell match
+        std::string pop = ell.front();
+        ell.erase(ell.begin());
+        db.ell_values.addGramsToMap(pop, graphId_eventId, ell);
+        act_id = db.label_map.put(pop).first;
+    } else {
+        act_id = noLabel;
+    }
+    return act_id;
+}
+
+static inline void registerObjectByFirstLabel(gsm2::tables::LinearGSM &db,
+                                       size_t act_id,
+                                       const std::pair<size_t, size_t> &graphId_eventId) {
+    // Setting up the new object
+    db.main_registry.load_record(graphId_eventId.first, act_id, graphId_eventId.second);
+}
+
+static inline void loadObjectXi(gsm2::tables::LinearGSM &db, std::vector<std::string> &xi,
+                         const std::pair<size_t, size_t> &graphId_eventId) {
+    if (!xi.empty()) {
+        // Sending to fuzzy xi match
+        std::string front = xi[0];
+        xi.erase(xi.begin());
+        db.xi_values.addGramsToMap(front, graphId_eventId, xi);
+    }
+}
+
+static inline void loadObjectProperty(gsm2::tables::LinearGSM &db,
+                const std::unordered_map<std::string, gsm2::tables::AttributeTableType> &property_to_type,
+                size_t act_id,
+                const std::pair<size_t, size_t> &graphId_eventId,
+                const std::string &property_key,
+                const std::string &property_value) {
+    auto& table = db.KeyValueContainment[property_key];
+    auto it = property_to_type.find(property_key);
+    if (it != property_to_type.end())
+        table.type = it->second;
+    else
+        table.type = gsm2::tables::StringAtt;
+    switch (table.type) {
+        case gsm2::tables::DoubleAtt:
+            table.record_load(act_id, std::__cxx11::stod(property_value), graphId_eventId.first, graphId_eventId.second);
+            break;
+        case gsm2::tables::SizeTAtt:
+            table.record_load(act_id, std::__cxx11::stoull(property_value), graphId_eventId.first, graphId_eventId.second);
+            break;
+        case gsm2::tables::LongAtt:
+            table.record_load(act_id, std::__cxx11::stoll(property_value), graphId_eventId.first, graphId_eventId.second);
+            break;
+        case gsm2::tables::StringAtt:
+            table.record_load(act_id, property_value, graphId_eventId.first, graphId_eventId.second);
+            break;
+        case gsm2::tables::BoolAtt:
+            table.record_load(act_id, (property_value == "True" || property_value == "true" || property_value == "tt" || property_value == "t"), graphId_eventId.first, graphId_eventId.second);
+            break;
+    }
+}
+
+static inline size_t initLoading(gsm2::tables::LinearGSM &db) {
+    if (db.doInitLoading) {
+        size_t noLabel = db.noLabel = db.label_map.put("").first;
+        size_t act_id = noLabel;
+        db.doInitLoading = false;
+        return noLabel;
+    } else {
+        return db.noLabel;
+    }
+}
+
 static inline void parse(char* string,
                          size_t len,
                          gsm2::tables::LinearGSM& forloading,
@@ -80,9 +157,9 @@ static inline void parse(char* string,
     string = skipSpaces(string, &len);
 //    size_t graphId = 0;
     std::vector<std::string> ell, xi;
-    size_t noLabel = forloading.label_map.put("").first;
     double weight; size_t content;
-    size_t act_id = noLabel;
+    size_t act_id;
+    size_t noLabel = initLoading(forloading);
     int scanSkip = 0;
     constexpr char const * ID = "id:";
     constexpr char const  DOT = '.';
@@ -113,20 +190,13 @@ static inline void parse(char* string,
             string = beforeReturn;
             if (!(string = skipSpaces(string, &len))) return;
         }
-        if (!ell.empty()) {
-            // Sending to fuzzy ell match
-            std::string pop = ell.front();
-            ell.erase(ell.begin());
-            forloading.ell_values.addGramsToMap(pop, graphId_eventId, ell);
-            act_id = forloading.label_map.put(pop).first;
-        } else {
-            act_id = noLabel;
-        }
+
+        act_id = loadObjectEll(forloading, ell, noLabel, graphId_eventId);//// HOC!
+
         string++; len--;
         if (!(string = skipSpaces(string, &len))) return;
         if (!(string = haspos(string,  (char*)XI, 0, &len))) return;
-        // Setting up the new object
-        forloading.main_registry.load_record(graphId_eventId.first, act_id, graphId_eventId.second);
+        registerObjectByFirstLabel(forloading, act_id, graphId_eventId); //// HOC!
 
         xi.clear();
         if (!(string = atreturn(string, &len))) return;
@@ -137,12 +207,8 @@ static inline void parse(char* string,
             string = beforeReturn;
             if (!(string = skipSpaces(string, &len))) return;
         }
-        if (!xi.empty()) {
-            // Sending to fuzzy xi match
-            std::string front = xi[0];
-            xi.erase(xi.begin());
-            forloading.xi_values.addGramsToMap(front, graphId_eventId, xi);
-        }
+        loadObjectXi(forloading, xi, graphId_eventId);//// HOC!
+
         string++; len--;
         if (!(string = skipSpaces(string, &len))) return;
         if (!(string = haspos(string,  (char*)PROP, 0, &len))) return;
@@ -156,30 +222,10 @@ static inline void parse(char* string,
             if (idx == std::string::npos) return;
             std::string key = UNESCAPE(tmp.substr(0, idx));
             std::string val = UNESCAPE(tmp.substr(idx+1));
+
             // Setting up the properties associated to the node
-            auto& table = forloading.KeyValueContainment[key];
-            auto it = map_for_types.find(key);
-            if (it != map_for_types.end())
-                table.type = it->second;
-            else
-                table.type = gsm2::tables::StringAtt;
-            switch (table.type) {
-                case gsm2::tables::DoubleAtt:
-                    table.record_load(act_id, std::stod(val), graphId_eventId.first, graphId_eventId.second);
-                    break;
-                case gsm2::tables::SizeTAtt:
-                    table.record_load(act_id, std::stoull(val), graphId_eventId.first, graphId_eventId.second);
-                    break;
-                case gsm2::tables::LongAtt:
-                    table.record_load(act_id, std::stoll(val), graphId_eventId.first, graphId_eventId.second);
-                    break;
-                case gsm2::tables::StringAtt:
-                    table.record_load(act_id, val, graphId_eventId.first, graphId_eventId.second);
-                    break;
-                case gsm2::tables::BoolAtt:
-                    table.record_load(act_id, (val == "True" || val == "true" || val == "tt" || val == "t"), graphId_eventId.first, graphId_eventId.second);
-                    break;
-            }
+            loadObjectProperty(forloading, map_for_types, act_id, graphId_eventId, key, val);
+
             string = beforeReturn;
             if (!(string = skipSpaces(string, &len))) return;
         }
@@ -189,6 +235,8 @@ static inline void parse(char* string,
 
         if (!(string = atreturn(string, &len))) return;
         if (!(string = skipSpaces(string, &len))) return;
+
+        forloading.objectScoresLoading[graphId_eventId].emplace_back(1.0);
         while (*string != DOT) {
             char* beforeReturn = atreturn(string, &len);
             std::string tmp{string, beforeReturn-1};
@@ -300,7 +348,16 @@ namespace gsm2 {
         }
 
         void LinearGSM::index() {
+            objectScores.resize(nGraphs);
             const auto& idx = main_registry.indexing1();
+            for (size_t i = 0; i<idx.size(); i++) {
+                auto& currentScoreHolder = objectScores[i];
+                currentScoreHolder.resize(objectScores.at(i).size());
+                for (size_t j = 0; j<objectScores.at(i).size(); j++) {
+                    currentScoreHolder[j] = objectScores.at(i).at(j);
+                }
+            }
+            objectScores.clear();
             for (auto& [key, table]: containment_tables)
                 table.index();
             for (auto& [key, table] : KeyValueContainment)
@@ -659,6 +716,57 @@ namespace gsm2 {
                     }
                 }
             }
+        }
+
+        void LinearGSM::loadGSMObject(size_t graphId,
+                                      std::unordered_map<std::string, gsm2::tables::AttributeTableType>& property_to_type,
+                                      const gsm_object &object) {
+            std::pair<size_t,size_t> cp{graphId, object.id};
+            nGraphs = std::max(graphId, nGraphs);
+            size_t noLabel = initLoading(*this);
+            std::vector<std::string> ell{object.ell.begin(), object.ell.end()};
+            size_t act_id = loadObjectEll(*this, ell, noLabel, cp);
+            std::vector<std::string> xi{object.xi.begin(), object.xi.end()};
+            loadObjectXi(*this, xi, cp);
+            registerObjectByFirstLabel(*this, act_id, cp);
+            objectScoresLoading[cp] = object.scores;
+            for (const auto& [property_key,property_value] : object.content) {
+                if (std::holds_alternative<std::string>(property_value)) {
+                    auto& table = KeyValueContainment[property_key];
+                    auto it = property_to_type.find(property_key);
+                    if (it != property_to_type.end())
+                        table.type = it->second;
+                    else
+                        table.type = gsm2::tables::StringAtt;
+                    switch (table.type) {
+                        case gsm2::tables::DoubleAtt:
+                            table.record_load(act_id, std::stod(std::get<std::string>(property_value)), cp.first, cp.second);
+                            break;
+                        case gsm2::tables::SizeTAtt:
+                            table.record_load(act_id, std::stoull(std::get<std::string>(property_value)), cp.first, cp.second);
+                            break;
+                        case gsm2::tables::LongAtt:
+                            table.record_load(act_id, std::stoll(std::get<std::string>(property_value)), cp.first, cp.second);
+                            break;
+                        case gsm2::tables::StringAtt:
+                            table.record_load(act_id, std::get<std::string>(property_value), cp.first, cp.second);
+                            break;
+                        case gsm2::tables::BoolAtt:
+                            table.record_load(act_id, (std::get<std::string>(property_value) == "True" || std::get<std::string>(property_value) == "true" || std::get<std::string>(property_value) == "tt" || std::get<std::string>(property_value) == "t"), cp.first, cp.second);
+                            break;
+                    }
+                } else {
+                    auto& table = KeyValueContainment[property_key];
+                    auto it = property_to_type.find(property_key);
+                    if (it != property_to_type.end())
+                        table.type = gsm2::tables::DoubleAtt;
+                    if (table.type == gsm2::tables::DoubleAtt) {
+                        table.record_load(act_id, (std::get<double>(property_value)), cp.first, cp.second);
+                    }
+                }
+            }
+
+
         }
     } // gsm2
 } // structures

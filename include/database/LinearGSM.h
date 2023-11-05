@@ -59,6 +59,14 @@ namespace gsm2 {
             ActivityTable                main_registry;
             std::vector<gsm_db_indices> all_indices; // index associated to each graph
             std::vector<gsm_object_xi_content> empty_containment;
+            std::vector<std::vector<std::vector<double>>> objectScores;
+            std::unordered_map<std::pair<size_t,size_t>, std::vector<double>> objectScoresLoading;
+            bool doInitLoading{true};
+            size_t noLabel{0};
+
+            void loadGSMObject(size_t graphId,
+                               std::unordered_map<std::string, gsm2::tables::AttributeTableType>& propertyname_to_type,
+                               const struct gsm_object& object);
 
             /**
              * Returning the conent of a specific graph and object id associated to the key
@@ -264,7 +272,6 @@ namespace gsm2 {
 //                }
 //                return result;
 //            }
-
 //            /**
 //             * Specifies the containment function for a specific object
 //             * @param object        Container object

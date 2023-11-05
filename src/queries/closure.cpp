@@ -49,6 +49,114 @@ void closure::asGraphs(std::vector<FlexibleGraph<std::string, std::string>> &gra
     forloading.asGraphs(graphs);
 }
 
+
+void closure::generateOODbFromMaterialisedViews(gsm2::tables::LinearGSM& newDB) {
+    std::unordered_map<std::string, gsm2::tables::AttributeTableType> propertyname_to_type;
+    std::vector<adjacency_graph> simpleGraphs(delta_updates_per_graph.size());
+    generate_materialised_view();
+    std::pair<size_t, size_t> cp;
+    std::vector<yaucl::structures::any_to_uint_bimap<size_t>> nodesBeingInsertedAlready(delta_updates_per_graph.size());
+    size_t offsetMainRegistryTable = 0;
+    std::vector<std::vector<size_t>> initialNodes(delta_updates_per_graph.size());
+    std::vector<std::unordered_map<size_t, size_t>> time(delta_updates_per_graph.size());
+    for (size_t i = 0, N = delta_updates_per_graph.size(); i<N; i++) {
+        const auto& graph_index = forloading.all_indices.at(i).container_order.at(0);
+        initialNodes[i].reserve(N);
+        for (size_t j = 0, M = graph_index.size(); j<M; j++) {
+            initialNodes[i][j] = getOrDefault(delta_updates_per_graph.at(i).replacement_map, graph_index.at(j), graph_index.at(j));
+        }
+        for (const auto& [idX,object] : delta_updates_per_graph.at(i).delta_plus_db.O) {
+            if (delta_updates_per_graph.at(i).hasXBeenRemoved(idX)) {
+                continue;
+            }
+            cp.first = i;
+            cp.second = idX;
+            auto& nodeMap = nodesBeingInsertedAlready[i];
+            auto& g = simpleGraphs[i];
+            size_t id = nodeMap.put(idX).first;
+            size_t gid;
+            gid = g.add_node();
+            std::string tmp;
+            DEBUG_ASSERT(id == gid);
+            offsetMainRegistryTable++;
+        }
+        for (const auto& [idX,object] : delta_updates_per_graph.at(i).delta_plus_db.O) {
+            if (delta_updates_per_graph.at(i).hasXBeenRemoved(idX))
+                continue;
+            for (const auto& [edgelabel,records] : object.phi) {
+                for (const auto& record: records) {
+                    if (delta_updates_per_graph.at(i).hasXBeenRemoved(record.id))
+                        continue;
+                    const auto& map = nodesBeingInsertedAlready.at(i);
+                    auto src = map.getKey(idX);
+                    auto dst = map.signed_get(record.id);
+                    if (dst >= 0) {
+                        auto& g = simpleGraphs[i];
+                        g.add_edge(src, dst);
+                    }
+                }
+            }
+        }
+    }
+    for (size_t k = 0, N = delta_updates_per_graph.size(); k<N; k++) {
+        roaring::Roaring64Map visited;
+        std::vector<size_t> Stack;
+        auto& g = simpleGraphs[k];
+        for (size_t start_from : initialNodes[k]) {
+            g.topologicalSortUtil(start_from, visited, Stack);
+        }
+        for (size_t i = 0; i < g.V_size; i++)
+            if (!visited.contains(i))
+                g.topologicalSortUtil(i, visited, Stack);
+        bool firstVisit = true;
+        std::reverse(Stack.begin(), Stack.end());
+        for (size_t v : Stack) {
+            if (firstVisit) {
+                time[k][v] = 0;
+                firstVisit = false;
+            } else {
+                time[k][v] = 0;
+                auto it = g.ingoing_edges.find(v);
+                if (it != g.ingoing_edges.end()) {
+                    for (size_t edgeId : it->second)
+                        time[k][v] = std::max(time[k][g.edge_ids.at(edgeId).first], time[k][v]);
+                    time[k][v]++;
+                }
+            }
+        }
+    }
+    gsm_object orig;
+    size_t vt;
+    std::vector<size_t> idx_to_remove;
+    for (size_t i = 0, N = delta_updates_per_graph.size(); i<N; i++) {
+        const auto& map = nodesBeingInsertedAlready.at(i);
+        for (const auto& [idX,object] : delta_updates_per_graph.at(i).delta_plus_db.O) {
+            if (delta_updates_per_graph.at(i).hasXBeenRemoved(idX)) {
+                continue;
+            }
+            cp.first = i;
+            cp.second = idX;
+            orig = object;
+            orig.id = map.signed_get(orig.id);
+            vt = time.at(i).at(orig.id);
+            for (auto it = orig.phi.begin(); it != orig.phi.end(); it++) {
+                idx_to_remove.clear();
+                for (size_t j = 0; j<it->second.size(); j++) {
+                    auto& content = it->second[j];
+                    content.id = map.signed_get(content.id);
+                    if (time[i][content.id] <= vt) {
+                        idx_to_remove.emplace_back(j);
+                    }
+                }
+                if (!idx_to_remove.empty())
+                    remove_index(it->second, idx_to_remove);
+                newDB.loadGSMObject(i, propertyname_to_type, orig);
+            }
+        }
+    }
+    newDB.index();
+}
+
 void closure::generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std::string, std::string>> &simpleGraphs) {
     generate_materialised_view();
     simpleGraphs.clear();
@@ -68,7 +176,6 @@ void closure::generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std:
 
         for (const auto& [idX,object] : delta_updates_per_graph.at(i).delta_plus_db.O) {
             if (delta_updates_per_graph.at(i).hasXBeenRemoved(idX)) {
-//                std::cout << idX << std::endl;
                 continue;
             }
             cp.first = i;
@@ -113,9 +220,6 @@ void closure::generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std:
                         auto& g = simpleGraphs[i];
                         g.addNewEdgeFromId(src, dst, edgelabel);
                     }
-//                    else {
-//                        std::cout<< idX << "--["<< edgelabel << "]-->" << record.id << std::endl;
-//                    }
                 }
             }
         }

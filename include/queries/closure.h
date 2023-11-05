@@ -296,6 +296,7 @@ struct closure {
      * For plotting purposes, generating the graphs representing the final result
      */
     void generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std::string,std::string>>& simpleGraphs);
+    void generateOODbFromMaterialisedViews(gsm2::tables::LinearGSM& simpleGraphs);
 
     void perform_query(bool verbose = false) {
         bool materialise = false;
