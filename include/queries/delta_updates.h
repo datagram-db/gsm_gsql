@@ -45,6 +45,13 @@ struct delta_updates {
 
     void clear_insertions();
 
+    inline size_t getNovelInsertions() const {
+        return std::max(delta_plus_db.max_id+1, no_inserted_node.size());
+    }
+    inline size_t getRemovals() const {
+        return removed_objects.size();
+    }
+
     inline const std::vector<size_t>& getNewlyInsertedVertices(const std::string&x) const {
         auto it = newly_inserted_vertices.find(x);
         if (it == newly_inserted_vertices.end())

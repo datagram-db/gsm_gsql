@@ -24,6 +24,11 @@
 #include "queries/closure.h"
 
 void closure::load_query_from_file(const std::string& filename) {
+    if (forloading) {
+        delete forloading;
+        forloading = nullptr;
+    }
+    forloading = new gsm2::tables::LinearGSM();
     std::ifstream stream(filename);
     antlr4::ANTLRInputStream input(stream);
     simple_graph_grammarLexer lexer(&input);
@@ -38,15 +43,15 @@ void closure::load_query_from_file(const std::string& filename) {
 }
 
 void closure::load_data_from_file(const std::string &filename) {
-    std::tie(loading_time,indexing_time) = gsm2::tables::primary_memory_load_gsm2( filename, forloading);
+    std::tie(loading_time,indexing_time) = gsm2::tables::primary_memory_load_gsm2( filename, *forloading);
     isMaterialised = false;
-    n_graphs = forloading.nGraphs;
-    n_total_objects = forloading.main_registry.table.size();
+    n_graphs = forloading->nGraphs;
+    n_total_objects = forloading->main_registry.table.size();
     data_name = filename;
 }
 
 void closure::asGraphs(std::vector<FlexibleGraph<std::string, std::string>> &graphs) const {
-    forloading.asGraphs(graphs);
+    forloading->asGraphs(graphs);
 }
 
 
@@ -60,7 +65,7 @@ void closure::generateOODbFromMaterialisedViews(gsm2::tables::LinearGSM& newDB) 
     std::vector<std::vector<size_t>> initialNodes(delta_updates_per_graph.size());
     std::vector<std::unordered_map<size_t, size_t>> time(delta_updates_per_graph.size());
     for (size_t i = 0, N = delta_updates_per_graph.size(); i<N; i++) {
-        const auto& graph_index = forloading.all_indices.at(i).container_order.at(0);
+        const auto& graph_index = forloading->all_indices.at(i).container_order.at(0);
         initialNodes[i].reserve(N);
         for (size_t j = 0, M = graph_index.size(); j<M; j++) {
             initialNodes[i][j] = getOrDefault(delta_updates_per_graph.at(i).replacement_map, graph_index.at(j), graph_index.at(j));
@@ -168,7 +173,7 @@ void closure::generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std:
     std::vector<std::unordered_map<size_t, size_t>> time(delta_updates_per_graph.size());
     auto real_time_start = std::chrono::high_resolution_clock::now();
     for (size_t i = 0, N = delta_updates_per_graph.size(); i<N; i++) {
-        const auto& graph_index = forloading.all_indices.at(i).container_order.at(0);
+        const auto& graph_index = forloading->all_indices.at(i).container_order.at(0);
         initialNodes[i].reserve(N);
         for (size_t j = 0, M = graph_index.size(); j<M; j++) {
             initialNodes[i][j] = getOrDefault(delta_updates_per_graph.at(i).replacement_map, graph_index.at(j), graph_index.at(j));
@@ -278,7 +283,7 @@ void closure::generate_materialised_view() {
         auto real_time_start = std::chrono::high_resolution_clock::now();
         isMaterialised = true;
 //    size_t N = pr.morphisms.size();
-        forloading.iterateOverObjects([this](size_t graphid, const gsm_object& legacy_object_old_data) {
+        forloading->iterateOverObjects([this](size_t graphid, const gsm_object& legacy_object_old_data) {
             auto& updates = delta_updates_per_graph[graphid];
             if ((!updates.hasXBeenRemoved(legacy_object_old_data.id))) {
                 size_t new_id = legacy_object_old_data.id;

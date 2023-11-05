@@ -71,7 +71,7 @@ struct closure {
     GSMPatternVisitor pv;
     std::vector<node_match> vl;
 
-    gsm2::tables::LinearGSM forloading;
+    gsm2::tables::LinearGSM* forloading = nullptr;
     preserve_results pr;
 
     std::vector<delta_updates> delta_updates_per_graph;
@@ -79,6 +79,13 @@ struct closure {
     std::string empty_string;
     std::vector<gsm_object_xi_content> empty_content;
     bool isMaterialised = false;
+
+    ~closure() {
+        if (forloading) {
+            delete forloading;
+            forloading = nullptr;
+        }
+    }
 
     inline void sortVL() {
         std::vector<std::unordered_set<std::string>> outgoing(vl.size());
@@ -309,10 +316,10 @@ struct closure {
             for (auto& nm : vl) {
                 auto outcome = nm.compileNodeVariableOptionality();
                 hasDelRewrite = hasDelRewrite || outcome;
-                pr.collect_node_match(nm, forloading);
+                pr.collect_node_match(nm, *forloading);
             }
             // Inialising the morphisms, substantiating the match for the nodes (just resizing and clearing)
-            pr.finalise_after_all_collections(forloading.all_indices.size());
+            pr.finalise_after_all_collections(forloading->all_indices.size());
             auto node_q_end = std::chrono::high_resolution_clock::now();
             query_collect_node_match = std::chrono::duration<double, std::milli>(node_q_end-node_q_start).count();
         }
@@ -320,7 +327,7 @@ struct closure {
         // First, matching all the single patterns within the queries, as described in the cached results
         {
             auto edge_q_start = std::chrono::high_resolution_clock::now();
-            pr.run_simple_edge_queries(forloading);
+            pr.run_simple_edge_queries(*forloading);
             auto edge_q_end = std::chrono::high_resolution_clock::now();
             query_collect_edge_match = std::chrono::duration<double, std::milli>(edge_q_end-edge_q_start).count();
         }
@@ -374,7 +381,7 @@ struct closure {
                 }
             }
         }
-        return forloading.hasContent(graphid, id, key_content);
+        return forloading->hasContent(graphid, id, key_content);
     }
 
     inline std::vector<std::string> phi_keys(size_t graphid,
@@ -398,7 +405,7 @@ struct closure {
                 }
             }
         }
-        auto v = forloading.resolveContainmentLabels(graphid, id);
+        auto v = forloading->resolveContainmentLabels(graphid, id);
         result.insert(v.begin(), v.end());
         v.clear();
         v.insert(v.begin(), result.begin(), result.end());
@@ -438,7 +445,7 @@ struct closure {
                 }
             }
         }
-        auto legacy = forloading.resolveContent(graphid, id, key_content);
+        auto legacy = forloading->resolveContent(graphid, id, key_content);
         bool subst=false;
         if (!delta_updates_per_graph.empty()) {
             for (auto& ref : legacy) {
@@ -486,7 +493,7 @@ struct closure {
                 }
             }
         }
-        std::optional<union_minimal> result = forloading.resolveProperties(graphid, id, key_prop);
+        std::optional<union_minimal> result = forloading->resolveProperties(graphid, id, key_prop);
         if (result.has_value()) {
             if (std::holds_alternative<std::string>(result.value()))
                 return std::get<std::string>(result.value());
@@ -516,7 +523,7 @@ struct closure {
                 }
             }
         }
-        auto v = forloading.resolvePropertyLabels(graphid, id);
+        auto v = forloading->resolvePropertyLabels(graphid, id);
         result.insert(v.begin(), v.end());
         v.clear();
         v.insert(v.begin(), result.begin(), result.end());
@@ -543,7 +550,7 @@ struct closure {
                 }
             }
         }
-        return forloading.resolveProperties(graphid, id, key_prop);
+        return forloading->resolveProperties(graphid, id, key_prop);
     }
 
     inline const std::vector<std::string>& resolve_ell(size_t graphid, size_t id) const {
@@ -582,7 +589,7 @@ private:
             }
         }
         }
-        return isXiEllOtherwise ? forloading.xi(graphid, id) : forloading.ell(graphid, id);
+        return isXiEllOtherwise ? forloading->xi(graphid, id) : forloading->ell(graphid, id);
     }
 
     /**
@@ -755,7 +762,25 @@ private:
         return object_id;
     }
 
-
+    /**
+     * Incremental update of the graph query, one at a time
+     */
+    size_t performQueryAndUpdateDB() {
+        perform_query(false);
+        size_t totalInsertions = 0, total_removals = 0;
+        for (const auto& ref : delta_updates_per_graph) {
+            totalInsertions += ref.getNovelInsertions();
+            total_removals += ref.getRemovals();
+        }
+        if ((totalInsertions + total_removals) > 0) {
+            auto ptr = new gsm2::tables::LinearGSM();
+            generateOODbFromMaterialisedViews(*ptr);
+            delete forloading;
+            forloading = nullptr;
+            forloading = ptr;
+        }
+        return totalInsertions;
+    }
 
     std::vector<size_t>
     resolveIdsOverVariableName(size_t graph_id, size_t pattern_id, const std::string &variable_name, const std::vector<value> &record) const {
@@ -807,12 +832,12 @@ private:
 
     inline void run_transformations(bool hasDelRewrite) {
         delta_updates_per_graph.clear();
-        for (size_t i = 0, N = forloading.all_indices.size(); i<N; i++) {
-            delta_updates_per_graph.emplace_back(forloading.main_registry.secondary_index.at(i).second->event_id);
+        for (size_t i = 0, N = forloading->all_indices.size(); i<N; i++) {
+            delta_updates_per_graph.emplace_back(forloading->main_registry.secondary_index.at(i).second->event_id);
         }
-        for (size_t graph_id = 0, N = forloading.all_indices.size(); graph_id < N; graph_id++) { // on parallel...do
+        for (size_t graph_id = 0, N = forloading->all_indices.size(); graph_id < N; graph_id++) { // on parallel...do
             // For each graph in the collection
-            const auto& g = forloading.all_indices.at(graph_id);
+            const auto& g = forloading->all_indices.at(graph_id);
             /*const*/ auto& morphs = pr.morphisms.at(graph_id);
             auto& updates = delta_updates_per_graph.at(graph_id);
 
@@ -958,7 +983,7 @@ private:
 //                                                delta_updates_per_graph[0].replaceWith(check, id);
                                                 delta_updates_per_graph[graph_id].replaceWith(check, id);
                                                 for (size_t orig : originals) {
-                                                    for (const auto& contK : forloading.containment_relationships) {
+                                                    for (const auto& contK : forloading->containment_relationships) {
                                                         auto content = resolve_content(graph_id, orig, contK);
                                                         for (const auto& containmentRel : content) {
                                                             if (containmentRel.id == check) {
