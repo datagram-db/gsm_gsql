@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="railroad-diagram" width="557" height="81" viewBox="0 0 557 81">
+<style type="text/css">svg.railroad-diagram {
+    background-color: hsl(30,20%,95%);
+}
+svg.railroad-diagram path {
+    stroke-width: 3;
+    stroke: black;
+    fill-opacity: 0;
+}
+svg.railroad-diagram text {
+    font: bold 14px monospace;
+    text-anchor: middle;
+}
+svg.railroad-diagram text.label {
+    text-anchor: start;
+}
+svg.railroad-diagram text.comment {
+    font: italic 12px monospace;
+}
+svg.railroad-diagram rect {
+    stroke-width: 3;
+    stroke: black;
+    fill: #9db0e5;
+}
+svg.railroad-diagram rect[rx~="10"] {
+    fill: #c7a6d8;
+}</style>
+<g transform="translate(.5 .5)">
+<path d="M 20 31 v 20 m 10 -20 v 20 m -10 -10 h 20.5">
+</path>
+<g>
+<path d="M40 41h0">
+</path>
+<path d="M516 41h0">
+</path>
+<path d="M40 41h20">
+</path>
+<g>
+<path d="M60 41h0">
+</path>
+<path d="M496 41h0">
+</path>
+<g>
+<path d="M60 41h0">
+</path>
+<path d="M360 41h0">
+</path>
+<path d="M60 41a10 10 0 0 0 10 -10v0a10 10 0 0 1 10 -10">
+</path>
+<g>
+<path d="M80 21h260">
+</path>
+</g>
+<path d="M340 21a10 10 0 0 1 10 10v0a10 10 0 0 0 10 10">
+</path>
+<path d="M60 41h20">
+</path>
+<g>
+<path d="M80 41h0">
+</path>
+<path d="M340 41h0">
+</path>
+<path d="M80 41h10">
+</path>
+<g>
+<path d="M90 41h0">
+</path>
+<path d="M330 41h0">
+</path>
+<path d="M90 41h20">
+</path>
+<g>
+<path d="M110 41h0">
+</path>
+<path d="M310 41h0">
+</path>
+<path d="M110 41h10">
+</path>
+<g>
+<path d="M120 41h0">
+</path>
+<path d="M236 41h0">
+</path>
+<rect x="120" y="30" width="116" height="22">
+</rect>
+<text x="178" y="45">
+centralmatch</text>
+</g>
+<path d="M236 41h10">
+</path>
+<path d="M246 41h10">
+</path>
+<g>
+<path d="M256 41h0">
+</path>
+<path d="M300 41h0">
+</path>
+<rect x="256" y="30" width="44" height="22" rx="10" ry="10">
+</rect>
+<text x="278" y="45">
+';'</text>
+</g>
+<path d="M300 41h10">
+</path>
+</g>
+<path d="M310 41h20">
+</path>
+</g>
+<path d="M330 41h10">
+</path>
+<path d="M90 41a10 10 0 0 0 -10 10v0a10 10 0 0 0 10 10">
+</path>
+<g>
+<path d="M90 61h240">
+</path>
+</g>
+<path d="M330 61a10 10 0 0 0 10 -10v0a10 10 0 0 0 -10 -10">
+</path>
+</g>
+<path d="M340 41h20">
+</path>
+</g>
+<path d="M360 41h10">
+</path>
+<g>
+<path d="M370 41h0">
+</path>
+<path d="M486 41h0">
+</path>
+<rect x="370" y="30" width="116" height="22">
+</rect>
+<text x="428" y="45">
+centralmatch</text>
+</g>
+<path d="M486 41h10">
+</path>
+</g>
+<path d="M496 41h20">
+</path>
+</g>
+<path d="M 516 41 h 20 m -10 -10 v 20 m 10 -20 v 20">
+</path>
+</g>
+</svg>
