@@ -173,9 +173,13 @@ static inline void parse(char* string,
     while (string && *string) {
         // Reading a new object from the database for value querying
         graphId_eventId.second = 0;
+        if (forloading.nodesInGraph.size() == graphId_eventId.first) {
+            forloading.nodesInGraph.emplace_back(graphId_eventId.second);
+        }
         ell.clear();
         if (!(string = haspos(string, (char*)ID, 0, &len))) return;
         if (sscanf(string, "%lu%n", &graphId_eventId.second, &scanSkip)==EOF) return;
+        forloading.nodesInGraph[graphId_eventId.first] = std::max(forloading.nodesInGraph[graphId_eventId.first],graphId_eventId.second);
         len-=scanSkip;
         string+=scanSkip;
         if (!(string = skipSpaces(string, &len))) return;
@@ -262,12 +266,12 @@ static inline void parse(char* string,
 
         if (strncmp(string,"~~",2)==0) {
             // Finding a new graph
+            forloading.nodesInGraph.emplace_back(0);
             graphId_eventId.first++; string+=2; len-=2;
             if (!(string = skipSpaces(string, &len))) return;
         }
     }
     maxGraphId = graphId_eventId.first;
-    // TODO: indexing
 }
 
 #include <fstream>
@@ -411,6 +415,15 @@ namespace gsm2 {
                 ref.traversal_order = ref.siblinghood.g.topological_sort(-1);
                 convertMap(ref.siblinghood, ref.traversal_order);
             }
+            objectScores.resize(nGraphs);
+            for (size_t i = 0; i<nGraphs; i++) {
+                auto& ref = objectScores[i];
+                ref.resize(++nodesInGraph[i]);
+            }
+            for (auto& [cp, vals] : objectScoresLoading) {
+                objectScores[cp.first][cp.second] = std::move(vals);
+            }
+            objectScoresLoading.clear();
         }
 
 
@@ -730,6 +743,10 @@ namespace gsm2 {
             loadObjectXi(*this, xi, cp);
             registerObjectByFirstLabel(*this, act_id, cp);
             objectScoresLoading[cp] = object.scores;
+            while (nodesInGraph.size() <= graphId) {
+                nodesInGraph.emplace_back(0);
+            }
+            nodesInGraph[graphId] = std::max(nodesInGraph[graphId], object.id);
             for (const auto& [property_key,property_value] : object.content) {
                 if (std::holds_alternative<std::string>(property_value)) {
                     auto& table = KeyValueContainment[property_key];

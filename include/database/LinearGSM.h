@@ -59,6 +59,7 @@ namespace gsm2 {
             ActivityTable                main_registry;
             std::vector<gsm_db_indices> all_indices; // index associated to each graph
             std::vector<gsm_object_xi_content> empty_containment;
+            std::vector<size_t> nodesInGraph;
             std::vector<std::vector<std::vector<double>>> objectScores;
             std::unordered_map<std::pair<size_t,size_t>, std::vector<double>> objectScoresLoading;
             bool doInitLoading{true};

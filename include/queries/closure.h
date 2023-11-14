@@ -875,7 +875,7 @@ private:
                                     bool skip = false;
                                     for (size_t i = 0, O = pattern_result.first.size(); i<O; i++) {
                                         const auto& colName = pattern_result.first.at(i);
-                                        if (colName == "*") {
+                                        if ((colName == "*") || (entries.at(i).isNested)) {
                                             std::vector<size_t> internal_cell_indices_to_remove;
                                             for (size_t k = 0, Q =  entries.at(i).table.datum.size(); k<Q; k++) {
                                                 const auto& entries2 = entries.at(i).table.datum.at(k);

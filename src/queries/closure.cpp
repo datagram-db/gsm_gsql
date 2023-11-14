@@ -173,11 +173,20 @@ void closure::generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std:
     std::vector<std::unordered_map<size_t, size_t>> time(delta_updates_per_graph.size());
     auto real_time_start = std::chrono::high_resolution_clock::now();
     for (size_t i = 0, N = delta_updates_per_graph.size(); i<N; i++) {
-        const auto& graph_index = forloading->all_indices.at(i).container_order.at(0);
         initialNodes[i].reserve(N);
-        for (size_t j = 0, M = graph_index.size(); j<M; j++) {
-            initialNodes[i][j] = getOrDefault(delta_updates_per_graph.at(i).replacement_map, graph_index.at(j), graph_index.at(j));
+        const auto& cn = forloading->all_indices.at(i).container_order;
+        if (cn.empty()) {
+            for (size_t j = 0, M = forloading->objectScores.at(i).size(); j<M; j++) {
+                initialNodes[i][j] = getOrDefault(delta_updates_per_graph.at(i).replacement_map, j, j);
+            }
+            // This implies that nodes are not contained between each other. So, any of these nodes will be the same
+        } else {
+            const auto& graph_index = cn.at(0);
+            for (size_t j = 0, M = graph_index.size(); j<M; j++) {
+                initialNodes[i][j] = getOrDefault(delta_updates_per_graph.at(i).replacement_map, graph_index.at(j), graph_index.at(j));
+            }
         }
+
 
         for (const auto& [idX,object] : delta_updates_per_graph.at(i).delta_plus_db.O) {
             if (delta_updates_per_graph.at(i).hasXBeenRemoved(idX)) {
@@ -550,7 +559,9 @@ std::any closure::Interpret::interpret_closure_evaluate(rewrite_expr *ptr) const
             break;
 
         case rewrite_expr::IFTE_RW: {
-            return interpret(ptr->ifcond);
+            return interpret(ptr->ifcond) ?
+                    interpret_closure_evaluate(ptr->pi_key_arg_or_then.get()) :
+                    interpret_closure_evaluate(ptr->ptr_or_else.get());
         } break;
 
         default:

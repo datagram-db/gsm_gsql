@@ -314,6 +314,7 @@ public:
         if (ctx) {
             std::shared_ptr<rewrite_expr> result = std::make_shared<rewrite_expr>();
             result->t = rewrite_expr::IFTE_RW;
+            std::cout << visit(ctx->ifcond).type().name() << std::endl;
             result->ifcond = std::move(std::any_cast<test_pred>(visit(ctx->ifcond)));
             result->pi_key_arg_or_then = std::any_cast< std::shared_ptr<rewrite_expr>>(visit(ctx->then_effect));
             if (ctx->else_effect) {
@@ -417,8 +418,9 @@ public:
         if (ctx) {
             test_pred ptr;
             ptr.t = test_pred::TEST_PRED_CASE_LEQ;
-            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->src)));
-            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->dst)));
+            ptr.args.emplace_back(std::any_cast<test_side >(visit(ctx->src)));
+            ptr.args.emplace_back(std::any_cast<test_side >(visit(ctx->dst)));
+            return {ptr};
         }
         return {};
     }
@@ -429,6 +431,7 @@ public:
             pred.t = test_pred::TEST_PRED_CASE_OR;
             pred.child_logic.emplace_back(std::move(std::any_cast<test_pred>(visit(ctx->src))));
             pred.child_logic.emplace_back(std::move(std::any_cast<test_pred>(visit(ctx->dst))));
+            return {pred};
         }
         return {};
     }
@@ -445,8 +448,12 @@ public:
         if (ctx) {
             test_pred ptr;
             ptr.t = test_pred::TEST_PRED_CASE_EQ;
-            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->src)));
-            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->dst)));
+//            auto g = visit(ctx->src);
+//            std::cout <<g.type().name()<< std::endl;
+//            auto h = visit(ctx->dst);
+            ptr.args.emplace_back(std::any_cast<test_side >(visit(ctx->src)));
+            ptr.args.emplace_back(std::any_cast<test_side >(visit(ctx->dst)));
+            return {ptr};
         }
         return {};
     }
@@ -455,8 +462,9 @@ public:
         if (ctx) {
             test_pred ptr;
             ptr.t = test_pred::TEST_PRED_CASE_NEQ;
-            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->src)));
-            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->dst)));
+            ptr.args.emplace_back(std::any_cast<test_side >(visit(ctx->src)));
+            ptr.args.emplace_back(std::any_cast<test_side >(visit(ctx->dst)));
+            return {ptr};
         }
         return {};
     }
@@ -465,8 +473,9 @@ public:
         if (ctx) {
             test_pred ptr;
             ptr.t = test_pred::TEST_PRED_CASE_LT;
-            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->src)));
-            ptr.args.emplace_back(std::any_cast<std::shared_ptr<rewrite_expr> >(visit(ctx->dst)));
+            ptr.args.emplace_back(std::any_cast<test_side >(visit(ctx->src)));
+            ptr.args.emplace_back(std::any_cast<test_side >(visit(ctx->dst)));
+            return {ptr};
         }
         return {};
     }
@@ -477,6 +486,7 @@ public:
                     pred.t = test_pred::TEST_PRED_CASE_AND;
                     pred.child_logic.emplace_back(std::move(std::any_cast<test_pred>(visit(ctx->src))));
                     pred.child_logic.emplace_back(std::move(std::any_cast<test_pred>(visit(ctx->dst))));
+                    return {pred};
                 }
                 return {};
     }
