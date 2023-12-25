@@ -80,6 +80,9 @@ public:
   virtual void enterPar_test(simple_graph_grammarParser::Par_testContext *ctx) = 0;
   virtual void exitPar_test(simple_graph_grammarParser::Par_testContext *ctx) = 0;
 
+  virtual void enterMatched(simple_graph_grammarParser::MatchedContext *ctx) = 0;
+  virtual void exitMatched(simple_graph_grammarParser::MatchedContext *ctx) = 0;
+
   virtual void enterEq_test(simple_graph_grammarParser::Eq_testContext *ctx) = 0;
   virtual void exitEq_test(simple_graph_grammarParser::Eq_testContext *ctx) = 0;
 
@@ -88,6 +91,9 @@ public:
 
   virtual void enterLt_test(simple_graph_grammarParser::Lt_testContext *ctx) = 0;
   virtual void exitLt_test(simple_graph_grammarParser::Lt_testContext *ctx) = 0;
+
+  virtual void enterUnmatched(simple_graph_grammarParser::UnmatchedContext *ctx) = 0;
+  virtual void exitUnmatched(simple_graph_grammarParser::UnmatchedContext *ctx) = 0;
 
   virtual void enterAnd_test(simple_graph_grammarParser::And_testContext *ctx) = 0;
   virtual void exitAnd_test(simple_graph_grammarParser::And_testContext *ctx) = 0;

@@ -63,11 +63,15 @@ public:
 
     virtual std::any visitPar_test(simple_graph_grammarParser::Par_testContext *context) = 0;
 
+    virtual std::any visitMatched(simple_graph_grammarParser::MatchedContext *context) = 0;
+
     virtual std::any visitEq_test(simple_graph_grammarParser::Eq_testContext *context) = 0;
 
     virtual std::any visitNeq_test(simple_graph_grammarParser::Neq_testContext *context) = 0;
 
     virtual std::any visitLt_test(simple_graph_grammarParser::Lt_testContext *context) = 0;
+
+    virtual std::any visitUnmatched(simple_graph_grammarParser::UnmatchedContext *context) = 0;
 
     virtual std::any visitAnd_test(simple_graph_grammarParser::And_testContext *context) = 0;
 

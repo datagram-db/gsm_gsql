@@ -65,6 +65,51 @@ namespace gsm2 {
             bool doInitLoading{true};
             size_t noLabel{0};
 
+            void asObjects(std::vector<std::vector<gsm_object>> &simpleGraphs) const {
+                simpleGraphs.clear();
+                simpleGraphs.resize(all_indices.size());
+                for(size_t i = 0, N = all_indices.size(); i<N; i++) {
+                    simpleGraphs[i].resize(nodesInGraph.at(i));
+                }
+                std::pair<size_t, size_t> cp;
+                std::vector<yaucl::structures::any_to_uint_bimap<size_t>> nodesBeingInsertedAlready(all_indices.size());
+                size_t offsetMainRegistryTable = 0;
+                for (const auto& record : main_registry.table) {
+                    cp.first = record.graph_id;
+                    cp.second = record.event_id;
+                    auto& nodeMap = nodesBeingInsertedAlready[record.graph_id];
+                    auto& g = simpleGraphs[record.graph_id];
+                    size_t id = nodeMap.put(record.event_id).first;
+                    gsm_object& result = simpleGraphs[record.graph_id][record.event_id];
+                    result.id = record.event_id;
+                    result.xi = xi_values.resolve_object_id(cp);
+                    result.ell = ell_values.resolve_object_id(cp);
+//                    size_t gid;
+                    for (const auto& [keyAttribute, Table] : KeyValueContainment) {
+                        auto tmp2 = Table.resolve_record_if_exists2(offsetMainRegistryTable);
+                        if (tmp2) {
+                            result.content[keyAttribute] = tmp2.value();
+//                            tmp = tmp+"|"+keyAttribute+"="+(std::holds_alternative <std::string>(tmp2.value()) ? std::get<std::string>(tmp2.value()) : std::to_string(std::get<double>(tmp2.value())));
+                        }
+                    }
+//                    gid = g.addNewNodeWithLabel(tmp);
+//                    DEBUG_ASSERT(id == gid);
+                    offsetMainRegistryTable++;
+                }
+                for (const auto& [edgeLabel, outEdges] : containment_tables) {
+                    for (const auto& record : outEdges.table) {
+                        const auto& map = nodesBeingInsertedAlready.at(record.graph_id);
+                        gsm_object& result = simpleGraphs[record.graph_id][record.object_id];
+                        result.phi[edgeLabel].emplace_back(record.id_contained);
+//                        auto src = map.getKey(record.object_id);
+//                        auto dst = map.getKey(record.id_contained);
+//                        auto& g = simpleGraphs[record.graph_id];
+//                        g.addNewEdgeFromId(src, dst, edgeLabel);
+                    }
+                }
+            }
+
+
             void loadGSMObject(size_t graphId,
                                std::unordered_map<std::string, gsm2::tables::AttributeTableType>& propertyname_to_type,
                                const struct gsm_object& object);

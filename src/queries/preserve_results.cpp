@@ -33,18 +33,12 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
     map_orig.resize(vl.size()); // One element per pattern
     map_nested.resize(vl.size());   // One element per pattern
     size_t map_orig_offset = 0;
+    std::filesystem::path folder = std::filesystem::path("viz") / "data";
 
     for (const auto& graph_grammar_entry_point: vl) {
+        size_t versions = 1;
         std::vector<std::string> nested_schema;
-        if (verbose) {
-            std::cout << " * Pattern = ";
-            if (graph_grammar_entry_point.vec)
-                std::cout << "[";
-            std::cout << graph_grammar_entry_point.pattern_name;
-            if (graph_grammar_entry_point.vec)
-                std::cout << "]";
-            std::cout << std::endl;
-        }
+//
 
         if (graph_grammar_entry_point.var.size() > 1) {
             throw std::runtime_error("ERROR: pattern "+graph_grammar_entry_point.pattern_name+" cannot have multi-variable entry point");
@@ -140,8 +134,16 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
             // Otherwise, you need to natural join the two tables
             if ((!matching_tables.at(0).datum.empty()) && (!matching_tables.at(1).datum.empty())) {
                 if (verbose) {
-                    std::cout << print_table(matching_tables.at(0)) << std::endl;
-                    std::cout << print_table(matching_tables.at(1)) << std::endl;
+                    {
+                        std::ofstream file{folder / (graph_grammar_entry_point.pattern_name+"("+std::to_string(versions++)+").ncsv")};
+                        serialised_nested_table(file, graph_grammar_entry_point.pattern_name, matching_tables.at(0));
+                    }
+                    {
+                        std::ofstream file{folder / (graph_grammar_entry_point.pattern_name+"("+std::to_string(versions++)+").ncsv")};
+                        serialised_nested_table(file, graph_grammar_entry_point.pattern_name, matching_tables.at(1));
+                    }
+//                    std::cout << print_table(matching_tables.at(0)) << std::endl;
+//                    std::cout << print_table(matching_tables.at(1)) << std::endl;
                 }
                 result = natural_equijoin<value>(matching_tables.at(0), matching_tables.at(1));
             }
@@ -155,17 +157,23 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
             if (!matching_tables.at(0).datum.empty()) {
                 // Computing the equi-join across all the tables being provided
                 result = matching_tables.at(0);
-                if (verbose)
-                    std::cout << print_table(result)<< std::endl;
-                for (size_t i = 1; i<matching_tables.size(); i++) {
-                    if (verbose)
-                        std::cout << print_table(matching_tables.at(i)) << std::endl;
+                if (verbose) {
+                    std::ofstream file{folder / (graph_grammar_entry_point.pattern_name+"("+std::to_string(versions++)+").ncsv")};
+                    serialised_nested_table(file, graph_grammar_entry_point.pattern_name, result);
+//                    std::cout << print_table(result) << std::endl;
+                } for (size_t i = 1; i<matching_tables.size(); i++) {
+                    if (verbose) {
+                        std::ofstream file{folder / (graph_grammar_entry_point.pattern_name+"("+std::to_string(versions++)+").ncsv")};
+                        serialised_nested_table(file, graph_grammar_entry_point.pattern_name, matching_tables.at(i));
+//                        std::cout << print_table(matching_tables.at(i)) << std::endl;
+                    }
                     result = natural_equijoin(result, matching_tables.at(i));
                     if (result.datum.empty()) break; // Stopping as soon as I reckon the table becomes empty
                     if (verbose) {
-                        std::cout << "with previous:" << std::endl;
-                        std::cout << print_table(result) << std::endl;
-                        std::cout << ":end with previous" << std::endl;
+//                        std::cout << "with previous:" << std::endl;
+                        std::ofstream file{folder / (graph_grammar_entry_point.pattern_name+"("+std::to_string(versions++)+").ncsv")};
+                        serialised_nested_table(file, graph_grammar_entry_point.pattern_name, result);
+//                        std::cout << ":end with previous" << std::endl;
                     }
                 }
             }
@@ -178,6 +186,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
             });
             for (const auto & optional_match_table : optional_match_tables) {
                 if (!optional_match_table.datum.empty()) {
+
 //                        std::cout << print_table(optional_match_table) << std::endl;
                     result = left_equijoin<value>(result, optional_match_table, abstract_true);
                 }
@@ -371,8 +380,10 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
             }
 
             if (verbose) {
-                std::cout << print_table(result) << std::endl;
-                std::cout << "~~~~~~~~~~~~~~~~~~~~~~~" << std::endl<< std::endl<< std::endl;
+                std::ofstream file{folder / ( graph_grammar_entry_point.pattern_name+"("+std::to_string(versions++)+").ncsv")};
+                serialised_nested_table(file, graph_grammar_entry_point.pattern_name, result);
+//                std::cout << print_table(result) << std::endl;
+//                std::cout << "~~~~~~~~~~~~~~~~~~~~~~~" << std::endl<< std::endl<< std::endl;
             }
         }
         map_orig_offset++;

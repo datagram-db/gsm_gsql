@@ -26,6 +26,7 @@
 #ifndef GSM_GSQL_GSM_OBJECT_H
 #define GSM_GSQL_GSM_OBJECT_H
 
+#include <iomanip>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -35,6 +36,7 @@
 
 #include <database/gsm_object_xi_content.h>
 
+struct delta_updates;
 
 struct gsm_object  {
     // Object's id
@@ -45,6 +47,7 @@ struct gsm_object  {
     std::vector<std::string>          xi;
     // Object's uncertainty scores
     std::vector<double>                                   scores;
+    // TODO: Provenance
     // Object's containment
     std::unordered_map<std::string, std::vector<gsm_object_xi_content>> phi;
     std::unordered_map<std::string, union_minimal> content;
@@ -56,6 +59,8 @@ struct gsm_object  {
      * @param old    Old object
      */
     void updateWith(const gsm_object& old);
+
+    void out_json(std::ostream &os, bool inserted  = false) const;
 
     gsm_object(uint_fast32_t id = 0, const std::vector<std::string> &ell = {}, const std::vector<std::string> &xi = {},
                const std::vector<double> &scores = {}, const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi = {});

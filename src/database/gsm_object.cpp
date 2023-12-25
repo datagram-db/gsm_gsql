@@ -59,3 +59,84 @@ bool gsm_object::operator==(const gsm_object &rhs) const {
 bool gsm_object::operator!=(const gsm_object &rhs) const {
     return !(rhs == *this);
 }
+
+
+#include "queries/delta_updates.h"
+
+void gsm_object::out_json(std::ostream &os, bool inserted) const {
+    // TODO:Score/Provenance
+    os << "{\"id\":" << id << ", \"ell\":[";
+    for (size_t i = 0, N = ell.size(); i<N; i++) {
+        os << std::quoted(ell.at(i));
+        if (i != (N-1)) os << ",";
+    }
+    os << "], \"xi\":[";
+    for (size_t i = 0, N = xi.size(); i<N; i++) {
+        os << std::quoted(xi.at(i));
+        if (i != (N-1)) os << ",";
+    }
+    os << "], \"properties\":{";
+    for (auto it = content.begin(), en = content.end(); it != en; ) {
+        os << std::quoted(it->first) << ":";
+        if (std::holds_alternative<std::string>(it->second)) {
+            os << std::quoted(std::get<std::string>(it->second));
+        } else {
+            os << std::quoted(std::to_string(std::get<double>(it->second)));
+        }
+        it++;
+        if (it != en) {
+            os << ", ";
+        }
+    }
+    os << "}, \"phi\":[";
+    std::map<std::string, std::map<size_t, std::vector<gsm_object_xi_content>>> P;
+    for (const auto& [k,v] : phi) {
+        for (const auto& x : v) {
+            P[k][x.id].emplace_back(x);
+        }
+    }
+    for (auto it1 = P.begin(), en1 = P.end(); it1 != en1; ) {
+        size_t i = 0;
+        for (auto it2 = it1->second.begin(), en2 = it1->second.end(); it2 != en2; ) {
+            for (auto it3 = it2->second.begin(), en3 = it2->second.end(); it3 != en3; ) {
+                os << "{\"containment\":" << std::quoted(it1->first)
+                   << ", \"content\":" << it2->first
+                   << ", \"properties\":{";
+                for (auto it = it3->property_values.begin(), en = it3->property_values.end(); it != en; ) {
+                    os << std::quoted(it->first) << ":";
+                    if (std::holds_alternative<std::string>(it->second)) {
+                        os << std::quoted(std::get<std::string>(it->second));
+                    } else {
+                        os << std::quoted(std::to_string(std::get<double>(it->second)));
+                    }
+                    it++;
+                    if (it != en) {
+                        os << ", ";
+                    }
+                }
+
+                // TODO!
+                os << R"(}, "score":{"type": "ProvPhi", "parent":)"
+                   << id << ",\"label\":"<< std::quoted(it1->first)
+                   << ",\"child\":" << it2->first << ",\"id\":" << (i++)
+                   << "}}"
+                        ;
+                it3++;
+                if (it3 != en3) {
+                    os << ",";
+                }
+            }
+            i++;
+            it2++;
+            if (it2 != en2) {
+                os << ",";
+            }
+        }
+        it1++;
+        if (it1 != en1) {
+            os << ",";
+        }
+    }
+    os << "], \"scores\":{\"type\": \"ProvObject\",\"object\":"<<id<<"}";
+    os << "}";
+}

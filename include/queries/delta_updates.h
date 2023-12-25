@@ -41,6 +41,8 @@ struct delta_updates {
     std::unordered_map<std::string, std::vector<size_t>> newly_inserted_vertices;
     roaring::Roaring64Map newIterationInsertedObjects;
     std::vector<size_t> no_inserted_node;
+    // Storing all the nodes that are removed
+    std::unordered_set<size_t> removed_objects;
 
 
     void clear_insertions();
@@ -108,13 +110,11 @@ struct delta_updates {
     }
 
     inline bool hasXBeenRemoved(size_t obj) const {
-        return removed_objects.contains(obj);
+        return (!replacement_map.contains(obj)) && removed_objects.contains(obj);
     }
 
 private:
 
-    // Storing all the nodes that are removed
-    std::unordered_set<size_t> removed_objects;
 };
 
 

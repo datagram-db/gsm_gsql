@@ -27,12 +27,16 @@
 #define GSM_GSQL_GSM_OBJECT_XI_CONTENT_H
 
 #include <cstdlib>
+#include <string>
+#include <unordered_map>
+#include "queries/DataPredicate.h"
 
 struct gsm_object_xi_content {
     size_t id;
     double score;
+    std::unordered_map<std::string,union_minimal> property_values;
 
-    gsm_object_xi_content(size_t id = 0, double score=1.0);
+    gsm_object_xi_content(size_t id = 0, double score=1.0, const std::unordered_map<std::string,union_minimal>& property_values = {});
     gsm_object_xi_content(const gsm_object_xi_content&) = default;
     gsm_object_xi_content(gsm_object_xi_content&&) = default;
     gsm_object_xi_content& operator=(const gsm_object_xi_content&) = default;
@@ -41,7 +45,7 @@ struct gsm_object_xi_content {
     bool operator!=(const gsm_object_xi_content &rhs) const;
 
     bool operator<(const gsm_object_xi_content &rhs) const {
-        return (id <rhs.id) || (id == rhs.id && (score == rhs.score));
+        return (id <rhs.id) || (id == rhs.id && (score == rhs.score) && (property_values == rhs.property_values));
     }
 };
 

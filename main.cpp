@@ -76,6 +76,8 @@ int main(int argc, char **argv) {
 
     closure result;
     script::compiler::ScriptVisitor::bindGSM(&result);
+    std::filesystem::path output_viz = std::filesystem::path("viz") / "data";
+
 
     if (script) {
         result.load_data_from_file(args::get(data)); // "./data/einstein.txt"
@@ -110,20 +112,26 @@ int main(int argc, char **argv) {
     // Loading the data
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // setting up the database
+    // TODO: 1) also loading edges with associated properties: this entails that the property
+    //         shall be (srcid,label,targtetid,edgeiD)
     result.load_data_from_file(args::get(data)); // "./data/einstein.txt"
     // loading the data from the file specification
 
-    // Plotting the loaded data if required
-    if (indot) {
-        std::vector<FlexibleGraph<std::string,std::string>> graphs;
-        result.asGraphs(graphs);
-        size_t idx = 1;
-        for (const auto& g : graphs){
-            std::ofstream f{args::get(data)+"_in_"+std::to_string(idx)+".dot"};
-            g.dot(f, false, "record"); f << std::endl;
-            idx++;
+    for (size_t i = 0, N = result.forloading->nGraphs; i<N; i++) {
+        auto output_viz_path = output_viz / std::to_string(i);
+        if (!std::filesystem::is_directory(output_viz_path) || !std::filesystem::exists(output_viz_path)) { // Check if src folder exists
+            std::filesystem::create_directory(output_viz_path); // create src folder
+        } else {
+            if (std::filesystem::is_regular_file(output_viz_path)) {
+                std::filesystem::remove(output_viz_path);
+                std::filesystem::create_directory(output_viz_path); // create src folder
+            } else {
+                for (const auto& entry : std::filesystem::directory_iterator(output_viz_path))
+                    std::filesystem::remove_all(entry.path());
+            }
         }
     }
+
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Starting to query
@@ -137,20 +145,100 @@ int main(int argc, char **argv) {
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    if (print) {
-        std::ofstream f{args::get(pattern)+"_debug_edge_matching.txt"};
-        result.pr.print_preliminary_edge_match_results(f);
-    }
+//    if (print) {
+//        std::ofstream f{args::get(pattern)+"_debug_edge_matching.txt"};
+//        result.pr.print_preliminary_edge_match_results(f);
+//    }
 
     if (outdot) {
-        std::vector<FlexibleGraph<std::string,std::string>> graphs;
-        result.generateGraphsFromMaterialisedViews(graphs);
+
+        std::vector<std::vector<gsm_object>> dbs;
+        result.fillInForSerialization(dbs);
+        std::vector<roaring::Roaring64Map> neue(dbs.size());
+//        result.generateGraphsFromMaterialisedViews(graphs);
         size_t idx = 1;
-        for (const auto& g : graphs){
-            std::ofstream f{args::get(data)+"_out_"+std::to_string(idx)+".dot"};
-            g.dot(f, false, "record"); f << std::endl;
+
+        for (const auto& json : dbs) {
+            {
+                auto output_viz_path = output_viz / std::to_string(idx-1);
+
+                std::ofstream f{output_viz_path / "result.json"};
+                f << "[";
+                for (size_t i = 0, N = json.size(); i<N; i++) {
+                    json.at(i).out_json(f);
+                    neue[idx-1].add(json.at(i).id);
+                    if (i != (N-1)) f <<", " << std::endl;
+                }
+                f << "]";
+            }
+
+
+
             idx++;
         }
+        // Plotting the loaded data if required
+        if (indot) {
+            std::vector<std::vector<gsm_object>> dbs2;
+//        std::vector<FlexibleGraph<std::string,std::string>> graphs;
+            result.asObjects(dbs2);
+            size_t idx2 = 1;
+            auto output_viz_path = output_viz / std::to_string(idx2-1);
+
+            for (const auto& json2 : dbs2){
+                std::ofstream f{output_viz_path / "input.json"};
+//            std::ofstream f{args::get(data)+"_out_"+std::to_string(idx)+".json"};
+                f << "[";
+                for (size_t i = 0, N = json2.size(); i<N; i++) {
+                    neue[idx2-1].remove(json2.at(i).id);
+                    json2.at(i).out_json(f);
+                    if (i != (N-1)) f <<", " << std::endl;
+                }
+                if (neue[idx2-1].cardinality()>0) {
+                    f<<","<<std::endl;
+                    size_t i = 1;
+                    for (size_t v : neue[idx2-1]) {
+                        result.delta_updates_per_graph.at(idx2-1).delta_plus_db.O.at(v).out_json(f, true);
+                        i++;
+                        if (i <= neue[idx2-1].cardinality())
+                            f <<", " << std::endl;
+                    }
+                }
+                f << "]";
+                idx2++;
+            }
+
+            for (size_t i = 0, N = result.delta_updates_per_graph.size(); i<N; i++) {
+                std::ofstream f{output_viz_path / "removed.json"};
+//            std::ofstream f{args::get(data)+"_out_"+std::to_string(idx)+".json"};
+                f << "[";
+                for (auto it = result.delta_updates_per_graph.at(i).removed_objects.begin(),
+                             en = result.delta_updates_per_graph.at(i).removed_objects.end();
+                     it != en; ) {
+                    f << *it;
+                    it++;
+                    if (it != en) f <<", " << std::endl;
+                }
+                f << "]";
+            }
+            for (size_t i = 0, N = result.delta_updates_per_graph.size(); i<N; i++) {
+                std::ofstream f{output_viz_path / "inserted.json"};
+//            std::ofstream f{args::get(data)+"_out_"+std::to_string(idx)+".json"};
+                f << "[";
+                for (auto it = neue[i].begin(),
+                             en = neue[i].end();
+                     it != en; ) {
+                    f << *it;
+                    it++;
+                    if (it != en) f <<", " << std::endl;
+                }
+                f << "]";
+            }
+        }
+//        for (const auto& g : graphs){
+//            std::ofstream f{args::get(data)+"_out_"+std::to_string(idx)+".dot"};
+//            g.dot(f, false, "record"); f << std::endl;
+//            idx++;
+//        }
     }
 
     if (benchmark_log) {

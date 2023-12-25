@@ -1,0 +1,182 @@
+# import os
+import json
+import os.path
+import sys
+
+import uvicorn
+from starlette.responses import HTMLResponse, Response, FileResponse
+from fastapi.responses import ORJSONResponse
+
+# import dash
+# import visdcc
+# import pandas as pd
+# import dash_core_components as dcc
+# import dash_html_components as html
+# from dash.dependencies import Input, Output, State
+#
+import parsers.NestedTables
+from parsers.GSMExt import GsmSpecification, gsm_object, to_vis_nodes, to_vis_network_phi, phi, to_vis_network_node
+from parsers.ReadGSMExt import serialize_gsm_model, deserialize_gsm_model, deserialize_gsm_file
+from parsers.SemiringProvenance import ProvenanceObject, provenance_object
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+origins = [
+    "http://localhost",
+    "http://localhost:9999",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+N_result = dict()
+E_result = dict()
+N_input = dict()
+E_input = dict()
+N_removed = dict()
+N_inserted = dict()
+
+@app.get("/morphisms/{folder}", response_class=HTMLResponse)
+async def morphisms(folder):
+    return parsers.NestedTables.generate_morphism_html(os.path.join(os.getcwd(), "data", folder), folder)
+
+def load_nodes_any(folder, N, file):
+    if folder not in N:
+        N[folder] = dict()
+        for obj in deserialize_gsm_file(os.path.join(os.getcwd(),"data",folder,file)):
+            N[folder][obj.id] = obj
+    return N
+
+def load_edges_any(folder, N, E, file):
+    N = load_nodes_any(folder, N, file)
+    if folder not in E:
+        E[folder] = to_vis_network_phi(N[folder].values())
+    return (N, E)
+
+def load_result_nodes(folder):
+    global N_result
+    N_result = load_nodes_any(folder, N_result, "result.json")
+    # if folder not in N:
+    #     N[folder] = dict()
+    #     for obj in deserialize_gsm_file(os.path.join(os.getcwd(),"data",folder,"result.json")):
+    #         N[folder][obj.id] = obj
+
+def load_input_nodes(folder):
+    global N_input
+    global N_removed
+    global N_inserted
+    with open(os.path.join(os.getcwd(),"data",folder,"removed.json"),"r") as f:
+        N_removed[folder] = set(json.load(f))
+    with open(os.path.join(os.getcwd(),"data",folder,"inserted.json"),"r") as f:
+        N_inserted[folder] = set(json.load(f))
+    N_input = load_nodes_any(folder, N_input, "input.json")
+
+def load_result_edges(folder):
+    global N_result
+    global E_result
+    (N_result, E_result) = load_edges_any(folder, N_result, E_result, "result.json")
+
+def load_input_edges(folder):
+    global N_input
+    global E_input
+    (N_input, E_input) = load_edges_any(folder, N_input, E_input, "input.json")
+
+@app.get("/result/nodes/{folder}")
+async def nodes(folder):
+    load_input_nodes(folder)
+    load_result_nodes(folder)
+    global N_result
+    return to_vis_nodes(N_result[folder].values(), None, N_inserted[folder])
+
+
+@app.get("/input/nodes/{folder}")
+async def inodes(folder):
+    load_input_nodes(folder)
+    global N_input
+    global N_removed
+    global N_inserted
+    return to_vis_nodes(N_input[folder].values(), N_removed[folder], N_inserted[folder])
+
+
+@app.get("/result/node/{folder}/{id}")
+async def node(folder, id):
+    load_input_nodes(folder)
+    load_result_nodes(folder)
+    global N_result
+    global N_inserted
+    return to_vis_network_node(N_result[folder][int(id)], None, N_inserted[folder])
+
+
+from fastapi.responses import JSONResponse
+
+@app.get("/javascript/{file}")
+def javascript(file):
+    return FileResponse(file)
+
+class CSSResponse(Response):
+    media_type = "text/css"
+
+@app.get("/css/{file}")
+def javascript(file, response_class=CSSResponse):
+    return FileResponse(file)
+
+@app.get("/input/node/{folder}/{id}")
+async def inode(folder, id):
+    load_input_nodes(folder)
+    global N_input
+    return to_vis_network_node(N_input[folder][int(id)])
+
+@app.get("/result/edges/{folder}")
+async def edges(folder):
+    load_result_edges(folder)
+    global E_result
+    return E_result[folder]
+
+@app.get("/input/edges/{folder}")
+async def iedges(folder):
+    load_input_edges(folder)
+    global E_input
+    return E_input[folder]
+
+@app.get("/result/graph/{folder}", response_class=HTMLResponse)
+async def graph(folder):
+    with open("test.html","r") as f:
+        return f.read().replace("§", folder).replace('£','result')
+
+@app.get("/input/graph/{folder}", response_class=HTMLResponse)
+async def graph(folder):
+    with open("test.html","r") as f:
+        content = f.read().replace("§", folder).replace('£','input')
+        pos = content.find("<div id=\"title\">")
+        result = content[:pos]+parsers.NestedTables.generate_morphism_html(os.path.join(os.getcwd(), "data"), folder)+content[pos:]
+        return result # f.read().replace("§", folder).replace('£','input')
+
+if __name__ == '__main__':
+    uvicorn.run(app, port=9999, workers=1)
+
+
+# # create app
+# # app = dash.Dash()
+# if __name__ == '__main__':
+#     f = deserialize_gsm_file("data/output/result.json")
+#     Model = [gsm_object(id=0,ell=["label"],xi=["value"],properties={"key":"value"},phi=[phi(0,"content",1,0)]),
+#              gsm_object(id=1,ell=["etichetta"],xi=["valore"],properties={"proprietà":"valore"})]
+#     s = to_vis_nodes(Model)
+#     p = to_vis_network_phi(Model)
+#     print(serialize_gsm_model(Model))
+#     print('serialized:', json.dumps(s))
+#     print('serialized:', json.dumps(p))
+#
+#     # serialized: {'boxes': [{'maxclass': 'newobj'}, {'maxclass': 'message'}, {'maxclass': 'int'}]}
+#
+#     # d2 = deserialize_gsm_model(s)
+#     # print('deserialized:', d2)
+#     #parsers.NestedTables.generate_morphism_html(sys.argv[1])

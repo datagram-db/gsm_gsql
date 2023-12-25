@@ -25,10 +25,10 @@
 
 #include "database/gsm_object_xi_content.h"
 
-gsm_object_xi_content::gsm_object_xi_content(size_t id, double score) : id(id), score(score) {}
+gsm_object_xi_content::gsm_object_xi_content(size_t id, double score, const std::unordered_map<std::string, union_minimal>& property_values) : id(id), score(score), property_values(property_values) {}
 
 bool gsm_object_xi_content::operator==(const gsm_object_xi_content &rhs) const {
-    return id == rhs.id && score == rhs.score;
+    return id == rhs.id && score == rhs.score && property_values == rhs.property_values;
 }
 
 bool gsm_object_xi_content::operator!=(const gsm_object_xi_content &rhs) const {

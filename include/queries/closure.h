@@ -63,6 +63,8 @@ void fill_vector_with_case(std::vector<T>& to_fill, const abstract_value& opts) 
 #include "delta_updates.h"
 #include "scriptv2/ScriptVisitor.h"
 
+
+
 /**
  * This class is referred to Closure as it wraps around both the loaded data and the intermediate values generating
  * the resulting graph as per matching.
@@ -79,6 +81,154 @@ struct closure {
     std::string empty_string;
     std::vector<gsm_object_xi_content> empty_content;
     bool isMaterialised = false;
+
+    void asObjects(std::vector<std::vector<gsm_object>>& graphs) const {
+        forloading->asObjects(graphs);
+    }
+
+    void fillInForSerialization(std::vector<std::vector<gsm_object>>& dbs) {
+        dbs.clear();
+        dbs.resize(delta_updates_per_graph.size());
+        generate_materialised_view();
+        std::vector<FlexibleGraph<std::string, std::string>> simpleGraphs;
+        simpleGraphs.resize(delta_updates_per_graph.size());
+        std::pair<size_t, size_t> cp;
+        std::vector<yaucl::structures::any_to_uint_bimap<size_t>> nodesBeingInsertedAlready(delta_updates_per_graph.size());
+        size_t offsetMainRegistryTable = 0;
+        std::vector<std::vector<size_t>> initialNodes(delta_updates_per_graph.size());
+        std::vector<std::unordered_map<size_t, size_t>> time(delta_updates_per_graph.size());
+        auto real_time_start = std::chrono::high_resolution_clock::now();
+        std::vector<std::unordered_map<size_t, gsm_object>> tmp;
+        tmp.resize(delta_updates_per_graph.size());
+        for (size_t i = 0, N = delta_updates_per_graph.size(); i<N; i++) {
+            initialNodes[i].reserve(N);
+            const auto& cn = forloading->all_indices.at(i).container_order;
+            if (cn.empty()) {
+                for (size_t j = 0, M = forloading->objectScores.at(i).size(); j<M; j++) {
+                    initialNodes[i].emplace_back(getOrDefault(delta_updates_per_graph.at(i).replacement_map, j, j));
+                }
+                // This implies that nodes are not contained between each other. So, any of these nodes will be the same
+            } else {
+                const auto& graph_index = cn.at(0);
+                for (size_t j = 0, M = graph_index.size(); j<M; j++) {
+                    initialNodes[i].emplace_back(getOrDefault(delta_updates_per_graph.at(i).replacement_map, graph_index.at(j), graph_index.at(j)));
+                }
+            }
+
+
+            for (const auto& [idX,object] : delta_updates_per_graph.at(i).delta_plus_db.O) {
+                if (delta_updates_per_graph.at(i).removed_objects.contains(idX)) {
+                    continue;
+                }
+                cp.first = i;
+                cp.second = idX;
+                auto& nodeMap = nodesBeingInsertedAlready[i];
+                auto& g = simpleGraphs[i];
+                size_t id = nodeMap.put(idX).first;
+                tmp[i][idX] = object;
+                size_t gid;
+                gid = g.addNewNodeWithLabel(std::to_string(idX));
+                DEBUG_ASSERT(id == gid);
+                offsetMainRegistryTable++;
+            }
+            for (const auto& [idX,object] : delta_updates_per_graph.at(i).delta_plus_db.O) {
+                if (delta_updates_per_graph.at(i).removed_objects.contains(idX))
+                    continue;
+//                if (idX == 16)
+//                    std::cout << "HERE" << std::endl;
+                for (const auto& [edgelabel,records] : object.phi) {
+                    size_t recordsId = 0;
+                    for (const auto& record: records) {
+                        if (delta_updates_per_graph.at(i).removed_objects.contains(record.id)) {
+                            recordsId++;
+                            continue;
+                        }
+                        const auto& map = nodesBeingInsertedAlready.at(i);
+                        auto src = map.getKey(idX);
+                        auto dst = map.signed_get(record.id);
+                        if (dst >= 0) {
+                            auto& g = simpleGraphs[i];
+                            g.addNewEdgeFromId(src, dst, std::to_string(recordsId++)+"_"+edgelabel);
+                        }
+                    }
+                }
+            }
+
+
+        }
+        for (size_t k = 0, N = delta_updates_per_graph.size(); k<N; k++) {
+            roaring::Roaring64Map visited;
+            std::vector<size_t> Stack;
+            auto& g = simpleGraphs[k];
+            for (size_t start_from : initialNodes[k]) {
+                g.g.topologicalSortUtil(nodesBeingInsertedAlready.at(k).getKey(start_from), visited, Stack);
+            }
+            for (size_t i = 0; i < g.g.V_size; i++)
+                if (!visited.contains(i))
+                    g.g.topologicalSortUtil(i, visited, Stack);
+            bool firstVisit = true;
+            std::reverse(Stack.begin(), Stack.end());
+            for (size_t v : Stack) {
+                if (firstVisit) {
+                    time[k][v] = 0;
+                    firstVisit = false;
+                } else {
+                    time[k][v] = 0;
+                    auto it = g.g.ingoing_edges.find(v);
+                    if (it != g.g.ingoing_edges.end()) {
+                        for (size_t edgeId : it->second)
+                            time[k][v] = std::max(time[k][g.g.edge_ids.at(edgeId).first], time[k][v]);
+                        time[k][v]++;
+                    }
+                }
+            }
+            for (size_t v = 0, vN = g.vertexSize(); v<vN; v++) {
+                size_t vt = time[k][v];
+                std::vector<size_t> edgesToRemove;
+                for (size_t edgeId : g.g.nodes.at(v)) {
+                    if (time[k][g.g.edge_ids.at(edgeId).second] <= vt) {
+                        edgesToRemove.emplace_back(edgeId);
+                    }
+                }
+                if (!edgesToRemove.empty()) {
+                    for (size_t edgeId : edgesToRemove) {
+                        remove_edge(&g.g, edgeId);
+                    }
+                }
+            }
+            auto& mp = tmp[k];
+            const auto& map = nodesBeingInsertedAlready.at(k);
+            for (auto& [idX, obj] : mp) {
+//                if (idX == 2)
+//                    std::cout << "HERE" << std::endl;
+                auto src = map.getKey(idX);
+                std::unordered_map<std::string, roaring::Roaring64Map> toRemove;
+                for (const auto& [keys,v] : obj.phi) {
+                    toRemove[keys].addRange(0, v.size());
+                }
+                for (const size_t edge_id : g.g.getOutgoingEdgesId(src)) {
+                    const std::string& label = g.getEdgeLabel(edge_id);
+                    size_t offset = label.find('_');
+                    size_t no = std::stoull(label.substr(0, offset));
+                    std::string labella = label.substr(offset+1);
+                    toRemove[labella].remove(no);
+                }
+                std::unordered_set<std::string> removeKeys;
+                for (auto& [keys,v] : obj.phi) {
+                    std::vector<size_t> cleared(toRemove[keys].begin(), toRemove[keys].end());
+                    std::sort(cleared.begin(), cleared.end());
+                    remove_index(v, cleared);
+                    if (v.empty())
+                        removeKeys.insert(keys);
+                }
+                for (const auto& k : removeKeys)
+                    obj.phi.erase(k);
+                dbs[k].emplace_back(obj);
+            }
+        }
+        auto real_time_end = std::chrono::high_resolution_clock::now();
+        materialise_time_final = std::chrono::duration<double, std::milli>(real_time_end-real_time_start).count();
+    }
 
     ~closure() {
         if (forloading) {
@@ -182,7 +332,7 @@ struct closure {
                 }
             }
         }
-        dependencies.dot(std::cout);
+//        dependencies.dot(std::cout);
         std::unordered_map<std::string, size_t> memento;
         auto tso = dependencies.g.topological_sort2(-1);
         for (size_t i = 0; i<N; i++) {
@@ -297,6 +447,7 @@ struct closure {
     /**
      * For plotting purposes, representing the loaded data as graphs
      */
+
     void asGraphs(std::vector<FlexibleGraph<std::string,std::string>>& graphs) const;
 
     /**
@@ -610,115 +761,20 @@ private:
         const nested_table& table;
         size_t record_id;
         const closure& clos;
-
+        const std::vector<std::unordered_map<std::string, std::pair<std::vector<std::string>, std::unordered_map<size_t, nested_table>>>>& ptr;
     public:
-        Interpret(size_t graphId, size_t patternId, const std::vector<std::string> &schema, const nested_table &table,
-                  size_t recordId, const closure &clos) : graph_id(graphId), pattern_id(patternId), schema(schema),
-                                                          table(table), record_id(recordId), clos(clos) {}
+        Interpret(size_t graphId,
+                  size_t patternId,
+                  const std::vector<std::string> &schema,
+                  const nested_table &table,
+                  size_t recordId,
+                  const closure &clos,
+                  const std::vector<std::unordered_map<std::string, std::pair<std::vector<std::string>, std::unordered_map<size_t, nested_table>>>>& ptr) : graph_id(graphId), pattern_id(patternId), schema(schema),
+                                                          table(table), record_id(recordId), clos(clos), ptr{ptr} {}
 
         std::any interpret_closure_evaluate(rewrite_expr* ptr) const;
 
-        bool interpret(const test_pred& ptr) const {
-            switch (ptr.t) {
-                case test_pred::TEST_PRED_CASE_EQ: {
-                    std::string L, R;
-                    if (std::holds_alternative<std::string>(ptr.args.at(0))) {
-                        L = std::get<std::string>(ptr.args.at(0));
-                    } else {
-                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(0)).get();
-                        L = std::any_cast<std::string>(interpret_closure_evaluate(j));
-                    }
-                    if (std::holds_alternative<std::string>(ptr.args.at(1))) {
-                        R = std::get<std::string>(ptr.args.at(1));
-                    } else {
-                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(1)).get();
-                        R = std::any_cast<std::string>(interpret_closure_evaluate(j));
-                    }
-                    return L == R;
-                }
-                    break;
-                case test_pred::TEST_PRED_CASE_NEQ: {
-                    std::string L, R;
-                    if (std::holds_alternative<std::string>(ptr.args.at(0))) {
-                        L = std::get<std::string>(ptr.args.at(0));
-                    } else {
-                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(0)).get();
-                        L = std::any_cast<std::string>(interpret_closure_evaluate(j));
-                    }
-                    if (std::holds_alternative<std::string>(ptr.args.at(1))) {
-                        R = std::get<std::string>(ptr.args.at(1));
-                    } else {
-                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(1)).get();
-                        R = std::any_cast<std::string>(interpret_closure_evaluate(j));
-                    }
-                    return L != R;
-                } break;
-                case test_pred::TEST_PRED_CASE_LT: {
-                    std::string L, R;
-                    if (std::holds_alternative<std::string>(ptr.args.at(0))) {
-                        L = std::get<std::string>(ptr.args.at(0));
-                    } else {
-                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(0)).get();
-                        L = std::any_cast<std::string>(interpret_closure_evaluate(j));
-                    }
-                    if (std::holds_alternative<std::string>(ptr.args.at(1))) {
-                        R = std::get<std::string>(ptr.args.at(1));
-                    } else {
-                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(1)).get();
-                        R = std::any_cast<std::string>(interpret_closure_evaluate(j));
-                    }
-                    try
-                    {
-                        return std::stod(L) < std::stod(R);
-                    }
-                    catch(...)
-                    {
-                        return false;
-                    }
-                }
-                    break;
-                case test_pred::TEST_PRED_CASE_LEQ: {
-                    std::string L, R;
-                    if (std::holds_alternative<std::string>(ptr.args.at(0))) {
-                        L = std::get<std::string>(ptr.args.at(0));
-                    } else {
-                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(0)).get();
-                        L = std::any_cast<std::string>(interpret_closure_evaluate(j));
-                    }
-                    if (std::holds_alternative<std::string>(ptr.args.at(1))) {
-                        R = std::get<std::string>(ptr.args.at(1));
-                    } else {
-                        auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(1)).get();
-                        R = std::any_cast<std::string>(interpret_closure_evaluate(j));
-                    }
-                    try
-                    {
-                        return std::stod(L) <= std::stod(R);
-                    }
-                    catch(...)
-                    {
-                        return false;
-                    }
-                }
-                    break;
-                case test_pred::TEST_PRED_CASE_AND:
-                {
-                    auto l = interpret(ptr.child_logic.at(0));
-                    if (!l) return false;
-                    return interpret(ptr.child_logic.at(1));
-                }
-                    break;
-                case test_pred::TEST_PRED_CASE_OR: {
-                    auto l = interpret(ptr.child_logic.at(0));
-                    if (l) return true;
-                    return interpret(ptr.child_logic.at(1));
-                }
-                    break;
-                case test_pred::TRUE:
-                    return true;
-                    break;
-            }
-        }
+        bool interpret(const test_pred& ptr) const;
     };
     
 
@@ -845,6 +901,8 @@ private:
             for (size_t time = 0, T = g.container_order.size(); time<T; time++)
                 // Visiting all the vertices associated to the same time
                 for (const auto& vertex : g.container_order.at(T-time-1)) {
+//                    if (vertex == 22)
+//                        std::cout << "HERE" << std::endl;
 
                     /// TODO: sort the patterns in dependency order, i.e., depending which should be run first
                     ///       This needs to be inferred previously
@@ -907,13 +965,18 @@ private:
                                             }
                                         }
                                     }
-                                    if (skip)
+                                    if (skip) {
+                                        table_offset++;
                                         continue;
+                                    }
                                 }
 
-                                Interpret I(graph_id, pattern_id, pattern_result.first, it->second, table_offset, *this);
+                                Interpret I(graph_id, pattern_id, pattern_result.first, it->second, table_offset, *this, pr.morphisms);
                                 if (pattern.has_where) {
-                                    if (!I.interpret(pattern.where)) continue;
+                                    if (!I.interpret(pattern.where)) {
+                                        table_offset++;
+                                        continue;
+                                    }
                                 }
 
                                 for (const auto& operation : pattern.rwr_to) {

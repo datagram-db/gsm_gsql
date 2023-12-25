@@ -15,11 +15,11 @@ public:
     T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, 
     T__7 = 8, T__8 = 9, T__9 = 10, T__10 = 11, T__11 = 12, T__12 = 13, T__13 = 14, 
     T__14 = 15, T__15 = 16, T__16 = 17, T__17 = 18, T__18 = 19, T__19 = 20, 
-    T__20 = 21, T__21 = 22, T__22 = 23, T__23 = 24, T__24 = 25, WHERE = 26, 
-    IF = 27, THEN = 28, ELSE = 29, AS = 30, VEC = 31, REWRITE_TO = 32, FORALL = 33, 
-    QM = 34, EQ = 35, STAR = 36, LPAR = 37, RPAR = 38, COL = 39, QPAR = 40, 
-    PPAR = 41, EscapedString = 42, OTHERS = 43, SPACE = 44, COMMENT = 45, 
-    LINE_COMMENT = 46
+    T__20 = 21, T__21 = 22, T__22 = 23, T__23 = 24, T__24 = 25, T__25 = 26, 
+    T__26 = 27, T__27 = 28, WHERE = 29, IF = 30, THEN = 31, ELSE = 32, AS = 33, 
+    VEC = 34, REWRITE_TO = 35, FORALL = 36, QM = 37, EQ = 38, STAR = 39, 
+    LPAR = 40, RPAR = 41, COL = 42, QPAR = 43, PPAR = 44, EscapedString = 45, 
+    OTHERS = 46, SPACE = 47, COMMENT = 48, LINE_COMMENT = 49
   };
 
   enum {
@@ -423,6 +423,18 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
+  class  MatchedContext : public Test_exprContext {
+  public:
+    MatchedContext(Test_exprContext *ctx);
+
+    std::vector<antlr4::tree::TerminalNode *> OTHERS();
+    antlr4::tree::TerminalNode* OTHERS(size_t i);
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
   class  Eq_testContext : public Test_exprContext {
   public:
     Eq_testContext(Test_exprContext *ctx);
@@ -460,6 +472,18 @@ public:
     simple_graph_grammarParser::Test_expr_sideContext *dst = nullptr;
     std::vector<Test_expr_sideContext *> test_expr_side();
     Test_expr_sideContext* test_expr_side(size_t i);
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  UnmatchedContext : public Test_exprContext {
+  public:
+    UnmatchedContext(Test_exprContext *ctx);
+
+    std::vector<antlr4::tree::TerminalNode *> OTHERS();
+    antlr4::tree::TerminalNode* OTHERS(size_t i);
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
 

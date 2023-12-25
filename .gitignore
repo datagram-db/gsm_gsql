@@ -43,9 +43,13 @@ build/
 
 ### Mac OS ###
 .DS_Store
-/gsm_example.yaml.gsm
+/data/gsm_example.yaml.gsm
 /cmake-build-debug/
 /cmake-build-release/
 /cmake-build-debug/
 /dist/
-
+/viz/venv/*
+/viz/data/0/
+*.ncsv
+/viz/.idea/
+__pycache__

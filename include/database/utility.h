@@ -119,6 +119,46 @@ tabulate::Table print_table(const nested_table& table) {
     return t;
 }
 
+#include <iomanip>
+
+static inline
+void serialised_nested_table(std::ostream& oss, const std::string& relation_name, const nested_table& table, size_t tab = 1) {
+    std::string tabs(tab, '\t');
+    oss << relation_name << "(";
+    for (size_t i = 0, N = table.Schema.size(); i<N; i++) {
+        oss << std::quoted(table.Schema.at(i));
+        if (i != (N-1))
+            oss << ", ";
+    }
+    oss << ") {" << std::endl << tabs;
+    for (size_t i = 0, N = table.datum.size(); i<N; i++) {
+        oss << "[";
+        auto ptr = table.datum.at(i);
+        for (size_t j = 0, M = table.Schema.size(); j<M; j++) {
+            auto cell = ptr.at(j);
+            if (!cell.isNested) {
+                if (std::holds_alternative<bool>(cell.val)) {
+                    oss << "NULL";
+                } else if (std::holds_alternative<double>(cell.val)) {
+                    oss << std::to_string(std::get<double>(cell.val));
+                } else if (std::holds_alternative<std::string>(cell.val)) {
+                    oss << std::quoted(std::get<std::string>(cell.val));
+                } else if (std::holds_alternative<size_t>(cell.val)) {
+                    oss << std::to_string(std::get<size_t>(cell.val));
+                }
+            } else {
+                oss << "@";
+                serialised_nested_table(oss, table.Schema.at(j), cell.table, tab+1);
+            }
+            if (j != (M-1))
+                oss << ", ";
+        }
+        oss << "]" << std::endl;
+        if (i < (N-1)) oss << std::string(tab, '\t');;
+    }
+    oss << "}";
+}
+
 #define PRINT_TABLE(t, os) os << t << std::endl
 
 static inline

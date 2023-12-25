@@ -46,12 +46,15 @@ struct test_pred {
         TEST_PRED_CASE_AND,
         TEST_PRED_CASE_OR,
         TEST_PRED_CASE_SCRIPT,
-        TRUE
+        TRUE,
+        MATCHED,
+        UNMATCHED
     };
     cases t = TRUE;
     std::vector<test_side> args;
     std::vector<test_pred> child_logic;
     std::string nsoe;
+    std::string pattern_matched, variable_matched;
     DEFAULT_CONSTRUCTORS(test_pred)
 };
 
@@ -83,6 +86,7 @@ struct rewrite_expr {
     std::shared_ptr<rewrite_expr>   ptr_or_else=nullptr;        // If an IFTE_RW, this represents the else branch. Otherwise, it represents the content from which retrieve the content to associate to the function
     test_pred      ifcond;                                        // If an IFTE_RW, this represents the condition.
     std::string prop;                                           // Variable name, or property text
+
 
     rewrite_expr() : t{NONE_CASES_REWRITE}, id{0}, ptr_or_else{nullptr}, pi_key_arg_or_then{nullptr}, prop{} {
 //        std::shared_ptr<rewrite_expr> o{nullptr};
@@ -198,10 +202,13 @@ struct node_match {
                     const auto& candidateNodeMatch = n.var.at(0);
                     if ((!hasRequiredMatch.contains(candidateNodeMatch)) || (!hasRequiredMatch.contains(n_orig.var.at(0)))) {
                         if ((candidateNodeMatch != mainMatchVarName) && (!hasRequiredMatch.contains(candidateNodeMatch))) {
+                            // determining the optionality via the question mark
                             if (e.question_mark) {
                                 optional_node_vars.insert(candidateNodeMatch);
                             } else {
                                 hasRequiredMatch.insert(candidateNodeMatch);
+                                // If something is a required match, it entails that the match is no
+                                // more optional
                                 optional_node_vars.erase(candidateNodeMatch);
                             }
                         }
@@ -239,6 +246,30 @@ struct node_match {
 
 class GSMPatternVisitor : public simple_graph_grammarBaseVisitor {
 public:
+
+    std::any visitMatched(simple_graph_grammarParser::MatchedContext *ctx) override {
+        if (ctx) {
+            test_pred pred;
+            pred.t = test_pred::MATCHED;
+            pred.nsoe = ctx->OTHERS(0)->getText();
+            pred.pattern_matched = ctx->OTHERS(1)->getText();
+            pred.variable_matched = ctx->OTHERS(2)->getText();
+            return {pred};
+        }
+        return {};
+    }
+
+    std::any visitUnmatched(simple_graph_grammarParser::UnmatchedContext *ctx) override {
+        if (ctx) {
+            test_pred pred;
+            pred.t = test_pred::UNMATCHED;
+            pred.nsoe = ctx->OTHERS(0)->getText();
+            pred.pattern_matched = ctx->OTHERS(1)->getText();
+            pred.variable_matched = ctx->OTHERS(2)->getText();
+            return {pred};
+        }
+        return {};
+    }
 
     std::any visitScript(simple_graph_grammarParser::ScriptContext *ctx) override {
         std::shared_ptr<rewrite_expr> ptr{nullptr};
@@ -314,7 +345,7 @@ public:
         if (ctx) {
             std::shared_ptr<rewrite_expr> result = std::make_shared<rewrite_expr>();
             result->t = rewrite_expr::IFTE_RW;
-            std::cout << visit(ctx->ifcond).type().name() << std::endl;
+//            std::cout << visit(ctx->ifcond).type().name() << std::endl;
             result->ifcond = std::move(std::any_cast<test_pred>(visit(ctx->ifcond)));
             result->pi_key_arg_or_then = std::any_cast< std::shared_ptr<rewrite_expr>>(visit(ctx->then_effect));
             if (ctx->else_effect) {

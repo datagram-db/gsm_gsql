@@ -37,6 +37,7 @@ void closure::load_query_from_file(const std::string& filename) {
     GSMPatternVisitor pv;
     // Loading the query from the visitor
     vl = std::any_cast<std::vector<node_match>>(pv.visit(parser.all_matches()));
+    // Sorting the patterns according to the order of execution. TODO: improve, depending on the pattern analysis
     sortVL();
     n_patterns = vl.size();
     query_name = filename;
@@ -320,7 +321,7 @@ void closure::interpret_closure_set(rewrite_expr *ptr, size_t graph_id, size_t p
                                     std::any match_rhs) /** non-const!*/ {
     if (!ptr)
         return;
-    Interpret I(graph_id, pattern_id, schema, table, record_id, *this);
+    Interpret I(graph_id, pattern_id, schema, table, record_id, *this, pr.morphisms);
     switch (ptr->t) {
         case rewrite_expr::SCRIPT_CASE:
             // Ignoring setting the expression
@@ -566,5 +567,271 @@ std::any closure::Interpret::interpret_closure_evaluate(rewrite_expr *ptr) const
 
         default:
             throw std::runtime_error("UNSUPPORTED OPERATION (FUTURE)");
+    }
+}
+
+static inline bool var_extractor(const test_pred& ptr,
+                                 size_t& offsetForStar,
+                                 size_t& offsetForValue,
+                                 size_t& offsetNested,
+                                 const std::string& _for_match,
+                                 const std::vector<std::string>& schema,
+                                 const nested_table& table) {
+    for (size_t i = 0, N = schema.size(); i<N; i++) {
+        if (schema.at(i) == "*")
+            offsetForStar = i;
+        else if (schema.at(i) == _for_match)
+            offsetForValue = i;
+        if (offsetForValue != (size_t)-1)
+            break;
+    }
+    if ((offsetForValue == (size_t)-1)) {
+        DEBUG_ASSERT(!table.datum.empty());
+        DEBUG_ASSERT(table.datum.at(0).at(offsetForStar).isNested);
+        const auto& access = table.datum.at(0).at(offsetForStar).table.Schema;
+        for (size_t i = 0, N = access.size(); i<N; i++) {
+            if (access.at(i) == ptr.variable_matched) {
+                offsetNested = i;
+                break;
+            }
+        }
+        if ((offsetNested) == (size_t)-1)
+            return false;
+    }
+    return true;
+}
+
+bool closure::Interpret::interpret(const test_pred &ptr) const {
+    switch (ptr.t) {
+        case test_pred::TEST_PRED_CASE_EQ: {
+            std::string L, R;
+            if (std::holds_alternative<std::string>(ptr.args.at(0))) {
+                L = std::get<std::string>(ptr.args.at(0));
+            } else {
+                auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(0)).get();
+                L = std::any_cast<std::string>(interpret_closure_evaluate(j));
+            }
+            if (std::holds_alternative<std::string>(ptr.args.at(1))) {
+                R = std::get<std::string>(ptr.args.at(1));
+            } else {
+                auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(1)).get();
+                R = std::any_cast<std::string>(interpret_closure_evaluate(j));
+            }
+            return L == R;
+        }
+            break;
+        case test_pred::TEST_PRED_CASE_NEQ: {
+            std::string L, R;
+            if (std::holds_alternative<std::string>(ptr.args.at(0))) {
+                L = std::get<std::string>(ptr.args.at(0));
+            } else {
+                auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(0)).get();
+                L = std::any_cast<std::string>(interpret_closure_evaluate(j));
+            }
+            if (std::holds_alternative<std::string>(ptr.args.at(1))) {
+                R = std::get<std::string>(ptr.args.at(1));
+            } else {
+                auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(1)).get();
+                R = std::any_cast<std::string>(interpret_closure_evaluate(j));
+            }
+            return L != R;
+        } break;
+        case test_pred::TEST_PRED_CASE_LT: {
+            std::string L, R;
+            if (std::holds_alternative<std::string>(ptr.args.at(0))) {
+                L = std::get<std::string>(ptr.args.at(0));
+            } else {
+                auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(0)).get();
+                L = std::any_cast<std::string>(interpret_closure_evaluate(j));
+            }
+            if (std::holds_alternative<std::string>(ptr.args.at(1))) {
+                R = std::get<std::string>(ptr.args.at(1));
+            } else {
+                auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(1)).get();
+                R = std::any_cast<std::string>(interpret_closure_evaluate(j));
+            }
+            try
+            {
+                return std::stod(L) < std::stod(R);
+            }
+            catch(...)
+            {
+                return false;
+            }
+        }
+            break;
+        case test_pred::TEST_PRED_CASE_LEQ: {
+            std::string L, R;
+            if (std::holds_alternative<std::string>(ptr.args.at(0))) {
+                L = std::get<std::string>(ptr.args.at(0));
+            } else {
+                auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(0)).get();
+                L = std::any_cast<std::string>(interpret_closure_evaluate(j));
+            }
+            if (std::holds_alternative<std::string>(ptr.args.at(1))) {
+                R = std::get<std::string>(ptr.args.at(1));
+            } else {
+                auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(1)).get();
+                R = std::any_cast<std::string>(interpret_closure_evaluate(j));
+            }
+            try
+            {
+                return std::stod(L) <= std::stod(R);
+            }
+            catch(...)
+            {
+                return false;
+            }
+        }
+            break;
+        case test_pred::TEST_PRED_CASE_AND:
+        {
+            auto l = interpret(ptr.child_logic.at(0));
+            if (!l) return false;
+            return interpret(ptr.child_logic.at(1));
+        }
+            break;
+        case test_pred::TEST_PRED_CASE_OR: {
+            auto l = interpret(ptr.child_logic.at(0));
+            if (l) return true;
+            return interpret(ptr.child_logic.at(1));
+        }
+            break;
+        case test_pred::TRUE:
+            return true;
+            break;
+        case test_pred::TEST_PRED_CASE_SCRIPT: {
+            std::stringstream ss;
+            ss << ptr.nsoe;
+            return script::compiler::ScriptVisitor::eval(ss, schema, table.datum.at(record_id))->run()->toBoolean();
+        }
+            break;
+        case test_pred::MATCHED: {
+            auto it = this->ptr.at(graph_id).find(ptr.pattern_matched);
+            if (it == this->ptr.at(graph_id).end())
+                return false;
+
+            std::unordered_set<size_t> currentMatches;
+            {
+                size_t offsetForStar1 = -1;
+                size_t offsetForValue1 = -1;
+                size_t offsetNested1 = -1;
+                if (!var_extractor(ptr, offsetForStar1, offsetForValue1, offsetNested1, ptr.nsoe, schema, table))
+                    return false;
+                if (offsetNested1 == (size_t)(-1)) {
+                    if (!std::holds_alternative<size_t>(
+                            table.datum.at(record_id).at(offsetForValue1).val))
+                        return false;
+                    currentMatches.insert(
+                            std::get<size_t>(
+                                    table.datum.at(record_id).at(offsetForValue1).val));
+                } else {
+                    if (!table.datum.at(record_id).at(offsetForValue1).isNested)
+                        return false;
+                    for (const auto& row :
+                            table.datum.at(record_id).at(offsetForValue1).table.datum) {
+                        if (!std::holds_alternative<size_t>(row.at(offsetNested1).val))
+                            return false;
+                        else
+                            currentMatches.insert(
+                                    std::get<size_t>(row.at(offsetNested1).val));
+                    }
+                }
+            }
+            if (currentMatches.empty())
+                return false;
+
+            size_t offsetForStar = -1;
+            size_t offsetForValue = -1;
+            size_t offsetNested = -1;
+            const std::string& _for_match = ptr.variable_matched;
+            const nested_table& table2 = it->second.second.begin()->second;
+            if (!var_extractor(ptr, offsetForStar, offsetForValue, offsetNested, ptr.variable_matched, it->second.first, table2))
+                return false;
+
+            for (const auto& [k,tablese] : it->second.second) {
+                for (size_t i = 0, N = tablese.datum.size(); i<N; i++) {
+                    if ((offsetForStar==(size_t)-1)) {
+                        if (std::holds_alternative<size_t>(tablese.datum.at(i).at(offsetForValue).val)) {
+                            if (currentMatches.contains(std::get<size_t>(tablese.datum.at(i).at(offsetForValue).val)))
+                                return true;
+                        }
+                    } else {
+                        if (!tablese.datum.at(i).at(offsetForStar).isNested)
+                            return false;
+                        for (const auto& row : tablese.datum.at(i).at(offsetForStar).table.datum) {
+                            if (std::holds_alternative<size_t>(row.at(offsetForStar).val)) {
+                                if (currentMatches.contains(std::get<size_t>(row.at(offsetNested).val)))
+                                    return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+            break;
+        case test_pred::UNMATCHED: {
+            auto it = this->ptr.at(graph_id).find(ptr.pattern_matched);
+            if (it == this->ptr.at(graph_id).end())
+                return false;
+
+            std::unordered_set<size_t> currentMatches;
+            {
+                size_t offsetForStar1 = -1;
+                size_t offsetForValue1 = -1;
+                size_t offsetNested1 = -1;
+                if (!var_extractor(ptr, offsetForStar1, offsetForValue1, offsetNested1, ptr.nsoe, schema, table))
+                    return false;
+                if (offsetNested1 == (size_t)(-1)) {
+                    const auto&x =
+                            table.datum.at(record_id).at(offsetForValue1).val;
+                    if (std::holds_alternative<size_t>(x))
+                        currentMatches.insert(
+                                std::get<size_t>(
+                                        table.datum.at(record_id).at(offsetForValue1).val));
+                } else {
+                    if (!table.datum.at(record_id).at(offsetForValue1).isNested)
+                        return false;
+                    for (const auto& row :
+                            table.datum.at(record_id).at(offsetForValue1).table.datum) {
+                        if (std::holds_alternative<size_t>(row.at(offsetNested1).val))
+                            currentMatches.insert(
+                                    std::get<size_t>(row.at(offsetNested1).val));
+                    }
+                }
+            }
+            if (currentMatches.empty())
+                return false;
+
+            size_t offsetForStar = -1;
+            size_t offsetForValue = -1;
+            size_t offsetNested = -1;
+            const std::string& _for_match = ptr.variable_matched;
+            if (!var_extractor(ptr, offsetForStar, offsetForValue, offsetNested, ptr.variable_matched, it->second.first, it->second.second.begin()->second))
+                return false;
+
+            for (const auto& [k,tablese] : it->second.second) {
+                for (size_t i = 0, N = tablese.datum.size(); i<N; i++) {
+                    if ((offsetForStar==(size_t)-1)) {
+                        if (std::holds_alternative<size_t>(tablese.datum.at(i).at(offsetForValue).val)) {
+                            if (currentMatches.contains(std::get<size_t>(tablese.datum.at(i).at(offsetForValue).val)))
+                                return false;
+                        }
+                    } else {
+                        if (!tablese.datum.at(i).at(offsetForStar).isNested)
+                            return false;
+                        for (const auto& row : tablese.datum.at(i).at(offsetForStar).table.datum) {
+                            if (std::holds_alternative<size_t>(row.at(offsetForStar).val)) {
+                                if (currentMatches.contains(std::get<size_t>(row.at(offsetNested).val)))
+                                    return false;
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+            break;
     }
 }

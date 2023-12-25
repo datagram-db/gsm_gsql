@@ -1,5 +1,5 @@
 p1 = (A)--[l]->(T)                   // Graph matching, First pattern
-     WHERE (𝜉 0 @ A) = k
+     where (𝜉 0 @ A) = k
 
      ↪
        del A                                             // Removing a node

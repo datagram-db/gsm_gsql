@@ -38,6 +38,8 @@ test_expr: src=test_expr_side '=' dst=test_expr_side #eq_test
          | src=test_expr '∧' dst=test_expr           #and_test
          | LPAR test_expr RPAR                       #par_test
          | 'TEST' EscapedString                      #script_test
+         | OTHERS 'unmatched' OTHERS '.' OTHERS      #unmatched
+         | OTHERS 'matched' OTHERS '.' OTHERS        #matched
          ;
 
 test_expr_side : rewrite_expr #test_data

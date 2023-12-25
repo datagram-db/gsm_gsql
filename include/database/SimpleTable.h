@@ -254,6 +254,17 @@ SimpleTable<D> left_equijoin(const SimpleTable<D>& lhs, const SimpleTable<D>& rh
             it2++;
         }
     }
+    while (it != en) {
+        for (const auto& lR : it->second) {
+//                for (const auto& rR : it2->second) {
+            auto v = it->first;
+            v.insert(v.end(), lR.begin(), lR.end());
+            v.insert(v.end(), remainingV.begin(), remainingV.end());
+            result.datum.emplace_back(v);
+//                }
+        }
+        it++;
+    }
     return result;
 }
 

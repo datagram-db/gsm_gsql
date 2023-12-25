@@ -915,8 +915,11 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
         case CeilE:
             return double_(std::ceil(arrayList[0]->toDouble()));
 
-        case ConcatE:
-            return string_(arrayList[0]->run()->toString()+arrayList[1]->run()->toString());
+        case ConcatE: {
+            auto f = arrayList[0]->run()->toString();
+            auto s = arrayList[1]->run()->toString();
+            return string_(f+s);
+        }
 
         case GtE:
         {

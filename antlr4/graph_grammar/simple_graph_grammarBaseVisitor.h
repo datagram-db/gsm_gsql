@@ -103,6 +103,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitMatched(simple_graph_grammarParser::MatchedContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitEq_test(simple_graph_grammarParser::Eq_testContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -112,6 +116,10 @@ public:
   }
 
   virtual std::any visitLt_test(simple_graph_grammarParser::Lt_testContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitUnmatched(simple_graph_grammarParser::UnmatchedContext *ctx) override {
     return visitChildren(ctx);
   }
 

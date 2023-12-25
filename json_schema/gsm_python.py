@@ -9,22 +9,22 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Extra, Field
 
-
 class PhiItem(BaseModel):
     containment: str = Field(
         description='the containment relation associating the parent object to the included child',
     )
     content: int = Field(description='object id providing a content to the object')
+    properties: Dict[str, str] = Field(
+        description='key-value representation associated to each containment',
+    )
     score: Optional[float] = Field(
         '1.0',
         description='confidence value of the parent object containing the content object',
     )
 
-
 class GsmSpecification(BaseModel):
     class Config:
         extra = Extra.forbid
-
     id: int = Field(description='A unique identifier for an GSM object')
     scores: List[float] = Field(
         description='list of confidence scores associated to the object',
