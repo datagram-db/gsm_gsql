@@ -53,3 +53,4 @@ build/
 *.ncsv
 /viz/.idea/
 __pycache__
+viz/parsers/__pycache__/
