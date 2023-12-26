@@ -2,13 +2,24 @@ cmake_minimum_required(VERSION 3.22.1)
 project(gsm2)
 set(CMAKE_CXX_STANDARD 23)
 
+Include(FetchContent)
+FetchContent_Declare(
+        Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG        v3.0.1 # or a later release
+)
+FetchContent_MakeAvailable(Catch2)
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+include(CTest)
+include(Catch)
+
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
     message(WARNING "Compiling in debug mode")
     add_compile_definitions(DEBUG)
     set(CMAKE_CXX_FLAGS_DEBUG "-g")
 else()
-    message(WARNING "Compiling in optimized mode. Level=2")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+    message(WARNING "Compiling in optimized mode. Level=3")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
 include_directories(submodules/args)
@@ -102,6 +113,9 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/lib)
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
+
 add_executable(gsm_gsql_script src/tests/script_runs.cpp)
-target_link_libraries(gsm_gsql_script gtest_main gsm_script gsm2)
-gtest_discover_tests(gsm_gsql_script)
+#target_link_libraries(gsm_gsql_script gtest_main gsm_script gsm2)
+#gtest_discover_tests(gsm_gsql_script)
+target_link_libraries(gsm_gsql_script PRIVATE Catch2::Catch2WithMain gsm_script gsm2)
+catch_discover_tests(gsm_gsql_script)
