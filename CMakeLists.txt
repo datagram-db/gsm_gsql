@@ -108,10 +108,10 @@ target_link_libraries(gsm2 antlr4_static yaucl_structures roaring  yaucl_hashing
 add_executable(gsm2_server main.cpp)
 target_link_libraries(gsm2_server  antlr4_static yaucl_structures roaring  yaucl_hashing yaucl_graph  gsm2 gsm_script)
 
-enable_testing ()
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-link_directories(${CMAKE_CURRENT_BINARY_DIR}/lib)
-include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+#enable_testing ()
+#set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+#link_directories(${CMAKE_CURRENT_BINARY_DIR}/lib)
+#include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
 
 add_executable(gsm_gsql_script src/tests/script_runs.cpp)
