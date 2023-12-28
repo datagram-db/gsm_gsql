@@ -1,0 +1,9 @@
+(1)--[i]->(2)
+(3)--[ii]->(4)
+
+(1:["hello"]=["val1"]{})
+(3:["world"]=["val2"]{})
+(5:["new"]=["node"]{"this":2.3;"value":+5}) /// adding a new non-linked node
+[i:["this","is"]{}]
+[ii:["a","label"]{}]
+[iii:["missing!"]{"no":"values"}]           /// No edge being referenced!

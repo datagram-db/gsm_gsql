@@ -1,3 +1,12 @@
+__author__ = "Giacomo Bergami"
+__copyright__ = "Copyright 2023"
+__credits__ = ["Giacomo Bergami"]
+__license__ = "GPL"
+__version__ = "3.0"
+__maintainer__ = "Giacomo Bergami"
+__email__ = "bergamigiacomo@gmail.com"
+__status__ = "Production"
+
 # import os
 import json
 import os.path
