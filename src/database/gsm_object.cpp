@@ -65,6 +65,7 @@ bool gsm_object::operator!=(const gsm_object &rhs) const {
 
 void gsm_object::out_json(std::ostream &os, bool inserted) const {
     // TODO:Score/Provenance
+
     os << "{\"id\":" << id << ", \"ell\":[";
     for (size_t i = 0, N = ell.size(); i<N; i++) {
         os << std::quoted(ell.at(i));

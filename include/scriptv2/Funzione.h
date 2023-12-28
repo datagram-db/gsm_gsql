@@ -37,6 +37,7 @@ namespace script::structures {
 //
         void setContext(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& context,
                         closure* db);
+        void setContext(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& context);
     };
 }
 

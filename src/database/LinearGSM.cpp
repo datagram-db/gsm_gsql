@@ -23,273 +23,8 @@
 // Created by giacomo on 28/05/23.
 //
 
-#include <chrono>
 #include "database/LinearGSM.h"
-extern "C" {
-#include <string.h>
-}
-/**
- *  haspos()
- * Dato un campo di testo \a text dove deve essere cercato \a BASE dalla
- * posizione \a pos in \a text, restituisce -1 se BASE è inesistente dal primo
- * suo carattere, altrimenti la posizione successiva all'ultimo carattere in BASE.
- */
-static inline char* haspos(char* text, char* BASE, int pos, size_t* len) {
-    int i;
-    for (i=0;i<strlen(BASE); i++)
-        if ((!(text[pos+i]==BASE[i]))&&(!(BASE[i]=='\0'))) {
-            *len=0;
-            return nullptr;
-        }
-    *len -= (pos+1);
-    return &text[pos+i];
-}
 
-
-
-/**
- *  atreturn()
- *
- * FUNZIONE DI PARSING/LEXING
- * --------------------------
- * Restituisce eventualmente il puntatore alla stringa dopo una andata a capo
- */
-static inline char* atreturn(char* buf,size_t* len) {
-    int  end=0;
-    for (end=0; end<*len; end++)
-        if (buf[end]=='\n') {
-            *len -= (end+1);
-            return &buf[end+1];
-        }
-    *len = 0;
-    return nullptr;
-}
-
-static inline char* skipSpaces(char*buf, size_t* len ) {
-    while (isspace(*buf) && (*len)) { buf++; (*len)--; }
-    if (!(*len)) return nullptr;
-    return buf;
-}
-
-#include "yaucl/data/json.h"
-
-static inline size_t loadObjectEll(gsm2::tables::LinearGSM &db,
-                            std::vector<std::string> &ell,
-                            size_t noLabel,
-                            const std::pair<size_t, size_t> &graphId_eventId) {
-    size_t act_id;
-    if (!ell.empty()) {
-        // Sending to fuzzy ell match
-        std::string pop = ell.front();
-        ell.erase(ell.begin());
-        db.ell_values.addGramsToMap(pop, graphId_eventId, ell);
-        act_id = db.label_map.put(pop).first;
-    } else {
-        act_id = noLabel;
-    }
-    return act_id;
-}
-
-static inline void registerObjectByFirstLabel(gsm2::tables::LinearGSM &db,
-                                       size_t act_id,
-                                       const std::pair<size_t, size_t> &graphId_eventId) {
-    // Setting up the new object
-    db.main_registry.load_record(graphId_eventId.first, act_id, graphId_eventId.second);
-}
-
-static inline void loadObjectXi(gsm2::tables::LinearGSM &db, std::vector<std::string> &xi,
-                         const std::pair<size_t, size_t> &graphId_eventId) {
-    if (!xi.empty()) {
-        // Sending to fuzzy xi match
-        std::string front = xi[0];
-        xi.erase(xi.begin());
-        db.xi_values.addGramsToMap(front, graphId_eventId, xi);
-    }
-}
-
-static inline void loadObjectProperty(gsm2::tables::LinearGSM &db,
-                const std::unordered_map<std::string, gsm2::tables::AttributeTableType> &property_to_type,
-                size_t act_id,
-                const std::pair<size_t, size_t> &graphId_eventId,
-                const std::string &property_key,
-                const std::string &property_value) {
-    auto& table = db.KeyValueContainment[property_key];
-    auto it = property_to_type.find(property_key);
-    if (it != property_to_type.end())
-        table.type = it->second;
-    else
-        table.type = gsm2::tables::StringAtt;
-    switch (table.type) {
-        case gsm2::tables::DoubleAtt:
-            table.record_load(act_id, std::__cxx11::stod(property_value), graphId_eventId.first, graphId_eventId.second);
-            break;
-        case gsm2::tables::SizeTAtt:
-            table.record_load(act_id, std::__cxx11::stoull(property_value), graphId_eventId.first, graphId_eventId.second);
-            break;
-        case gsm2::tables::LongAtt:
-            table.record_load(act_id, std::__cxx11::stoll(property_value), graphId_eventId.first, graphId_eventId.second);
-            break;
-        case gsm2::tables::StringAtt:
-            table.record_load(act_id, property_value, graphId_eventId.first, graphId_eventId.second);
-            break;
-        case gsm2::tables::BoolAtt:
-            table.record_load(act_id, (property_value == "True" || property_value == "true" || property_value == "tt" || property_value == "t"), graphId_eventId.first, graphId_eventId.second);
-            break;
-    }
-}
-
-static inline size_t initLoading(gsm2::tables::LinearGSM &db) {
-    if (db.doInitLoading) {
-        size_t noLabel = db.noLabel = db.label_map.put("").first;
-        size_t act_id = noLabel;
-        db.doInitLoading = false;
-        return noLabel;
-    } else {
-        return db.noLabel;
-    }
-}
-
-static inline void parse(char* string,
-                         size_t len,
-                         gsm2::tables::LinearGSM& forloading,
-                         const std::unordered_map<std::string, gsm2::tables::AttributeTableType>& map_for_types,
-                         size_t& maxGraphId) {
-    string = skipSpaces(string, &len);
-//    size_t graphId = 0;
-    std::vector<std::string> ell, xi;
-    double weight; size_t content;
-    size_t act_id;
-    size_t noLabel = initLoading(forloading);
-    int scanSkip = 0;
-    constexpr char const * ID = "id:";
-    constexpr char const  DOT = '.';
-    constexpr char const * ELL = "ell:";
-    constexpr char const * XI = "xi:";
-    constexpr char const * PROP = "properties:";
-    constexpr char const * PHI = "phi:";
-//    size_t id;
-    std::pair<size_t,size_t> graphId_eventId{0,0};
-    // Defining a simple format to scan, so to avoid using a parser for this.
-    while (string && *string) {
-        // Reading a new object from the database for value querying
-        graphId_eventId.second = 0;
-        if (forloading.nodesInGraph.size() == graphId_eventId.first) {
-            forloading.nodesInGraph.emplace_back(graphId_eventId.second);
-        }
-        ell.clear();
-        if (!(string = haspos(string, (char*)ID, 0, &len))) return;
-        if (sscanf(string, "%lu%n", &graphId_eventId.second, &scanSkip)==EOF) return;
-        forloading.nodesInGraph[graphId_eventId.first] = std::max(forloading.nodesInGraph[graphId_eventId.first],graphId_eventId.second);
-        len-=scanSkip;
-        string+=scanSkip;
-        if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string,  (char*)ELL, 0, &len))) return;
-        act_id = noLabel;
-
-        if (!(string = atreturn(string, &len))) return;
-        if (!(string = skipSpaces(string, &len))) return;
-        while (*string != DOT) {
-            char* beforeReturn = atreturn(string, &len);
-            ell.emplace_back(string, beforeReturn-1);
-            string = beforeReturn;
-            if (!(string = skipSpaces(string, &len))) return;
-        }
-
-        act_id = loadObjectEll(forloading, ell, noLabel, graphId_eventId);//// HOC!
-
-        string++; len--;
-        if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string,  (char*)XI, 0, &len))) return;
-        registerObjectByFirstLabel(forloading, act_id, graphId_eventId); //// HOC!
-
-        xi.clear();
-        if (!(string = atreturn(string, &len))) return;
-        if (!(string = skipSpaces(string, &len))) return;
-        while (*string != DOT) {
-            char* beforeReturn = atreturn(string, &len);
-            xi.emplace_back(string, beforeReturn-1);
-            string = beforeReturn;
-            if (!(string = skipSpaces(string, &len))) return;
-        }
-        loadObjectXi(forloading, xi, graphId_eventId);//// HOC!
-
-        string++; len--;
-        if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string,  (char*)PROP, 0, &len))) return;
-
-        if (!(string = atreturn(string, &len))) return;
-        if (!(string = skipSpaces(string, &len))) return;
-        while (*string != DOT) {
-            char* beforeReturn = atreturn(string, &len);
-            std::string tmp{string, beforeReturn-1};
-            size_t idx = tmp.find("\t");
-            if (idx == std::string::npos) return;
-            std::string key = UNESCAPE(tmp.substr(0, idx));
-            std::string val = UNESCAPE(tmp.substr(idx+1));
-
-            // Setting up the properties associated to the node
-            loadObjectProperty(forloading, map_for_types, act_id, graphId_eventId, key, val);
-
-            string = beforeReturn;
-            if (!(string = skipSpaces(string, &len))) return;
-        }
-        string++; len--;
-        if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string,  (char*)PHI, 0, &len))) return;
-
-        if (!(string = atreturn(string, &len))) return;
-        if (!(string = skipSpaces(string, &len))) return;
-
-        forloading.objectScoresLoading[graphId_eventId].emplace_back(1.0);
-        while (*string != DOT) {
-            char* beforeReturn = atreturn(string, &len);
-            std::string tmp{string, beforeReturn-1};
-            tmp = UNESCAPE(tmp);
-            string =beforeReturn;
-            if (!(string = skipSpaces(string, &len))) return;
-            while (*string != ';') {
-                if (sscanf(string, "%lf\t%lu%n", &weight, &content,&scanSkip)==EOF) return;
-                len-=scanSkip;
-                string+=scanSkip;
-                // Setting up the containment associated to the node
-                forloading.containment_tables[tmp].add(act_id, graphId_eventId, weight, content);
-                forloading.containment_relationships.emplace(tmp);
-                if (!(string = skipSpaces(string, &len))) return;
-            }
-            string++;
-            len--;
-            if (!(string = skipSpaces(string, &len))) return;
-        }
-        string++;
-        len--;
-        if (!(string = skipSpaces(string, &len))) return;
-
-        if (strncmp(string,"~~",2)==0) {
-            // Finding a new graph
-            forloading.nodesInGraph.emplace_back(0);
-            graphId_eventId.first++; string+=2; len-=2;
-            if (!(string = skipSpaces(string, &len))) return;
-        }
-    }
-    maxGraphId = graphId_eventId.first;
-}
-
-#include <fstream>
-#include "magic_enum.hpp"
-
-static inline
-void convertMap(const NodeLabelBijectionGraph<size_t, std::string>& map,
-                std::unordered_map<size_t, std::vector<size_t>>& original) {
-    std::unordered_map<size_t, std::vector<size_t>> final;
-    for (const auto& [k, ls] : original) {
-        auto newKey = k;
-        auto& v = final[newKey];
-        for (size_t x : ls) {
-            v.emplace_back(map.getUniqueLabel(x));
-        }
-    }
-    std::swap(final, original);
-}
 
 namespace gsm2 {
     namespace tables {
@@ -338,6 +73,65 @@ namespace gsm2 {
                 auto indexing_end = std::chrono::high_resolution_clock::now();
                 indexing = std::chrono::duration<double, std::milli>(indexing_end-indexing_start).count();
             }
+            return {loading, indexing};
+        }
+
+        std::pair<double, double> primary_memory_load_direct(std::vector<std::vector<gsm_object>> &db,
+                                                             const std::unordered_map<std::string, gsm2::tables::AttributeTableType> &schema,
+                                                             LinearGSM &target) {
+            size_t noLabel = initLoading(target);
+            double loading = 0.0, indexing = 0.0;
+            {
+                auto loading_start = std::chrono::high_resolution_clock::now();
+                {
+                    for (auto& actual_db : db) {
+                        yaucl::structures::any_to_uint_bimap<size_t> conversion;
+                        for (auto& obj : actual_db) {
+                            obj.id = conversion.put(obj.id).first;
+                            for (auto& [k,v] : obj.phi) {
+                                for (auto& e : v) {
+                                    e.id = conversion.put(e.id).first;
+                                }
+                            }
+                        }
+                    }
+                    std::pair<size_t, size_t> cp;
+                    target.nodesInGraph.clear();
+                    for (cp.first = 0; cp.first<db.size(); cp.first++) {
+                        const auto& actual_db = db.at(cp.first);
+                        target.nodesInGraph.emplace_back(actual_db.size());
+                        for (const auto& obj : actual_db) {
+                            cp.second = obj.id;
+                            target.objectScoresLoading[cp] = obj.scores;
+                            auto act = loadObjectEll2(target, obj.ell, noLabel, cp);
+                            registerObjectByFirstLabel(target, act, cp);
+                            loadObjectXi2(target, obj.xi, cp);
+                            for (const auto& [key,val] : obj.content) {
+                                if (std::holds_alternative<std::string>(val))
+                                    loadObjectProperty(target, schema, act, cp, key, std::get<std::string>(val));
+                                else
+                                    loadObjectProperty(target, schema, act, cp, key, std::to_string(std::get<double>(val)));
+                            }
+
+                            for (const auto& [k,u] : obj.phi) {
+                                for (const auto& v : u) {
+                                    target.containment_tables[k].add(act, cp, v.score, v.id);
+                                    target.containment_relationships.emplace(k);
+                                }
+                            }
+                        }
+                    }
+                }
+                auto loading_end = std::chrono::high_resolution_clock::now();
+                loading = std::chrono::duration<double, std::milli>(loading_end-loading_start).count();
+            }
+            {
+                auto indexing_start = std::chrono::high_resolution_clock::now();
+                target.index();
+                auto indexing_end = std::chrono::high_resolution_clock::now();
+                indexing = std::chrono::duration<double, std::milli>(indexing_end-indexing_start).count();
+            }
+            target.nGraphs = db.size();
             return {loading, indexing};
         }
 
@@ -569,10 +363,13 @@ namespace gsm2 {
             if (it == containment_tables.end())
                 return empty_containment;
             std::vector<gsm_object_xi_content> result;
-            auto it3 = it->second.secondary_index.find({graphid, id});
+            auto it3 = it->second.secondary_index.find(graphid);
             if (it3 == it->second.secondary_index.end())
                 return empty_containment;
-            else for (const auto& record : it3->second) {
+            auto it2 = it3->second.find(id);
+            if (it2 == it3->second.end())
+                return empty_containment;
+            else for (const auto& record : it2->second) {
                     result.emplace_back(record->id_contained, record->w_contained);
                 }
             return result;
@@ -592,16 +389,18 @@ namespace gsm2 {
         }
 
         void LinearGSM::iterateOverObjects(const std::function<void(size_t, const gsm_object &)> &f) {
-            std::pair<size_t, size_t> cp;
+
+//            std::pair<size_t, size_t> cp;
             size_t offsetMainRegistryTable = 0;
             gsm_object legacy_obj;
             for (const auto& record : main_registry.table) {
-                cp.first = record.graph_id;
-                cp.second = legacy_obj.id = record.event_id;
+//                cp.first = record.graph_id;
+//                cp.second = legacy_obj.id = record.event_id;
+                legacy_obj.id = record.event_id;
                 legacy_obj.content.clear();
                 legacy_obj.phi.clear();
-                legacy_obj.ell = ell(cp.first, cp.second);
-                legacy_obj.xi = xi(cp.first, cp.second);
+                legacy_obj.ell = ell(record.graph_id, legacy_obj.id);
+                legacy_obj.xi = xi(record.graph_id, legacy_obj.id);
                 for (const auto& [keyAttribute, Table] : KeyValueContainment) {
                     auto tmp2 = Table.resolve_record_if_exists2(offsetMainRegistryTable);
                     if (tmp2) {
@@ -609,13 +408,23 @@ namespace gsm2 {
                     }
                 }
                 for (const auto& [keyAttribute, Table] : containment_tables) {
-                    auto it = Table.secondary_index.find(cp);
+//                    if (cp.second == 6) {
+//                        std::cout << keyAttribute << ": SIZE=" << Table.table.size() << " T=" << Table.secondary_index.size() << std::endl;
+//                    }
+                    auto it = Table.secondary_index.find( record.graph_id);
                     if (it != Table.secondary_index.end()) {
-                        for (const auto& record2 : it->second)
-                            legacy_obj.phi[keyAttribute].emplace_back(record2->id_contained, record2->w_contained);
+                        auto it2 = it->second.find(legacy_obj.id);
+                        if (it2 != it->second.end()) {
+//                            if (cp.second == 6) {
+//                                std::cout << "|"<< keyAttribute << std::endl;
+//                            }
+                            for (const auto& record2 : it2->second)
+                                legacy_obj.phi[keyAttribute].emplace_back(record2->id_contained, record2->w_contained);
+                        }
+
                     }
                 }
-                f(cp.first, legacy_obj);
+                f(record.graph_id, legacy_obj);
                 offsetMainRegistryTable++;
             }
         }

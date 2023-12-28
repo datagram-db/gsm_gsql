@@ -1181,12 +1181,16 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
         }
 
         case EvalE: {
-            std::stringstream ss;
-            ss << arrayList[0]->run()->toString(false);
-            //std::cerr << ss.str() << std::endl;
-            auto res = script::compiler::ScriptVisitor::eval(ss, optGamma);
-
-            return res;
+            if (casted_type.get()) {
+                if (casted_type->optGamma.get() != optGamma.get())
+                    casted_type->setOptGammaRecursively(optGamma);
+            } else {
+                std::stringstream ss;
+                ss << arrayList[0]->run()->toString(false);
+                //std::cerr << ss.str() << std::endl;
+                script::compiler::ScriptVisitor::eval(ss, casted_type, optGamma);
+            }
+            return casted_type;
         }
 
         case TypeOf: {
@@ -1449,13 +1453,17 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
             if (objProps.empty()) {
                 std::stringstream ss;
                 ss << db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id)[0];
-                auto lfst = compiler::ScriptVisitor::eval(ss, optGamma);
+                DPtr<script::structures::ScriptAST> lfst;
+//                auto lfst = ;
+                compiler::ScriptVisitor::eval(ss, lfst, optGamma);
                 if (!lfst->isType()) {
                     ArrayList<DPtr<ScriptAST>> xi;
                     for (const std::string& val : XI) {
+                        DPtr<script::structures::ScriptAST> local;
                         std::stringstream ss2;
                         ss2 << val;
-                        xi.emplace_back(compiler::ScriptVisitor::eval(ss2, optGamma)->typeInference());
+                        compiler::ScriptVisitor::eval(ss2, local, optGamma);
+                        xi.emplace_back(local->typeInference());
                     }
                     auto x = mgu(xi); // Actually this?
                     if (!x->isType())
@@ -1467,14 +1475,18 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
             } else {
                 std::stringstream ss;
                 ss <<  db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id)[0];
-                auto lfst = compiler::ScriptVisitor::eval(ss, optGamma);
+                DPtr<script::structures::ScriptAST> lfst;
+//                auto lfst = ;
+                compiler::ScriptVisitor::eval(ss, lfst, optGamma);
                 if (!lfst->isType())
                     throw std::runtime_error("ERROR: the label of an object should express a type!");
                 ArrayList<DPtr<ScriptAST>> xi;
                 for (const std::string& val : XI) {
+                    DPtr<script::structures::ScriptAST> lfst2;
                     std::stringstream ss2;
                     ss2 << val;
-                    xi.emplace_back(compiler::ScriptVisitor::eval(ss2, optGamma)->typeInference());
+                    compiler::ScriptVisitor::eval(ss2, lfst2, optGamma);
+                    xi.emplace_back(lfst2->typeInference());
                 }
                 auto x = mgu(xi); // Actually this?
                 if (x->type == TupleT) {
@@ -1497,9 +1509,11 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
 //                    local.emplace_back(upTypeObjX(content.id));
 //                vv[k] = mgu(local);
 //            }
+            DPtr<script::structures::ScriptAST> lfst;
             std::stringstream ss;
             ss <<  db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id)[0];
-            auto lfst = compiler::ScriptVisitor::eval(ss, optGamma);
+//            auto lfst =
+            compiler::ScriptVisitor::eval(ss, lfst, optGamma);
             if (!lfst->isType())
                 throw std::runtime_error("ERROR: the label of an object should express a type!");
             return lex_type_(std::move(lfst), std::move(vv));
@@ -1823,4 +1837,34 @@ std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::str
         } break;
     }
     return {};
+}
+
+void
+script::structures::ScriptAST::setOptGammaRecursively(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>> &gamma) {
+    if (optGamma.get() != gamma.get()) {
+        optGamma = gamma;
+        for (auto & ref : arrayList)
+            ref->setOptGammaRecursively(gamma);
+        for (auto & [k,v] : tuple)
+            v->setOptGammaRecursively(gamma);
+        if (function)
+            function->setContext(gamma);
+//            if (optGamma)
+//                for (auto & [k,v] : *optGamma)
+//                    v->setOptGammaRecursively(gamma);
+    }
+}
+
+void
+script::structures::ScriptAST::setOptGammaRecursively(std::unordered_map<std::string, DPtr<ScriptAST>>&& gamma) {
+    *optGamma = std::move(gamma);
+    for (auto & ref : arrayList)
+        ref->setOptGammaRecursively(optGamma);
+    for (auto & [k,v] : tuple)
+        v->setOptGammaRecursively(optGamma);
+    if (function)
+        function->setContext(optGamma);
+//            if (optGamma)
+//                for (auto & [k,v] : *optGamma)
+//                    v->setOptGammaRecursively(gamma);
 }

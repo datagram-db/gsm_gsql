@@ -33,7 +33,11 @@
 #include <variant>
 #include "yaucl/functional/assert.h"
 #include "yaucl/data/json.h"
+#include <scriptv2/java_types.h>
 
+namespace script::structures {
+    struct ScriptAST;
+}
 
 struct rewrite_expr;
 using test_side = std::variant<std::shared_ptr<rewrite_expr>,std::string>;
@@ -55,6 +59,8 @@ struct test_pred {
     std::vector<test_pred> child_logic;
     std::string nsoe;
     std::string pattern_matched, variable_matched;
+    DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> optGamma;
+    DPtr<script::structures::ScriptAST> ptrResult{nullptr};
     DEFAULT_CONSTRUCTORS(test_pred)
 };
 
@@ -78,7 +84,7 @@ struct rewrite_expr {
         NODE_OR_EDGE,
         SCRIPT_CASE
     };
-
+    DPtr<script::structures::ScriptAST> ptrResult;
     cases t;                                                    // Using enumeration instead of inheritance
     size_t id;                                                  // Potential id associated to the match
 

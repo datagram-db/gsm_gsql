@@ -28,8 +28,16 @@ namespace script {
                 typecaster.clear();
                 db = gsm;
             }
-            static DPtr<script::structures::ScriptAST> eval(std::istream& is, const std::vector<std::string>& schema, const std::vector<value>& nestedRow);
-            static DPtr<script::structures::ScriptAST> eval(std::istream& is, DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> context);
+            static void eval(std::istream &is,
+                                 DPtr<script::structures::ScriptAST>& ptrResult,
+                                 const std::vector<std::string>& schema,
+                                 const std::vector<value>& nestedRow);
+            static void eval(std::istream& is,
+                             DPtr<script::structures::ScriptAST>& ptrResult,
+                             DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> context);
+            static bool eval(DPtr<script::structures::ScriptAST>& ptrResult,
+                                     const std::vector<std::string>& schema,
+                                     const std::vector<value>& nestedRow);
 
             static size_t isEnforced(const DPtr<script::structures::ScriptAST>& left,
                                    const DPtr<script::structures::ScriptAST>& right);

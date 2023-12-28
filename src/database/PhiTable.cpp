@@ -81,7 +81,7 @@ namespace gsm2 {
                 const auto& ref = table[i];
                 cp.first = ref.graph_id;
                 cp.second = ref.object_id;
-                secondary_index[cp].emplace_back(&ref);
+                secondary_index[cp.first][cp.second].emplace_back(&ref);
                 if (i == 0) {
                     lIdPrev = ref.l0_id;
                     begin = &ref;

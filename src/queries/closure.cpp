@@ -24,11 +24,12 @@
 #include "queries/closure.h"
 
 void closure::load_query_from_file(const std::string& filename) {
-    if (forloading) {
-        delete forloading;
-        forloading = nullptr;
-    }
-    forloading = new gsm2::tables::LinearGSM();
+//    if (forloading) {
+//        delete forloading;
+//        forloading = nullptr;
+//    }
+//    forloading = new gsm2::tables::LinearGSM();
+
     std::ifstream stream(filename);
     antlr4::ANTLRInputStream input(stream);
     simple_graph_grammarLexer lexer(&input);
@@ -290,17 +291,23 @@ void closure::generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std:
 
 void closure::generate_materialised_view() {
     if (!isMaterialised) {
+//        std::cout << "materialising" << std::endl;
         auto real_time_start = std::chrono::high_resolution_clock::now();
         isMaterialised = true;
 //    size_t N = pr.morphisms.size();
         forloading->iterateOverObjects([this](size_t graphid, const gsm_object& legacy_object_old_data) {
             auto& updates = delta_updates_per_graph[graphid];
             if ((!updates.hasXBeenRemoved(legacy_object_old_data.id))) {
+//                std::cout << "C" << legacy_object_old_data.id << "..." << std::endl;
                 size_t new_id = legacy_object_old_data.id;
                 auto& obj = updates.delta_plus_db.O[new_id];
                 obj.id = new_id;
                 obj.updateWith(legacy_object_old_data);
+//                for (auto& [k, v] :legacy_object_old_data.phi) {
+//                    std::cout << "\tE=" << k<< std::endl;
+//                }
                 for (auto& [k, v] :obj.phi) {
+//                    std::cout << "\tG=" << k<< std::endl;
                     for (auto& w : v) {
                         auto it = updates.replacement_map.find(w.id);
                         if (it != updates.replacement_map.end()) {
@@ -434,6 +441,34 @@ void closure::interpret_closure_set(rewrite_expr *ptr, size_t graph_id, size_t p
     }
 }
 
+void closure::load_query_from_string(std::istream &stream) {
+//    if (forloading) {
+//        delete forloading;
+//        forloading = nullptr;
+//    }
+//    forloading = new gsm2::tables::LinearGSM();
+//    new_data_slate();
+    antlr4::ANTLRInputStream input(stream);
+    simple_graph_grammarLexer lexer(&input);
+    antlr4::CommonTokenStream tokens(&lexer);
+    simple_graph_grammarParser parser(&tokens);
+    GSMPatternVisitor pv;
+    // Loading the query from the visitor
+    vl = std::any_cast<std::vector<node_match>>(pv.visit(parser.all_matches()));
+    // Sorting the patterns according to the order of execution. TODO: improve, depending on the pattern analysis
+    sortVL();
+    n_patterns = vl.size();
+    query_name = "stream";
+}
+
+void closure::new_data_slate() {
+    if (forloading) {
+        delete forloading;
+        forloading = nullptr;
+    }
+    forloading = new gsm2::tables::LinearGSM();
+}
+
 #include <scriptv2/ScriptVisitor.h>
 #include <scriptv2/ScriptAST.h>
 
@@ -442,9 +477,15 @@ std::any closure::Interpret::interpret_closure_evaluate(rewrite_expr *ptr) const
         return {};
     switch (ptr->t) {
         case rewrite_expr::SCRIPT_CASE: {
-            std::stringstream ss;
-            ss << ptr->prop;
-            return script::compiler::ScriptVisitor::eval(ss, schema, table.datum.at(record_id))->run()->toString();
+            if (!ptr->ptrResult.get()) {
+                std::stringstream ss;
+                ss << ptr->prop;
+                script::compiler::ScriptVisitor::eval(ss, ptr->ptrResult, schema, table.datum.at(record_id));
+//                return ptr->ptrResult->run()->toString();
+            } else {
+                script::compiler::ScriptVisitor::eval(ptr->ptrResult, schema, table.datum.at(record_id));
+            }
+            return ptr->ptrResult->run()->toString();
         }
             // Returning the specific XI for the nodes
         case rewrite_expr::NODE_XI: {
@@ -601,7 +642,7 @@ static inline bool var_extractor(const test_pred& ptr,
     return true;
 }
 
-bool closure::Interpret::interpret(const test_pred &ptr) const {
+bool closure::Interpret::interpret(test_pred &ptr) const {
     switch (ptr.t) {
         case test_pred::TEST_PRED_CASE_EQ: {
             std::string L, R;
@@ -701,9 +742,14 @@ bool closure::Interpret::interpret(const test_pred &ptr) const {
             return true;
             break;
         case test_pred::TEST_PRED_CASE_SCRIPT: {
-            std::stringstream ss;
-            ss << ptr.nsoe;
-            return script::compiler::ScriptVisitor::eval(ss, schema, table.datum.at(record_id))->run()->toBoolean();
+            if (!ptr.ptrResult.get()) {
+                std::stringstream ss;
+                ss << ptr.nsoe;
+                script::compiler::ScriptVisitor::eval(ss, ptr.ptrResult, schema, table.datum.at(record_id));
+            } else {
+                script::compiler::ScriptVisitor::eval(ptr.ptrResult, schema, table.datum.at(record_id));
+            }
+            return ptr.ptrResult->run()->toBoolean();
         }
             break;
         case test_pred::MATCHED: {

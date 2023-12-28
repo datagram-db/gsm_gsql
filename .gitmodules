@@ -10,3 +10,6 @@
 [submodule "submodules/tinyxml2"]
 	path = script_ver/submodules/tinyxml2
 	url = https://github.com/leethomason/tinyxml2.git
+[submodule "submodules/easylogging"]
+	path = submodules/easylogging
+	url = https://github.com/abumq/easyloggingpp

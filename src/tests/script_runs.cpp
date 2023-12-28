@@ -8,12 +8,13 @@
 TEST_CASE("simple_scripts") {
     std::filesystem::path scripts_folder = std::filesystem::current_path().parent_path() / "data" / "script";
 
-
     SECTION("first") {
         closure database;
         script::compiler::ScriptVisitor::bindGSM(&database);
         std::ifstream file{scripts_folder / "script_01.txt"};
-        bool test = script::compiler::ScriptVisitor::eval(file, {}, {})->toString() == "10";
+        DPtr<script::structures::ScriptAST> ptr;
+        script::compiler::ScriptVisitor::eval(file, ptr, {}, {});
+        bool test = ptr->toString() == "10";
         REQUIRE(test);
     }
 
@@ -21,7 +22,9 @@ TEST_CASE("simple_scripts") {
         closure database;
         script::compiler::ScriptVisitor::bindGSM(&database);
         std::ifstream file{scripts_folder / "script_02.txt"};
-        bool test = script::compiler::ScriptVisitor::eval(file, {}, {})->toString() == "Hello, world!";
+        DPtr<script::structures::ScriptAST> ptr;
+        script::compiler::ScriptVisitor::eval(file, ptr, {}, {});
+        bool test = ptr->toString() == "Hello, world!";
         REQUIRE(test);
     }
 
@@ -29,7 +32,9 @@ TEST_CASE("simple_scripts") {
         closure database;
         script::compiler::ScriptVisitor::bindGSM(&database);
         std::ifstream file{scripts_folder / "script_03.txt"};
-        bool test = script::compiler::ScriptVisitor::eval(file, {}, {})->toString() == "{\"H\"; \"e\"; \"l\"; \"l\"; \"o\"; \",\"; \" \"; \"w\"; \"o\"; \"r\"; \"l\"; \"d\"; \"!\"}";
+        DPtr<script::structures::ScriptAST> ptr;
+        script::compiler::ScriptVisitor::eval(file, ptr, {}, {});
+        bool test = ptr->toString() == R"({"H"; "e"; "l"; "l"; "o"; ","; " "; "w"; "o"; "r"; "l"; "d"; "!"})";
         REQUIRE(test);
     }
 
@@ -37,7 +42,9 @@ TEST_CASE("simple_scripts") {
         closure database;
         script::compiler::ScriptVisitor::bindGSM(&database);
         std::ifstream file{scripts_folder / "script_04.txt"};
-        bool test = script::compiler::ScriptVisitor::eval(file, {}, {})->toString() == "5";
+        DPtr<script::structures::ScriptAST> ptr;
+        script::compiler::ScriptVisitor::eval(file, ptr, {}, {});
+        bool test = ptr->toString() == "5";
         REQUIRE(test);
     }
 
@@ -45,7 +52,9 @@ TEST_CASE("simple_scripts") {
         closure database;
         script::compiler::ScriptVisitor::bindGSM(&database);
         std::ifstream file{scripts_folder / "script_05.txt"};
-        bool test = script::compiler::ScriptVisitor::eval(file, {}, {})->toString() == "tt";
+        DPtr<script::structures::ScriptAST> ptr;
+        script::compiler::ScriptVisitor::eval(file, ptr, {}, {});
+        bool test = ptr->toString() == "tt";
         REQUIRE(test);
     }
 
@@ -53,7 +62,9 @@ TEST_CASE("simple_scripts") {
         closure database;
         script::compiler::ScriptVisitor::bindGSM(&database);
         std::ifstream file{scripts_folder / "script_06.txt"};
-        bool test = script::compiler::ScriptVisitor::eval(file, {}, {})->toString() == "tt";
+        DPtr<script::structures::ScriptAST> ptr;
+        script::compiler::ScriptVisitor::eval(file, ptr, {}, {});
+        bool test = ptr->toString() == "tt";
         REQUIRE(test);
     }
 
@@ -61,53 +72,9 @@ TEST_CASE("simple_scripts") {
         closure database;
         script::compiler::ScriptVisitor::bindGSM(&database);
         std::ifstream file{scripts_folder / "script_07.txt"};
-        bool test = script::compiler::ScriptVisitor::eval(file, {}, {})->toString() == "ff";
+        DPtr<script::structures::ScriptAST> ptr;
+        script::compiler::ScriptVisitor::eval(file, ptr, {}, {});
+        bool test = ptr->toString() == "ff";
         REQUIRE(test);
     }
 }
-//
-//class simple_scripts : public testing::Test {
-//protected:
-//    void SetUp() override {
-//    }
-//
-//};
-//
-//TEST_F(simple_scripts, first) {
-//
-//}
-//
-//TEST_F(simple_scripts, second) {
-//    std::ifstream file{scripts_folder / "script_02.txt"};
-//    ASSERT_STREQ(script::compiler::ScriptVisitor::eval(file, {}, {})->toString().c_str(), "Hello, world!");
-//}
-//
-//TEST_F(simple_scripts, third) {
-//    std::ifstream file{scripts_folder / "script_03.txt"};
-//    ASSERT_STREQ(script::compiler::ScriptVisitor::eval(file, {}, {})->toString().c_str(),
-//                 "{\"H\"; \"e\"; \"l\"; \"l\"; \"o\"; \",\"; \" \"; \"w\"; \"o\"; \"r\"; \"l\"; \"d\"; \"!\"}");
-//}
-//
-//TEST_F(simple_scripts, fourth) {
-//    std::ifstream file{scripts_folder / "script_04.txt"};
-//    ASSERT_STREQ(script::compiler::ScriptVisitor::eval(file, {}, {})->toString().c_str(),
-//                 "5");
-//}
-//
-//TEST_F(simple_scripts, fifth) {
-//    std::ifstream file{scripts_folder / "script_05.txt"};
-//    ASSERT_STREQ(script::compiler::ScriptVisitor::eval(file, {}, {})->toString().c_str(),
-//                 "tt");
-//}
-//
-//TEST_F(simple_scripts, sixth) {
-//    std::ifstream file{scripts_folder / "script_06.txt"};
-//    ASSERT_STREQ(script::compiler::ScriptVisitor::eval(file, {}, {})->toString().c_str(),
-//                 "tt");
-//}
-//
-//TEST_F(simple_scripts, seventh) {
-//    std::ifstream file{scripts_folder / "script_07.txt"};
-//    ASSERT_STREQ(script::compiler::ScriptVisitor::eval(file, {}, {})->toString().c_str(),
-//                 "ff");
-//}

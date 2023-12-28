@@ -1,3 +1,4 @@
+from __future__ import annotations
 __author__ = "Giacomo Bergami"
 __copyright__ = "Copyright 2023"
 __credits__ = ["Giacomo Bergami"]
@@ -12,7 +13,7 @@ __status__ = "Production"
 #   timestamp: 2023-09-18T18:37:05+00:00
 #   command: "datamodel-codegen --input test.schema.json --output model.py"
 
-from __future__ import annotations
+
 
 from typing import Any, Dict, List, Optional, Union, Iterable
 

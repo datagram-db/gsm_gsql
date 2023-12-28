@@ -62,7 +62,7 @@ void fill_vector_with_case(std::vector<T>& to_fill, const abstract_value& opts) 
 
 #include "delta_updates.h"
 #include "scriptv2/ScriptVisitor.h"
-
+#include <easylogging++.h>
 
 
 /**
@@ -81,6 +81,8 @@ struct closure {
     std::string empty_string;
     std::vector<gsm_object_xi_content> empty_content;
     bool isMaterialised = false;
+
+    void new_data_slate();
 
     void asObjects(std::vector<std::vector<gsm_object>>& graphs) const {
         forloading->asObjects(graphs);
@@ -134,12 +136,13 @@ struct closure {
             for (const auto& [idX,object] : delta_updates_per_graph.at(i).delta_plus_db.O) {
                 if (delta_updates_per_graph.at(i).removed_objects.contains(idX))
                     continue;
-//                if (idX == 16)
+//                if (idX == 6)
 //                    std::cout << "HERE" << std::endl;
                 for (const auto& [edgelabel,records] : object.phi) {
                     size_t recordsId = 0;
                     for (const auto& record: records) {
                         if (delta_updates_per_graph.at(i).removed_objects.contains(record.id)) {
+//                            std::cout << idX << "R.." << record.id <<std::endl;
                             recordsId++;
                             continue;
                         }
@@ -199,7 +202,7 @@ struct closure {
             auto& mp = tmp[k];
             const auto& map = nodesBeingInsertedAlready.at(k);
             for (auto& [idX, obj] : mp) {
-//                if (idX == 2)
+//                if (idX == 6)
 //                    std::cout << "HERE" << std::endl;
                 auto src = map.getKey(idX);
                 std::unordered_map<std::string, roaring::Roaring64Map> toRemove;
@@ -437,6 +440,8 @@ struct closure {
      */
     void load_query_from_file(const std::string& stream);
 
+    void load_query_from_string(std::istream& stream);
+
     /**
      * Loading the data to be queried
      *
@@ -457,12 +462,15 @@ struct closure {
     void generateOODbFromMaterialisedViews(gsm2::tables::LinearGSM& simpleGraphs);
 
     void perform_query(bool verbose = false) {
+        LOG(INFO) << "Performing the query";
         bool materialise = false;
         isMaterialised = false;
         pr.init(); // For future reference, if this will become a query engine, we need to clear all intermediate results first!
+
         // TODO: rewrite the matching variables so to allow morphisms to be effectively queried
         bool hasDelRewrite = false;
         {
+            LOG(TRACE) << "Collecting the node matches";
             auto node_q_start = std::chrono::high_resolution_clock::now();
             for (auto& nm : vl) {
                 auto outcome = nm.compileNodeVariableOptionality();
@@ -477,6 +485,7 @@ struct closure {
 
         // First, matching all the single patterns within the queries, as described in the cached results
         {
+            LOG(TRACE) << "Running the simple edge queries";
             auto edge_q_start = std::chrono::high_resolution_clock::now();
             pr.run_simple_edge_queries(*forloading);
             auto edge_q_end = std::chrono::high_resolution_clock::now();
@@ -485,6 +494,7 @@ struct closure {
 
         // Then, running each morphism separately (now, we are assuming any order will do)
         {
+            LOG(TRACE) << "Instantiating the nested morphisms";
             auto nmorph_start = std::chrono::high_resolution_clock::now();
             pr.instantiate_morphisms(vl, verbose);
             auto nmorph_end = std::chrono::high_resolution_clock::now();
@@ -493,6 +503,7 @@ struct closure {
 
         // Only afterwards, we are applying all of the transformations for each of the matches collected in the tables as morphisms
         {
+            LOG(TRACE) << "Running the transformations over the matches";
             auto t_start = std::chrono::high_resolution_clock::now();
             run_transformations(hasDelRewrite);
             auto t_end = std::chrono::high_resolution_clock::now();
@@ -774,7 +785,7 @@ private:
 
         std::any interpret_closure_evaluate(rewrite_expr* ptr) const;
 
-        bool interpret(const test_pred& ptr) const;
+        bool interpret(test_pred& ptr) const;
     };
     
 
@@ -901,13 +912,13 @@ private:
             for (size_t time = 0, T = g.container_order.size(); time<T; time++)
                 // Visiting all the vertices associated to the same time
                 for (const auto& vertex : g.container_order.at(T-time-1)) {
-//                    if (vertex == 22)
-//                        std::cout << "HERE" << std::endl;
+                    if (vertex == 6)
+                        std::cout << "HERE" << std::endl;
 
                     /// TODO: sort the patterns in dependency order, i.e., depending which should be run first
                     ///       This needs to be inferred previously
                     for (size_t pattern_id = 0, M = vl.size(); pattern_id < M; pattern_id++) {
-                        const auto& pattern = vl.at(pattern_id);
+                        auto& pattern = vl[pattern_id];
                         if (morphs.find(pattern.pattern_name) == morphs.end())
                             continue; // Skipping if there are no results
                         /*const*/ auto& pattern_result = morphs.at(pattern.pattern_name);

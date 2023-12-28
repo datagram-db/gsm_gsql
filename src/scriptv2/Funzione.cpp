@@ -74,3 +74,11 @@ void script::structures::Funzione::addExpression(DPtr<ScriptAST>&& expr) {
             }
             return toReturn;
         }
+
+void script::structures::Funzione::setContext(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>> &context) {
+    if (externalToUpdate.get() != context.get()) {
+        externalToUpdate = context;
+        for (auto& ref : body)
+            ref->setOptGammaRecursively(context);
+    }
+}

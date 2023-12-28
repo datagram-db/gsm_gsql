@@ -122,8 +122,9 @@ namespace script::structures {
         ScriptAST& operator=(const ScriptAST&) = default;
         ScriptAST& operator=(ScriptAST&&) = default;
 
-
+        void setOptGammaRecursively(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& gamma);
         void setDBRecursively( closure* datenbanken);
+        void setOptGammaRecursively(std::unordered_map<std::string, DPtr<ScriptAST>>&& gamma);
 
         inline bool isType() const {
             switch (type) {
@@ -204,9 +205,9 @@ namespace script::structures {
 
         DPtr<ScriptAST> variableEval();
         DPtr<ScriptAST> mgu(const std::vector<DPtr<ScriptAST>>& x) const {
-            if (x.empty())
+            if (x.empty() || (x.size() != 1))
                 return any_T();
-            else if (x.size() == 1)
+            else //if (x.size() == 1)
                 return x.at(0);
         }
 
