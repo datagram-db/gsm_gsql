@@ -1,0 +1,5 @@
+p1 = (X)--[h:dste]->(Z)
+        --[? g:srce]->(Y)
+      ↪ set (φ arco , Y) as Z
+        del X
+        (Y)

@@ -114,16 +114,16 @@ int main(int argc, char **argv) {
     std::vector<std::vector<gsm_object>> output, expected;
 
     Environment env(configuration);
-    env.run_test(output);
+    env.run();
 
-    std::filesystem::path f{"/home/giacomo/projects/gsm2/data/test/einstein_expected.txt"};
-    parse(f, expected);
-    GSMIso eqSort;
-    bool result = eqSort.equals(output.at(0),
-                  expected.at(0),
-                  [](const gsm_object& lhs, const gsm_object& rhs) {
-        return lhs.xi == rhs.xi;
-    });
+//    std::filesystem::path f{"/home/giacomo/projects/gsm2/data/test/einstein_expected.txt"};
+//    parse(f, expected);
+//    GSMIso eqSort;
+//    bool result = eqSort.equals(output.at(0),
+//                  expected.at(0),
+//                  [](const gsm_object& lhs, const gsm_object& rhs) {
+//        return lhs.xi == rhs.xi;
+//    });
 
     return 0;
 }

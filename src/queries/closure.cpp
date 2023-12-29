@@ -472,7 +472,7 @@ void closure::new_data_slate() {
 #include <scriptv2/ScriptVisitor.h>
 #include <scriptv2/ScriptAST.h>
 
-std::any closure::Interpret::interpret_closure_evaluate(rewrite_expr *ptr) const {
+std::any closure::Interpret::interpret_closure_evaluate(rewrite_expr *ptr) /*const*/ {
     if (!ptr)
         return {};
     switch (ptr->t) {
@@ -642,7 +642,7 @@ static inline bool var_extractor(const test_pred& ptr,
     return true;
 }
 
-bool closure::Interpret::interpret(test_pred &ptr) const {
+bool closure::Interpret::interpret(test_pred &ptr) /*const*/ {
     switch (ptr.t) {
         case test_pred::TEST_PRED_CASE_EQ: {
             std::string L, R;

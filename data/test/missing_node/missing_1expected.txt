@@ -1,0 +1,37 @@
+id:0
+ell:
+.
+xi:
+4
+.
+properties:
+.
+phi:
+"arco"
+	1.0	1
+	1.0	1
+;.
+
+id:1
+ell:
+.
+xi:
+5
+.
+properties:
+.
+phi:
+.
+
+id:2
+ell:
+.
+xi:
+.
+properties:
+.
+phi:
+"arco"
+	1.0	0
+;.
+

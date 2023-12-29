@@ -771,7 +771,7 @@ private:
         const std::vector<std::string>& schema;
         const nested_table& table;
         size_t record_id;
-        const closure& clos;
+        closure& clos;
         const std::vector<std::unordered_map<std::string, std::pair<std::vector<std::string>, std::unordered_map<size_t, nested_table>>>>& ptr;
     public:
         Interpret(size_t graphId,
@@ -779,13 +779,13 @@ private:
                   const std::vector<std::string> &schema,
                   const nested_table &table,
                   size_t recordId,
-                  const closure &clos,
+                  closure &clos,
                   const std::vector<std::unordered_map<std::string, std::pair<std::vector<std::string>, std::unordered_map<size_t, nested_table>>>>& ptr) : graph_id(graphId), pattern_id(patternId), schema(schema),
                                                           table(table), record_id(recordId), clos(clos), ptr{ptr} {}
 
-        std::any interpret_closure_evaluate(rewrite_expr* ptr) const;
+        std::any interpret_closure_evaluate(rewrite_expr* ptr) /*const*/;
 
-        bool interpret(test_pred& ptr) const;
+        bool interpret(test_pred& ptr) /*const*/;
     };
     
 
@@ -849,8 +849,16 @@ private:
         return totalInsertions;
     }
 
+    inline size_t newObjectToVariable(size_t graph_id, const std::string& var) {
+        auto& updates = delta_updates_per_graph[graph_id];
+        auto& obj = updates.getNewObject();
+        updates.associateNewToVar(var, obj.id);
+        return obj.id;
+    }
+
+    inline
     std::vector<size_t>
-    resolveIdsOverVariableName(size_t graph_id, size_t pattern_id, const std::string &variable_name, const std::vector<value> &record) const {
+    resolveIdsOverVariableName(size_t graph_id, size_t pattern_id, const std::string &variable_name, const std::vector<value> &record) /*const*/ {
         std::vector<size_t> object_id;
         auto v = delta_updates_per_graph.at(graph_id).getNewlyInsertedVertices(variable_name);
         if (!v.empty())
@@ -875,7 +883,11 @@ private:
                     fill_vector_with_case(object_id, cell2.val);
                 }
             } else {
-                fill_vector_with_case(object_id, cell.val);
+                if (std::holds_alternative<bool>(cell.val)) {
+                    object_id.emplace_back(newObjectToVariable(graph_id, variable_name));
+                } else {
+                    fill_vector_with_case(object_id, cell.val);
+                }
             }
         } else {
             for (const auto& record_internal : record.at(pr.nested_index.at(pattern_id)).table.datum) {
@@ -906,13 +918,13 @@ private:
             // For each graph in the collection
             const auto& g = forloading->all_indices.at(graph_id);
             /*const*/ auto& morphs = pr.morphisms.at(graph_id);
-            auto& updates = delta_updates_per_graph.at(graph_id);
+            auto& updates = delta_updates_per_graph[graph_id];
 
             // For each graph in the actual graphs, visitn the nodes in lexicographic order
             for (size_t time = 0, T = g.container_order.size(); time<T; time++)
                 // Visiting all the vertices associated to the same time
                 for (const auto& vertex : g.container_order.at(T-time-1)) {
-                    if (vertex == 6)
+                    if (vertex == 1)
                         std::cout << "HERE" << std::endl;
 
                     /// TODO: sort the patterns in dependency order, i.e., depending which should be run first
@@ -1016,17 +1028,9 @@ private:
                                         } break;
 
                                         case rewrite_to::NEU_RW: {
-                                            // Allocating a new empty object, and returning this potentially in place of the previous one.
-                                            // Then, associating this to a new variable, not in the morphisms, but in the delta updates
-//                                            delta_plus_db.max_id++;
-                                            auto& obj = updates.getNewObject(); //delta_plus_db.O[delta_plus_db.max_id];
-//                                            if (obj.id == 29)
-//                                                std::cout << "debug" << std::endl;
-                                            updates.associateNewToVar(operation.others, obj.id);
-//                                            obj.id = delta_plus_db.max_id;
-//                                            auto idx = pr.resolve_entry_match(j, operation.others);
-//                                            newly_inserted_vertices[operation.others].emplace_back(obj.id);
-
+                                            newObjectToVariable(graph_id, operation.others);
+//                                            auto& obj = updates.getNewObject();
+//                                            updates.associateNewToVar(operation.others, obj.id);
                                         } break;
 
                                         case rewrite_to::SET_RW: {

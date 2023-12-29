@@ -89,7 +89,7 @@ TEST_CASE("einstein") {
     SerialisationStyle type;
     type = JSON_OUTPUT;
 
-    std::filesystem::path input_data = std::filesystem::current_path().parent_path() / ("data") / "test" / "einstein.txt";
+    std::filesystem::path input_data = std::filesystem::current_path().parent_path() / ("data") / "test" / "einstein" / "einstein.txt";
     configuration.full_server_output = true;
     configuration.data.file_or_string_otherwise = true;
     configuration.data.load_value = input_data;
@@ -98,7 +98,7 @@ TEST_CASE("einstein") {
     configuration.conf.emplace_back(SerialisationType::OUTPUT_DATA, type);
     configuration.benchmark_log = "";
     ConfigurationArguments query;
-    std::filesystem::path query_data = std::filesystem::current_path().parent_path() / ("data") / "test" / "einstein_query.txt";
+    std::filesystem::path query_data = std::filesystem::current_path().parent_path() / ("data") / "test" / "einstein" /"einstein_query.txt";
     query.load_value = query_data;
     query.file_or_string_otherwise = true;
     configuration.opt_data_schema = "";
@@ -110,7 +110,82 @@ TEST_CASE("einstein") {
     Environment env(configuration);
     env.run_test(output);
 
-    std::filesystem::path f = std::filesystem::current_path().parent_path() / ("data") / "test" / "einstein_expected.txt";
+    std::filesystem::path f = std::filesystem::current_path().parent_path() / ("data") / "test" / "einstein" /"einstein_expected.txt";
+    parse(f, expected);
+    GSMIso eqSort;
+    bool result = eqSort.equals(output.at(0),
+                                expected.at(0),
+                                [](const gsm_object& lhs, const gsm_object& rhs) {
+                                    return lhs.xi == rhs.xi;
+                                });
+    REQUIRE(result);
+}
+
+
+TEST_CASE("missing1") {
+    Configuration configuration;
+    SerialisationStyle type;
+    type = JSON_OUTPUT;
+
+    std::filesystem::path input_data = std::filesystem::current_path().parent_path() / ("data") / "test" / "missing_node" / "missing_data.txt";
+    configuration.full_server_output = true;
+    configuration.data.file_or_string_otherwise = true;
+    configuration.data.load_value = input_data;
+    configuration.output_folder = "";
+    configuration.run_script_over_graph = -1;
+    configuration.conf.emplace_back(SerialisationType::OUTPUT_DATA, type);
+    configuration.benchmark_log = "";
+    ConfigurationArguments query;
+    std::filesystem::path query_data = std::filesystem::current_path().parent_path() / ("data") / "test" / "missing_node" /"missing_1query.txt";
+    query.load_value = query_data;
+    query.file_or_string_otherwise = true;
+    configuration.opt_data_schema = "";
+    configuration.query = query;
+
+
+    std::vector<std::vector<gsm_object>> output, expected;
+
+    Environment env(configuration);
+    env.run_test(output);
+
+    std::filesystem::path f = std::filesystem::current_path().parent_path() / ("data") / "test" / "missing_node" /"missing_1expected.txt";
+    parse(f, expected);
+    GSMIso eqSort;
+    bool result = eqSort.equals(output.at(0),
+                                expected.at(0),
+                                [](const gsm_object& lhs, const gsm_object& rhs) {
+                                    return lhs.xi == rhs.xi;
+                                });
+    REQUIRE(result);
+}
+
+TEST_CASE("missing2") {
+    Configuration configuration;
+    SerialisationStyle type;
+    type = JSON_OUTPUT;
+
+    std::filesystem::path input_data = std::filesystem::current_path().parent_path() / ("data") / "test" / "missing_node" / "missing_data.txt";
+    configuration.full_server_output = true;
+    configuration.data.file_or_string_otherwise = true;
+    configuration.data.load_value = input_data;
+    configuration.output_folder = "";
+    configuration.run_script_over_graph = -1;
+    configuration.conf.emplace_back(SerialisationType::OUTPUT_DATA, type);
+    configuration.benchmark_log = "";
+    ConfigurationArguments query;
+    std::filesystem::path query_data = std::filesystem::current_path().parent_path() / ("data") / "test" / "missing_node" /"missing_2query.txt";
+    query.load_value = query_data;
+    query.file_or_string_otherwise = true;
+    configuration.opt_data_schema = "";
+    configuration.query = query;
+
+
+    std::vector<std::vector<gsm_object>> output, expected;
+
+    Environment env(configuration);
+    env.run_test(output);
+
+    std::filesystem::path f = std::filesystem::current_path().parent_path() / ("data") / "test" / "missing_node" /"missing_2expected.txt";
     parse(f, expected);
     GSMIso eqSort;
     bool result = eqSort.equals(output.at(0),
