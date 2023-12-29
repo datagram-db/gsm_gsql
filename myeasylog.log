@@ -1,0 +1,128 @@
+2023-12-29 09:35:20,298 INFO [default] Initialisation
+2023-12-29 09:35:20,299 TRACE [default] [Environment::Environment(Configuration&)] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:34] Binding result to script visitor
+2023-12-29 09:35:20,299 INFO [default] Schema loading attempt
+2023-12-29 09:35:20,299 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:43] Loading from files: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:35:20,299 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:47] file schema exists
+2023-12-29 09:35:20,299 INFO [default] Loading data
+2023-12-29 09:35:20,299 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:75] Loading data from file: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:35:20,299 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:91] starting to parse data
+2023-12-29 09:35:20,300 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:97] data parsed in 0.931946 ms
+2023-12-29 09:35:20,300 INFO [default] Indexing data
+2023-12-29 09:35:20,301 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:110] data indexed in 1.02427 ms
+2023-12-29 09:35:20,313 INFO [default] Performing the query
+2023-12-29 09:35:20,313 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:473] Collecting the node matches
+2023-12-29 09:35:20,313 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:488] Running the simple edge queries
+2023-12-29 09:35:20,313 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:497] Instantiating the nested morphisms
+2023-12-29 09:35:20,317 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:506] Running the transformations over the matches
+2023-12-29 09:38:51,890 INFO [default] Initialisation
+2023-12-29 09:38:51,891 TRACE [default] [Environment::Environment(Configuration&)] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:34] Binding result to script visitor
+2023-12-29 09:38:51,891 INFO [default] Schema loading attempt
+2023-12-29 09:38:51,891 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:43] Loading from files: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:38:51,891 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:47] file schema exists
+2023-12-29 09:38:51,891 INFO [default] Loading data
+2023-12-29 09:38:51,891 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:75] Loading data from file: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:38:51,891 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:91] starting to parse data
+2023-12-29 09:38:51,892 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:97] data parsed in 0.972347 ms
+2023-12-29 09:38:51,892 INFO [default] Indexing data
+2023-12-29 09:38:51,893 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:110] data indexed in 1.13666 ms
+2023-12-29 09:38:51,906 INFO [default] Performing the query
+2023-12-29 09:38:51,906 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:473] Collecting the node matches
+2023-12-29 09:38:51,906 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:488] Running the simple edge queries
+2023-12-29 09:38:51,906 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:497] Instantiating the nested morphisms
+2023-12-29 09:38:51,909 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:506] Running the transformations over the matches
+2023-12-29 09:48:46,118 INFO [default] Initialisation
+2023-12-29 09:48:46,118 TRACE [default] [Environment::Environment(Configuration&)] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:34] Binding result to script visitor
+2023-12-29 09:48:46,118 INFO [default] Schema loading attempt
+2023-12-29 09:48:46,118 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:43] Loading from files: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:48:46,118 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:47] file schema exists
+2023-12-29 09:48:46,118 INFO [default] Loading data
+2023-12-29 09:48:46,118 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:75] Loading data from file: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:48:46,118 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:91] starting to parse data
+2023-12-29 09:48:46,119 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:97] data parsed in 1.02306 ms
+2023-12-29 09:48:46,119 INFO [default] Indexing data
+2023-12-29 09:48:46,120 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:110] data indexed in 0.957826 ms
+2023-12-29 09:48:46,134 INFO [default] Performing the query
+2023-12-29 09:48:46,134 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:473] Collecting the node matches
+2023-12-29 09:48:46,134 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:488] Running the simple edge queries
+2023-12-29 09:48:46,134 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:497] Instantiating the nested morphisms
+2023-12-29 09:48:46,137 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:506] Running the transformations over the matches
+2023-12-29 09:50:22,177 INFO [default] Initialisation
+2023-12-29 09:50:22,177 TRACE [default] [Environment::Environment(Configuration&)] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:34] Binding result to script visitor
+2023-12-29 09:50:22,177 INFO [default] Schema loading attempt
+2023-12-29 09:50:22,177 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:43] Loading from files: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:50:22,177 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:47] file schema exists
+2023-12-29 09:50:22,177 INFO [default] Loading data
+2023-12-29 09:50:22,177 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:75] Loading data from file: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:50:22,177 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:91] starting to parse data
+2023-12-29 09:50:22,178 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:97] data parsed in 0.850337 ms
+2023-12-29 09:50:22,178 INFO [default] Indexing data
+2023-12-29 09:50:22,179 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:110] data indexed in 0.880165 ms
+2023-12-29 09:50:22,192 INFO [default] Performing the query
+2023-12-29 09:50:22,192 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:473] Collecting the node matches
+2023-12-29 09:50:22,192 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:488] Running the simple edge queries
+2023-12-29 09:50:22,192 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:497] Instantiating the nested morphisms
+2023-12-29 09:50:22,194 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:506] Running the transformations over the matches
+2023-12-29 09:50:37,382 INFO [default] Initialisation
+2023-12-29 09:50:37,382 TRACE [default] [Environment::Environment(Configuration&)] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:34] Binding result to script visitor
+2023-12-29 09:50:37,382 INFO [default] Schema loading attempt
+2023-12-29 09:50:37,382 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:43] Loading from files: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:50:37,382 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:47] file schema exists
+2023-12-29 09:50:37,383 INFO [default] Loading data
+2023-12-29 09:50:37,383 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:75] Loading data from file: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:50:37,383 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:91] starting to parse data
+2023-12-29 09:50:37,384 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:97] data parsed in 0.886372 ms
+2023-12-29 09:50:37,384 INFO [default] Indexing data
+2023-12-29 09:50:37,385 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:110] data indexed in 1.01711 ms
+2023-12-29 09:50:37,398 INFO [default] Performing the query
+2023-12-29 09:50:37,398 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:473] Collecting the node matches
+2023-12-29 09:50:37,398 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:488] Running the simple edge queries
+2023-12-29 09:50:37,398 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:497] Instantiating the nested morphisms
+2023-12-29 09:50:37,400 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:506] Running the transformations over the matches
+2023-12-29 09:52:31,729 INFO [default] Initialisation
+2023-12-29 09:52:31,729 TRACE [default] [Environment::Environment(Configuration&)] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:34] Binding result to script visitor
+2023-12-29 09:52:31,729 INFO [default] Schema loading attempt
+2023-12-29 09:52:31,729 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:43] Loading from files: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:52:31,729 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:47] file schema exists
+2023-12-29 09:52:31,729 INFO [default] Loading data
+2023-12-29 09:52:31,729 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:75] Loading data from file: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:52:31,729 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:91] starting to parse data
+2023-12-29 09:52:31,730 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:97] data parsed in 0.936332 ms
+2023-12-29 09:52:31,730 INFO [default] Indexing data
+2023-12-29 09:52:31,731 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:110] data indexed in 1.01944 ms
+2023-12-29 09:52:31,746 INFO [default] Performing the query
+2023-12-29 09:52:31,746 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:473] Collecting the node matches
+2023-12-29 09:52:31,746 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:488] Running the simple edge queries
+2023-12-29 09:52:31,747 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:497] Instantiating the nested morphisms
+2023-12-29 09:52:31,752 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:506] Running the transformations over the matches
+2023-12-29 09:53:34,513 INFO [default] Initialisation
+2023-12-29 09:53:34,513 TRACE [default] [Environment::Environment(Configuration&)] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:34] Binding result to script visitor
+2023-12-29 09:53:34,513 INFO [default] Schema loading attempt
+2023-12-29 09:53:34,513 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:43] Loading from files: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:53:34,513 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:47] file schema exists
+2023-12-29 09:53:34,513 INFO [default] Loading data
+2023-12-29 09:53:34,513 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:75] Loading data from file: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:53:34,513 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:91] starting to parse data
+2023-12-29 09:53:34,514 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:97] data parsed in 0.884934 ms
+2023-12-29 09:53:34,514 INFO [default] Indexing data
+2023-12-29 09:53:34,515 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:110] data indexed in 0.902908 ms
+2023-12-29 09:53:34,530 INFO [default] Performing the query
+2023-12-29 09:53:34,530 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:473] Collecting the node matches
+2023-12-29 09:53:34,530 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:488] Running the simple edge queries
+2023-12-29 09:53:34,530 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:497] Instantiating the nested morphisms
+2023-12-29 09:53:34,535 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:506] Running the transformations over the matches
+2023-12-29 09:57:22,368 INFO [default] Initialisation
+2023-12-29 09:57:22,369 TRACE [default] [Environment::Environment(Configuration&)] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:34] Binding result to script visitor
+2023-12-29 09:57:22,369 INFO [default] Schema loading attempt
+2023-12-29 09:57:22,369 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:43] Loading from files: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:57:22,369 TRACE [default] [void Environment::schema_loading()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:47] file schema exists
+2023-12-29 09:57:22,369 INFO [default] Loading data
+2023-12-29 09:57:22,369 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:75] Loading data from file: /home/giacomo/projects/gsm2/data/einstein.txt
+2023-12-29 09:57:22,369 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:91] starting to parse data
+2023-12-29 09:57:22,370 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:97] data parsed in 1.26049 ms
+2023-12-29 09:57:22,370 INFO [default] Indexing data
+2023-12-29 09:57:22,371 TRACE [default] [void Environment::loading_and_indexing()] [/home/giacomo/projects/gsm2/src/configuration/Environment.cpp:110] data indexed in 1.32008 ms
+2023-12-29 09:57:22,390 INFO [default] Performing the query
+2023-12-29 09:57:22,390 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:473] Collecting the node matches
+2023-12-29 09:57:22,390 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:488] Running the simple edge queries
+2023-12-29 09:57:22,390 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:497] Instantiating the nested morphisms
+2023-12-29 09:57:22,394 TRACE [default] [void closure::perform_query(bool)] [/home/giacomo/projects/gsm2/include/queries/closure.h:506] Running the transformations over the matches

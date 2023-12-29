@@ -8,17 +8,19 @@
 #include "roaring64map.hh"
 #include <functional>
 #include "database/gsm_object.h"
+#include <yaucl/structures/any_to_uint_bimap.h>
 
 struct GSMIso {
 
     struct TopologicalSort {
         const std::vector<gsm_object>& O;
-        std::unordered_map<size_t, size_t> db;
+        yaucl::structures::any_to_uint_bimap<size_t> db;
         std::vector<std::vector<size_t>> levels;
 
         TopologicalSort(const std::vector<gsm_object>& O) : O{O} {
             for (size_t i = 0, N = O.size(); i<N; i++) {
-                db.emplace(i, O.at(i).id);
+                const auto& ref = db.put(O.at(i).id);
+                DEBUG_ASSERT(ref.first == i);
             }
             for (size_t i = 0, N = O.size(); i<N; i++) {
                 if (!visited.contains(O.at(i).id)) {
@@ -41,7 +43,7 @@ struct GSMIso {
             visited.add(v);
 
             // Recur for all the vertices adjacent to this vertex
-            for (const auto& [k,u] : O.at(db.at(v)).phi) {
+            for (const auto& [k,u] : O.at(db.getKey(v)).phi) {
                 for (const auto& w : u) {
                     if (!visited.contains(w.id)) {
                         ingoing_edges[w.id].insert(v);
@@ -108,13 +110,13 @@ struct GSMIso {
                 return false;
             for (size_t j = 0, M = leftLevel.size(); j<M; j++) {
                 const auto& leftItemIdx = leftLevel.at(j);
-                const auto& leftItem = left.at(topoLeft.db.at(leftItemIdx));
+                const auto& leftItem = left.at(topoLeft.db.getKey(leftItemIdx));
 
                 for (size_t k = 0; k<M; k++) {
                     const auto& rightItemIdx = rightLevel.at(k);
                     // Restraining the morphisms to the value equivalence, thus reducing the
                     // attempts to morphisms to the ones being value equivalent
-                    if (obj_eq(leftItem, right.at(topoRight.db.at(rightItemIdx)))) {
+                    if (obj_eq(leftItem, right.at(topoRight.db.getKey(rightItemIdx)))) {
                         leftRightMap[leftItemIdx].emplace(rightItemIdx);
                     }
                 }
@@ -165,17 +167,17 @@ struct GSMIso {
             const auto& u = LR.at(i);
             const auto& rU = RR.at(i);
             for (const auto& [orig,dst] : u) {
-                if (!comparison(left.at(topoLeft.db.at(orig)).phi,
+                if (!comparison(left.at(topoLeft.db.getKey(orig)).phi,
                                 u,
-                                right.at(topoRight.db.at(dst)).phi)) {
+                                right.at(topoRight.db.getKey(dst)).phi)) {
                     skip = true;
                     break;
                 }
             }
             for (const auto& [dst,orig]: rU) {
-                if (!comparison(right.at(topoRight.db.at(dst)).phi,
+                if (!comparison(right.at(topoRight.db.getKey(dst)).phi,
                                 rU,
-                                left.at(topoLeft.db.at(orig)).phi)) {
+                                left.at(topoLeft.db.getKey(orig)).phi)) {
                     skip = true;
                     break;
                 }
@@ -191,15 +193,19 @@ private:
     inline bool comparison(const std::unordered_map<std::string, std::vector<gsm_object_xi_content>>& src,
                     const std::unordered_map<size_t, size_t>& conversion,
                     const std::unordered_map<std::string, std::vector<gsm_object_xi_content>>& target) {
-        std::unordered_map<std::string, std::vector<gsm_object_xi_content>> result;
-        for (const auto& [k, vec] : src) {
-            for (const auto& u : vec) {
-                auto j = u;
-                j.id = conversion.at(j.id);
-                result[k].emplace_back(std::move(j));
+        if (src.size() != target.size())
+            return false;
+        else {
+            std::unordered_map<std::string, std::vector<gsm_object_xi_content>> result;
+            for (const auto& [k, vec] : src) {
+                for (const auto& u : vec) {
+                    auto j = u;
+                    j.id = conversion.at(j.id);
+                    result[k].emplace_back(std::move(j));
+                }
             }
+            return result == target;
         }
-        return result == target;
     }
 
 };

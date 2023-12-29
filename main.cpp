@@ -1,4 +1,6 @@
 #include <vector>
+#include "database/GSMIso.h"
+
 #include <args.hxx>
 #include <string>
 #include <iostream>
@@ -8,6 +10,7 @@
 INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char **argv) {
+    // "data/queries/patterns.txt" "/home/giacomo/projects/gsm2/data/einstein.txt" -iortv -b out.csv
     args::ArgumentParser parser("gsm_gsql v2", "This provides an extended implementation of the GSM model for enabling the querying of generalised graph grammars over rooted DAGs.");
     args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
     args::Positional<std::string> pattern(parser, "pattern", "The pattern file");
@@ -107,9 +110,20 @@ int main(int argc, char **argv) {
         configuration.conf.emplace_back(SerialisationType::INPUT_DATA, type);
     }
 
-    Environment env(configuration);
-    env.run();
 
+    std::vector<std::vector<gsm_object>> output, expected;
+
+    Environment env(configuration);
+    env.run_test(output);
+
+    std::filesystem::path f{"/home/giacomo/projects/gsm2/data/test/einstein_expected.txt"};
+    parse(f, expected);
+    GSMIso eqSort;
+    bool result = eqSort.equals(output.at(0),
+                  expected.at(0),
+                  [](const gsm_object& lhs, const gsm_object& rhs) {
+        return lhs.xi == rhs.xi;
+    });
 
     return 0;
 }

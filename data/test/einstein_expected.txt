@@ -1,0 +1,156 @@
+id:0
+ell:
+.
+xi:
+they
+.
+properties:
+.
+phi:
+"had"
+	1.0	1
+;.
+
+id:1
+ell:
+.
+xi:
+daughter
+.
+properties:
+.
+phi:
+"acl_relcl"
+	1.0	7
+;.
+
+id:2
+ell:
+.
+xi:
+discovery publication
+.
+properties:
+.
+phi:
+"orig"
+	1.0	3
+	1.0	4
+;"revealed"
+	1.0	0
+;.
+
+id:3
+ell:
+.
+xi:
+discovery
+.
+properties:
+.
+phi:
+"nmod"
+	1.0	5
+;.
+
+id:4
+ell:
+.
+xi:
+publication
+.
+properties:
+.
+phi:
+.
+
+id:5
+ell:
+.
+xi:
+1978
+.
+properties:
+.
+phi:
+"nmod"
+	1.0	6
+;.
+
+id:6
+ell:
+.
+xi:
+correspondence
+.
+properties:
+.
+phi:
+"nmod"
+	1.0	8
+	1.0	8
+;"between"
+	1.0	8
+;.
+
+id:7
+ell:
+.
+xi:
+which
+.
+properties:
+.
+phi:
+"staying with"
+	1.0	11
+;.
+
+id:8
+ell:
+.
+xi:
+maric einsten
+.
+properties:
+.
+phi:
+"orig"
+	1.0	9
+	1.0	10
+;.
+
+id:9
+ell:
+.
+xi:
+maric
+.
+properties:
+.
+phi:
+.
+
+id:10
+ell:
+.
+xi:
+einsten
+.
+properties:
+.
+phi:
+.
+
+id:11
+ell:
+.
+xi:
+parents
+.
+properties:
+.
+phi:
+.
+
+

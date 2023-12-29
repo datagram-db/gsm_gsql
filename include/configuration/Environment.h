@@ -34,6 +34,24 @@ struct Environment {
     void prepare_output_folders();
     void benchmark_log() const;
 
+    void run_test( std::vector<std::vector<gsm_object>>&  dbs) {
+        schema_loading();
+        loading_and_indexing();
+        if (!conf.query.has_value()) {
+            LOG(ERROR) << "ERROR: a querying environment must specify the patterns to be queried!";
+            exit(1);
+        }
+        if (conf.query->file_or_string_otherwise) {
+            result.load_query_from_file(conf.query->load_value);
+        } else {
+            std::stringstream ss;
+            ss << conf.query->load_value;
+            result.load_query_from_string(ss);
+        }
+        result.perform_query(conf.full_server_output);
+        result.fillInForSerialization(dbs);
+    }
+
     void run() {
         schema_loading();
         loading_and_indexing();
