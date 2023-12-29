@@ -343,7 +343,7 @@ void closure::interpret_closure_set(rewrite_expr *ptr, size_t graph_id, size_t p
                 if (!hasVar.has_value()) return;
                 auto variable_name = std::any_cast<std::string>(hasVar);
                 const auto& record = table.datum.at(record_id);
-                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record, true);
                 for (const auto& id : object_ids) {
                     auto& xi = delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).xi;
                     if (xi.size() <= xi_offset)
@@ -360,7 +360,7 @@ void closure::interpret_closure_set(rewrite_expr *ptr, size_t graph_id, size_t p
                 if (!hasVar.has_value()) return;
                 auto variable_name = std::any_cast<std::string>(hasVar);
                 const auto& record = table.datum.at(record_id);
-                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record, true);
                 for (const auto& id : object_ids) {
                     auto& ell = delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).ell;
                     if (ell.size() <= ell_offset)
@@ -380,7 +380,7 @@ void closure::interpret_closure_set(rewrite_expr *ptr, size_t graph_id, size_t p
                 if (!hasVar.has_value()) return;
                 auto variable_name = std::any_cast<std::string>(hasVar);
                 const auto& record = table.datum.at(record_id);
-                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record, true);
                 for (const auto& id : object_ids) {
                     delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).content[prop_name] = std::any_cast<std::string>(match_rhs);
                 }
@@ -399,7 +399,7 @@ void closure::interpret_closure_set(rewrite_expr *ptr, size_t graph_id, size_t p
             if (isVariableName.has_value()) {
                 auto orig = resolveIdsOverVariableName(graph_id, pattern_id, isVariableName.value(), record);
                 if (!orig.empty()) {
-                    auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+                    auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record, true);
                     for (size_t dst : orig) {
                         for (const auto& id : object_ids) {
                             delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).phi[prop_name].emplace_back(dst);
@@ -408,7 +408,7 @@ void closure::interpret_closure_set(rewrite_expr *ptr, size_t graph_id, size_t p
                 }
 
             } else {
-                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record, true);
                 for (const auto& id : object_ids) {
                     delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).phi[prop_name] = std::any_cast<std::vector<gsm_object_xi_content>>(match_rhs);
                 }

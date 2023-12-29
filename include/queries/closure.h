@@ -858,7 +858,11 @@ private:
 
     inline
     std::vector<size_t>
-    resolveIdsOverVariableName(size_t graph_id, size_t pattern_id, const std::string &variable_name, const std::vector<value> &record) /*const*/ {
+    resolveIdsOverVariableName(size_t graph_id,
+                               size_t pattern_id,
+                               const std::string &variable_name,
+                               const std::vector<value> &record,
+                               bool buildNewIds = false) /*const*/ {
         std::vector<size_t> object_id;
         auto v = delta_updates_per_graph.at(graph_id).getNewlyInsertedVertices(variable_name);
         if (!v.empty())
@@ -884,7 +888,8 @@ private:
                 }
             } else {
                 if (std::holds_alternative<bool>(cell.val)) {
-                    object_id.emplace_back(newObjectToVariable(graph_id, variable_name));
+                    if (buildNewIds)
+                        object_id.emplace_back(newObjectToVariable(graph_id, variable_name));
                 } else {
                     fill_vector_with_case(object_id, cell.val);
                 }
