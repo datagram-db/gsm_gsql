@@ -54,10 +54,12 @@ namespace gsm2 {
 
         struct LinearGSM {
             size_t nGraphs = 0;
+            std::map<size_t, std::string> minRecordToContaimentLabel;
+            const std::string noLabelStr;
             yaucl::structures::any_to_uint_bimap<std::string> label_map;
             std::unordered_map<std::string, PhiTable> containment_tables;
             std::unordered_set<std::string> containment_relationships;
-            std::unordered_map<std::string, AttributeTable> KeyValueContainment;
+            std::unordered_map<std::string, AttributeTable> KeyValueProperties;
             FuzzyMatchSerializer ell_values, xi_values;
             ActivityTable                main_registry;
             std::vector<gsm_db_indices> all_indices; // index associated to each graph
@@ -67,6 +69,19 @@ namespace gsm2 {
             std::unordered_map<std::pair<size_t,size_t>, std::vector<double>> objectScoresLoading;
             bool doInitLoading{true};
             size_t noLabel{0};
+
+            const std::map<size_t, std::string>::const_iterator findLabelFromID(size_t k) const {
+                DEBUG_ASSERT(minRecordToContaimentLabel.begin()->first == 0);
+                auto it = minRecordToContaimentLabel.lower_bound(k);
+                if (it->first>k) it--;
+                return it;
+            }
+            const gsm2::tables::PhiTable::record* resolveRecord(size_t k) const {
+                DEBUG_ASSERT(minRecordToContaimentLabel.begin()->first == 0);
+                auto it = minRecordToContaimentLabel.lower_bound(k);
+                if (it->first>k) it--;
+                return &containment_tables.at(it->second).table.at(k-it->first);
+            }
 
             void asObjects(std::vector<std::vector<gsm_object>> &simpleGraphs) const {
                 simpleGraphs.clear();
@@ -88,7 +103,7 @@ namespace gsm2 {
                     result.xi = xi_values.resolve_object_id(cp);
                     result.ell = ell_values.resolve_object_id(cp);
 //                    size_t gid;
-                    for (const auto& [keyAttribute, Table] : KeyValueContainment) {
+                    for (const auto& [keyAttribute, Table] : KeyValueProperties) {
                         auto tmp2 = Table.resolve_record_if_exists2(offsetMainRegistryTable);
                         if (tmp2) {
                             result.content[keyAttribute] = tmp2.value();
@@ -252,7 +267,7 @@ namespace gsm2 {
             inline std::vector<std::string> resolvePropertyLabels(size_t graphid, size_t id ) const {
                 std::pair<size_t,size_t>cp{graphid, id};
                 std::vector<std::string> result;
-                for (const auto& [key, table] : KeyValueContainment) {
+                for (const auto& [key, table] : KeyValueProperties) {
                     if (table.secondary_index2.find(cp)!= table.secondary_index2.end())
                         result.emplace_back(key);
                 }
@@ -472,7 +487,7 @@ static inline void loadObjectProperty(gsm2::tables::LinearGSM &db,
                                       const std::pair<size_t, size_t> &graphId_eventId,
                                       const std::string &property_key,
                                       const std::string &property_value) {
-    auto& table = db.KeyValueContainment[property_key];
+    auto& table = db.KeyValueProperties[property_key];
     auto it = property_to_type.find(property_key);
     if (it != property_to_type.end())
         table.type = it->second;
@@ -503,7 +518,7 @@ static inline void loadObjectProperty(gsm2::tables::LinearGSM &db,
                                       const std::pair<size_t, size_t> &graphId_eventId,
                                       const std::string &property_key,
                                       const union_type &property_value) {
-    auto& table = db.KeyValueContainment[property_key];
+    auto& table = db.KeyValueProperties[property_key];
     auto it = property_to_type.find(property_key);
     if (it != property_to_type.end())
         table.type = it->second;

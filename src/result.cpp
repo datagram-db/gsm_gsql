@@ -9,7 +9,11 @@ bool result::operator<(const result &rhs) const {
         return true;
     if (rhs.graphid < graphid)
         return false;
-    return eventid < rhs.eventid;
+        if (eventid < rhs.eventid)
+        return true;
+    if (rhs.eventid < eventid)
+        return false;
+    return globalEdgeId < rhs.globalEdgeId;
 }
 
 bool result::operator>(const result &rhs) const {
@@ -26,7 +30,8 @@ bool result::operator>=(const result &rhs) const {
 
 bool result::operator==(const result &rhs) const {
     return graphid == rhs.graphid &&
-           eventid == rhs.eventid;
+           eventid == rhs.eventid &&
+           globalEdgeId == rhs.globalEdgeId;
 }
 
 bool result::operator!=(const result &rhs) const {
@@ -34,6 +39,6 @@ bool result::operator!=(const result &rhs) const {
 }
 
 std::ostream &operator<<(std::ostream &os, const result &result) {
-    os << "{graph=" << result.graphid << ", event=" << result.eventid << ", score=" << result.score <<"}";
+    os << "{graph=" << result.graphid << ", event=" << result.eventid << ", edgeId=" << result.globalEdgeId <<"}";
     return os;
 }

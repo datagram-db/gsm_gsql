@@ -44,7 +44,8 @@ void gsm_object::updateWith(const gsm_object& old) {
         content.emplace(oldKey, oldValue); // Inserting the old content only if something new is not available
     }
     for (const auto& [oldKey, oldValue] : old.phi) {
-        remove_duplicates(phi.emplace(oldKey, oldValue).first->second); // Inserting the old content only if something new is not available
+        phi[oldKey].insert(phi[oldKey].begin(), oldValue.begin(), oldValue.end());
+//        remove_duplicates(phi.emplace(oldKey, oldValue).first->second); // Inserting the old content only if something new is not available
     }
 }
 

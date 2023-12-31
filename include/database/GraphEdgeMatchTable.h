@@ -39,9 +39,9 @@ struct RawThreewayTable {
     std::string src;
     std::string edge;
     std::string dst;
-    std::string score{"score"};
+//    std::string score{"score"};
 
-    using record = std::tuple<size_t, size_t, std::string, size_t, double> ;
+    using record = std::array<size_t, 4/*, double*/> ;
     std::vector<record> table;
 };
 
@@ -52,9 +52,9 @@ struct RawTwowayTable {
     std::string graph{"graph"};
     std::string src;
     std::string dst;
-    std::string score{"score"};
+//    std::string score{"score"};
 
-    using record = std::tuple<size_t, size_t, size_t, double> ;
+    using record = std::array<size_t, 3/*, double*/> ;
     std::vector<record> table;
 };
 

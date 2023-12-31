@@ -10,7 +10,8 @@
 INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char **argv) {
-    // "data/queries/patterns.txt" "/home/giacomo/projects/gsm2/data/einstein.txt" -iortv -b out.csv
+    // "data/test/einstein/einstein_query.txt" "data/test/einstein/einstein.txt"  -iortv -b out.csv
+    // "data/test/missing_node/missing_3query.txt" "data/test/missing_node/missing_data.txt"  -iortv -b out.csv
     args::ArgumentParser parser("gsm_gsql v2", "This provides an extended implementation of the GSM model for enabling the querying of generalised graph grammars over rooted DAGs.");
     args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
     args::Positional<std::string> pattern(parser, "pattern", "The pattern file");

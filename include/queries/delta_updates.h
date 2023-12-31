@@ -43,6 +43,7 @@ struct delta_updates {
     std::vector<size_t> no_inserted_node;
     // Storing all the nodes that are removed
     std::unordered_set<size_t> removed_objects;
+    std::unordered_set<size_t> removed_edges;
 
 
     void clear_insertions();
@@ -50,8 +51,11 @@ struct delta_updates {
     inline size_t getNovelInsertions() const {
         return std::max(delta_plus_db.max_id+1, no_inserted_node.size());
     }
-    inline size_t getRemovals() const {
+    inline size_t getNodeRemovals() const {
         return removed_objects.size();
+    }
+    inline size_t getEdgeRemovals() const {
+        return removed_edges.size();
     }
 
     inline const std::vector<size_t>& getNewlyInsertedVertices(const std::string&x) const {
@@ -80,13 +84,18 @@ struct delta_updates {
             removed_objects.insert(default_val);
     }
 
+    inline void edge_removed(size_t default_val) {
+        removed_edges.insert(default_val);
+    }
+
     /**
      * Determining that "dest" should replace "orig"
      * @param orig
      * @param dest
      */
     inline void replaceWith(size_t orig, size_t dest) {
-        DEBUG_ASSERT(!replacement_map.contains(orig));
+        if (replacement_map.contains(orig))
+            std::cerr << "WARNING!" << std::endl;
         replacement_map[orig] = dest;
     }
     /**

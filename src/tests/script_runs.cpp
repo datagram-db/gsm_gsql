@@ -195,3 +195,40 @@ TEST_CASE("missing2") {
                                 });
     REQUIRE(result);
 }
+
+TEST_CASE("missing3") {
+    Configuration configuration;
+    SerialisationStyle type;
+    type = JSON_OUTPUT;
+
+    std::filesystem::path input_data = std::filesystem::current_path().parent_path() / ("data") / "test" / "missing_node" / "missing_data.txt";
+    configuration.full_server_output = true;
+    configuration.data.file_or_string_otherwise = true;
+    configuration.data.load_value = input_data;
+    configuration.output_folder = "";
+    configuration.run_script_over_graph = -1;
+    configuration.conf.emplace_back(SerialisationType::OUTPUT_DATA, type);
+    configuration.benchmark_log = "";
+    ConfigurationArguments query;
+    std::filesystem::path query_data = std::filesystem::current_path().parent_path() / ("data") / "test" / "missing_node" /"missing_3query.txt";
+    query.load_value = query_data;
+    query.file_or_string_otherwise = true;
+    configuration.opt_data_schema = "";
+    configuration.query = query;
+
+
+    std::vector<std::vector<gsm_object>> output, expected;
+
+    Environment env(configuration);
+    env.run_test(output);
+
+    std::filesystem::path f = std::filesystem::current_path().parent_path() / ("data") / "test" / "missing_node" /"missing_3expected.txt";
+    parse(f, expected);
+    GSMIso eqSort;
+    bool result = eqSort.equals(output.at(0),
+                                expected.at(0),
+                                [](const gsm_object& lhs, const gsm_object& rhs) {
+                                    return lhs.xi == rhs.xi;
+                                });
+    REQUIRE(result);
+}

@@ -139,7 +139,7 @@ namespace gsm2 {
             label_map.clear();
             containment_tables.clear();
             containment_relationships.clear();
-            KeyValueContainment.clear();
+            KeyValueProperties.clear();
             ell_values.clear();
             xi_values.clear();
             main_registry.clear();
@@ -156,9 +156,12 @@ namespace gsm2 {
                 }
             }
             objectScores.clear();
-            for (auto& [key, table]: containment_tables)
-                table.index();
-            for (auto& [key, table] : KeyValueContainment)
+            size_t tables_start = 0;
+            for (auto& [key, table]: containment_tables) {
+                minRecordToContaimentLabel.emplace(tables_start, key);
+                tables_start = table.index(tables_start);
+            }
+            for (auto& [key, table] : KeyValueProperties)
                 table.index(main_registry, idx);
             main_registry.indexing2();
             main_registry.sanityCheck();
@@ -233,7 +236,7 @@ namespace gsm2 {
                 return foundData;
             }
             for (auto it = main_registry.table.begin() + indexes.first; it != main_registry.table.begin() + indexes.second + 1; ++it) {
-                foundData.emplace_back(it->graph_id, it->event_id);
+                foundData.emplace_back(it->graph_id, it->event_id, -1);
             }
             return foundData;
         }
@@ -328,7 +331,7 @@ namespace gsm2 {
                             container_containementOth ? x.object_id : x.id_contained}]
                             .emplace_back(x.graph_id,
                                           container_containementOth ?  x.id_contained : x.object_id,
-                                          x.w_contained);
+                                          x.record_id);
                 }
             } else {
                 auto it = containment_tables.find(phi_label);
@@ -344,7 +347,7 @@ namespace gsm2 {
                             container_containementOth ? iterator.first->object_id : iterator.first->id_contained}]
                             .emplace_back(iterator.first->graph_id,
                                           container_containementOth ? iterator.first->id_contained : iterator.first->object_id,
-                                          iterator.first->w_contained);
+                                          iterator.first->record_id);
                 }
             }
 
@@ -377,8 +380,8 @@ namespace gsm2 {
 
         std::optional<union_minimal>
         LinearGSM::resolveProperties(size_t graph_id, size_t node_id, const std::string &key_prop) const {
-            auto it = KeyValueContainment.find(key_prop);
-            if (it == KeyValueContainment.end())
+            auto it = KeyValueProperties.find(key_prop);
+            if (it == KeyValueProperties.end())
                 return {};
             size_t i, N;
             auto it3= it->second.secondary_index2.find({graph_id,node_id});
@@ -401,7 +404,7 @@ namespace gsm2 {
                 legacy_obj.phi.clear();
                 legacy_obj.ell = ell(record.graph_id, legacy_obj.id);
                 legacy_obj.xi = xi(record.graph_id, legacy_obj.id);
-                for (const auto& [keyAttribute, Table] : KeyValueContainment) {
+                for (const auto& [keyAttribute, Table] : KeyValueProperties) {
                     auto tmp2 = Table.resolve_record_if_exists2(offsetMainRegistryTable);
                     if (tmp2) {
                         legacy_obj.content[keyAttribute] = (std::holds_alternative <std::string>(tmp2.value()) ? std::get<std::string>(tmp2.value()) : std::to_string(std::get<double>(tmp2.value())));
@@ -419,7 +422,7 @@ namespace gsm2 {
 //                                std::cout << "|"<< keyAttribute << std::endl;
 //                            }
                             for (const auto& record2 : it2->second)
-                                legacy_obj.phi[keyAttribute].emplace_back(record2->id_contained, record2->w_contained);
+                                legacy_obj.phi[keyAttribute].emplace_back(record2->id_contained, record2->w_contained, record2->record_id);
                         }
 
                     }
@@ -450,7 +453,7 @@ namespace gsm2 {
                 else
                     // Otherwise, using the first value
                     tmp = xis.at(0)+"="+std::to_string(record.event_id);
-                for (const auto& [keyAttribute, Table] : KeyValueContainment) {
+                for (const auto& [keyAttribute, Table] : KeyValueProperties) {
                     auto tmp2 = Table.resolve_record_if_exists2(offsetMainRegistryTable);
                     if (tmp2) {
                         tmp = tmp+"|"+keyAttribute+"="+(std::holds_alternative <std::string>(tmp2.value()) ? std::get<std::string>(tmp2.value()) : std::to_string(std::get<double>(tmp2.value())));
@@ -477,8 +480,8 @@ namespace gsm2 {
 
 //                bool doTemporalMatchQuery = temporalTimeMatch.has_value();
 //                uint16_t isTemproalVal = temporalTimeMatch.value_or(0);
-            auto it = KeyValueContainment.find(field_name);
-            if (it == KeyValueContainment.end()) {
+            auto it = KeyValueProperties.find(field_name);
+            if (it == KeyValueProperties.end()) {
                 // if no attribute is there, for the exact match I assume that no value was matched
                 return;
             } else {
@@ -558,7 +561,7 @@ namespace gsm2 {
             nodesInGraph[graphId] = std::max(nodesInGraph[graphId], object.id);
             for (const auto& [property_key,property_value] : object.content) {
                 if (std::holds_alternative<std::string>(property_value)) {
-                    auto& table = KeyValueContainment[property_key];
+                    auto& table = KeyValueProperties[property_key];
                     auto it = property_to_type.find(property_key);
                     if (it != property_to_type.end())
                         table.type = it->second;
@@ -582,7 +585,7 @@ namespace gsm2 {
                             break;
                     }
                 } else {
-                    auto& table = KeyValueContainment[property_key];
+                    auto& table = KeyValueProperties[property_key];
                     auto it = property_to_type.find(property_key);
                     if (it != property_to_type.end())
                         table.type = gsm2::tables::DoubleAtt;

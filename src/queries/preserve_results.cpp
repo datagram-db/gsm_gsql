@@ -67,7 +67,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                 throw std::runtime_error("ERROR: ingoing edge for pattern "+graph_grammar_entry_point.pattern_name+" must have at least one entry point");
             }
             if (inEdge.forall) {
-                all.emplace_back(inEdge.var.value());
+                //all.emplace_back(inEdge.var.value());
                 for (const auto& x : src.var) all.emplace_back(x);
             }
             if (!inEdge.question_mark)
@@ -241,7 +241,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
             std::vector<size_t> idx_to_remove; // Indices for the rows to be removed in the main table, as they do not match
             // with the other "spare" edges, for hooks or "join" edges (not within the ego-net)
             for (const auto& record : result.datum) {
-                auto fg = M2.find(std::get<size_t>(record.at(foundGraph).val));
+                auto fg = M2.find(std::get<size_t>(record.at(graphPos).val));
                 if (fg == M2.end())
                     idx_to_remove.emplace_back(recordToRemove);
                 else {
@@ -263,9 +263,10 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
             std::reverse(all.begin(), all.end());
             // Nesting the table using the variables associate to a .vec, alongside with their associated graph id.
             // The remaining rows will be nested within the * node
+//            std::cout << print_table(result) << std::endl;
             std::tie(result, nested_schema) = nest_or_groupby(result, all, "*");
             idx_to_remove.clear();
-
+//            std::cout << print_table(result) << std::endl;
             recordToRemove = 0; foundInPos = -1; size_t graphInPos = -1;
             for (const auto& x : result.datum) {
                 if (graphInPos == -1) {
@@ -469,9 +470,9 @@ void preserve_results::loadColumnarTablesFromEdges(std::vector<nested_table> &ma
                     if (filterHook && (e != graph_src.second)) continue;
                     DEBUG_ASSERT(isOutgoing == q.second);
                     if (isOutgoing)
-                        raw_table.table.emplace_back(graph_src.first, graph_src.second, q.first, e, s);
+                        raw_table.table.push_back({graph_src.first, graph_src.second, s, e});
                     else
-                        raw_table.table.emplace_back(graph_src.first, e, q.first, graph_src.second, s);
+                        raw_table.table.push_back({graph_src.first, e, s, graph_src.second});
                 }
             }
         }
@@ -514,13 +515,13 @@ void preserve_results::loadColumnarTablesFromEdges(std::vector<nested_table> &ma
             const auto& q = edge_query_ref.int_to_T.at(idx);
             const auto& result = out.at(idx);
             for (const auto& [graph_src, list_dst] : result) {
-                for (const auto& [g,e,s] : list_dst) {
-                    if (filterHook && (e != graph_src.second)) continue;
+                for (const auto& [g,event,edgeId] : list_dst) {
+                    if (filterHook && (event != graph_src.second)) continue;
                     DEBUG_ASSERT(isOutgoing == q.second);
                     if (isOutgoing)
-                        raw_table.table.emplace_back(graph_src.first, graph_src.second, e, s);
+                        raw_table.table.push_back({graph_src.first, graph_src.second, event});
                     else
-                        raw_table.table.emplace_back(graph_src.first, e, graph_src.second, s);
+                        raw_table.table.push_back({graph_src.first, event, graph_src.second});
                 }
             }
         }

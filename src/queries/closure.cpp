@@ -298,6 +298,8 @@ void closure::generate_materialised_view() {
         forloading->iterateOverObjects([this](size_t graphid, const gsm_object& legacy_object_old_data) {
             auto& updates = delta_updates_per_graph[graphid];
             if ((!updates.hasXBeenRemoved(legacy_object_old_data.id))) {
+                size_t i =0;
+                std::vector<size_t> removed_indices;
 //                std::cout << "C" << legacy_object_old_data.id << "..." << std::endl;
                 size_t new_id = legacy_object_old_data.id;
                 auto& obj = updates.delta_plus_db.O[new_id];
@@ -308,12 +310,19 @@ void closure::generate_materialised_view() {
 //                }
                 for (auto& [k, v] :obj.phi) {
 //                    std::cout << "\tG=" << k<< std::endl;
+                    i = 0;
+                    removed_indices.clear();
                     for (auto& w : v) {
                         auto it = updates.replacement_map.find(w.id);
                         if (it != updates.replacement_map.end()) {
                             w.id = it->second;
                         }
+                        if ((w.orig_edge_id != -1) &&  delta_updates_per_graph.at(graphid).removed_edges.contains(w.orig_edge_id)) {
+                            removed_indices.emplace_back(i);
+                        }
+                        i++;
                     }
+                    remove_index(v, removed_indices);
                 }
             }
         });
@@ -328,7 +337,7 @@ void closure::interpret_closure_set(rewrite_expr *ptr, size_t graph_id, size_t p
                                     std::any match_rhs) /** non-const!*/ {
     if (!ptr)
         return;
-    Interpret I(graph_id, pattern_id, schema, table, record_id, *this, pr.morphisms);
+    Interpret I(graph_id, pattern_id, schema, table, record_id, *this, pr.morphisms, forloading);
     switch (ptr->t) {
         case rewrite_expr::SCRIPT_CASE:
             // Ignoring setting the expression
@@ -490,9 +499,25 @@ std::any closure::Interpret::interpret_closure_evaluate(rewrite_expr *ptr) /*con
             // Returning the specific XI for the nodes
         case rewrite_expr::NODE_XI: {
             size_t xi_offset = ptr->id;
-            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
-            const auto& record = table.datum.at(record_id);
-            auto object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+            std::vector<size_t> object_ids;
+            auto evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get());
+            bool found = false;
+            {
+                auto strs = get_v_opt<std::string>(evaluation);
+                if (strs.has_value()) {
+                    found = true;
+//                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+                    const auto& record = table.datum.at(record_id);
+                    object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, strs.value(), record);
+                }
+            }
+            if (!found) {
+                auto strs = get_v_opt<std::vector<size_t>>(evaluation);
+                if (strs.has_value()) {
+                    object_ids = strs.value();
+                }
+            }
+
             if (object_ids.empty())
                 return {};
 
@@ -514,9 +539,27 @@ std::any closure::Interpret::interpret_closure_evaluate(rewrite_expr *ptr) /*con
             // Returning the specific ELLS for the nodes
         case rewrite_expr::NODE_ELL: {
             size_t ell_offset = ptr->id;
-            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+            std::vector<size_t> object_ids;
+            auto evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get());
+            bool found = false;
+            {
+                auto strs = get_v_opt<std::string>(evaluation);
+                if (strs.has_value()) {
+                    found = true;
+//                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+                    const auto& record = table.datum.at(record_id);
+                    object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, strs.value(), record);
+                }
+            }
+            if (!found) {
+                auto strs = get_v_opt<std::vector<size_t>>(evaluation);
+                if (strs.has_value()) {
+                    object_ids = strs.value();
+                }
+            }
+            /*auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
             const auto& record = table.datum.at(record_id);
-            auto object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+            auto object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);*/
             if (object_ids.empty())
                 return {};
 
@@ -538,9 +581,27 @@ std::any closure::Interpret::interpret_closure_evaluate(rewrite_expr *ptr) /*con
             // Returning the property associated to a node
         case rewrite_expr::NODE_PROP: {
             auto prop_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->pi_key_arg_or_then.get()));
-            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
-            const auto& record = table.datum.at(record_id);
-            auto object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+            std::vector<size_t> object_ids;
+            auto evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get());
+            bool found = false;
+            {
+                auto strs = get_v_opt<std::string>(evaluation);
+                if (strs.has_value()) {
+                    found = true;
+//                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+                    const auto& record = table.datum.at(record_id);
+                    object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, strs.value(), record);
+                }
+            }
+            if (!found) {
+                auto strs = get_v_opt<std::vector<size_t>>(evaluation);
+                if (strs.has_value()) {
+                    object_ids = strs.value();
+                }
+            }
+//            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+//            const auto& record = table.datum.at(record_id);
+//            auto object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
             if (object_ids.empty())
                 return {};
 
@@ -560,14 +621,43 @@ std::any closure::Interpret::interpret_closure_evaluate(rewrite_expr *ptr) /*con
 
         case rewrite_expr::NODE_CONT: {
             size_t ell_offset = ptr->id;
-            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
-            const auto& record = table.datum.at(record_id);
-            auto object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
-
-            std::vector<gsm_object_xi_content> collected;
+            std::vector<size_t> collected;
+            auto hasProp = interpret_closure_evaluate(ptr->pi_key_arg_or_then.get());
+            if (!hasProp.has_value()) return collected;
+            auto prop_name = std::any_cast<std::string>(hasProp);
+            auto evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get());
+            if (!evaluation.has_value()) return collected;
+//            auto variable_name = std::any_cast<std::string>(hasVar);
+            std::vector<size_t> object_ids;
+//            auto evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get());
+            bool found = false;
+            {
+                auto strs = get_v_opt<std::string>(evaluation);
+                if (strs.has_value()) {
+                    found = true;
+//                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+                    const auto& record = table.datum.at(record_id);
+                    object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, strs.value(), record);
+                }
+            }
+            if (!found) {
+                auto strs = get_v_opt<std::vector<size_t>>(evaluation);
+                if (strs.has_value()) {
+                    object_ids = strs.value();
+                }
+            }
+//            const auto& record = table.datum.at(record_id);
+//            auto isVariableName = get_v_opt<std::string>(match_rhs);
+//            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+//            const auto& record = table.datum.at(record_id);
+//            auto object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+//            std::vector<gsm_object_xi_content> collected;
             for (size_t id : object_ids) {
-                auto local = clos.resolve_content(graph_id, id, variable_name);
-                collected.insert(collected.end(), local.begin(), local.end());
+                for (const gsm_object_xi_content& ref : clos.resolve_content(graph_id, id, prop_name)) {
+                    collected.emplace_back(ref.id);
+                }
+//                auto local = clos.resolve_content(graph_id, id, prop_name);
+//                collected.insert(collected.end(), local.begin(), local.end());
             }
             remove_duplicates(collected);
             return collected;
@@ -577,14 +667,18 @@ std::any closure::Interpret::interpret_closure_evaluate(rewrite_expr *ptr) /*con
         case rewrite_expr::EDGE_LABEL: {
             auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
             const auto& record = table.datum.at(record_id);
-            auto object_ids = clos.resolvelabelsOverVariableName(pattern_id, variable_name, record);
-            if (object_ids.empty())
+            auto edges_ids = clos.resolveEdgesOverVariableName(pattern_id, variable_name, record);
+            if (edges_ids.empty())
                 return {};
 
+            std::unordered_set<std::string> S;
+            for (const auto& x : edges_ids)
+                S.insert(ptr2->findLabelFromID(x)->second);
+
             return std::accumulate(
-                    object_ids.empty() ? object_ids.end() : std::next(object_ids.begin()),
-                    object_ids.end(),
-                    object_ids.empty() ? std::string("") : object_ids.at(0),
+                    S.empty() ? S.end() : std::next(S.begin()),
+                    S.end(),
+                    S.empty() ? std::string("") :  *S.begin(),
                     [](const std::string& b, const std::string& a) {
                         if (b.empty())
                             return a;
@@ -605,6 +699,52 @@ std::any closure::Interpret::interpret_closure_evaluate(rewrite_expr *ptr) /*con
                     interpret_closure_evaluate(ptr->pi_key_arg_or_then.get()) :
                     interpret_closure_evaluate(ptr->ptr_or_else.get());
         } break;
+
+        case rewrite_expr::EDGE_SRC: {
+            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+            const auto& record = table.datum.at(record_id);
+            auto edges_ids = clos.resolveEdgesOverVariableName(pattern_id, variable_name, record);
+            if (edges_ids.empty())
+                return {};
+
+            std::vector<size_t> ids;
+            for (size_t& x : edges_ids) {
+                x = ptr2->resolveRecord(x)->object_id;
+            }
+            return {ids};
+        }
+
+        case rewrite_expr::EDGE_DST: {
+            auto evaluation = (interpret_closure_evaluate(ptr->ptr_or_else.get()));
+//            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+            const auto& record = table.datum.at(record_id);
+            std::vector<size_t> edges_ids;
+            bool found = false;
+            {
+                auto strs = get_v_opt<std::string>(evaluation);
+                if (strs.has_value()) {
+                    found = true;
+//                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+                    const auto& record = table.datum.at(record_id);
+                    edges_ids = clos.resolveEdgesOverVariableName(pattern_id, strs.value(), record);
+                }
+            }
+            if (!found) {
+                auto strs = get_v_opt<std::vector<size_t>>(evaluation);
+                if (strs.has_value()) {
+                    edges_ids = strs.value();
+                }
+            }
+
+            if (edges_ids.empty())
+                return {};
+
+            std::vector<size_t> ids;
+            for (size_t& x : edges_ids) {
+                x = ptr2->resolveRecord(x)->id_contained;
+            }
+            return {ids};
+        }
 
         default:
             throw std::runtime_error("UNSUPPORTED OPERATION (FUTURE)");
@@ -868,7 +1008,7 @@ bool closure::Interpret::interpret(test_pred &ptr) /*const*/ {
                         if (!tablese.datum.at(i).at(offsetForStar).isNested)
                             return false;
                         for (const auto& row : tablese.datum.at(i).at(offsetForStar).table.datum) {
-                            if (std::holds_alternative<size_t>(row.at(offsetForStar).val)) {
+                            if (std::holds_alternative<size_t>(row.at(offsetNested).val)) {
                                 if (currentMatches.contains(std::get<size_t>(row.at(offsetNested).val)))
                                     return false;
                             }

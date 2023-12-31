@@ -25,7 +25,7 @@
 
 #include "database/gsm_object_xi_content.h"
 
-gsm_object_xi_content::gsm_object_xi_content(size_t id, double score, const std::unordered_map<std::string, union_minimal>& property_values) : id(id), score(score), property_values(property_values) {}
+gsm_object_xi_content::gsm_object_xi_content(size_t id, double score, size_t orig_edge_id, const std::map<std::string, union_minimal>& property_values) : id(id), score(score), orig_edge_id(orig_edge_id), property_values(property_values) {}
 
 bool gsm_object_xi_content::operator==(const gsm_object_xi_content &rhs) const {
     return id == rhs.id && score == rhs.score && property_values == rhs.property_values;

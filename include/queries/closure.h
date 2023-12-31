@@ -43,11 +43,6 @@ std::optional<T> get_v_opt(const std::any & tmp)
     } catch (...) {
         return std::nullopt;
     }
-//    std::string tmpType = tmp.type().name();
-//    if(tmpType.contains(typeid(T).name()))
-//        return std::optional<T>(std::any_cast<T>(tmp));
-//    else
-//        return std::nullopt;
 }
 
 
@@ -240,6 +235,8 @@ struct closure {
         }
     }
 
+    std::unordered_set<std::string> nodeVars, edgeVars;
+
     inline void sortVL() {
         std::vector<std::unordered_set<std::string>> outgoing(vl.size());
         std::unordered_map<std::string, std::unordered_set<size_t>> ingoing;
@@ -262,6 +259,7 @@ struct closure {
                         continue;
                 }
             }
+
             if (pattern.var.size() != 1) {
                 std::cerr << "ERROR: the entrypoint variable should be associated to just one variable (pattern #" << i << ")" << std::endl;
                 exit(1);
@@ -350,6 +348,7 @@ struct closure {
             return memento.at(objL.pattern_name) < memento.at(objR.pattern_name);
         });
         for (size_t i = 0; i<N; i++) {
+            nodeVars.insert(vl.at(i).var.at(0));
             for (auto& [n,e] : vl.at(i).in) {
                 std::set<std::string> vars{n.var.begin(), n.var.end()};
                 n.var = {std::accumulate(
@@ -363,6 +362,10 @@ struct closure {
                                 return  b + (a.empty() ? "" : "_"+a);
                         }
                 )};
+                nodeVars.insert(n.var.at(0));
+                if (e.var.has_value()) {
+                    edgeVars.insert(e.var.value());
+                }
             }
             for (auto& [e,n] : vl.at(i).out) {
                 std::set<std::string> vars{n.var.begin(), n.var.end()};
@@ -377,6 +380,10 @@ struct closure {
                                 return  b + (a.empty() ? "" : "_"+a);
                         }
                 )};
+                nodeVars.insert(n.var.at(0));
+                if (e.var.has_value()) {
+                    edgeVars.insert(e.var.value());
+                }
             }
             for (auto& nOther : vl.at(i).join_edges) {
                 std::set<std::string> vars{nOther.var.begin(), nOther.var.end()};
@@ -391,10 +398,15 @@ struct closure {
                                 return  b + (a.empty() ? "" : "_"+a);
                         }
                 )};
+                nodeVars.insert(nOther.var.at(0));
                 for (auto& [e,n] : nOther.out) {
                     for (const auto& varName : n.var) {
+                        nodeVars.insert(varName);
                         if (varName != "ANY")
                             ingoing[varName].insert(i);
+                    }
+                    if (e.var.has_value()) {
+                        edgeVars.insert(e.var.value());
                     }
                 }
                 for (auto& [n,e] : nOther.in) {
@@ -410,6 +422,10 @@ struct closure {
                                     return  b + (a.empty() ? "" : "_"+a);
                             }
                     )};
+                    nodeVars.insert(n.var.at(0));
+                    if (e.var.has_value()) {
+                        edgeVars.insert(e.var.value());
+                    }
                 }
             }
         }
@@ -773,6 +789,7 @@ private:
         size_t record_id;
         closure& clos;
         const std::vector<std::unordered_map<std::string, std::pair<std::vector<std::string>, std::unordered_map<size_t, nested_table>>>>& ptr;
+        const gsm2::tables::LinearGSM* ptr2;
     public:
         Interpret(size_t graphId,
                   size_t patternId,
@@ -780,8 +797,9 @@ private:
                   const nested_table &table,
                   size_t recordId,
                   closure &clos,
-                  const std::vector<std::unordered_map<std::string, std::pair<std::vector<std::string>, std::unordered_map<size_t, nested_table>>>>& ptr) : graph_id(graphId), pattern_id(patternId), schema(schema),
-                                                          table(table), record_id(recordId), clos(clos), ptr{ptr} {}
+                  const std::vector<std::unordered_map<std::string, std::pair<std::vector<std::string>, std::unordered_map<size_t, nested_table>>>>& ptr,
+                  const gsm2::tables::LinearGSM* ptr2) : graph_id(graphId), pattern_id(patternId), schema(schema),
+                                                          table(table), record_id(recordId), clos(clos), ptr{ptr}, ptr2{ptr2} {}
 
         std::any interpret_closure_evaluate(rewrite_expr* ptr) /*const*/;
 
@@ -792,10 +810,13 @@ private:
 
 
 
-
-    std::vector<std::string>
-    resolvelabelsOverVariableName(size_t pattern_id, const std::string &variable_name, const std::vector<value> &record) const {
-        std::vector<std::string> object_id;
+    inline
+    std::vector<size_t>
+    resolveEdgesOverVariableName(size_t pattern_id, const std::string &variable_name, const std::vector<value> &record) const {
+        std::vector<size_t> object_id;
+        if (!edgeVars.contains(variable_name)) {
+            return object_id;
+        }
         auto offset = pr.resolve_entry_match(pattern_id, variable_name);
         if (offset.second<0)
             return object_id;
@@ -837,7 +858,7 @@ private:
         size_t totalInsertions = 0, total_removals = 0;
         for (const auto& ref : delta_updates_per_graph) {
             totalInsertions += ref.getNovelInsertions();
-            total_removals += ref.getRemovals();
+            total_removals += ref.getNovelInsertions() + ref.getEdgeRemovals();
         }
         if ((totalInsertions + total_removals) > 0) {
             auto ptr = new gsm2::tables::LinearGSM();
@@ -929,7 +950,7 @@ private:
             for (size_t time = 0, T = g.container_order.size(); time<T; time++)
                 // Visiting all the vertices associated to the same time
                 for (const auto& vertex : g.container_order.at(T-time-1)) {
-                    if (vertex == 1)
+                    if (vertex == 0)
                         std::cout << "HERE" << std::endl;
 
                     /// TODO: sort the patterns in dependency order, i.e., depending which should be run first
@@ -999,7 +1020,7 @@ private:
                                     }
                                 }
 
-                                Interpret I(graph_id, pattern_id, pattern_result.first, it->second, table_offset, *this, pr.morphisms);
+                                Interpret I(graph_id, pattern_id, pattern_result.first, it->second, table_offset, *this, pr.morphisms, forloading);
                                 if (pattern.has_where) {
                                     if (!I.interpret(pattern.where)) {
                                         table_offset++;
@@ -1019,17 +1040,30 @@ private:
                                                     for (const auto& sub_entries : entries.at(pr.nested_index.at(pattern_id)).table.datum) {
                                                         if (!std::holds_alternative<bool>(sub_entries.at(idx.second).val)) { // If this was not an optional match
                                                             size_t default_val = std::get<size_t>(sub_entries.at(idx.second).val);
-                                                            updates.set_removed(default_val);
+                                                            DEBUG_ASSERT(nodeVars.contains(operation.others));
+                                                            if (nodeVars.contains(operation.others)) {
+                                                                updates.set_removed(default_val);
+                                                            } else if (edgeVars.contains(operation.others)) {
+                                                                updates.edge_removed(default_val);
+                                                            }
                                                         }
 
                                                     }
                                                 } else { // Otherwise, just removing this instance
                                                     if (!std::holds_alternative<bool>(entries.at(idx.second).val)) {
                                                         size_t default_val = std::get<size_t>(entries.at(idx.second).val);
-                                                        updates.set_removed(default_val);
+//                                                        DEBUG_ASSERT(nodeVars.contains(operation.others));
+
+                                                        if (nodeVars.contains(operation.others)) {
+                                                            updates.set_removed(default_val);
+                                                        } else if (edgeVars.contains(operation.others)) {
+                                                            updates.edge_removed(default_val);
+                                                        }
                                                     }
                                                 }
                                             }
+
+
                                         } break;
 
                                         case rewrite_to::NEU_RW: {

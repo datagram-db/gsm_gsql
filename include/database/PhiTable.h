@@ -40,12 +40,14 @@ namespace gsm2 {
                 size_t object_id;
                 double w_contained; // Weight
                 size_t id_contained;
+                size_t instance_id;
+                size_t record_id;
 
                 record(const record&) = default;
                 record(record&&) = default;
                 record& operator=(const record&) = default;
                 record& operator=(record&&) = default;
-                record(size_t l0Id = 0, const std::pair<size_t,size_t>& nodeId = {0,0}, double wContained = 1.0, size_t idContained = 1);
+                record(size_t l0Id = 0, const std::pair<size_t,size_t>& nodeId = {0,0}, double wContained = 1.0, size_t idContained = 1, size_t instance_id = 0);
 
                 bool operator<(const record &rhs) const;
                 bool operator>(const record &rhs) const;
@@ -69,9 +71,9 @@ namespace gsm2 {
             std::unordered_map<size_t, std::pair<const struct record*,const struct record*>> primary_index;
             std::unordered_map<size_t, std::unordered_map<size_t, std::vector<const struct record*>>> secondary_index;
 
-            void add(size_t l0Id = 0, const std::pair<size_t,size_t>& nodeId = {0,0}, double wContained = 1.0, size_t idContained = 1);
+            void add(size_t l0Id = 0, const std::pair<size_t,size_t>& nodeId = {0,0}, double wContained = 1.0, size_t idContained = 1, size_t instance_id = 0);
 
-            void index();
+            size_t index(size_t first_record_id);
         };
     } // gsm2
 } // tables
