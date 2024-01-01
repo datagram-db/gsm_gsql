@@ -26,10 +26,10 @@
 #include "queries/preserve_results.h"
 #include "database/utility.h"
 
-void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, bool verbose) {
+void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, bool verbose, const std::unordered_set<std::string>& nodes, const std::unordered_set<std::string>& edges) {
     abstract_value abstract_true = true;
     nested_index.clear();
-    nested_index.insert(nested_index.end(), vl.size(), -1);
+    nested_index.resize(vl.size());
     map_orig.resize(vl.size()); // One element per pattern
     map_nested.resize(vl.size());   // One element per pattern
     size_t map_orig_offset = 0;
@@ -136,11 +136,11 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                 if (verbose) {
                     {
                         std::ofstream file{folder / (graph_grammar_entry_point.pattern_name+"("+std::to_string(versions++)+").ncsv")};
-                        serialised_nested_table(file, graph_grammar_entry_point.pattern_name, matching_tables.at(0));
+                        serialised_nested_table(file, graph_grammar_entry_point.pattern_name, matching_tables.at(0), edges);
                     }
                     {
                         std::ofstream file{folder / (graph_grammar_entry_point.pattern_name+"("+std::to_string(versions++)+").ncsv")};
-                        serialised_nested_table(file, graph_grammar_entry_point.pattern_name, matching_tables.at(1));
+                        serialised_nested_table(file, graph_grammar_entry_point.pattern_name, matching_tables.at(1), edges);
                     }
 //                    std::cout << print_table(matching_tables.at(0)) << std::endl;
 //                    std::cout << print_table(matching_tables.at(1)) << std::endl;
@@ -159,12 +159,12 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                 result = matching_tables.at(0);
                 if (verbose) {
                     std::ofstream file{folder / (graph_grammar_entry_point.pattern_name+"("+std::to_string(versions++)+").ncsv")};
-                    serialised_nested_table(file, graph_grammar_entry_point.pattern_name, result);
+                    serialised_nested_table(file, graph_grammar_entry_point.pattern_name, result, edges);
 //                    std::cout << print_table(result) << std::endl;
                 } for (size_t i = 1; i<matching_tables.size(); i++) {
                     if (verbose) {
                         std::ofstream file{folder / (graph_grammar_entry_point.pattern_name+"("+std::to_string(versions++)+").ncsv")};
-                        serialised_nested_table(file, graph_grammar_entry_point.pattern_name, matching_tables.at(i));
+                        serialised_nested_table(file, graph_grammar_entry_point.pattern_name, matching_tables.at(i), edges);
 //                        std::cout << print_table(matching_tables.at(i)) << std::endl;
                     }
                     result = natural_equijoin(result, matching_tables.at(i));
@@ -172,7 +172,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                     if (verbose) {
 //                        std::cout << "with previous:" << std::endl;
                         std::ofstream file{folder / (graph_grammar_entry_point.pattern_name+"("+std::to_string(versions++)+").ncsv")};
-                        serialised_nested_table(file, graph_grammar_entry_point.pattern_name, result);
+                        serialised_nested_table(file, graph_grammar_entry_point.pattern_name, result, edges);
 //                        std::cout << ":end with previous" << std::endl;
                     }
                 }
@@ -199,6 +199,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
             std::map<std::pair<size_t, size_t>, std::set<size_t>> M; // <graph,objId> --> <edgeTarget>
             std::map<size_t, std::set<std::set<size_t>>> M2;         // <graph> --> [<edgeTarget>]
             for (const auto& t : hooks_for_vecs) {
+//                std::cout <<print_table(t)<<std::endl;
                 DEBUG_ASSERT(t.Schema.at(0) == "graph");
                 DEBUG_ASSERT(t.Schema.at(1) == t.Schema.at(2));
                 DEBUG_ASSERT(t.Schema.size() == 3);
@@ -268,6 +269,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
             idx_to_remove.clear();
 //            std::cout << print_table(result) << std::endl;
             recordToRemove = 0; foundInPos = -1; size_t graphInPos = -1;
+            std::vector<std::vector<std::vector<size_t>>> osagai;
             for (const auto& x : result.datum) {
                 if (graphInPos == -1) {
                     // After the group-by, re-calculating the position of "graph" within the schema of the nested table
@@ -293,24 +295,73 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                     }
                 }
                 std::set<size_t> offsets;
-                for (const auto& recordT : t.datum) {
-                    offsets.insert(std::get<size_t>(recordT.at(foundInPos).val));
-                }
                 bool found = false;
-                for (auto& s : it->second) {
+//                size_t idxByOffset = 0;
+                size_t recordId = 0;
+                std::unordered_map<size_t,std::vector<size_t>> hookNodeIdToRecordOffset;
+                for (const auto& recordT : t.datum) {
+                    const auto& cell = std::get<size_t>(recordT.at(foundInPos).val);
+                    hookNodeIdToRecordOffset[cell].emplace_back(recordId++);
+                    offsets.insert(cell);
+                }
+                for (const auto& s : it->second) {
                     // Hook intersection should target all the outputs that are associated to the aggregation, if any
                     if (ordered_intersection(s, offsets).size() == s.size()) {
                         found = true;
                         break;
                     }
                 }
+                auto& emplaced = osagai.emplace_back();
                 // If not found, then removing the entry from the match
                 if (!found)
                     idx_to_remove.emplace_back(recordToRemove);
+                else {
+
+                    std::vector<size_t> result_set;
+                    for (const auto& s : it->second) {
+                        auto it3 = s.begin();
+                        if (!hookNodeIdToRecordOffset.contains(*it3))
+                            continue;
+                        auto current = hookNodeIdToRecordOffset.at(*it3);
+                        it3++;
+                        result_set.clear();
+                        for (; it3!=s.end(); it3++) {
+                            const auto& next = hookNodeIdToRecordOffset.at(*it3);
+                            std::set_union(current.begin(), current.end(), next.begin(), next.end(), std::back_inserter(result_set));
+                            std::swap(current, result_set);
+                            result_set.clear();
+                        }
+                        emplaced.emplace_back(current);
+                    }
+                }
                 recordToRemove++;
             }
             // Removing the records not matching the hook
             remove_index(result.datum, idx_to_remove);
+            remove_index(osagai, idx_to_remove);
+            nested_table final_table;
+            final_table.Schema = result.Schema;
+
+            for (size_t i = 0, N = osagai.size(); i<N; i++) {
+                const auto& x = result.datum.at(i);
+                const auto& t = x.at(x.size()-1).table;
+                std::vector<value> recordToCopy(x.begin(), x.end()-1);
+
+                for (const auto& records : osagai.at(i)) {
+                    nested_table tableCopy;
+                    tableCopy.Schema = t.Schema;
+                    for (size_t idx : records) {
+                        tableCopy.datum.emplace_back(t.datum.at(idx));
+                    }
+                    auto& final_row = final_table.datum.emplace_back(recordToCopy);
+                    final_row.emplace_back(tableCopy);
+                }
+            }
+//            std::cout << print_table(result) << std::endl;
+//            std::cout << "~~~~~~~~~~~~~~~~" << std::endl;
+//            std::cout << print_table(final_table) << std::endl;
+//            std::cout << "~~~~~~~~~~~~~~~~" << std::endl;
+            std::swap(final_table, result);
         }
         /// If I need to group-by: finish
 
@@ -342,18 +393,82 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
         size_t offsetForStar = 0;
         for (const auto& k : result.Schema) {
             if (k != "*") {
+                if ((!result.datum.empty())) {
+                    if (result.datum.at(0).at(offsetForStar).isNested) {
+                        // Remembering the location of the sole nested cell
+                        nested_index[map_orig_offset].emplace_back(offsetForStar);
+                        auto& W = map_nested[map_orig_offset].emplace_back();
+                        // Remembering the offsets for the other nested cells
+                        for (const auto& w : result.datum.at(0).at(offsetForStar).table.Schema) {
+                            W.put(w);
+                        }
+                    } else {
+                        map_orig[map_orig_offset].emplace(k, offsetForStar); // Used f
+                    }
+                } else
                 // Remembering that pattern map_orig_offset contains k in the current position
                 // This works under the assumption that * is always located at the last element of the table!
-                map_orig[map_orig_offset].put(k); // Used f
+                map_orig[map_orig_offset].emplace(k, offsetForStar); // Used f
             } else {
                 // Remembering the location of the sole nested cell
-                nested_index[map_orig_offset] = offsetForStar;
+                nested_index[map_orig_offset].emplace_back(offsetForStar);
+                auto& W = map_nested[map_orig_offset].emplace_back();
                 // Remembering the offsets for the other nested cells
                 for (const auto& w : nested_schema) {
-                    map_nested[map_orig_offset].put(w);
+                    W.put(w);
                 }
             }
             offsetForStar++;
+        }
+
+        // Last, ensuring that all the nodes and edges are different for each nested label.
+        std::vector<size_t> removeIndex2;
+        if (!nested_index[map_orig_offset].empty()) {
+            for (size_t i = 0, N = result.datum.size(); i<N; i++) {
+                auto& row = result.datum.at(i);
+                for (size_t k : nested_index[map_orig_offset]) {
+                    std::vector<size_t> removeIndex;
+                    for (size_t l = 0, O = row.at(k).table.datum.size(); l<O; l++) {
+                        std::multiset<size_t> nodeIds, edgeIds;
+                        for (size_t j = 0, M = row.at(k).table.Schema.size(); j<M; j++) {
+                            if (nodes.contains(row.at(k).table.Schema.at(j))) {
+                                if (std::holds_alternative<size_t>((row.at(k).table.datum.at(l).at(j).val))) {
+                                    nodeIds.insert(std::get<size_t>((row.at(k).table.datum.at(l).at(j).val)));
+                                }
+                            }
+                            else if (edges.contains(row.at(k).table.Schema.at(j))) {
+                                    if (std::holds_alternative<size_t>((row.at(k).table.datum.at(l).at(j).val))) {
+                                        edgeIds.insert(std::get<size_t>((row.at(k).table.datum.at(l).at(j).val)));
+                                    }
+                            }
+                        }
+                        bool multi = false;
+                        for (const auto& key : nodeIds) {
+                            if (nodeIds.count(key)>1) {
+                                removeIndex.emplace_back(l);
+                                multi = true;
+                                break;
+                            }
+                        }
+                        if (!multi) {
+                            for (const auto& key : edgeIds) {
+                                if (edgeIds.count(key)>1) {
+                                    removeIndex.emplace_back(l);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (!removeIndex.empty()) {
+                        remove_index(row[k].table.datum, removeIndex);
+                        if (row[k].table.datum.empty()) {
+                            removeIndex2.emplace_back(i);
+                            break;
+                        }
+                    }
+                }
+            }
+            remove_index(result.datum, removeIndex2);
         }
 
         size_t expectedOffset = -1;
@@ -382,7 +497,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
 
             if (verbose) {
                 std::ofstream file{folder / ( graph_grammar_entry_point.pattern_name+"("+std::to_string(versions++)+").ncsv")};
-                serialised_nested_table(file, graph_grammar_entry_point.pattern_name, result);
+                serialised_nested_table(file, graph_grammar_entry_point.pattern_name, result, edges);
 //                std::cout << print_table(result) << std::endl;
 //                std::cout << "~~~~~~~~~~~~~~~~~~~~~~~" << std::endl<< std::endl<< std::endl;
             }
@@ -425,19 +540,27 @@ void preserve_results::init() {
     map_nested.clear();
 }
 
-std::pair<bool, ssize_t> preserve_results::resolve_entry_match(size_t patternId, const std::string &element) const {
-    ssize_t id = map_orig.at(patternId).signed_get(element);
-    if (id >= 0)
-        return {false, id};
+std::pair<ssize_t, ssize_t> preserve_results::resolve_entry_match(size_t patternId, const std::string &element) const {
+    auto it = map_orig.at(patternId).find(element);
+//    ssize_t id = map_orig.at(patternId).signed_get(element);
+    if (it != map_orig.at(patternId).end())
+        return {-1, it->second};
     else /*if ((id < 0))*/ {
-        if (nested_index.at(patternId) == -1)
-            return {false, -1};
+        if (nested_index.at(patternId).empty())
+            return {-1, -1};
         else {
-            ssize_t id2 = map_nested.at(patternId).signed_get(element);
-            if (id2 < 0)
-                return {false, -1};
-            else
-                return {true, id2};
+            size_t idx = 0;
+            for (const auto& ref : map_nested.at(patternId)) {
+                ssize_t id2 = ref.signed_get(element);
+                if (id2 >=0 )
+                    return {idx, id2};
+                idx++;
+            }
+//            ssize_t id2 = map_nested.at(patternId).signed_get(element);
+//            if (id2 < 0)
+                return {-1, -1};
+//            else
+//                return {true, id2};
         }
     }
 //        return {false, -1};
@@ -470,9 +593,9 @@ void preserve_results::loadColumnarTablesFromEdges(std::vector<nested_table> &ma
                     if (filterHook && (e != graph_src.second)) continue;
                     DEBUG_ASSERT(isOutgoing == q.second);
                     if (isOutgoing)
-                        raw_table.table.push_back({graph_src.first, graph_src.second, s, e});
+                        raw_table.table.emplace_back(graph_src.first, graph_src.second, q.first, s, e);
                     else
-                        raw_table.table.push_back({graph_src.first, e, s, graph_src.second});
+                        raw_table.table.emplace_back(graph_src.first, e, q.first, s, graph_src.second);
                 }
             }
         }
@@ -484,13 +607,15 @@ void preserve_results::loadColumnarTablesFromEdges(std::vector<nested_table> &ma
                 raw_table.dst = dstE;//"O("+dstE+")";
 //                    raw_table.score = dstE+","+var_table_edge; //"OEs("+dstE+","+raw_table.edge+")";
                 raw_table.edge = var_table_edge; // + ":"+ raw_table.dst;
-                first = {raw_table.graph, raw_table.src};
+                raw_table.edgeLabel = raw_table.edge +"_label";
+                first = {raw_table.graph, raw_table.src, raw_table.edgeLabel};
                 nesting = raw_table.dst;
             } else {
                 raw_table.src = dstE;// "I("+dstE+")";
 //                    raw_table.score = dstE+","+var_table_edge;//"IEs("+dstE+","+raw_table.edge+")";
                 raw_table.edge = var_table_edge; // + ":"+ raw_table.src;
-                first = {raw_table.graph, raw_table.dst};
+                raw_table.edgeLabel = raw_table.edge +"_label";
+                first = {raw_table.graph, raw_table.dst, raw_table.edgeLabel};
                 nesting = raw_table.src;
             }
             auto& table = matching_tables.emplace_back();

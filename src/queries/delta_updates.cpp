@@ -33,3 +33,15 @@ void delta_updates::clear_insertions() {
 delta_updates::delta_updates(size_t max_id) {
     delta_plus_db.max_id = max_id;
 }
+
+void delta_updates::updateWith(const std::vector<delta_updates> &vector1) {
+    for (const auto& entry : vector1) {
+        for (const auto& [k,vec] : entry.newly_inserted_vertices) {
+            newly_inserted_vertices[k].insert(newly_inserted_vertices[k].end(), vec.begin(), vec.end());
+        }
+        newIterationInsertedObjects |= entry.newIterationInsertedObjects;
+    }
+    for (auto& [k, vec] : newly_inserted_vertices) {
+        remove_duplicates(vec);
+    }
+}

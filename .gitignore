@@ -54,3 +54,5 @@ build/
 /viz/.idea/
 __pycache__
 viz/parsers/__pycache__/
+/myeasylog.log
+/out.csv

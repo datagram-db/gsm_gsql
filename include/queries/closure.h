@@ -99,19 +99,7 @@ struct closure {
         tmp.resize(delta_updates_per_graph.size());
         for (size_t i = 0, N = delta_updates_per_graph.size(); i<N; i++) {
             initialNodes[i].reserve(N);
-            const auto& cn = forloading->all_indices.at(i).container_order;
-            if (cn.empty()) {
-                for (size_t j = 0, M = forloading->objectScores.at(i).size(); j<M; j++) {
-                    initialNodes[i].emplace_back(getOrDefault(delta_updates_per_graph.at(i).replacement_map, j, j));
-                }
-                // This implies that nodes are not contained between each other. So, any of these nodes will be the same
-            } else {
-                const auto& graph_index = cn.at(0);
-                for (size_t j = 0, M = graph_index.size(); j<M; j++) {
-                    initialNodes[i].emplace_back(getOrDefault(delta_updates_per_graph.at(i).replacement_map, graph_index.at(j), graph_index.at(j)));
-                }
-            }
-
+            auto& nodeMap = nodesBeingInsertedAlready[i];
 
             for (const auto& [idX,object] : delta_updates_per_graph.at(i).delta_plus_db.O) {
                 if (delta_updates_per_graph.at(i).removed_objects.contains(idX)) {
@@ -119,7 +107,7 @@ struct closure {
                 }
                 cp.first = i;
                 cp.second = idX;
-                auto& nodeMap = nodesBeingInsertedAlready[i];
+
                 auto& g = simpleGraphs[i];
                 size_t id = nodeMap.put(idX).first;
                 tmp[i][idX] = object;
@@ -128,6 +116,7 @@ struct closure {
                 DEBUG_ASSERT(id == gid);
                 offsetMainRegistryTable++;
             }
+
             for (const auto& [idX,object] : delta_updates_per_graph.at(i).delta_plus_db.O) {
                 if (delta_updates_per_graph.at(i).removed_objects.contains(idX))
                     continue;
@@ -152,14 +141,35 @@ struct closure {
                 }
             }
 
-
+            const auto& cn = forloading->all_indices.at(i).container_order;
+            if (cn.empty()) {
+                for (size_t j = 0, M = forloading->objectScores.at(i).size(); j<M; j++) {
+                    size_t candidate = getOrDefault(delta_updates_per_graph.at(i).replacement_map, j, j);
+                    if (delta_updates_per_graph.at(i).removed_objects.contains(candidate)) {
+                        continue;
+                    }
+                    initialNodes[i].emplace_back(nodeMap.put(candidate).first);
+                }
+                // This implies that nodes are not contained between each other. So, any of these nodes will be the same
+            } else {
+                const auto& graph_index = cn.at(0);
+                for (size_t j = 0, M = graph_index.size(); j<M; j++) {
+                    size_t candidate = getOrDefault(delta_updates_per_graph.at(i).replacement_map, graph_index.at(j), graph_index.at(j));
+                    if (delta_updates_per_graph.at(i).removed_objects.contains(candidate)) {
+                        continue;
+                    }
+                    initialNodes[i].emplace_back(nodeMap.put(candidate).first);
+                }
+            }
         }
+
+
         for (size_t k = 0, N = delta_updates_per_graph.size(); k<N; k++) {
             roaring::Roaring64Map visited;
             std::vector<size_t> Stack;
             auto& g = simpleGraphs[k];
             for (size_t start_from : initialNodes[k]) {
-                g.g.topologicalSortUtil(nodesBeingInsertedAlready.at(k).getKey(start_from), visited, Stack);
+                g.g.topologicalSortUtil(start_from, visited, Stack);
             }
             for (size_t i = 0; i < g.g.V_size; i++)
                 if (!visited.contains(i))
@@ -512,7 +522,7 @@ struct closure {
         {
             LOG(TRACE) << "Instantiating the nested morphisms";
             auto nmorph_start = std::chrono::high_resolution_clock::now();
-            pr.instantiate_morphisms(vl, verbose);
+            pr.instantiate_morphisms(vl, verbose, nodeVars, edgeVars);
             auto nmorph_end = std::chrono::high_resolution_clock::now();
             generate_nested_morphisms = std::chrono::duration<double, std::milli>(nmorph_end-nmorph_start).count();
         }
@@ -770,16 +780,7 @@ private:
         return isXiEllOtherwise ? forloading->xi(graphid, id) : forloading->ell(graphid, id);
     }
 
-    /**
-     *
-     */
-    void interpret_closure_set(rewrite_expr* ptr,
-                               size_t graph_id,
-                               size_t pattern_id,
-                               const std::vector<std::string>& schema,
-                               const nested_table& table,
-                               size_t record_id,
-                               std::any match_rhs);
+
 
     class Interpret {
         size_t graph_id;
@@ -802,13 +803,50 @@ private:
                                                           table(table), record_id(recordId), clos(clos), ptr{ptr}, ptr2{ptr2} {}
 
         std::any interpret_closure_evaluate(rewrite_expr* ptr) /*const*/;
+//        std::vector<size_t> interpret_closure_evaluate2(rewrite_expr* ptr) /*const*/;
 
         bool interpret(test_pred& ptr) /*const*/;
     };
-    
 
 
+    /**
+     *(graph_id, pattern_id, schema, table, record_id, *this, pr.morphisms, forloading);
+     */
+    void interpret_closure_set(rewrite_expr* ptr,
+                               size_t graph_id,
+                               size_t pattern_id,
+                               const std::vector<std::string>& schema,
+                               const nested_table& table,
+                               size_t record_id,
+                               rewrite_expr* ptrTarget,
+                               Interpret&);
 
+
+    inline
+    std::tuple<std::pair<ssize_t, ssize_t>,std::vector<size_t>>
+            resolveEdgesOverVariableName2(size_t pattern_id, const std::string &variable_name, const std::vector<value> &record) const {
+        std::vector<size_t> object_id;
+        if (!edgeVars.contains(variable_name)) {
+            return {{-1,-1},std::move(object_id)};
+        }
+        auto offset = pr.resolve_entry_match(pattern_id, variable_name);
+        if (offset.second<0)
+            return {offset,object_id};
+        if (offset.first<0) {
+            const auto& cell = record.at(offset.second);
+            DEBUG_ASSERT(!cell.isNested);
+            {
+                fill_vector_with_case(object_id, cell.val);
+            }
+        } else {
+            for (const auto& record_internal : record.at(pr.nested_index.at(pattern_id).at(offset.first)).table.datum) {
+                const auto& cell = record_internal.at(offset.second);
+                DEBUG_ASSERT(!cell.isNested);
+                fill_vector_with_case(object_id, cell.val);
+            }
+        }
+        return {std::move(offset),std::move(object_id)};
+    }
 
     inline
     std::vector<size_t>
@@ -820,27 +858,29 @@ private:
         auto offset = pr.resolve_entry_match(pattern_id, variable_name);
         if (offset.second<0)
             return object_id;
-        if (!offset.first) {
+        if (offset.first<0) {
             const auto& cell = record.at(offset.second);
-            if (cell.isNested) {
-                size_t actualNestedOffset = -1;
-                for (size_t k = 0, N = cell.table.Schema.size(); k<N; k++) {
-                    if (cell.table.Schema.at(k) == variable_name){
-                        actualNestedOffset = k;
-                        break;
-                    }
-                }
-                DEBUG_ASSERT(actualNestedOffset != -1);
-                for (const auto& record_internal : record.at(offset.second).table.datum) {
-                    const auto& cell2 = record_internal.at(actualNestedOffset);
-                    DEBUG_ASSERT(!cell2.isNested);
-                    fill_vector_with_case(object_id, cell2.val);
-                }
-            } else {
+            DEBUG_ASSERT(!cell.isNested);
+//            if (cell.isNested) {
+//                size_t actualNestedOffset = -1;
+//                for (size_t k = 0, N = cell.table.Schema.size(); k<N; k++) {
+//                    if (cell.table.Schema.at(k) == variable_name){
+//                        actualNestedOffset = k;
+//                        break;
+//                    }
+//                }
+//                DEBUG_ASSERT(actualNestedOffset != -1);
+//                for (const auto& record_internal : record.at(offset.second).table.datum) {
+//                    const auto& cell2 = record_internal.at(actualNestedOffset);
+//                    DEBUG_ASSERT(!cell2.isNested);
+//                    fill_vector_with_case(object_id, cell2.val);
+//                }
+//            } else
+            {
                 fill_vector_with_case(object_id, cell.val);
             }
         } else {
-            for (const auto& record_internal : record.at(pr.nested_index.at(pattern_id)).table.datum) {
+            for (const auto& record_internal : record.at(pr.nested_index.at(pattern_id).at(offset.first)).table.datum) {
                 const auto& cell = record_internal.at(offset.second);
                 DEBUG_ASSERT(!cell.isNested);
                 fill_vector_with_case(object_id, cell.val);
@@ -878,6 +918,51 @@ private:
     }
 
     inline
+    std::tuple<std::pair<ssize_t,ssize_t>,std::vector<size_t>>
+    resolveIdsOverVariableName2(size_t graph_id,
+                               size_t pattern_id,
+                               const std::string &variable_name,
+                               const std::vector<value> &record,
+                               bool buildNewIds = false) /*const*/ {
+        std::vector<size_t> object_id;
+        auto v = delta_updates_per_graph.at(graph_id).getNewlyInsertedVertices(variable_name);
+        if (!v.empty())
+            return {{-1,-1},v};
+        auto offset = pr.resolve_entry_match(pattern_id, variable_name);
+        if (offset.second<0)
+            return {std::move(offset),std::move(object_id)};
+        if (offset.first<0) {
+            const auto& cell = record.at(offset.second);
+            DEBUG_ASSERT(!cell.isNested);
+            {
+                if (std::holds_alternative<bool>(cell.val)) {
+                    if (buildNewIds)
+                        object_id.emplace_back(newObjectToVariable(graph_id, variable_name));
+                } else {
+                    fill_vector_with_case(object_id, cell.val);
+                }
+            }
+        } else {
+            for (const auto& record_internal : record.at(pr.nested_index.at(pattern_id).at(offset.first)).table.datum) {
+                const auto& cell = record_internal.at(offset.second);
+                DEBUG_ASSERT(!cell.isNested);
+                fill_vector_with_case(object_id, cell.val);
+            }
+        }
+        bool subst=false;
+        for (auto& ref : object_id) {
+            auto& map = delta_updates_per_graph.at(graph_id).replacement_map;
+            auto it =  (map.find(ref));
+            if (it != map.end() && (!delta_updates_per_graph.at(graph_id).newIterationInsertedObjects.contains(it->second))) {
+                ref = it->second;
+                subst = true;
+            }
+        }
+//        remove_duplicates(object_id);
+        return {std::move(offset),std::move(object_id)};
+    }
+
+    inline
     std::vector<size_t>
     resolveIdsOverVariableName(size_t graph_id,
                                size_t pattern_id,
@@ -891,23 +976,25 @@ private:
         auto offset = pr.resolve_entry_match(pattern_id, variable_name);
         if (offset.second<0)
             return object_id;
-        if (!offset.first) {
+        if (offset.first<0) {
             const auto& cell = record.at(offset.second);
-            if (cell.isNested) {
-                size_t actualNestedOffset = -1;
-                for (size_t k = 0, N = cell.table.Schema.size(); k<N; k++) {
-                    if (cell.table.Schema.at(k) == variable_name){
-                        actualNestedOffset = k;
-                        break;
-                    }
-                }
-                DEBUG_ASSERT(actualNestedOffset != -1);
-                for (const auto& record_internal : record.at(offset.second).table.datum) {
-                    const auto& cell2 = record_internal.at(actualNestedOffset);
-                    DEBUG_ASSERT(!cell2.isNested);
-                    fill_vector_with_case(object_id, cell2.val);
-                }
-            } else {
+            DEBUG_ASSERT(!cell.isNested);
+//            if (cell.isNested) {
+//                size_t actualNestedOffset = -1;
+//                for (size_t k = 0, N = cell.table.Schema.size(); k<N; k++) {
+//                    if (cell.table.Schema.at(k) == variable_name){
+//                        actualNestedOffset = k;
+//                        break;
+//                    }
+//                }
+//                DEBUG_ASSERT(actualNestedOffset != -1);
+//                for (const auto& record_internal : record.at(offset.second).table.datum) {
+//                    const auto& cell2 = record_internal.at(actualNestedOffset);
+//                    DEBUG_ASSERT(!cell2.isNested);
+//                    fill_vector_with_case(object_id, cell2.val);
+//                }
+//            } else
+            {
                 if (std::holds_alternative<bool>(cell.val)) {
                     if (buildNewIds)
                         object_id.emplace_back(newObjectToVariable(graph_id, variable_name));
@@ -916,7 +1003,7 @@ private:
                 }
             }
         } else {
-            for (const auto& record_internal : record.at(pr.nested_index.at(pattern_id)).table.datum) {
+            for (const auto& record_internal : record.at(pr.nested_index.at(pattern_id).at(offset.first)).table.datum) {
                 const auto& cell = record_internal.at(offset.second);
                 DEBUG_ASSERT(!cell.isNested);
                 fill_vector_with_case(object_id, cell.val);
@@ -965,13 +1052,19 @@ private:
                         // Ignoring the match if this was removed!
                         if (updates.hasXBeenRemoved(vertex)) continue;
 
+//                        auto updatesCopy = updates;
+
                         // Whether there was a single node being matched
                         auto it = pattern_result.second.find(vertex);
                         if (it != pattern_result.second.end()) {
-                            updates.clear_insertions();
 //                            DEBUG_ASSERT(updates.replacement_map.find(vertex) == updates.replacement_map.end());
                             size_t table_offset = 0;
+//                            std::vector<delta_updates> elementi;
+//                            elementi.reserve(it->second.datum.size());
                             for (auto& entries : it->second.datum) {
+                                updates.clear_insertions();
+//                                updates.newIterationInsertedObjects = updatesCopy.newIterationInsertedObjects; // Need to clear the associations, otherwise, we have incremental definitions of the veriables
+//                                updates.newly_inserted_vertices = updatesCopy.newly_inserted_vertices;
 
                                 // this operation needs to be performed only if some rewriting have a deletion operation
                                 // Otherwise, we can skip this check.
@@ -1016,7 +1109,7 @@ private:
                                     }
                                     if (skip) {
                                         table_offset++;
-                                        continue;
+                                        continue; //next entry
                                     }
                                 }
 
@@ -1024,7 +1117,7 @@ private:
                                 if (pattern.has_where) {
                                     if (!I.interpret(pattern.where)) {
                                         table_offset++;
-                                        continue;
+                                        continue; //next entry
                                     }
                                 }
 
@@ -1036,10 +1129,14 @@ private:
                                             // Removing objects from the final result
                                             auto idx = pr.resolve_entry_match(pattern_id, operation.others);
                                             if (idx.second >= 0) { // If this is in the table
-                                                if (idx.first) { // If a nested variable, removing all the associated entries in the nested
-                                                    for (const auto& sub_entries : entries.at(pr.nested_index.at(pattern_id)).table.datum) {
-                                                        if (!std::holds_alternative<bool>(sub_entries.at(idx.second).val)) { // If this was not an optional match
-                                                            size_t default_val = std::get<size_t>(sub_entries.at(idx.second).val);
+                                                if (idx.first >=
+                                                    0) { // If a nested variable, removing all the associated entries in the nested
+                                                    for (const auto &sub_entries: entries.at(
+                                                            pr.nested_index.at(pattern_id).at(idx.first)).table.datum) {
+                                                        if (!std::holds_alternative<bool>(sub_entries.at(
+                                                                idx.second).val)) { // If this was not an optional match
+                                                            size_t default_val = std::get<size_t>(
+                                                                    sub_entries.at(idx.second).val);
                                                             DEBUG_ASSERT(nodeVars.contains(operation.others));
                                                             if (nodeVars.contains(operation.others)) {
                                                                 updates.set_removed(default_val);
@@ -1051,9 +1148,8 @@ private:
                                                     }
                                                 } else { // Otherwise, just removing this instance
                                                     if (!std::holds_alternative<bool>(entries.at(idx.second).val)) {
-                                                        size_t default_val = std::get<size_t>(entries.at(idx.second).val);
-//                                                        DEBUG_ASSERT(nodeVars.contains(operation.others));
-
+                                                        size_t default_val = std::get<size_t>(
+                                                                entries.at(idx.second).val);
                                                         if (nodeVars.contains(operation.others)) {
                                                             updates.set_removed(default_val);
                                                         } else if (edgeVars.contains(operation.others)) {
@@ -1062,8 +1158,6 @@ private:
                                                     }
                                                 }
                                             }
-
-
                                         } break;
 
                                         case rewrite_to::NEU_RW: {
@@ -1076,9 +1170,8 @@ private:
                                             DEBUG_ASSERT(operation.from);
                                             DEBUG_ASSERT(operation.to);
 
-
-                                            std::any rhs = I.interpret_closure_evaluate(operation.from.get());
-                                            interpret_closure_set(operation.to.get(), graph_id, pattern_id, pattern_result.first, it->second, table_offset, rhs);
+                                            //std::any rhs = I.interpret_closure_evaluate(operation.from.get());
+                                            interpret_closure_set(operation.to.get(), graph_id, pattern_id, pattern_result.first, it->second, table_offset, operation.from.get(), I);
                                         } break;
 
                                         case rewrite_to::NONE_OF_REWRITE:
@@ -1097,7 +1190,6 @@ private:
                                         auto originals = resolveIdsOverVariableName(graph_id, pattern_id, pattern.in.at(0).first.var.at(0), entries);
                                         for (size_t check : toReplace) {
                                             for (size_t id : replaceWith) {
-//                                                delta_updates_per_graph[0].replaceWith(check, id);
                                                 delta_updates_per_graph[graph_id].replaceWith(check, id);
                                                 for (size_t orig : originals) {
                                                     for (const auto& contK : forloading->containment_relationships) {
@@ -1112,22 +1204,8 @@ private:
 
                                             }
                                         }
-
-
-
-//
-//                                                    auto tmp = pr.resolve_entry_match(j, pattern.in.at(0).first.var.at(0));
-//                                                    DEBUG_ASSERT(tmp.second >= 0);
-//                                                    auto result = entries.at(tmp.second);
-//                                                    if (std::holds_alternative<size_t>(result.val)) {
-//                                                        updates.replaceWith(std::get<size_t>(result.val), obj.id);
-//                                                    }
-
-//                                                    replacement_map[result.second] = obj.id;
                                     } else {
                                         DEBUG_ASSERT(pattern.var.size() == 1);
-//                                    auto tmp = pr.resolve_entry_match(pattern_id, pattern.var.at(0));
-//                                    DEBUG_ASSERT(tmp.second >= 0);
                                         auto originals = resolveIdsOverVariableName(graph_id, pattern_id, pattern.var.at(0), entries);
                                         auto replacements = resolveIdsOverVariableName(graph_id, pattern_id, pattern.rewrite_match_dst->var.at(0), entries);
                                         for (size_t orig : originals) {
@@ -1135,19 +1213,14 @@ private:
                                                 updates.replaceWith(orig, repl);
                                             }
                                         }
-//                                        auto result = entries.at(tmp.second);
-//                                        if (std::holds_alternative<size_t>(result.val)) {
-//                                            updates.replaceWith(std::get<size_t>(result.val), obj.id);
-//                                        }
-//                                                    replacement_map[result.second] = obj.id;
                                     }
                                 }
                                 table_offset++;
+//                                elementi.emplace_back(updates);
                             }
-
+//                            updatesCopy.updateWith(elementi);
                         }
                     }
-//            }
                 }
         }
     }

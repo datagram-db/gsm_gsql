@@ -37,11 +37,12 @@ using abstract_value = std::variant<double,size_t,std::string,bool>;
 struct RawThreewayTable {
     std::string graph{"graph"};
     std::string src;
+    std::string edgeLabel;
     std::string edge;
     std::string dst;
 //    std::string score{"score"};
 
-    using record = std::array<size_t, 4/*, double*/> ;
+    using record = std::tuple<size_t,size_t,std::string,size_t,size_t> ;
     std::vector<record> table;
 };
 

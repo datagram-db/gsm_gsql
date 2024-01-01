@@ -1,4 +1,4 @@
-p1 = (X)--[l:aux||det||nmod_poss||amod||mark||case]->(Y)                   // Graph matching, First pattern
+p1 = (X)--[l:det||nmod_poss||amod||mark||case||punct]->(Y)                   // Graph matching, First pattern
       where ((TEST "|varphi (var(\"Y\"))| == 0") ∧ ((Y unmatched p2 . K) ∧ (Y unmatched p3 . T)))
      ↪  set (𝜋 (label l) @ X) as (𝜉 0 @ Y)                        // Property extension
        del Y                                             // Removing a node
@@ -11,8 +11,8 @@ p2 = (>> H)<-[∀l:]--(X)                                   // Graph matching, S
            --[conj] hook
            --[? case]->(K)
            --[? c : cc]->(Z)
-           --[? g]->(Y)
-
+           --[? g:]->(Y)
+    //where ((Y unmatched p4 . V) ∧ ((Y unmatched p2 . X) ∧ (Y unmatched p3 . V)))
      ↪  new h                                             // Creating a new node standing for H
        set (φ orig , h) as H                             // This node will contain all the grouped element (>>)
        set (𝜋 conj @ h) as (𝜉 0 @ Z)                     // Optional, only if Z exists!
@@ -35,21 +35,37 @@ p2 = (>> H)<-[∀l:]--(X)                                   // Graph matching, S
 
 p3 = (V)--[∀n:nsubj]->(>>S)
         --[? mark]->(M)
-        --[l:dobj||ccomp||nmod]->(Z)
+        --[∀l:dobj||ccomp||nmod]->(>>Z) // Future work: nested join between >>Z and >>Z from the join, when required. This might require to re-do the join semantics
      (Z)--[? case]->(T)
 
      ↪
+        //new s
         set(φ (if ((label l ) = nmod) then    // Defining the label in function of T, if this exists,
                                                                       // otherwise using V
                                               SCRIPT "((xi var(\"V\"))[0]) ++ \" \" ++ ((xi var(\"T\"))[0])"
                                              else
                                               (𝜉 0 @ V)
                                              ), S) as Z
-        set(   𝜋 mark @ s) as (𝜉 0 @ M)
+        //set(   𝜋 mark @ s) as (𝜉 0 @ M)
         //set(   φ orig , s) as S
         //set(   𝜉 0 @ s) as (𝜉 0 @ S)
        del V
        del T
        del M
 
-       (S)
+       (S);
+
+p4 = (V)--[∀l:dobj||ccomp||nmod]->(Z)
+      (Z)--[? case]->(T)
+      where ((V unmatched p3 . V))
+     ↪  new j
+        set(φ (if ((label l ) = nmod) then    // Defining the label in function of T, if this exists,
+                                                                              // otherwise using V
+                                                      SCRIPT "((xi var(\"V\"))[0]) ++ \" \" ++ ((xi var(\"T\"))[0])"
+                                                     else
+                                                      (𝜉 0 @ V)
+                                                     ), j) as Z
+       del V                                             // Removing a node
+       del T
+
+       (j)                                              // Instance of reference to be returned

@@ -1,0 +1,426 @@
+id:0
+ell:
+VBP
+root
+.
+xi:
+believe
+.
+properties:
+"pos"	"4"
+.
+phi:
+"ccomp"
+	1.0	2
+	1.0	3
+;"punct"
+	1.0	4
+;"nsubj"
+	1.0	5
+	1.0	6
+;.
+
+id:1
+ell:
+CC
+.
+xi:
+or
+.
+properties:
+"pos"	"16"
+.
+phi:
+.
+
+id:5
+ell:
+noun
+.
+xi:
+matt
+.
+properties:
+"number"	"singular"
+"pos"	"1"
+"specification"	"common"
+.
+phi:
+"cc"
+	1.0	7
+;"conj"
+	1.0	6
+;.
+
+id:7
+ell:
+CC
+.
+xi:
+and
+.
+properties:
+"pos"	"2"
+.
+phi:
+.
+
+id:6
+ell:
+noun
+.
+xi:
+tray
+.
+properties:
+"number"	"singular"
+"pos"	"3"
+"specification"	"common"
+.
+phi:
+.
+
+id:3
+ell:
+VB
+.
+xi:
+have
+.
+properties:
+"pos"	"22"
+.
+phi:
+"neg"
+	1.0	8
+;"aux"
+	1.0	9
+;"nsubj"
+	1.0	10
+	1.0	11
+;"dobj"
+	1.0	12
+;.
+
+id:10
+ell:
+noun
+.
+xi:
+carl
+.
+properties:
+"number"	"singular"
+"pos"	"17"
+"specification"	"common"
+.
+phi:
+"cc"
+	1.0	13
+;"conj"
+	1.0	11
+;.
+
+id:13
+ell:
+CC
+.
+xi:
+and
+.
+properties:
+"pos"	"18"
+.
+phi:
+.
+
+id:11
+ell:
+noun
+.
+xi:
+dan
+.
+properties:
+"number"	"singular"
+"pos"	"19"
+"specification"	"common"
+.
+phi:
+.
+
+id:9
+ell:
+MD
+.
+xi:
+will
+.
+properties:
+"pos"	"20"
+.
+phi:
+.
+
+id:8
+ell:
+RB
+.
+xi:
+not
+.
+properties:
+"pos"	"21"
+.
+phi:
+.
+
+id:12
+ell:
+noun
+.
+xi:
+way
+.
+properties:
+"number"	"singular"
+"pos"	"24"
+"specification"	"common"
+.
+phi:
+"det"
+	1.0	14
+;"acl"
+	1.0	15
+;.
+
+id:14
+ell:
+det
+.
+xi:
+a
+.
+properties:
+"pos"	"23"
+.
+phi:
+.
+
+id:15
+ell:
+VB
+.
+xi:
+amuse
+.
+properties:
+"pos"	"26"
+.
+phi:
+"dobj"
+	1.0	16
+;"mark"
+	1.0	17
+;.
+
+id:17
+ell:
+TO
+.
+xi:
+to
+.
+properties:
+"pos"	"25"
+.
+phi:
+.
+
+id:16
+ell:
+PRP
+.
+xi:
+themselves
+.
+properties:
+"pos"	"27"
+.
+phi:
+.
+
+id:2
+ell:
+VBP
+.
+xi:
+play
+.
+properties:
+"pos"	"13"
+.
+phi:
+"punct"
+	1.0	18
+;"nsubj"
+	1.0	19
+	1.0	20
+	1.0	25
+;"dobj"
+	1.0	21
+;"mark"
+	1.0	22
+;"conj"
+ 	1.0	3
+;"cc"
+  	1.0	1
+;.
+
+id:22
+ell:
+IN
+.
+xi:
+that
+.
+properties:
+"pos"	"5"
+.
+phi:
+.
+
+id:18
+ell:
+,
+.
+xi:
+,
+.
+properties:
+"pos"	"6"
+.
+phi:
+.
+
+id:19
+ell:
+noun
+.
+xi:
+alice
+.
+properties:
+"number"	"singular"
+"pos"	"8"
+"specification"	"common"
+.
+phi:
+"cc"
+	1.0	23
+;"conj"
+	1.0	20
+	1.0	25
+;.
+
+id:24
+ell:
+CC
+.
+xi:
+either
+.
+properties:
+"pos"	"7"
+.
+phi:
+.
+
+id:23
+ell:
+CC
+.
+xi:
+and
+.
+properties:
+"pos"	"9"
+.
+phi:
+.
+
+id:20
+ell:
+noun
+.
+xi:
+bob
+.
+properties:
+"number"	"singular"
+"pos"	"10"
+"specification"	"common"
+.
+phi:
+"cc"
+	1.0	26
+;"conj"
+	1.0	25
+;.
+
+id:26
+ell:
+CC
+.
+xi:
+and
+.
+properties:
+"pos"	"11"
+.
+phi:
+.
+
+id:25
+ell:
+noun
+.
+xi:
+carl
+.
+properties:
+"number"	"singular"
+"pos"	"12"
+"specification"	"common"
+.
+phi:
+.
+
+id:21
+ell:
+noun
+.
+xi:
+cricket
+.
+properties:
+"number"	"singular"
+"pos"	"14"
+"specification"	"common"
+.
+phi:
+.
+
+id:4
+ell:
+,
+.
+xi:
+,
+.
+properties:
+"pos"	"15"
+.
+phi:
+.
+

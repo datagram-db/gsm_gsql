@@ -122,7 +122,7 @@ tabulate::Table print_table(const nested_table& table) {
 #include <iomanip>
 
 static inline
-void serialised_nested_table(std::ostream& oss, const std::string& relation_name, const nested_table& table, size_t tab = 1) {
+void serialised_nested_table(std::ostream& oss, const std::string& relation_name, const nested_table& table, const std::unordered_set<std::string>& edges, size_t tab = 1) {
     std::string tabs(tab, '\t');
     oss << relation_name << "(";
     for (size_t i = 0, N = table.Schema.size(); i<N; i++) {
@@ -137,6 +137,8 @@ void serialised_nested_table(std::ostream& oss, const std::string& relation_name
         for (size_t j = 0, M = table.Schema.size(); j<M; j++) {
             auto cell = ptr.at(j);
             if (!cell.isNested) {
+                if (edges.contains(table.Schema.at(j)))
+                    oss << "\"↑";
                 if (std::holds_alternative<bool>(cell.val)) {
                     oss << "NULL";
                 } else if (std::holds_alternative<double>(cell.val)) {
@@ -146,9 +148,11 @@ void serialised_nested_table(std::ostream& oss, const std::string& relation_name
                 } else if (std::holds_alternative<size_t>(cell.val)) {
                     oss << std::to_string(std::get<size_t>(cell.val));
                 }
+                if (edges.contains(table.Schema.at(j)))
+                    oss << "\"";
             } else {
                 oss << "@";
-                serialised_nested_table(oss, table.Schema.at(j), cell.table, tab+1);
+                serialised_nested_table(oss, table.Schema.at(j), cell.table, edges, tab+1);
             }
             if (j != (M-1))
                 oss << ", ";
@@ -163,14 +167,14 @@ void serialised_nested_table(std::ostream& oss, const std::string& relation_name
 
 static inline
 void fillFrom(nested_table& table, const RawThreewayTable& orig) {
-    table.Schema ={orig.graph, orig.src, orig.edge, orig.dst/*, orig.score*/};
+    table.Schema ={orig.graph, orig.src, orig.edgeLabel, orig.edge, orig.dst/*, orig.score*/};
     for (const auto& ROW : orig.table) {
         auto& tmp = table.datum.emplace_back();
         tmp.emplace_back(std::get<0>(ROW));
         tmp.emplace_back(std::get<1>(ROW));
         tmp.emplace_back(std::get<2>(ROW));
         tmp.emplace_back(std::get<3>(ROW));
-//        tmp.emplace_back(std::get<4>(ROW));
+        tmp.emplace_back(std::get<4>(ROW));
     }
 }
 

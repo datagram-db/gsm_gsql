@@ -334,10 +334,12 @@ void closure::generate_materialised_view() {
 
 void closure::interpret_closure_set(rewrite_expr *ptr, size_t graph_id, size_t pattern_id,
                                     const std::vector<std::string> &schema, const nested_table &table, size_t record_id,
-                                    std::any match_rhs) /** non-const!*/ {
+                                    rewrite_expr *target_ptr,
+                                    Interpret& I) /** non-const!*/ {
     if (!ptr)
         return;
-    Interpret I(graph_id, pattern_id, schema, table, record_id, *this, pr.morphisms, forloading);
+
+//    Interpret I(graph_id, pattern_id, schema, table, record_id, *this, pr.morphisms, forloading);
     switch (ptr->t) {
         case rewrite_expr::SCRIPT_CASE:
             // Ignoring setting the expression
@@ -346,6 +348,7 @@ void closure::interpret_closure_set(rewrite_expr *ptr, size_t graph_id, size_t p
         case rewrite_expr::NONE_CASES_REWRITE:
             break;
         case rewrite_expr::NODE_XI: {
+            std::any match_rhs = I.interpret_closure_evaluate(target_ptr);
             if (match_rhs.has_value()) {
                 size_t xi_offset = ptr->id;
                 auto hasVar = I.interpret_closure_evaluate(ptr->ptr_or_else.get());
@@ -363,6 +366,7 @@ void closure::interpret_closure_set(rewrite_expr *ptr, size_t graph_id, size_t p
         } break;
 
         case rewrite_expr::NODE_ELL: {
+            std::any match_rhs = I.interpret_closure_evaluate(target_ptr);
             if (match_rhs.has_value()) {
                 size_t ell_offset = ptr->id;
                 auto hasVar = I.interpret_closure_evaluate(ptr->ptr_or_else.get());
@@ -381,6 +385,7 @@ void closure::interpret_closure_set(rewrite_expr *ptr, size_t graph_id, size_t p
         } break;
 
         case rewrite_expr::NODE_PROP: {
+            std::any match_rhs = I.interpret_closure_evaluate(target_ptr);
             if (match_rhs.has_value()) {
                 auto hasProp = I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get());
                 if (!hasProp.has_value()) return;
@@ -400,10 +405,14 @@ void closure::interpret_closure_set(rewrite_expr *ptr, size_t graph_id, size_t p
             auto hasProp = I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get());
             if (!hasProp.has_value()) return;
             auto prop_name = std::any_cast<std::string>(hasProp);
+            if (prop_name   == "cc conj") {
+                I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get());
+            }
             auto hasVar = I.interpret_closure_evaluate(ptr->ptr_or_else.get());
             if (!hasVar.has_value()) return;
             auto variable_name = std::any_cast<std::string>(hasVar);
             const auto& record = table.datum.at(record_id);
+            std::any match_rhs = I.interpret_closure_evaluate(target_ptr);
             auto isVariableName = get_v_opt<std::string>(match_rhs);
             if (isVariableName.has_value()) {
                 auto orig = resolveIdsOverVariableName(graph_id, pattern_id, isVariableName.value(), record);
@@ -439,9 +448,9 @@ void closure::interpret_closure_set(rewrite_expr *ptr, size_t graph_id, size_t p
 
         case rewrite_expr::IFTE_RW: {
             if (I.interpret(ptr->ifcond)) {
-                interpret_closure_set(ptr->pi_key_arg_or_then.get(), graph_id, pattern_id, schema, table, record_id, match_rhs);
+                interpret_closure_set(ptr->pi_key_arg_or_then.get(), graph_id, pattern_id, schema, table, record_id, target_ptr, I);
             } else {
-                interpret_closure_set(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id, match_rhs);
+                interpret_closure_set(ptr->ptr_or_else.get(), graph_id, pattern_id, schema, table, record_id, target_ptr, I);
             }
         } break;
 
@@ -625,6 +634,7 @@ std::any closure::Interpret::interpret_closure_evaluate(rewrite_expr *ptr) /*con
             auto hasProp = interpret_closure_evaluate(ptr->pi_key_arg_or_then.get());
             if (!hasProp.has_value()) return collected;
             auto prop_name = std::any_cast<std::string>(hasProp);
+
             auto evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get());
             if (!evaluation.has_value()) return collected;
 //            auto variable_name = std::any_cast<std::string>(hasVar);
@@ -668,8 +678,10 @@ std::any closure::Interpret::interpret_closure_evaluate(rewrite_expr *ptr) /*con
             auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
             const auto& record = table.datum.at(record_id);
             auto edges_ids = clos.resolveEdgesOverVariableName(pattern_id, variable_name, record);
-            if (edges_ids.empty())
+            if (edges_ids.empty()) {
+                clos.resolveEdgesOverVariableName(pattern_id, variable_name, record);
                 return {};
+            }
 
             std::unordered_set<std::string> S;
             for (const auto& x : edges_ids)
@@ -701,11 +713,26 @@ std::any closure::Interpret::interpret_closure_evaluate(rewrite_expr *ptr) /*con
         } break;
 
         case rewrite_expr::EDGE_SRC: {
-            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+            auto evaluation = (interpret_closure_evaluate(ptr->ptr_or_else.get()));
+//            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
             const auto& record = table.datum.at(record_id);
-            auto edges_ids = clos.resolveEdgesOverVariableName(pattern_id, variable_name, record);
-            if (edges_ids.empty())
-                return {};
+            std::vector<size_t> edges_ids;
+            bool found = false;
+            {
+                auto strs = get_v_opt<std::string>(evaluation);
+                if (strs.has_value()) {
+                    found = true;
+//                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+                    const auto& record = table.datum.at(record_id);
+                    edges_ids = clos.resolveEdgesOverVariableName(pattern_id, strs.value(), record);
+                }
+            }
+            if (!found) {
+                auto strs = get_v_opt<std::vector<size_t>>(evaluation);
+                if (strs.has_value()) {
+                    edges_ids = strs.value();
+                }
+            }
 
             std::vector<size_t> ids;
             for (size_t& x : edges_ids) {
@@ -751,6 +778,144 @@ std::any closure::Interpret::interpret_closure_evaluate(rewrite_expr *ptr) /*con
     }
 }
 
+//
+//std::vector<size_t> closure::Interpret::interpret_closure_evaluate2(rewrite_expr *ptr) /*const*/ {
+//    if (!ptr)
+//        return {};
+//    switch (ptr->t) {
+//        case rewrite_expr::VARIABLE:
+//        case rewrite_expr::SCRIPT_CASE: {
+//            throw std::runtime_error("UNSUPPORTED OPERATION ON MUTUALLY NESTED");
+//        }
+//            // Returning the specific XI for the nodes
+//        case rewrite_expr::NODE_PROP:
+//        case rewrite_expr::NODE_ELL:
+//        case rewrite_expr::NODE_XI: {
+//            size_t xi_offset = ptr->id;
+//            std::vector<size_t> object_ids;
+//            auto evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get());
+//            bool found = false;
+//            {
+//                auto strs = get_v_opt<std::string>(evaluation);
+//                if (strs.has_value()) {
+//                    found = true;
+////                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+//                    const auto& record = table.datum.at(record_id);
+//                    object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, strs.value(), record);
+//                }
+//            }
+//            if (!found) {
+//                auto strs = get_v_opt<std::vector<size_t>>(evaluation);
+//                if (strs.has_value()) {
+//                    object_ids = strs.value();
+//                }
+//            }
+//            // for each object_id in the vector, I continuously append
+//            return object_ids;
+//        } break;
+//
+//
+//        case rewrite_expr::NODE_CONT: {
+//            size_t ell_offset = ptr->id;
+//            std::vector<size_t> collected;
+//            auto hasProp = interpret_closure_evaluate(ptr->pi_key_arg_or_then.get());
+//            if (!hasProp.has_value()) return collected;
+//            auto prop_name = std::any_cast<std::string>(hasProp);
+//            auto evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get());
+//            if (!evaluation.has_value()) return collected;
+////            auto variable_name = std::any_cast<std::string>(hasVar);
+//            std::vector<size_t> object_ids;
+////            auto evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get());
+//            bool found = false;
+//            {
+//                auto strs = get_v_opt<std::string>(evaluation);
+//                if (strs.has_value()) {
+//                    found = true;
+////                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+//                    const auto& record = table.datum.at(record_id);
+//                    object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, strs.value(), record);
+//                }
+//            }
+//            if (!found) {
+//                auto strs = get_v_opt<std::vector<size_t>>(evaluation);
+//                if (strs.has_value()) {
+//                    object_ids = strs.value();
+//                }
+//            }
+////            const auto& record = table.datum.at(record_id);
+////            auto isVariableName = get_v_opt<std::string>(match_rhs);
+////            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+////            const auto& record = table.datum.at(record_id);
+////            auto object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
+////            std::vector<gsm_object_xi_content> collected;
+//            for (size_t id : object_ids) {
+//                for (const gsm_object_xi_content& ref : clos.resolve_content(graph_id, id, prop_name)) {
+//                    collected.emplace_back(ref.id);
+//                }
+////                auto local = clos.resolve_content(graph_id, id, prop_name);
+////                collected.insert(collected.end(), local.begin(), local.end());
+//            }
+//            remove_duplicates(collected);
+//            return collected;
+//        } break;
+//
+//            // Returning the edge label (if nested, imploding the collection into a string!) TODO: what if we need singled out?
+//        case rewrite_expr::EDGE_LABEL: {
+//            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+//            const auto& record = table.datum.at(record_id);
+//            auto edges_ids = clos.resolveEdgesOverVariableName(pattern_id, variable_name, record);
+////            if (edges_ids.empty()) {
+////                clos.resolveEdgesOverVariableName(pattern_id, variable_name, record);
+////                return {};
+////            }
+//
+//            return edges_ids;
+//        } break;
+//
+//
+//        case rewrite_expr::IFTE_RW: {
+//            return interpret(ptr->ifcond) ?
+//                   interpret_closure_evaluate2(ptr->pi_key_arg_or_then.get()) :
+//                   interpret_closure_evaluate2(ptr->ptr_or_else.get());
+//        } break;
+//
+//        case rewrite_expr::EDGE_DST:
+//        case rewrite_expr::EDGE_SRC: {
+//            bool isSrc = ptr->t == rewrite_expr::EDGE_SRC;
+//            auto evaluation = (interpret_closure_evaluate(ptr->ptr_or_else.get()));
+////            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+//            const auto& record = table.datum.at(record_id);
+//            std::vector<size_t> edges_ids;
+//            bool found = false;
+//            {
+//                auto strs = get_v_opt<std::string>(evaluation);
+//                if (strs.has_value()) {
+//                    found = true;
+////                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
+//                    const auto& record = table.datum.at(record_id);
+//                    edges_ids = clos.resolveEdgesOverVariableName(pattern_id, strs.value(), record);
+//                }
+//            }
+//            if (!found) {
+//                auto strs = get_v_opt<std::vector<size_t>>(evaluation);
+//                if (strs.has_value()) {
+//                    edges_ids = strs.value();
+//                }
+//            }
+//
+//            std::vector<size_t> ids;
+//            for (size_t& x : edges_ids) {
+//                const auto& y = ptr2->resolveRecord(x);
+//                x = (isSrc) ? y->object_id : y->id_contained;
+//            }
+//            return ids;
+//        }
+//
+//        default:
+//            throw std::runtime_error("UNSUPPORTED OPERATION (FUTURE)");
+//    }
+//}
+
 static inline bool var_extractor(const test_pred& ptr,
                                  size_t& offsetForStar,
                                  size_t& offsetForValue,
@@ -767,6 +932,16 @@ static inline bool var_extractor(const test_pred& ptr,
             break;
     }
     if ((offsetForValue == (size_t)-1)) {
+        if (offsetForStar == -1) {
+            for (size_t i = 0, N = table.datum.at(0).size(); i<N; i++) {
+                if (table.datum.at(0).at(i).isNested) {
+                    offsetForStar = i;
+                    break;
+                }
+            }
+        }
+        if ((offsetForStar==-1))
+            return false;
         DEBUG_ASSERT(!table.datum.empty());
         DEBUG_ASSERT(table.datum.at(0).at(offsetForStar).isNested);
         const auto& access = table.datum.at(0).at(offsetForStar).table.Schema;
@@ -968,7 +1143,7 @@ bool closure::Interpret::interpret(test_pred &ptr) /*const*/ {
                 size_t offsetForValue1 = -1;
                 size_t offsetNested1 = -1;
                 if (!var_extractor(ptr, offsetForStar1, offsetForValue1, offsetNested1, ptr.nsoe, schema, table))
-                    return false;
+                    return true;
                 if (offsetNested1 == (size_t)(-1)) {
                     const auto&x =
                             table.datum.at(record_id).at(offsetForValue1).val;
@@ -988,14 +1163,14 @@ bool closure::Interpret::interpret(test_pred &ptr) /*const*/ {
                 }
             }
             if (currentMatches.empty())
-                return false;
+                return true;
 
             size_t offsetForStar = -1;
             size_t offsetForValue = -1;
             size_t offsetNested = -1;
             const std::string& _for_match = ptr.variable_matched;
             if (!var_extractor(ptr, offsetForStar, offsetForValue, offsetNested, ptr.variable_matched, it->second.first, it->second.second.begin()->second))
-                return false;
+                return true;
 
             for (const auto& [k,tablese] : it->second.second) {
                 for (size_t i = 0, N = tablese.datum.size(); i<N; i++) {

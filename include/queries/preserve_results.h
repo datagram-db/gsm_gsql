@@ -45,9 +45,9 @@ struct preserve_results {
     std::unordered_set<std::string> copyOut, copyIn;
 //    std::vector<results_to_preserve> intermediate_graph_view_delta_updates;
 
-    std::vector<yaucl::structures::any_to_uint_bimap<std::string>> map_orig;
-    std::vector<size_t> nested_index;
-    std::vector<yaucl::structures::any_to_uint_bimap<std::string>> map_nested;
+    std::vector<std::unordered_map<std::string,size_t>> map_orig;
+    std::vector<std::vector<size_t>> nested_index;
+    std::vector<std::vector<yaucl::structures::any_to_uint_bimap<std::string>>> map_nested;
 
     /**
      * Under the assumption that the algorithm will only consider * as the main entry-point for handling the
@@ -58,7 +58,7 @@ struct preserve_results {
      * @return returning a pair, determining whether the offset of the schema refers to a field within the main
      *         table or a field within *
      */
-    std::pair<bool, ssize_t> resolve_entry_match(size_t patternId, const std::string& element) const;
+    std::pair<ssize_t, ssize_t> resolve_entry_match(size_t patternId, const std::string& element) const;
 
 
     /**
@@ -92,7 +92,7 @@ struct preserve_results {
      *
      * @param vl    Collection of patterns
      */
-    void instantiate_morphisms(const std::vector<node_match>& vl, bool verbose = false);
+    void instantiate_morphisms(const std::vector<node_match>& vl, bool verbose = false, const std::unordered_set<std::string>& nodes = {}, const std::unordered_set<std::string>& edges = {});
 
     /**
      * Preparing teh hook queries edges
