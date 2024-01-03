@@ -1181,16 +1181,17 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run() {
         }
 
         case EvalE: {
-            if (casted_type.get()) {
-                if (casted_type->optGamma.get() != optGamma.get())
-                    casted_type->setOptGammaRecursively(optGamma);
-            } else {
+//            if (casted_type.get()) {
+//                if (casted_type->optGamma.get() != optGamma.get())
+//                    casted_type->setOptGammaRecursively(optGamma);
+//            } else
+            {
                 std::stringstream ss;
                 ss << arrayList[0]->run()->toString(false);
                 //std::cerr << ss.str() << std::endl;
-                script::compiler::ScriptVisitor::eval(ss, casted_type, optGamma);
+
+                return script::compiler::ScriptVisitor::eval(ss, nullptr, optGamma);
             }
-            return casted_type;
         }
 
         case TypeOf: {
@@ -1453,16 +1454,16 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
             if (objProps.empty()) {
                 std::stringstream ss;
                 ss << db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id)[0];
-                DPtr<script::structures::ScriptAST> lfst;
+//                DPtr<script::structures::ScriptAST> ;
 //                auto lfst = ;
-                compiler::ScriptVisitor::eval(ss, lfst, optGamma);
+                auto lfst = compiler::ScriptVisitor::eval(ss, nullptr, optGamma);
                 if (!lfst->isType()) {
                     ArrayList<DPtr<ScriptAST>> xi;
                     for (const std::string& val : XI) {
-                        DPtr<script::structures::ScriptAST> local;
+
                         std::stringstream ss2;
                         ss2 << val;
-                        compiler::ScriptVisitor::eval(ss2, local, optGamma);
+                        DPtr<script::structures::ScriptAST> local = compiler::ScriptVisitor::eval(ss2, nullptr, optGamma);
                         xi.emplace_back(local->typeInference());
                     }
                     auto x = mgu(xi); // Actually this?
@@ -1475,17 +1476,17 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
             } else {
                 std::stringstream ss;
                 ss <<  db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id)[0];
-                DPtr<script::structures::ScriptAST> lfst;
-//                auto lfst = ;
-                compiler::ScriptVisitor::eval(ss, lfst, optGamma);
+//                DPtr<script::structures::ScriptAST> lfst;
+                auto lfst =
+                compiler::ScriptVisitor::eval(ss, nullptr, optGamma);
                 if (!lfst->isType())
                     throw std::runtime_error("ERROR: the label of an object should express a type!");
                 ArrayList<DPtr<ScriptAST>> xi;
                 for (const std::string& val : XI) {
-                    DPtr<script::structures::ScriptAST> lfst2;
+
                     std::stringstream ss2;
                     ss2 << val;
-                    compiler::ScriptVisitor::eval(ss2, lfst2, optGamma);
+                    DPtr<script::structures::ScriptAST> lfst2 = compiler::ScriptVisitor::eval(ss2, nullptr, optGamma);
                     xi.emplace_back(lfst2->typeInference());
                 }
                 auto x = mgu(xi); // Actually this?
@@ -1509,11 +1510,11 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
 //                    local.emplace_back(upTypeObjX(content.id));
 //                vv[k] = mgu(local);
 //            }
-            DPtr<script::structures::ScriptAST> lfst;
+
             std::stringstream ss;
             ss <<  db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id)[0];
 //            auto lfst =
-            compiler::ScriptVisitor::eval(ss, lfst, optGamma);
+            DPtr<script::structures::ScriptAST> lfst = compiler::ScriptVisitor::eval(ss, nullptr, optGamma);
             if (!lfst->isType())
                 throw std::runtime_error("ERROR: the label of an object should express a type!");
             return lex_type_(std::move(lfst), std::move(vv));

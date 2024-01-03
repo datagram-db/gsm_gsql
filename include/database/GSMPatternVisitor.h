@@ -39,6 +39,7 @@ namespace script::structures {
     struct ScriptAST;
 }
 
+
 struct rewrite_expr;
 using test_side = std::variant<std::shared_ptr<rewrite_expr>,std::string>;
 struct test_pred {
@@ -60,7 +61,7 @@ struct test_pred {
     std::string nsoe;
     std::string pattern_matched, variable_matched;
     DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> optGamma;
-    DPtr<script::structures::ScriptAST> ptrResult{nullptr};
+    void*  ptrResult{nullptr};//scriptParser::ScriptContext
     DEFAULT_CONSTRUCTORS(test_pred)
 };
 
@@ -84,7 +85,7 @@ struct rewrite_expr {
         NODE_OR_EDGE,
         SCRIPT_CASE
     };
-    DPtr<script::structures::ScriptAST> ptrResult;
+    void* ptrResult{nullptr};
     cases t;                                                    // Using enumeration instead of inheritance
     size_t id;                                                  // Potential id associated to the match
 

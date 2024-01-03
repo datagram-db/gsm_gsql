@@ -121,8 +121,7 @@ void Environment::run_script() {
     while ((str = getLine()) != "quit!") {
         std::stringstream  ss;
         ss << str;
-        DPtr<script::structures::ScriptAST> program;
-        script::compiler::ScriptVisitor::eval(ss,program, map);
+        DPtr<script::structures::ScriptAST> program = script::compiler::ScriptVisitor::eval(ss,nullptr, map);
         std::cout << program->run()->toString() << std::endl;
     }
 }

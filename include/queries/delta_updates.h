@@ -37,7 +37,6 @@ struct delta_updates {
     // Storing the information pertaining to the newly-inserted or updated objects
     struct gsm_inmemory_db delta_plus_db;
     // Storing the replaced objects
-    std::unordered_map<size_t, size_t> replacement_map;
     std::unordered_map<std::string, std::vector<size_t>> newly_inserted_vertices;
     roaring::Roaring64Map newIterationInsertedObjects;
     std::vector<size_t> no_inserted_node;
@@ -126,6 +125,17 @@ struct delta_updates {
 
     void updateWith(const std::vector<delta_updates> &vector1);
 
+    inline size_t replacedWith(size_t x) const {
+        auto it = replacement_map.find(x);
+        while (it != replacement_map.end()) {
+            x = it->second;
+            it = replacement_map.find(x);
+        }
+        return x;
+    }
+
+private:
+    std::unordered_map<size_t, size_t> replacement_map;
 };
 
 

@@ -76,6 +76,9 @@ namespace gsm2 {
                 if (it->first>k) it--;
                 return it;
             }
+            const std::map<size_t, std::string>::const_iterator notALabel() const {
+                return minRecordToContaimentLabel.end();
+            }
             const gsm2::tables::PhiTable::record* resolveRecord(size_t k) const {
                 DEBUG_ASSERT(minRecordToContaimentLabel.begin()->first == 0);
                 auto it = minRecordToContaimentLabel.lower_bound(k);

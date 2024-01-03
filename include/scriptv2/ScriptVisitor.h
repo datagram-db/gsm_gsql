@@ -28,14 +28,14 @@ namespace script {
                 typecaster.clear();
                 db = gsm;
             }
-            static void eval(std::istream &is,
-                                 DPtr<script::structures::ScriptAST>& ptrResult,
+            static DPtr<script::structures::ScriptAST> eval(std::istream &is,
+                             scriptParser::ScriptContext** ptrResult,
                                  const std::vector<std::string>& schema,
                                  const std::vector<value>& nestedRow);
-            static void eval(std::istream& is,
-                             DPtr<script::structures::ScriptAST>& ptrResult,
+            static DPtr<script::structures::ScriptAST> eval(std::istream& is,
+                             scriptParser::ScriptContext** ptrResult,
                              DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> context);
-            static bool eval(DPtr<script::structures::ScriptAST>& ptrResult,
+            static DPtr<script::structures::ScriptAST> eval(scriptParser::ScriptContext** ptrResult,
                                      const std::vector<std::string>& schema,
                                      const std::vector<value>& nestedRow);
 

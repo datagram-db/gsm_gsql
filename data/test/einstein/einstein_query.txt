@@ -35,6 +35,7 @@ p2 = (>> H)<-[∀l:]--(X)                                   // Graph matching, S
 
 p3 = (V)--[∀n:nsubj]->(>>S)
         --[? mark]->(M)
+        --[? aux]->(A)
         --[∀l:dobj||ccomp||nmod]->(>>Z) // Future work: nested join between >>Z and >>Z from the join, when required. This might require to re-do the join semantics
      (Z)--[? case]->(T)
 
@@ -42,9 +43,9 @@ p3 = (V)--[∀n:nsubj]->(>>S)
         //new s
         set(φ (if ((label l ) = nmod) then    // Defining the label in function of T, if this exists,
                                                                       // otherwise using V
-                                              SCRIPT "((xi var(\"V\"))[0]) ++ \" \" ++ ((xi var(\"T\"))[0])"
+                                              SCRIPT "((xi var(\"A\"))[0]) ++ \" \" ++ ((xi var(\"V\"))[0]) ++ \" \" ++ ((xi var(\"T\"))[0])"
                                              else
-                                              (𝜉 0 @ V)
+                                              SCRIPT "((xi var(\"A\"))[0]) ++ \" \" ++ ((xi var(\"V\"))[0])"
                                              ), S) as Z
         //set(   𝜋 mark @ s) as (𝜉 0 @ M)
         //set(   φ orig , s) as S
@@ -53,7 +54,7 @@ p3 = (V)--[∀n:nsubj]->(>>S)
        del T
        del M
 
-       (S);
+       (S)/*;
 
 p4 = (V)--[∀l:dobj||ccomp||nmod]->(Z)
       (Z)--[? case]->(T)
@@ -68,4 +69,4 @@ p4 = (V)--[∀l:dobj||ccomp||nmod]->(Z)
        del V                                             // Removing a node
        del T
 
-       (j)                                              // Instance of reference to be returned
+       (j)                                              // Instance of reference to be returned*/

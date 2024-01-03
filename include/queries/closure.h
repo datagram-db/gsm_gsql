@@ -57,6 +57,7 @@ void fill_vector_with_case(std::vector<T>& to_fill, const abstract_value& opts) 
 
 #include "delta_updates.h"
 #include "scriptv2/ScriptVisitor.h"
+#include "NestedResultTable.h"
 #include <easylogging++.h>
 
 
@@ -144,7 +145,7 @@ struct closure {
             const auto& cn = forloading->all_indices.at(i).container_order;
             if (cn.empty()) {
                 for (size_t j = 0, M = forloading->objectScores.at(i).size(); j<M; j++) {
-                    size_t candidate = getOrDefault(delta_updates_per_graph.at(i).replacement_map, j, j);
+                    size_t candidate = delta_updates_per_graph.at(i).replacedWith(j);//getOrDefault(delta_updates_per_graph.at(i).replacement_map, j, j);
                     if (delta_updates_per_graph.at(i).removed_objects.contains(candidate)) {
                         continue;
                     }
@@ -154,7 +155,7 @@ struct closure {
             } else {
                 const auto& graph_index = cn.at(0);
                 for (size_t j = 0, M = graph_index.size(); j<M; j++) {
-                    size_t candidate = getOrDefault(delta_updates_per_graph.at(i).replacement_map, graph_index.at(j), graph_index.at(j));
+                    size_t candidate = delta_updates_per_graph.at(i).replacedWith(graph_index.at(j));//getOrDefault(delta_updates_per_graph.at(i).replacement_map, graph_index.at(j), graph_index.at(j));
                     if (delta_updates_per_graph.at(i).removed_objects.contains(candidate)) {
                         continue;
                     }
@@ -547,30 +548,30 @@ struct closure {
      */
     void generate_materialised_view();
 
-    inline bool has_content(size_t graphid,
-                                                              size_t id,
-                                                              const std::string& key_content) const {
-        if (!delta_updates_per_graph.empty()) {
-            auto& updates = delta_updates_per_graph.at(graphid);
-            {
-                auto it = updates.replacement_map.find(id);
-                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
-                    id = it->second;
-            }
-            if (updates.hasXBeenRemoved(id))
-                return false;
-            {
-                auto it = updates.delta_plus_db.O.find(id);
-                if (it != updates.delta_plus_db.O.end()) {
-                    auto it2 =  it->second.phi.find(key_content);
-                    if (it2 != it->second.phi.end()) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return forloading->hasContent(graphid, id, key_content);
-    }
+//    inline bool has_content(size_t graphid,
+//                                                              size_t id,
+//                                                              const std::string& key_content) const {
+//        if (!delta_updates_per_graph.empty()) {
+//            auto& updates = delta_updates_per_graph.at(graphid);
+//            {
+//                auto it = updates.replacement_map.find(id);
+//                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
+//                    id = it->second;
+//            }
+//            if (updates.hasXBeenRemoved(id))
+//                return false;
+//            {
+//                auto it = updates.delta_plus_db.O.find(id);
+//                if (it != updates.delta_plus_db.O.end()) {
+//                    auto it2 =  it->second.phi.find(key_content);
+//                    if (it2 != it->second.phi.end()) {
+//                        return true;
+//                    }
+//                }
+//            }
+//        }
+//        return forloading->hasContent(graphid, id, key_content);
+//    }
 
     inline std::vector<std::string> phi_keys(size_t graphid,
                                              size_t id) {
@@ -578,9 +579,10 @@ struct closure {
         if (!delta_updates_per_graph.empty()) {
             auto& updates = delta_updates_per_graph.at(graphid);
             {
-                auto it = updates.replacement_map.find(id);
-                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
-                    id = it->second;
+                size_t tmp = updates.replacedWith(id);
+//                auto it = updates.replacement_map.find(id);
+                if (/*it != updates.replacement_map.end() &&*/ (!updates.newIterationInsertedObjects.contains(tmp)))
+                    id = tmp;
             }
             if (updates.hasXBeenRemoved(id))
                 return {};
@@ -617,9 +619,13 @@ struct closure {
         if (!delta_updates_per_graph.empty()) {
             auto& updates = delta_updates_per_graph.at(graphid);
             {
-                auto it = updates.replacement_map.find(id);
-                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
-                    id = it->second;
+                size_t tmp = updates.replacedWith(id);
+//                auto it = updates.replacement_map.find(id);
+                if (/*it != updates.replacement_map.end() &&*/ (!updates.newIterationInsertedObjects.contains(tmp)))
+                    id = tmp;
+//                auto it = updates.replacement_map.find(id);
+//                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
+//                    id = it->second;
             }
             if (updates.hasXBeenRemoved(id))
                 return empty_content;
@@ -637,10 +643,11 @@ struct closure {
         bool subst=false;
         if (!delta_updates_per_graph.empty()) {
             for (auto& ref : legacy) {
-                auto& map = delta_updates_per_graph.at(graphid).replacement_map;
-                auto it =  (map.find(ref.id));
-                if (it != map.end()) {
-                    ref.id = it->second;
+                size_t tmp = delta_updates_per_graph.at(graphid).replacedWith(ref.id);
+//                auto& map = delta_updates_per_graph.at(graphid).replacement_map;
+//                auto it =  (map.find(ref.id));
+                if (tmp != ref.id) {
+                    ref.id = tmp;
                     subst = true;
                 }
             }
@@ -662,9 +669,10 @@ struct closure {
         if (!delta_updates_per_graph.empty()) {
             auto& updates = delta_updates_per_graph.at(graphid);
             {
-                auto it = updates.replacement_map.find(id);
-                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
-                    id = it->second;
+
+//                auto it = updates.replacement_map.find(id);
+//                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
+//                    id = it->second;
             }
             if (updates.hasXBeenRemoved(id))
                 return empty_string;
@@ -696,9 +704,13 @@ struct closure {
         if (!delta_updates_per_graph.empty()) {
             auto& updates = delta_updates_per_graph.at(graphid);
             {
-                auto it = updates.replacement_map.find(id);
-                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
-                    id = it->second;
+                size_t tmp = updates.replacedWith(id);
+//                auto it = updates.replacement_map.find(id);
+                if (/*it != updates.replacement_map.end() &&*/ (!updates.newIterationInsertedObjects.contains(tmp)))
+                    id = tmp;
+//                auto it = updates.replacement_map.find(id);
+//                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
+//                    id = it->second;
             }
             if (updates.hasXBeenRemoved(id))
                 return {};
@@ -722,9 +734,13 @@ struct closure {
         if (!delta_updates_per_graph.empty()) {
             auto& updates = delta_updates_per_graph.at(graphid);
             {
-                auto it = updates.replacement_map.find(id);
-                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
-                    id = it->second;
+                size_t tmp = updates.replacedWith(id);
+//                auto it = updates.replacement_map.find(id);
+                if (/*it != updates.replacement_map.end() &&*/ (!updates.newIterationInsertedObjects.contains(tmp)))
+                    id = tmp;
+//                auto it = updates.replacement_map.find(id);
+//                if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
+//                    id = it->second;
             }
             if (updates.hasXBeenRemoved(id))
                 return empty_string;
@@ -755,9 +771,13 @@ private:
         if (!delta_updates_per_graph.empty()) {
         auto& updates = delta_updates_per_graph.at(graphid);
         {
-            auto it = updates.replacement_map.find(id);
-            if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
-                id = it->second;
+            size_t tmp = updates.replacedWith(id);
+//                auto it = updates.replacement_map.find(id);
+                if (/*it != updates.replacement_map.end() &&*/ (!updates.newIterationInsertedObjects.contains(tmp)))
+                    id = tmp;
+//            auto it = updates.replacement_map.find(id);
+//            if (it != updates.replacement_map.end() && (!updates.newIterationInsertedObjects.contains(it->second)))
+//                id = it->second;
         }
         if (updates.hasXBeenRemoved(id))
             return empty_string_vector;
@@ -781,7 +801,7 @@ private:
     }
 
 
-
+public:
     class Interpret {
         size_t graph_id;
         size_t pattern_id;
@@ -802,12 +822,145 @@ private:
                   const gsm2::tables::LinearGSM* ptr2) : graph_id(graphId), pattern_id(patternId), schema(schema),
                                                           table(table), record_id(recordId), clos(clos), ptr{ptr}, ptr2{ptr2} {}
 
-        std::any interpret_closure_evaluate(rewrite_expr* ptr) /*const*/;
+        NestedResultTable interpret_closure_evaluate(rewrite_expr* ptr, bool force, bool node_or_edge_otherwise) /*const*/;
 //        std::vector<size_t> interpret_closure_evaluate2(rewrite_expr* ptr) /*const*/;
 
-        bool interpret(test_pred& ptr) /*const*/;
+        std::pair<roaring::Roaring64Map,size_t> interpret(test_pred& ptr, size_t maxN) /*const*/;
+
+        NestedResultTable resolve(const NestedResultTable& x,
+                                                NestedResultTable::variant_type_cpp script_cast = NestedResultTable::RT_NONE) const;
+
     };
 
+    /*template <typename T>
+    inline void updateContents(rewrite_expr *ptr, rewrite_expr *target_ptr,
+                               size_t graph_id, size_t pattern_id, size_t record_id,
+                               const nested_table &table, Interpret& I,
+                               const std::function<T(const std::any)>& f) {
+        std::any match_rhs = I.interpret_closure_evaluate(target_ptr);
+        if (match_rhs.has_value()) {
+            auto hasProp = I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get());
+            if (!hasProp.has_value()) return;
+            auto NAME = std::any_cast<std::tuple<std::pair<ssize_t,ssize_t>,std::vector<std::string>>>(hasProp); // prop_name
+            auto hasVar = I.interpret_closure_evaluate(ptr->ptr_or_else.get());
+            if (!hasVar.has_value()) return;
+            auto variable_name = std::any_cast<std::string>(hasVar);
+            const auto& record = table.datum.at(record_id);
+            auto VAR = resolveIdsOverVariableName2(graph_id, pattern_id, variable_name, record, true);
+            auto VAL = f(match_rhs);
+
+            if ((std::get<0>(VAR).first == std::get<0>(VAL).first) && (std::get<0>(VAL).first == std::get<0>(NAME).first)) {
+                const auto& var = std::get<1>(VAR);
+                const auto& val = std::get<1>(VAL);
+                const auto& name = std::get<1>(NAME);
+                for (size_t i = 0, N = std::min({var.size(), val.size(), name.size()}); i<N; i++) {
+                    delta_updates_per_graph[graph_id].delta_plus_db.generateId(var.at(i)).content[name.at(i)] = val.at(i);
+                }
+            } else if (std::get<0>(VAR).first == std::get<0>(VAL).first) {
+                const auto& var = std::get<1>(VAR);
+                const auto& val = std::get<1>(VAL);
+                for (const std::string& x : std::get<1>(NAME)) {
+                    for (size_t i = 0, N = std::min({var.size(), val.size()}); i<N; i++) {
+                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(var.at(i)).content[x] = val.at(i);
+                    }
+                }
+            } else if ((std::get<0>(NAME).first == std::get<0>(VAR).first) && (std::get<0>(NAME).first == -1)) {
+                const auto& var = std::get<1>(VAR);
+                const auto& name = std::get<1>(NAME);
+                const char* const delim = " ";
+                std::ostringstream imploded;
+                std::copy(std::get<1>(VAL).begin(), std::get<1>(VAL).end(),
+                          std::ostream_iterator<std::string>(imploded, delim));
+                for (size_t i = 0, N = std::min({var.size(), name.size()}); i<N; i++) {
+                    delta_updates_per_graph[graph_id].delta_plus_db.generateId(var.at(i)).content[name.at(i)] = imploded.str();
+                }
+            } else if ((std::get<0>(NAME).first == std::get<0>(VAR).first) && (std::get<0>(VAL).first == -1)) {
+                const auto& var = std::get<1>(VAR);
+                const auto& name = std::get<1>(NAME);
+                const auto& val = std::get<1>(VAL);
+                DEBUG_ASSERT(val.size() == 1);
+                for (size_t i = 0, N = std::min({var.size(), name.size()}); i<N; i++) {
+                    delta_updates_per_graph[graph_id].delta_plus_db.generateId(var.at(i)).content[name.at(i)] = val.at(0);
+                }
+            } else if ((std::get<0>(NAME).first == std::get<0>(VAL).first) && (std::get<0>(VAR).first == -1)) {
+                const auto& var = std::get<1>(VAR);
+                const auto& name = std::get<1>(NAME);
+                const auto& val = std::get<1>(VAL);
+                DEBUG_ASSERT(var.size() == 1);
+                std::unordered_map<std::string, std::unordered_set<std::string>> vals;
+                for (size_t i = 0, N = std::min({name.size(), val.size()}); i<N; i++) {
+                    vals[name.at(i)].insert(val.at(i));
+                }
+                for (const auto& [k,v] : vals) {
+                    const char* const delim = " ";
+                    std::ostringstream imploded;
+                    std::copy(v.begin(), v.end(),
+                              std::ostream_iterator<std::string>(imploded, delim));
+                    delta_updates_per_graph[graph_id].delta_plus_db.generateId(var.at(0)).content[k] = imploded.str();
+                }
+            } else if ((std::get<0>(NAME).first == std::get<0>(VAL).first) && (std::get<0>(VAL).first == -1)) {
+                const auto& var = std::get<1>(VAR);
+                const auto& name = std::get<1>(NAME);
+                const auto& val = std::get<1>(VAL);
+                DEBUG_ASSERT((val.size() == 1) && (name.size() == 1));
+                for (unsigned long i : var) {
+                    delta_updates_per_graph[graph_id].delta_plus_db.generateId(i).content[name.at(0)] = val.at(0);
+                }
+            } else {
+                DEBUG_ASSERT((std::get<0>(NAME).first != std::get<0>(VAL).first) &&
+                             (std::get<0>(VAR).first != std::get<0>(VAL).first) &&
+                             (std::get<0>(NAME).first != std::get<0>(VAR).first));
+                if (std::get<0>(VAR).first == -1) {
+                    DEBUG_ASSERT(std::get<1>(VAR).size() == 1);
+                    size_t id = std::get<1>(VAR).at(0);
+                    std::unordered_map<std::string, std::unordered_set<std::string>> vals;
+                    std::unordered_map<std::string, std::string> flattened;
+                    for (const auto& name : std::get<1>(NAME)) {
+                        for (const auto& val : std::get<1>(VAL)) {
+                            vals[name].insert(val);
+                        }
+                    }
+                    for (const auto& [k,v] : vals) {
+                        const char* const delim = " ";
+                        std::ostringstream imploded;
+                        std::copy(v.begin(), v.end(),
+                                  std::ostream_iterator<std::string>(imploded, delim));
+                        flattened[k] = imploded.str();
+                    }
+                    vals.clear();
+                    for (const auto& [name,val] : flattened) {
+                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).content[name] = val;
+                    }
+                } else if (std::get<0>(VAL).first == -1) {
+                    DEBUG_ASSERT(std::get<1>(VAL).size() == 1);
+                    const auto& val = std::get<1>(VAL).at(0);
+                    for (const auto& name : std::get<1>(NAME)) {
+                        for (const size_t id: std::get<1>(VAR)) {
+                            delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).content[name] = val;
+                        }
+                    }
+                } else {
+                    DEBUG_ASSERT(std::get<0>(NAME).first == -1);
+                    DEBUG_ASSERT(std::get<1>(NAME).size() == 1);
+                    const auto& name = std::get<1>(NAME).at(0);
+                    for (const auto& val : std::get<1>(VAL)) {
+                        for (const size_t id: std::get<1>(VAR)) {
+                            delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).content[name] = val;
+                        }
+                    }
+                }
+            }
+        }
+    }*/
+
+    inline
+    size_t resolve(size_t graph_id, size_t ref) const {
+        size_t tmp = delta_updates_per_graph.at(graph_id).replacedWith(ref);
+        if ((!delta_updates_per_graph.at(graph_id).newIterationInsertedObjects.contains(tmp))) {
+            return tmp;
+        } else
+            return ref;
+    }
 
     /**
      *(graph_id, pattern_id, schema, table, record_id, *this, pr.morphisms, forloading);
@@ -823,72 +976,65 @@ private:
 
 
     inline
-    std::tuple<std::pair<ssize_t, ssize_t>,std::vector<size_t>>
+    NestedResultTable
             resolveEdgesOverVariableName2(size_t pattern_id, const std::string &variable_name, const std::vector<value> &record) const {
         std::vector<size_t> object_id;
         if (!edgeVars.contains(variable_name)) {
-            return {{-1,-1},std::move(object_id)};
+            return {};
         }
         auto offset = pr.resolve_entry_match(pattern_id, variable_name);
         if (offset.second<0)
-            return {offset,object_id};
+            return {}; //{std::tuple<std::pair<ssize_t,ssize_t>,std::vector<size_t>>{offset,object_id}};
         if (offset.first<0) {
             const auto& cell = record.at(offset.second);
             DEBUG_ASSERT(!cell.isNested);
             {
-                fill_vector_with_case(object_id, cell.val);
+                if (std::holds_alternative<size_t>(cell.val))
+                    return {std::get<size_t>(cell.val), false, offset.first, offset.second};
+                else
+                    return {};
+//                fill_vector_with_case(object_id, cell.val);
             }
         } else {
             for (const auto& record_internal : record.at(pr.nested_index.at(pattern_id).at(offset.first)).table.datum) {
                 const auto& cell = record_internal.at(offset.second);
                 DEBUG_ASSERT(!cell.isNested);
-                fill_vector_with_case(object_id, cell.val);
+                if (std::holds_alternative<size_t>(cell.val))
+                    object_id.emplace_back(std::get<size_t>(cell.val));
+                else
+                    object_id.emplace_back(-1);
+//                fill_vector_with_case(object_id, cell.val);
             }
         }
-        return {std::move(offset),std::move(object_id)};
+        return {object_id, false, offset.first, offset.second};
     }
 
-    inline
-    std::vector<size_t>
-    resolveEdgesOverVariableName(size_t pattern_id, const std::string &variable_name, const std::vector<value> &record) const {
-        std::vector<size_t> object_id;
-        if (!edgeVars.contains(variable_name)) {
-            return object_id;
-        }
-        auto offset = pr.resolve_entry_match(pattern_id, variable_name);
-        if (offset.second<0)
-            return object_id;
-        if (offset.first<0) {
-            const auto& cell = record.at(offset.second);
-            DEBUG_ASSERT(!cell.isNested);
-//            if (cell.isNested) {
-//                size_t actualNestedOffset = -1;
-//                for (size_t k = 0, N = cell.table.Schema.size(); k<N; k++) {
-//                    if (cell.table.Schema.at(k) == variable_name){
-//                        actualNestedOffset = k;
-//                        break;
-//                    }
-//                }
-//                DEBUG_ASSERT(actualNestedOffset != -1);
-//                for (const auto& record_internal : record.at(offset.second).table.datum) {
-//                    const auto& cell2 = record_internal.at(actualNestedOffset);
-//                    DEBUG_ASSERT(!cell2.isNested);
-//                    fill_vector_with_case(object_id, cell2.val);
-//                }
-//            } else
-            {
-                fill_vector_with_case(object_id, cell.val);
-            }
-        } else {
-            for (const auto& record_internal : record.at(pr.nested_index.at(pattern_id).at(offset.first)).table.datum) {
-                const auto& cell = record_internal.at(offset.second);
-                DEBUG_ASSERT(!cell.isNested);
-                fill_vector_with_case(object_id, cell.val);
-            }
-        }
-        remove_duplicates(object_id);
-        return object_id;
-    }
+//    inline
+//    std::vector<size_t>
+//    resolveEdgesOverVariableName(size_t pattern_id, const std::string &variable_name, const std::vector<value> &record) const {
+//        std::vector<size_t> object_id;
+//        if (!edgeVars.contains(variable_name)) {
+//            return object_id;
+//        }
+//        auto offset = pr.resolve_entry_match(pattern_id, variable_name);
+//        if (offset.second<0)
+//            return object_id;
+//        if (offset.first<0) {
+//            const auto& cell = record.at(offset.second);
+//            DEBUG_ASSERT(!cell.isNested);
+//            {
+//                fill_vector_with_case(object_id, cell.val);
+//            }
+//        } else {
+//            for (const auto& record_internal : record.at(pr.nested_index.at(pattern_id).at(offset.first)).table.datum) {
+//                const auto& cell = record_internal.at(offset.second);
+//                DEBUG_ASSERT(!cell.isNested);
+//                fill_vector_with_case(object_id, cell.val);
+//            }
+//        }
+//        remove_duplicates(object_id);
+//        return object_id;
+//    }
 
     /**
      * Incremental update of the graph query, one at a time
@@ -917,49 +1063,43 @@ private:
         return obj.id;
     }
 
+
     inline
-    std::tuple<std::pair<ssize_t,ssize_t>,std::vector<size_t>>
+    NestedResultTable
     resolveIdsOverVariableName2(size_t graph_id,
                                size_t pattern_id,
                                const std::string &variable_name,
                                const std::vector<value> &record,
                                bool buildNewIds = false) /*const*/ {
         std::vector<size_t> object_id;
-        auto v = delta_updates_per_graph.at(graph_id).getNewlyInsertedVertices(variable_name);
+        const std::vector<size_t>& v = delta_updates_per_graph.at(graph_id).getNewlyInsertedVertices(variable_name);
         if (!v.empty())
-            return {{-1,-1},v};
+            return {v, true};
         auto offset = pr.resolve_entry_match(pattern_id, variable_name);
         if (offset.second<0)
-            return {std::move(offset),std::move(object_id)};
+            return {v, true, offset.first, offset.second};
         if (offset.first<0) {
             const auto& cell = record.at(offset.second);
             DEBUG_ASSERT(!cell.isNested);
-            {
                 if (std::holds_alternative<bool>(cell.val)) {
-                    if (buildNewIds)
-                        object_id.emplace_back(newObjectToVariable(graph_id, variable_name));
-                } else {
-                    fill_vector_with_case(object_id, cell.val);
+                    if (buildNewIds) {
+                        return {resolve(graph_id, newObjectToVariable(graph_id, variable_name)), true, offset.first, offset.second};
+                    }
+                } else if (std::holds_alternative<size_t>(cell.val)) {
+                    return {resolve(graph_id, std::get<size_t>(cell.val)), true, offset.first, offset.second};
                 }
-            }
+                return {};
         } else {
             for (const auto& record_internal : record.at(pr.nested_index.at(pattern_id).at(offset.first)).table.datum) {
                 const auto& cell = record_internal.at(offset.second);
                 DEBUG_ASSERT(!cell.isNested);
-                fill_vector_with_case(object_id, cell.val);
+                if (std::holds_alternative<size_t>(cell.val))
+                    object_id.emplace_back(resolve(graph_id, std::get<size_t>(cell.val)));
+                else
+                    object_id.emplace_back(-1);
             }
+            return {object_id, true, offset.first, offset.second};
         }
-        bool subst=false;
-        for (auto& ref : object_id) {
-            auto& map = delta_updates_per_graph.at(graph_id).replacement_map;
-            auto it =  (map.find(ref));
-            if (it != map.end() && (!delta_updates_per_graph.at(graph_id).newIterationInsertedObjects.contains(it->second))) {
-                ref = it->second;
-                subst = true;
-            }
-        }
-//        remove_duplicates(object_id);
-        return {std::move(offset),std::move(object_id)};
     }
 
     inline
@@ -979,21 +1119,6 @@ private:
         if (offset.first<0) {
             const auto& cell = record.at(offset.second);
             DEBUG_ASSERT(!cell.isNested);
-//            if (cell.isNested) {
-//                size_t actualNestedOffset = -1;
-//                for (size_t k = 0, N = cell.table.Schema.size(); k<N; k++) {
-//                    if (cell.table.Schema.at(k) == variable_name){
-//                        actualNestedOffset = k;
-//                        break;
-//                    }
-//                }
-//                DEBUG_ASSERT(actualNestedOffset != -1);
-//                for (const auto& record_internal : record.at(offset.second).table.datum) {
-//                    const auto& cell2 = record_internal.at(actualNestedOffset);
-//                    DEBUG_ASSERT(!cell2.isNested);
-//                    fill_vector_with_case(object_id, cell2.val);
-//                }
-//            } else
             {
                 if (std::holds_alternative<bool>(cell.val)) {
                     if (buildNewIds)
@@ -1009,13 +1134,10 @@ private:
                 fill_vector_with_case(object_id, cell.val);
             }
         }
-        bool subst=false;
         for (auto& ref : object_id) {
-            auto& map = delta_updates_per_graph.at(graph_id).replacement_map;
-            auto it =  (map.find(ref));
-            if (it != map.end() && (!delta_updates_per_graph.at(graph_id).newIterationInsertedObjects.contains(it->second))) {
-                ref = it->second;
-                subst = true;
+           size_t tmp =  delta_updates_per_graph.at(graph_id).replacedWith(ref);
+            if ((!delta_updates_per_graph.at(graph_id).newIterationInsertedObjects.contains(tmp))) {
+                ref = tmp;
             }
         }
         remove_duplicates(object_id);
@@ -1115,7 +1237,8 @@ private:
 
                                 Interpret I(graph_id, pattern_id, pattern_result.first, it->second, table_offset, *this, pr.morphisms, forloading);
                                 if (pattern.has_where) {
-                                    if (!I.interpret(pattern.where)) {
+                                    auto result = I.interpret(pattern.where, 1);
+                                    if ((result.first.cardinality()==0)) {
                                         table_offset++;
                                         continue; //next entry
                                     }
@@ -1224,6 +1347,221 @@ private:
                 }
         }
     }
+
+//    std::string
+//    getOstringstream(const Interpret &I,
+//                     const char *delim,
+//                     const NestedResultTable &containingStrings) const;
+
+
+
 };
+
+static inline
+std::string getOstringstream(
+        const closure::Interpret &I,
+        const char *delim,const NestedResultTable &containingStrings)  {
+    std::ostringstream imploded;
+    switch (containingStrings.expectedType) {
+        case NestedResultTable::RT_STRING:
+            return std::get<std::string>(containingStrings.content);
+
+        case NestedResultTable::RT_VSTRING: {
+            const auto& it = std::get<std::vector<std::string>>(containingStrings.content);
+            std::copy(it.begin(), it.end(),
+                      std::ostream_iterator<std::string>(imploded, delim));
+            return imploded.str();
+        }
+
+        case NestedResultTable::RT_SIZET:
+            return std::get<std::string>(I.resolve(containingStrings, NestedResultTable::RT_STRING).content);
+
+        case NestedResultTable::RT_VSIZET: {
+            const auto& V = std::get<std::vector<size_t>>(containingStrings.content);
+            size_t index = 0;
+            std::map<size_t, std::unordered_set<std::string>> M;
+            auto tmp = I.resolve(containingStrings, NestedResultTable::RT_VSTRING );
+            for (size_t i = 0, N = tmp.size(); i<N; i++) {
+                M[V.at(index)].insert(tmp.getString(i));
+                index++;
+            }
+            for (auto it = M.begin(), en = M.end(); it != en; ) {
+                std::ostringstream local;
+                std::copy(it->second.begin(), it->second.end(),
+                          std::ostream_iterator<std::string>(local, delim));
+                imploded << local.str();
+                it++;
+                if (it != en)
+                    imploded << delim;
+            }
+            return imploded.str();
+        }
+
+
+        case NestedResultTable::RT_NONE:
+            return "";
+
+        case NestedResultTable::RT_CONTENT:
+        case NestedResultTable::RT_VCONTENT:
+        case NestedResultTable::RT_SCRIPT:
+            throw std::runtime_error("Unexpected type");
+    }
+}
+
+static inline
+std::vector<gsm_object_xi_content> getFlattenedContent(
+        const closure::Interpret &I,
+        const char *delim,const NestedResultTable &containingStrings)  {
+    std::vector<gsm_object_xi_content> imploded;
+    switch (containingStrings.expectedType) {
+        case NestedResultTable::RT_CONTENT:
+            return std::get<std::vector<gsm_object_xi_content>>(containingStrings.content);
+
+        case NestedResultTable::RT_VCONTENT: {
+            for (const auto& ref : std::get<std::vector<std::vector<gsm_object_xi_content>>>(containingStrings.content))
+                imploded.insert(imploded.end(), ref.begin(), ref.end());
+            remove_duplicates(imploded);
+            return imploded;
+        }
+
+        case NestedResultTable::RT_SIZET: {
+            return I.resolve(containingStrings, NestedResultTable::RT_CONTENT).getContent(0);
+        }
+
+        case NestedResultTable::RT_VSIZET: {
+            const auto W = I.resolve(containingStrings, NestedResultTable::RT_VCONTENT );
+            for (size_t i = 0, N = W.size(); i<N; i++) {
+                auto x = W.getContent(i);
+                imploded.insert(imploded.end(), x.begin(), x.end());
+            }
+            remove_duplicates(imploded);
+            return imploded;
+        }
+
+        case NestedResultTable::RT_NONE:
+            return imploded;
+
+        default:
+            throw std::runtime_error("Unexpected type");
+    }
+}
+
+template <typename T>
+
+   void complexInstantiate(size_t graph_id,
+            closure& self,
+            const closure::Interpret &I,
+            const char *delim,
+            const NestedResultTable::variant_type_cpp vectorType,
+    const NestedResultTable::variant_type_cpp simpleType,
+            const std::function<void(size_t, size_t, const std::string &, const T &)> &resolve,
+            const std::function<T(const std::set<T>&)> &flatten2,
+            const std::function<T(const closure::Interpret,const char*,const NestedResultTable &)> flattenT,
+            const std::function<T(const NestedResultTable &, size_t)> projector,
+            const NestedResultTable &VAR,
+                   NestedResultTable &VAL,
+                   NestedResultTable &NAME) {
+       auto nameType = (NAME.size()) > 1 ? NestedResultTable::RT_VSTRING : NestedResultTable::RT_STRING;
+       auto valType = (VAL.size()) > 1 ? vectorType : simpleType;
+       if ((VAR.cell_nested_morphism == VAL.cell_nested_morphism) &&
+           (VAL.cell_nested_morphism == NAME.cell_nested_morphism)) {
+           VAL = I.resolve(VAL, valType);
+           NAME = I.resolve(NAME, nameType);
+           for (size_t i = 0, N = std::min({VAR.size(), VAL.size(), NAME.size()}); i < N; i++) {
+               resolve(graph_id, VAR.getInt(i), NAME.getString(i), projector(VAL,i));
+//                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(VAR.getInt(i)).content[NAME.getString(i)] = VAL.getT<std::string>(i);
+           }
+       } else if (VAR.cell_nested_morphism == VAL.cell_nested_morphism) {
+           VAL = I.resolve(VAL, valType);
+           NAME = I.resolve(NAME, nameType);
+           for (size_t i = 0, N = NAME.size(); i<N; i++) {
+               for (size_t i = 0, N = VAR.size(); i < N; i++) {
+                   resolve(graph_id, VAR.getInt(i), NAME.getString(i), projector(VAL,i));
+//                            delta_updates_per_graph[graph_id].delta_plus_db.generateId(VAR.getInt(i)).content[x] = VAL.getT<std::string>(i);
+               }
+           }
+       } else if ((NAME.cell_nested_morphism == VAR.cell_nested_morphism) && (NAME.cell_nested_morphism == -1)) {
+           NAME = I.resolve(NAME, nameType);
+
+           auto result = flattenT(I, delim, VAL);
+           for (size_t i = 0, N = std::min({VAR.size(), NAME.size()}); i < N; i++) {
+               resolve(graph_id, VAR.getInt(i), NAME.getString(i), result);
+//                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(VAR.getInt(i)).content[NAME.getString(i)] = result;
+           }
+       } else if ((NAME.cell_nested_morphism == VAR.cell_nested_morphism) && (VAL.cell_nested_morphism == -1)) {
+           NAME = I.resolve(NAME, nameType);
+           auto val = flattenT(I, delim, VAL);
+           for (size_t i = 0, N = std::min({VAR.size(), NAME.size()}); i < N; i++) {
+               resolve(graph_id, VAR.getInt(i), NAME.getString(i), val);
+//                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(VAR.getInt(i)).content[NAME.getString(i)] = val;
+           }
+       } else if ((NAME.cell_nested_morphism == VAL.cell_nested_morphism) && (VAR.cell_nested_morphism == -1)) {
+           VAL = I.resolve(VAL, valType);
+           NAME = I.resolve(NAME, nameType);
+           DEBUG_ASSERT(VAR.size() == 1);
+           std::unordered_map<std::string, std::set<T>> vals;
+           for (size_t i = 0, N = std::min({NAME.size(), VAL.size()}); i < N; i++) {
+               vals[NAME.getString(i)].insert(projector(VAL,i));
+           }
+           for (const auto &[k, v]: vals) {
+               resolve(graph_id, VAR.getInt(0), k, flatten2(v));
+//                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(VAR.getInt(0)).content[k] = imploded.str();
+           }
+       } else if ((NAME.cell_nested_morphism == VAL.cell_nested_morphism) && (VAL.cell_nested_morphism == -1)) {
+           DEBUG_ASSERT((VAL.size() == 1) && (NAME.size() == 1));
+           auto val = flattenT(I, delim, VAL);
+           auto name = getOstringstream(I, delim, NAME);
+           for (size_t idx = 0, N = VAR.size(); idx < N; idx++) {
+               resolve(graph_id, VAR.getInt(0), name, val);
+//                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(VAR.getInt(idx)).content[name] = val;
+           }
+       } else {
+           NAME = I.resolve(NAME, nameType);
+           DEBUG_ASSERT((NAME.cell_nested_morphism != VAL.cell_nested_morphism) &&
+                        (VAR.cell_nested_morphism != VAL.cell_nested_morphism) &&
+                        (NAME.cell_nested_morphism != VAR.cell_nested_morphism));
+           if (VAR.cell_nested_morphism == -1) {
+               DEBUG_ASSERT(VAR.size() == 1);
+               size_t id = VAR.getInt(0);
+               const auto &namesV = std::get<std::vector<std::string>>(NAME.content);
+               std::unordered_set<std::string> names(namesV.begin(), namesV.end());
+               auto str = flattenT(I, delim, VAL);
+               for (const auto &name: names) {
+                   resolve(graph_id, VAR.getInt(0), name, str);
+//                            delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).content[name] = str;
+               }
+           } else if (VAL.cell_nested_morphism == -1) {
+               DEBUG_ASSERT(VAL.size() == 1);
+               const auto &namesV = std::get<std::vector<std::string>>(NAME.content);
+               std::unordered_set<std::string> names(namesV.begin(), namesV.end());
+               const auto val = flattenT(I, delim, VAL);
+               for (size_t i = 0, N = VAR.size(); i < N; i++) {
+                   auto id = VAR.getInt(i);
+                   for (const auto &name: names) {
+                       resolve(graph_id, id, name, val);
+//                                delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).content[name] = val;
+                   }
+               }
+           } else {
+               DEBUG_ASSERT(NAME.cell_nested_morphism == -1);
+               DEBUG_ASSERT(NAME.size() == 1);
+               const auto &name = NAME.getString(0);
+               const auto val = flattenT(I, delim, VAL);
+               for (size_t i = 0, N = VAR.size(); i < N; i++) {
+                   resolve(graph_id, VAR.getInt(i), name, val);
+//                            delta_updates_per_graph[graph_id].delta_plus_db.generateId(VAR.getInt(i)).content[name] = val;
+               }
+           }
+       }
+   }
+
+
+
+
+
+//    template <> inline std::vector<gsm_object_xi_content> flattenT<gsm_object_xi_content>(
+//            const NestedResultTable &containingStrings) const {
+//        return {};
+//    }
 
 #endif //GSM2_CLOSURE_H
