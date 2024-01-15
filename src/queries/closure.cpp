@@ -199,7 +199,6 @@ void closure::generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std:
             auto& nodeMap = nodesBeingInsertedAlready[i];
             auto& g = simpleGraphs[i];
             size_t id = nodeMap.put(idX).first;
-//                const auto& xis = xi_values.resolve_object_id(cp);
             size_t gid;
             std::string tmp;
             if (object.xi.empty())
@@ -291,33 +290,22 @@ void closure::generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std:
 
 void closure::generate_materialised_view() {
     if (!isMaterialised) {
-//        std::cout << "materialising" << std::endl;
         auto real_time_start = std::chrono::high_resolution_clock::now();
         isMaterialised = true;
-//    size_t N = pr.morphisms.size();
         forloading->iterateOverObjects([this](size_t graphid, const gsm_object& legacy_object_old_data) {
             auto& updates = delta_updates_per_graph[graphid];
             if ((!updates.hasXBeenRemoved(legacy_object_old_data.id))) {
                 size_t i =0;
                 std::vector<size_t> removed_indices;
-//                std::cout << "C" << legacy_object_old_data.id << "..." << std::endl;
                 size_t new_id = legacy_object_old_data.id;
                 auto& obj = updates.delta_plus_db.O[new_id];
                 obj.id = new_id;
                 obj.updateWith(legacy_object_old_data);
-//                for (auto& [k, v] :legacy_object_old_data.phi) {
-//                    std::cout << "\tE=" << k<< std::endl;
-//                }
                 for (auto& [k, v] :obj.phi) {
-//                    std::cout << "\tG=" << k<< std::endl;
                     i = 0;
                     removed_indices.clear();
                     for (auto& w : v) {
                         w.id = updates.replacedWith(w.id);
-//                        auto it = updates.replacement_map.find(w.id);
-//                        if (it != updates.replacement_map.end()) {
-//                            w.id = it->second;
-//                        }
                         if ((w.orig_edge_id != -1) &&  delta_updates_per_graph.at(graphid).removed_edges.contains(w.orig_edge_id)) {
                             removed_indices.emplace_back(i);
                         }
@@ -336,9 +324,6 @@ void closure::generate_materialised_view() {
 #include <ranges>
 
 
-
-
-
 void closure::interpret_closure_set(rewrite_expr *ptr,
                                     size_t graph_id,
                                     size_t pattern_id,
@@ -352,7 +337,6 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
     if (!ptr)
         return;
 
-//    Interpret I(graph_id, pattern_id, schema, table, record_id, *this, pr.morphisms, forloading);
     switch (ptr->t) {
         case rewrite_expr::NODE_OR_EDGE:
         case rewrite_expr::SCRIPT_CASE:
@@ -372,16 +356,19 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
             size_t xi_offset = ptr->id;
             DEBUG_ASSERT((lhs.expectedType == NestedResultTable::RT_SIZET) || (lhs.expectedType == NestedResultTable::RT_VSIZET));
             if (lhs.cell_nested_morphism == rhs.cell_nested_morphism) {
-                rhs = I.resolve(rhs, std::max(rhs.size(), lhs.size()) > 1 ? NestedResultTable::RT_VSTRING : NestedResultTable::RT_STRING);
-                for (size_t i = 0, N = std::min(lhs.size(), rhs.size()); i<N; i++) {
-                    const auto &id = lhs.getInt(i);
-                    auto &xi = isXI ? delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).xi
-                                    : delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).ell;
-                    if (xi.size() <= xi_offset)
-                        xi.insert(xi.end(), xi.size() - xi_offset + 1, "");
+                OrderedSet including{(size_t)0};
+                rhs = I.resolve(rhs, including, std::max(rhs.size(), lhs.size()) > 1 ? NestedResultTable::RT_VSTRING : NestedResultTable::RT_STRING);
+                for (size_t i = 0, N = including.cardinality(); i<N; i++) {
+                    if (including.contains(i)) {
+                        const auto &id = lhs.getInt(i);
+                        auto &xi = isXI ? delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).xi
+                                        : delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).ell;
+                        if (xi.size() <= xi_offset)
+                            xi.insert(xi.end(), xi.size() - xi_offset + 1, "");
 //                    if (rhs.getString(i).starts_with("alice alice"))
 //                        std::cout << "ERR" << std::endl;
-                    xi[xi_offset] = rhs.getString(i); //std::any_cast<std::string>(match_rhs);
+                        xi[xi_offset] = rhs.getString(i); //std::any_cast<std::string>(match_rhs);
+                    }
                 }
             } else if (lhs.cell_nested_morphism == -1) {
 //                DEBUG_ASSERT(lhs.expectedType == NestedResultTable::RT_SIZET);
@@ -396,9 +383,10 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
 //                    std::cout << "ERR" << std::endl;
                 xi[xi_offset] = tmp;
             } else if (rhs.cell_nested_morphism == -1) {
+                OrderedSet including{0};
 //                DEBUG_ASSERT(lhs.expectedType == NestedResultTable::RT_VSIZET);
                 if (rhs.expectedType != NestedResultTable::RT_STRING) {
-                    rhs = I.resolve(rhs, NestedResultTable::RT_STRING);
+                    rhs = I.resolve(rhs, including, NestedResultTable::RT_STRING);
                 }
                 const auto& R0 = rhs.getString(0);
 //                if (R0.starts_with("alice alice"))
@@ -441,7 +429,7 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
             std::function<void(size_t, size_t, const std::string&, const std::string&)> resolve = [this](size_t graph_id, size_t var, const std::string& x, const std::string& val) {
 //                if (val.starts_with("or or or"))
 //                    std::cout << "ERR" << std::endl;
-                return delta_updates_per_graph[graph_id].delta_plus_db.generateId(var).content[x] = val;
+                delta_updates_per_graph[graph_id].delta_plus_db.generateId(var).content[x] = val;
             };
             std::function<std::string(const std::set<std::string>&)> resolve2 = [](const std::set<std::string>& v) {
                 std::ostringstream imploded;
@@ -467,9 +455,19 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
             NestedResultTable NAME = I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), false, true);
 
             std::function<void(size_t, size_t, const std::string&, const std::vector<gsm_object_xi_content>&)> resolve = [this,&I,&ptr](size_t graph_id, size_t var, const std::string& x, const std::vector<gsm_object_xi_content>& val) {
-                if (x.starts_with("was staying in"))
-                    I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), false, true);
-                return delta_updates_per_graph[graph_id].delta_plus_db.generateId(var).phi[x] = val;
+//                {
+//                    auto s = x;
+//                    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+//                        return !std::isspace(ch);
+//                    }));
+//                    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+//                        return !std::isspace(ch);
+//                    }).base(), s.end());
+//                    if (s.empty()) {
+//                        I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), false, true);
+//                    }
+//                }
+                delta_updates_per_graph[graph_id].delta_plus_db.generateId(var).phi[x] = val;
             };
             std::function<std::vector<gsm_object_xi_content>(const std::set<std::vector<gsm_object_xi_content>>&)> resolve2 = [](const std::set<std::vector<gsm_object_xi_content>>& v) {
                 std::vector<gsm_object_xi_content> imploded;
@@ -478,7 +476,7 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
                 remove_duplicates(imploded);
                 return imploded;
             };
-            std::function<std::vector<gsm_object_xi_content>(const NestedResultTable &, size_t)> projS = [this](const NestedResultTable & VAL, size_t i) {
+            std::function<std::vector<gsm_object_xi_content>(const NestedResultTable &, size_t)> projS = [](const NestedResultTable & VAL, size_t i) {
                 return VAL.getContent(i);
             };
             complexInstantiate<std::vector<gsm_object_xi_content>>(graph_id, *this,I, delim, vectorType, simpleType,  resolve, resolve2, getFlattenedContent,projS, VAR, VAL, NAME);
@@ -643,20 +641,24 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
 
         case rewrite_expr::IFTE_RW: {
             auto result = interpret(ptr->ifcond, 1);
-            if (result.first.cardinality() == result.second) {
+            if (result.full()) {
                 return interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), force, node_or_edge_otherwise);
-            } else if (result.first.isEmpty()) {
+            } else if (result.empty()) {
                 return interpret_closure_evaluate(ptr->ptr_or_else.get(), force, node_or_edge_otherwise);
             } else {
-                DEBUG_ASSERT(result.second > 1);
+                DEBUG_ASSERT(result.cardinality() > 1);
+                OrderedSet toConsider{(size_t)0};
                 auto l = interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), force, node_or_edge_otherwise);
+                // TODO: estimate the type of R just from the expression, so to save computational time.
+                //       by doing this, we can then compute r after updating toConsider with result, and only compute the results for the specific positions
                 auto r = interpret_closure_evaluate(ptr->ptr_or_else.get(), force, node_or_edge_otherwise);
-                l = resolve(l,r.expectedType);
+                l = resolve(l,toConsider,r.expectedType);
+                toConsider &= result;
                 switch (r.expectedType) {
                     case NestedResultTable::RT_VSTRING: {
                         std::vector<std::string> v;
-                        for (size_t i = 0; i< result.second; i++) {
-                            if (result.first.contains(i))
+                        for (size_t i = 0; i< result.cardinality(); i++) {
+                            if (toConsider.contains(i))
                                 v.emplace_back(l.getV<std::string>(i));
                             else
                                 v.emplace_back(r.getV<std::string>(i));
@@ -666,8 +668,8 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                         break;
                     case NestedResultTable::RT_VSIZET: {
                         std::vector<size_t> v;
-                        for (size_t i = 0; i< result.second; i++) {
-                            if (result.first.contains(i))
+                        for (size_t i = 0; i< result.cardinality(); i++) {
+                            if (toConsider.contains(i))
                                 v.emplace_back(l.getV<size_t>(i));
                             else
                                 v.emplace_back(r.getV<size_t>(i));
@@ -677,8 +679,8 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                         break;
                     case NestedResultTable::RT_VCONTENT:{
                         std::vector<std::vector<gsm_object_xi_content>> v;
-                        for (size_t i = 0; i< result.second; i++) {
-                            if (result.first.contains(i))
+                        for (size_t i = 0; i< result.cardinality(); i++) {
+                            if (toConsider.contains(i))
                                 v.emplace_back(l.getV<std::vector<gsm_object_xi_content>>(i));
                             else
                                 v.emplace_back(r.getV<std::vector<gsm_object_xi_content>>(i));
@@ -783,7 +785,7 @@ static inline std::string interpret_implosive_string(const std::any& ptr) {
     return imploded.str();
 }
 
-std::pair<roaring::Roaring64Map,size_t> closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const*/ {
+OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const*/ {
     switch (ptr.t) {
         case test_pred::TEST_PRED_CASE_LT:
         case test_pred::TEST_PRED_CASE_LEQ:
@@ -812,8 +814,9 @@ std::pair<roaring::Roaring64Map,size_t> closure::Interpret::interpret(test_pred 
                 R = interpret_closure_evaluate(j, false, false);
             }
             if ((L.size() == 1) || (R.size() == 1) || (L.size() == R.size())) {
-                auto tmp = resolve(L, getExpectedType(R.t));
-                return tmp.compare(resolve(R, getExpectedType(L.t)), cmp);
+                OrderedSet toIgnore{0};
+                auto tmp = resolve(L, toIgnore, getExpectedType(R.t));
+                return tmp.compare(resolve(R, toIgnore, getExpectedType(L.t)), cmp);
             } else {
                 throw std::runtime_error("ERROR: either both morphisms should be of the same size, of at least one of them should be of size 1");
             }
@@ -823,28 +826,29 @@ std::pair<roaring::Roaring64Map,size_t> closure::Interpret::interpret(test_pred 
         case test_pred::TEST_PRED_CASE_AND:
         {
             auto l = interpret(ptr.child_logic.at(0), maxSize);
-            if (l.first.isEmpty()) return l;
-            auto r = interpret(ptr.child_logic.at(1), maxSize);
-            l.first &= r.first;
-            l.second = std::max(l.second, r.second);
+            if (l.empty()) return l;
+            l &= interpret(ptr.child_logic.at(1), maxSize);
+//            l.first &= r.first;
+//            l.second = std::max(l.second, r.second);
             return l;
         } break;
 
         case test_pred::TEST_PRED_CASE_OR:
         {
             auto l = interpret(ptr.child_logic.at(0), maxSize);
-            if (l.first.cardinality() == l.second) return l;
-            auto r = interpret(ptr.child_logic.at(1), maxSize);
-            l.first |= r.first;
-            l.second = std::max(l.second, r.second);
+            if (l.full()) return l;
+            l |= interpret(ptr.child_logic.at(1), maxSize);
+//            auto r = interpret(ptr.child_logic.at(1), maxSize);
+//            l.first |= r.first;
+//            l.second = std::max(l.second, r.second);
             return l;
         } break;
 
         case test_pred::TRUE:
         {
-            std::pair<roaring::Roaring64Map,size_t> m{{}, maxSize};
-            m.first.addRange(0, maxSize);
-            return m;
+//            std::pair<roaring::Roaring64Map,size_t> m{{}, maxSize};
+//            m.first.addRange(0, maxSize);
+            return {maxSize};
         } break;
 
         case test_pred::TEST_PRED_CASE_SCRIPT: {
@@ -856,15 +860,15 @@ std::pair<roaring::Roaring64Map,size_t> closure::Interpret::interpret(test_pred 
             } else {
                 result= script::compiler::ScriptVisitor::eval((scriptParser::ScriptContext**)&ptr.ptrResult, schema, table.datum.at(record_id))->run()->toBoolean();
             }
-            std::pair<roaring::Roaring64Map,size_t> m{{}, maxSize};
-            if (result)
-                m.first.addRange(0, maxSize);
-            return m;
+//            std::pair<roaring::Roaring64Map,size_t> m{{}, maxSize};
+//            if (result)
+//                m.first.addRange(0, maxSize);
+            return {maxSize};
 //            return (((scriptParser::ScriptContext*)ptr.ptrResult);
         }
             break;
         case test_pred::MATCHED: {
-            std::pair<roaring::Roaring64Map,size_t> m{{}, maxSize};
+            OrderedSet m{(size_t)0};
             auto it = this->ptr.at(graph_id).find(ptr.pattern_matched);
             if (it == this->ptr.at(graph_id).end())
                 return m;
@@ -912,7 +916,7 @@ std::pair<roaring::Roaring64Map,size_t> closure::Interpret::interpret(test_pred 
                     if ((offsetForStar==(size_t)-1)) {
                         if (std::holds_alternative<size_t>(tablese.datum.at(i).at(offsetForValue).val)) {
                             if (currentMatches.contains(std::get<size_t>(tablese.datum.at(i).at(offsetForValue).val))) {
-                                m.first.addRange(0, maxSize);
+                                m.fillWithPreviouslyLess(maxSize);
                                 return m;
                             }
                         }
@@ -922,7 +926,7 @@ std::pair<roaring::Roaring64Map,size_t> closure::Interpret::interpret(test_pred 
                         for (const auto& row : tablese.datum.at(i).at(offsetForStar).table.datum) {
                             if (std::holds_alternative<size_t>(row.at(offsetForStar).val)) {
                                 if (currentMatches.contains(std::get<size_t>(row.at(offsetNested).val))){
-                                    m.first.addRange(0, maxSize);
+                                    m.fillWithPreviouslyLess(maxSize);
                                     return m;
                                 }
                             }
@@ -934,7 +938,7 @@ std::pair<roaring::Roaring64Map,size_t> closure::Interpret::interpret(test_pred 
         }
             break;
         case test_pred::UNMATCHED: {
-            std::pair<roaring::Roaring64Map,size_t> m{{}, maxSize};
+            OrderedSet m{(size_t)0};
             auto it = this->ptr.at(graph_id).find(ptr.pattern_matched);
             if (it == this->ptr.at(graph_id).end())
                 return m;
@@ -945,7 +949,7 @@ std::pair<roaring::Roaring64Map,size_t> closure::Interpret::interpret(test_pred 
                 size_t offsetForValue1 = -1;
                 size_t offsetNested1 = -1;
                 if (!var_extractor(ptr, offsetForStar1, offsetForValue1, offsetNested1, ptr.nsoe, schema, table)) {
-                    m.first.addRange(0, maxSize);
+                    m.fillWithPreviouslyLess(maxSize);
                     return m;
                 }
                 if (offsetNested1 == (size_t)(-1)) {
@@ -967,7 +971,7 @@ std::pair<roaring::Roaring64Map,size_t> closure::Interpret::interpret(test_pred 
                 }
             }
             if (currentMatches.empty()) {
-                m.first.addRange(0, maxSize);
+                m.fillWithPreviouslyLess(maxSize);
                 return m;
             }
 
@@ -977,7 +981,7 @@ std::pair<roaring::Roaring64Map,size_t> closure::Interpret::interpret(test_pred 
             const std::string& _for_match = ptr.variable_matched;
             if (!var_extractor(ptr, offsetForStar, offsetForValue, offsetNested, ptr.variable_matched, it->second.first, it->second.second.begin()->second))
             {
-                m.first.addRange(0, maxSize);
+                m.fillWithPreviouslyLess(maxSize);
                 return m;
             }
 
@@ -1000,7 +1004,7 @@ std::pair<roaring::Roaring64Map,size_t> closure::Interpret::interpret(test_pred 
                     }
                 }
             }
-            m.first.addRange(0, maxSize);
+            m.fillWithPreviouslyLess(maxSize);
             return m;
         }
             break;
@@ -1008,34 +1012,68 @@ std::pair<roaring::Roaring64Map,size_t> closure::Interpret::interpret(test_pred 
 }
 
 NestedResultTable
-closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::variant_type_cpp script_cast) const {
+closure::Interpret::resolve(const NestedResultTable &x,
+                            OrderedSet& containment,
+                            NestedResultTable::variant_type_cpp script_cast) const {
     switch (x.t) {
-        case NestedResultTable::R_LABEL:
-        case NestedResultTable::R_NESTED_LABEL:
+        case NestedResultTable::R_NONE: {
+            containment.clearWithMaxCardinality(0);
+            return x;
+        }
+
+        // Cardinality 1
         case NestedResultTable::R_NODE:
         case NestedResultTable::R_EDGE:
         case NestedResultTable::R_EDGE_SRC:
+        case NestedResultTable::R_EDGE_DST: {
+            containment.clearWithMaxCardinality(1);
+            if (std::get<size_t>(x.content)!=(size_t)-1)
+                containment.add(0);
+            return x;
+        }
+
+        case NestedResultTable::R_CONTENT:
+        case NestedResultTable::R_XI:
+        case NestedResultTable::R_ELL:
+        case NestedResultTable::R_PROP:
+        case NestedResultTable::R_LABEL:
+        case NestedResultTable::R_EDGE_LABEL: {
+            containment.clearWithMaxCardinality(1);
+            containment.add(0);
+            return x;
+        }
+
+        case NestedResultTable::R_NESTED_LABEL:
+        case NestedResultTable::R_NESTED_EDGE_LABEL: {
+            containment.fillWithPreviouslyLess(std::get<std::vector<std::string>>(x.content).size());
+            return x;
+        }
+        case NestedResultTable::R_NESTED_CONTENT: {
+            containment.fillWithPreviouslyLess(std::get<std::vector<std::vector<gsm_object_xi_content>>>(x.content).size());
+            return x;
+        }
+
         case NestedResultTable::R_NESTD_EDGE_SRC:
-        case NestedResultTable::R_EDGE_DST:
         case NestedResultTable::R_NESTED_EDGE_DST:
         case NestedResultTable::R_NESTED_NODE:
         case NestedResultTable::R_NESTED_EDGE:
-        case NestedResultTable::R_CONTENT:
-        case NestedResultTable::R_NESTED_CONTENT:
-        case NestedResultTable::R_PROP:
         case NestedResultTable::R_NESTED_PROP:
-        case NestedResultTable::R_XI:
         case NestedResultTable::R_NESTED_XI:
-        case NestedResultTable::R_ELL:
-        case NestedResultTable::R_NESTED_ELL:
-        case NestedResultTable::R_EDGE_LABEL:
-        case NestedResultTable::R_NESTED_EDGE_LABEL:
-        case NestedResultTable::R_NONE:
+        case NestedResultTable::R_NESTED_ELL:  {
+            const auto& W = std::get<std::vector<size_t>>(x.content);
+            containment.clearWithMaxCardinality(W.size());
+            for(size_t i = 0, N = W.size(); i<N; i++) {
+                if (W.at(i) != (size_t)-1)
+                    containment.add(i);
+            }
             return x;
+        }
 
         case NestedResultTable::R_DO_EDGE_LABEL:{
+            containment.clearWithMaxCardinality(1);
             auto ptr = ptr2->findLabelFromID(std::get<size_t>(x.content));
             if (ptr != ptr2->notALabel()) {
+                containment.add(0);
                 return {ptr->second, x.cell_nested_morphism, x.column};
             } else
                 return {};
@@ -1043,10 +1081,13 @@ closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::varia
 
         case NestedResultTable::R_DO_NESTED_EDGE_LABEL: {
             std::vector<std::string> v;
+            containment.clearWithMaxCardinality(x.size());
             v.reserve(x.size());
-            for (size_t y : std::get<std::vector<size_t>>(x.content)) {
-                auto ptr = ptr2->findLabelFromID(y);
+            const auto& W = std::get<std::vector<size_t>>(x.content);
+            for (size_t idx = 0, N = W.size(); idx<N; idx++) {
+                auto ptr = ptr2->findLabelFromID(W.at(idx));
                 if (ptr != ptr2->notALabel()) {
+                    containment.add(idx);
                     v.emplace_back(ptr->second);
                 } else
                     v.emplace_back("");
@@ -1055,8 +1096,10 @@ closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::varia
         }
 
         case NestedResultTable::R_DO_EDGE_SRC: {
+            containment.clearWithMaxCardinality(1);
             const gsm2::tables::PhiTable::record* ptr = ptr2->resolveRecord(std::get<size_t>(x.content));
             if (ptr) {
+                containment.add(0);
                 return {ptr->object_id,  NestedResultTable::R_EDGE_SRC, x.cell_nested_morphism, x.column};
             } else
                 return {};
@@ -1065,9 +1108,12 @@ closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::varia
         case NestedResultTable::R_DO_NESTED_EDGE_SRC: {
             std::vector<size_t> v;
             v.reserve(x.size());
-            for (size_t y : std::get<std::vector<size_t>>(x.content)) {
-                const gsm2::tables::PhiTable::record* ptr = ptr2->resolveRecord(y);
+            containment.clearWithMaxCardinality(x.size());
+            const auto& W =std::get<std::vector<size_t>>(x.content);
+            for (size_t idx = 0, N = W.size(); idx<N; idx++) {
+                const gsm2::tables::PhiTable::record* ptr = ptr2->resolveRecord(W.at(idx));
                 if (ptr) {
+                    containment.add(idx);
                     v.emplace_back(ptr->object_id);
                 } else
                     v.emplace_back(-1);
@@ -1076,8 +1122,10 @@ closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::varia
         }
 
         case NestedResultTable::R_DO_EDGE_DST: {
+            containment.clearWithMaxCardinality(1);
             const gsm2::tables::PhiTable::record* ptr = ptr2->resolveRecord(std::get<size_t>(x.content));
             if (ptr) {
+                containment.add(0);
                 return {ptr->id_contained,  NestedResultTable::R_EDGE_SRC, x.cell_nested_morphism, x.column};
             } else
                 return {};
@@ -1086,9 +1134,12 @@ closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::varia
         case NestedResultTable::R_DO_NESTED_EDGE_DST: {
             std::vector<size_t> v;
             v.reserve(x.size());
-            for (size_t y : std::get<std::vector<size_t>>(x.content)) {
-                const gsm2::tables::PhiTable::record* ptr = ptr2->resolveRecord(y);
+            containment.clearWithMaxCardinality(x.size());
+            const auto& W =std::get<std::vector<size_t>>(x.content);
+            for (size_t idx = 0, N = W.size(); idx<N; idx++) {
+                const gsm2::tables::PhiTable::record* ptr = ptr2->resolveRecord(W.at(idx));
                 if (ptr) {
+                    containment.add(idx);
                     v.emplace_back(ptr->id_contained);
                 } else
                     v.emplace_back(-1);
@@ -1097,20 +1148,25 @@ closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::varia
         }
 
         case NestedResultTable::R_DO_XI: {
+            containment.clearWithMaxCardinality(1);
             const auto& resolution = clos.resolve_xi(graph_id, std::get<size_t>(x.content));
             if (resolution.size() > x.opt_offset) {
+                containment.add(0);
                 return {resolution.at(x.opt_offset), x.cell_nested_morphism, x.column};
             } else {
-                return {"", x.cell_nested_morphism, x.column};
+                return {};
             }
         }
 
         case NestedResultTable::R_DO_NESTED_XI: {
             std::vector<std::string> v;
             v.reserve(x.size());
-            for (size_t y : std::get<std::vector<size_t>>(x.content)) {
-                const auto& resolution = clos.resolve_xi(graph_id, y);
+            containment.clearWithMaxCardinality(x.size());
+            const auto& W = std::get<std::vector<size_t>>(x.content);
+            for (size_t idx = 0, N = W.size(); idx<N; idx++) {
+                const auto& resolution = clos.resolve_xi(graph_id, W.at(idx));
                 if (resolution.size() > x.opt_offset) {
+                    containment.add(idx);
                     v.emplace_back(resolution.at(x.opt_offset));
                 } else {
                     v.emplace_back("");
@@ -1120,20 +1176,25 @@ closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::varia
         }
 
         case NestedResultTable::R_DO_ELL: {
+            containment.clearWithMaxCardinality(1);
             const auto& resolution = clos.resolve_ell(graph_id, std::get<size_t>(x.content));
             if (resolution.size() > x.opt_offset) {
+                containment.add(0);
                 return {resolution.at(x.opt_offset), x.cell_nested_morphism, x.column};
             } else {
-                return {"", x.cell_nested_morphism, x.column};
+                return {};
             }
         }
 
         case NestedResultTable::R_DO_NESTED_ELL: {
             std::vector<std::string> v;
             v.reserve(x.size());
-            for (size_t y : std::get<std::vector<size_t>>(x.content)) {
-                const auto& resolution = clos.resolve_ell(graph_id, y);
+            containment.clearWithMaxCardinality(x.size());
+            const auto& W = std::get<std::vector<size_t>>(x.content);
+            for (size_t idx = 0, N = W.size(); idx<N; idx++) {
+                const auto& resolution = clos.resolve_ell(graph_id, W.at(idx));
                 if (resolution.size() > x.opt_offset) {
+                    containment.add(idx);
                     v.emplace_back(resolution.at(x.opt_offset));
                 } else {
                     v.emplace_back("");
@@ -1144,6 +1205,7 @@ closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::varia
 
         case NestedResultTable::R_DO_PROP: {
             if ((x.fields->size() == 1) || (x.size() == 1)) {
+                containment.fillWithPreviouslyLess(1);
                 return {clos.resolve_prop(graph_id, std::get<size_t>(x.content), std::get<std::string>(x.fields->content)), x.cell_nested_morphism, x.column};
             } else
                 throw std::runtime_error(std::string("ERROR: the fields are not 1, "+std::to_string(x.fields->size())+", while the objects are also not 1, "+std::to_string(x.size())));
@@ -1162,7 +1224,6 @@ closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::varia
             } else if (x.size() == N) {
                 const std::vector<std::string>& prop = std::get<std::vector<std::string>>(x.fields->content);
                 const auto& V = std::get<std::vector<size_t>>(x.content);
-                std::vector<std::string> v;
                 v.reserve(N);
                 for (size_t i = 0; i<N; i++) {
                     v.emplace_back(clos.resolve_prop(graph_id, V.at(i), prop.at(i)));
@@ -1170,14 +1231,15 @@ closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::varia
             }
             if ((x.fields->size() == 1) || (x.size() == x.fields->size())) {
                 v.emplace_back(clos.resolve_prop(graph_id, std::get<size_t>(x.content), std::get<std::string>(x.fields->content)));
-
             } else
                 throw std::runtime_error(std::string("ERROR: the fields are "+std::to_string(x.fields->size())+" while the objects are "+std::to_string(x.size())));
+            containment.fillWithPreviouslyLess(v.size());
             return {(v), x.cell_nested_morphism, x.column};
         } break;
 
         case NestedResultTable::R_DO_CONTENT: {
             if ((x.fields->size() == 1) || (x.size() == 1)) {
+                containment.fillWithPreviouslyLess(1);
                 return {clos.resolve_content(graph_id, std::get<size_t>(x.content), std::get<std::string>(x.fields->content)), x.cell_nested_morphism, x.column};
             } else
                 throw std::runtime_error(std::string("ERROR: the fields are not 1, "+std::to_string(x.fields->size())+", while the objects are also not 1, "+std::to_string(x.size())));
@@ -1204,14 +1266,16 @@ closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::varia
                 v.emplace_back(clos.resolve_content(graph_id, std::get<size_t>(x.content), std::get<std::string>(x.fields->content)));
             } else
                 throw std::runtime_error(std::string("ERROR: the fields are "+std::to_string(x.fields->size())+" while the objects are "+std::to_string(x.size())));
-
+            containment.fillWithPreviouslyLess(v.size());
             return {(v), x.cell_nested_morphism, x.column};
         } break;
 
         case NestedResultTable::R_SCRIPT: {
             switch (script_cast) {
-                case NestedResultTable::RT_STRING:
+                case NestedResultTable::RT_STRING: {
+                    containment.fillWithPreviouslyLess(1);
                     return {std::get<std::shared_ptr<script::structures::ScriptAST>>(x.content)->run()->toString(false), x.cell_nested_morphism, x.column};
+                }
 
                 case NestedResultTable::RT_VSTRING: {
                     std::vector<std::string> W;
@@ -1226,6 +1290,7 @@ closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::varia
                         }
                     } else
                         throw std::runtime_error("ERROR: expected a vector!");
+                    containment.fillWithPreviouslyLess(W.size());
                     return {(W), x.cell_nested_morphism, x.column};
                 }
 
@@ -1239,6 +1304,7 @@ closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::varia
                         for (const auto& y : tmp->toList()) {
                             W.emplace_back(y->toInteger());
                         }
+                        containment.fillWithPreviouslyLess(W.size());
                         return {(W), true, x.cell_nested_morphism, x.column};
                     } else
                         throw std::runtime_error("ERROR: expected a vector!");
@@ -1255,6 +1321,7 @@ closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::varia
                                 auto r = y->run();
                                 W.emplace_back(r->tuple["id"]->run()->toInteger(), r->tuple["score"]->run()->toDouble());
                             }
+                            containment.fillWithPreviouslyLess(W.size());
                             return {(W), x.cell_nested_morphism, x.column};
                         }
                     }else
@@ -1279,6 +1346,7 @@ closure::Interpret::resolve(const NestedResultTable &x, NestedResultTable::varia
                                 }
                                 W.emplace_back(U);
                             }
+                            containment.fillWithPreviouslyLess(W.size());
                             return {(W), x.cell_nested_morphism, x.column};
                         }
                     }else

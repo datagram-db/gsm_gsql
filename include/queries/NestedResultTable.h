@@ -28,6 +28,64 @@ enum ComparisonForNestedResultTable {
 
 using SimpleNestedResultTableValue = std::variant<std::string, size_t, std::vector<gsm_object_xi_content>>;
 
+struct OrderedSet {
+    roaring::Roaring64Map   set;
+    size_t                  cardo;
+//    bool                    ignore;
+
+    OrderedSet(roaring::Roaring64Map&& set, size_t cardinality) : set(set), cardo(cardinality){}
+    OrderedSet(size_t maxSize) : cardo{maxSize}  {
+        if (maxSize > 0) set.addRange(0, maxSize);
+    }
+//    OrderedSet(bool ignore) : cardo{0}, ignore{ignore} {}
+
+    void fillWithPreviouslyLess(size_t maxSize) {
+//        if (ignore) return;
+        cardo = maxSize;
+        set.addRange(0, maxSize);
+    }
+
+    void clearWithMaxCardinality(size_t maxSize) {
+//        if (ignore) return;
+        set.clear();
+        cardo= maxSize;
+    }
+    bool full() const {
+//        if (ignore) return false;
+        return (set.cardinality() == cardo) && (cardo != 0);
+    }
+    bool empty() const {
+//        if (ignore) return true;
+        return set.cardinality() == 0;
+    }
+    size_t available() const {
+//        if (ignore) return 0;
+        return set.cardinality();
+    }
+    size_t cardinality() const {
+        return cardo;
+    }
+    bool contains(size_t x) const {
+        return set.contains(x);
+    }
+    void add(size_t x) {
+        set.add(x);
+    }
+    OrderedSet& operator&=(const OrderedSet& x) {
+        set &= x.set;
+        cardo = std::max(x.cardo, cardo);
+        return *this;
+    }
+    OrderedSet& operator|=(const OrderedSet& x) {
+        set |= x.set;
+        cardo = std::max(x.cardo, cardo);
+        return *this;
+    }
+    friend std::ostream& operator<<(std::ostream& os, const OrderedSet& x) {
+        return os << x.cardo << ":" << x.set.toString();
+    }
+};
+
 struct NestedResultTable {
     ssize_t cell_nested_morphism{-1};
     ssize_t column{-1};
@@ -109,6 +167,16 @@ struct NestedResultTable {
             throw std::runtime_error("unexpected type at int");
     }
 
+    bool containsInt(size_t val) const {
+        if (expectedType == RT_SIZET)
+            return std::get<size_t>(content) == val;
+        else if (expectedType == RT_VSIZET)
+            return std::find(std::get<std::vector<size_t>>(content).begin(),
+                                      std::get<std::vector<size_t>>(content).end(), val) != std::get<std::vector<size_t>>(content).end();
+        else
+            return false;
+    }
+
     [[nodiscard]] inline std::vector<gsm_object_xi_content> getContent(size_t i) const {
         if (expectedType == RT_CONTENT)
             return std::get<std::vector<gsm_object_xi_content>>(content);
@@ -176,7 +244,7 @@ struct NestedResultTable {
     }
 
     inline
-    std::pair<roaring::Roaring64Map,size_t> compare(const struct NestedResultTable& x, ComparisonForNestedResultTable cmp ) const {
+    OrderedSet compare(const struct NestedResultTable& x, ComparisonForNestedResultTable cmp ) const {
         size_t N = std::max(size(), x.size());
         roaring::Roaring64Map result;
         for (size_t i = 0; i<N; i++) {
@@ -195,7 +263,7 @@ struct NestedResultTable {
                     break;
             }
         }
-        return {result,N};
+        return {std::move(result),N};
     }
 
 
@@ -290,7 +358,7 @@ struct NestedResultTable {
                 return std::get<std::vector<std::vector<gsm_object_xi_content>>>(content).size();
 
             case R_SCRIPT:
-                return -1;
+                return 0;
 
             case R_NONE:
                 return 0;

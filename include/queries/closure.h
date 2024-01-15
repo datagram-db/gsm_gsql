@@ -61,6 +61,7 @@ void fill_vector_with_case(std::vector<T>& to_fill, const abstract_value& opts) 
 #include <easylogging++.h>
 
 
+
 /**
  * This class is referred to Closure as it wraps around both the loaded data and the intermediate values generating
  * the resulting graph as per matching.
@@ -825,9 +826,9 @@ public:
         NestedResultTable interpret_closure_evaluate(rewrite_expr* ptr, bool force, bool node_or_edge_otherwise) /*const*/;
 //        std::vector<size_t> interpret_closure_evaluate2(rewrite_expr* ptr) /*const*/;
 
-        std::pair<roaring::Roaring64Map,size_t> interpret(test_pred& ptr, size_t maxN) /*const*/;
+        OrderedSet interpret(test_pred& ptr, size_t maxN) /*const*/;
 
-        NestedResultTable resolve(const NestedResultTable& x,
+        NestedResultTable resolve(const NestedResultTable& x, OrderedSet& containment,
                                                 NestedResultTable::variant_type_cpp script_cast = NestedResultTable::RT_NONE) const;
 
     };
@@ -1238,7 +1239,7 @@ public:
                                 Interpret I(graph_id, pattern_id, pattern_result.first, it->second, table_offset, *this, pr.morphisms, forloading);
                                 if (pattern.has_where) {
                                     auto result = I.interpret(pattern.where, 1);
-                                    if ((result.first.cardinality()==0)) {
+                                    if ((result.empty())) {
                                         table_offset++;
                                         continue; //next entry
                                     }
@@ -1373,16 +1374,21 @@ std::string getOstringstream(
             return imploded.str();
         }
 
-        case NestedResultTable::RT_SIZET:
-            return std::get<std::string>(I.resolve(containingStrings, NestedResultTable::RT_STRING).content);
+        case NestedResultTable::RT_SIZET: {
+            OrderedSet toIgnore{0};
+            return std::get<std::string>(I.resolve(containingStrings, toIgnore, NestedResultTable::RT_STRING).content);
+        }
 
         case NestedResultTable::RT_VSIZET: {
             const auto& V = std::get<std::vector<size_t>>(containingStrings.content);
             size_t index = 0;
             std::map<size_t, std::unordered_set<std::string>> M;
-            auto tmp = I.resolve(containingStrings, NestedResultTable::RT_VSTRING );
+
+            OrderedSet toIgnore{(size_t)0};
+            auto tmp = I.resolve(containingStrings,toIgnore, NestedResultTable::RT_VSTRING );
             for (size_t i = 0, N = tmp.size(); i<N; i++) {
-                M[V.at(index)].insert(tmp.getString(i));
+                if (toIgnore.contains(i))
+                    M[V.at(index)].insert(tmp.getString(i));
                 index++;
             }
             for (auto it = M.begin(), en = M.end(); it != en; ) {
@@ -1425,14 +1431,18 @@ std::vector<gsm_object_xi_content> getFlattenedContent(
         }
 
         case NestedResultTable::RT_SIZET: {
-            return I.resolve(containingStrings, NestedResultTable::RT_CONTENT).getContent(0);
+            OrderedSet toIgnore{0};
+            return I.resolve(containingStrings, toIgnore, NestedResultTable::RT_CONTENT).getContent(0);
         }
 
         case NestedResultTable::RT_VSIZET: {
-            const auto W = I.resolve(containingStrings, NestedResultTable::RT_VCONTENT );
+            OrderedSet toIgnore{(size_t)0};
+            const auto W = I.resolve(containingStrings, toIgnore, NestedResultTable::RT_VCONTENT );
             for (size_t i = 0, N = W.size(); i<N; i++) {
-                auto x = W.getContent(i);
-                imploded.insert(imploded.end(), x.begin(), x.end());
+                if (toIgnore.contains(i)) {
+                    auto x = W.getContent(i);
+                    imploded.insert(imploded.end(), x.begin(), x.end());
+                }
             }
             remove_duplicates(imploded);
             return imploded;
@@ -1446,8 +1456,9 @@ std::vector<gsm_object_xi_content> getFlattenedContent(
     }
 }
 
-template <typename T>
 
+template <typename T>
+static inline
    void complexInstantiate(size_t graph_id,
             closure& self,
             const closure::Interpret &I,
@@ -1463,49 +1474,70 @@ template <typename T>
                    NestedResultTable &NAME) {
        auto nameType = (NAME.size()) > 1 ? NestedResultTable::RT_VSTRING : NestedResultTable::RT_STRING;
        auto valType = (VAL.size()) > 1 ? vectorType : simpleType;
+       if (VAR.containsInt(30))
+           std::cerr << "DEBUG" << std::endl;
        if ((VAR.cell_nested_morphism == VAL.cell_nested_morphism) &&
            (VAL.cell_nested_morphism == NAME.cell_nested_morphism)) {
-           VAL = I.resolve(VAL, valType);
-           NAME = I.resolve(NAME, nameType);
+           OrderedSet rLS{(size_t)0}, rNS{(size_t)0};
+           VAL = I.resolve(VAL, rLS, valType);
+           NAME = I.resolve(NAME,rNS, nameType);
+           rLS &= rNS;
            for (size_t i = 0, N = std::min({VAR.size(), VAL.size(), NAME.size()}); i < N; i++) {
+               if (rLS.contains(i))
                resolve(graph_id, VAR.getInt(i), NAME.getString(i), projector(VAL,i));
-//                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(VAR.getInt(i)).content[NAME.getString(i)] = VAL.getT<std::string>(i);
+//               else
+//                   DEBUG_ASSERT((NAME.getInt(i) != (size_t)-1)||(VAL.getInt(i) != (size_t)-1));
            }
        } else if (VAR.cell_nested_morphism == VAL.cell_nested_morphism) {
-           VAL = I.resolve(VAL, valType);
-           NAME = I.resolve(NAME, nameType);
+           OrderedSet rLS{(size_t)0}, rNS{(size_t)0};
+           VAL = I.resolve(VAL, rLS, valType);
+           NAME = I.resolve(NAME, rNS, nameType);
            for (size_t i = 0, N = NAME.size(); i<N; i++) {
-               for (size_t i = 0, N = VAR.size(); i < N; i++) {
-                   resolve(graph_id, VAR.getInt(i), NAME.getString(i), projector(VAL,i));
-//                            delta_updates_per_graph[graph_id].delta_plus_db.generateId(VAR.getInt(i)).content[x] = VAL.getT<std::string>(i);
-               }
+               if (rNS.contains(i)) {
+                   for (size_t j = 0, M = VAR.size(); j < M; j++) {
+                       if (rLS.contains(j))
+                       resolve(graph_id, VAR.getInt(j), NAME.getString(i), projector(VAL,j));
+//                       else
+//                           DEBUG_ASSERT(VAL.getInt(i) == (size_t)-1);
+                   }
+               } //else
+//                   DEBUG_ASSERT(NAME.getInt(i) == (size_t)-1);
            }
        } else if ((NAME.cell_nested_morphism == VAR.cell_nested_morphism) && (NAME.cell_nested_morphism == -1)) {
-           NAME = I.resolve(NAME, nameType);
-
+           OrderedSet rLS{(size_t)0};
+           NAME = I.resolve(NAME, rLS, nameType);
            auto result = flattenT(I, delim, VAL);
            for (size_t i = 0, N = std::min({VAR.size(), NAME.size()}); i < N; i++) {
+               if (rLS.contains(i))
                resolve(graph_id, VAR.getInt(i), NAME.getString(i), result);
-//                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(VAR.getInt(i)).content[NAME.getString(i)] = result;
+//               else
+//                   DEBUG_ASSERT(NAME.getInt(i) == (size_t)-1);
            }
        } else if ((NAME.cell_nested_morphism == VAR.cell_nested_morphism) && (VAL.cell_nested_morphism == -1)) {
-           NAME = I.resolve(NAME, nameType);
+           OrderedSet rLS{(size_t)0};
+           NAME = I.resolve(NAME, rLS, nameType);
            auto val = flattenT(I, delim, VAL);
            for (size_t i = 0, N = std::min({VAR.size(), NAME.size()}); i < N; i++) {
+               if (rLS.contains(i))
                resolve(graph_id, VAR.getInt(i), NAME.getString(i), val);
-//                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(VAR.getInt(i)).content[NAME.getString(i)] = val;
+//               else
+//                   DEBUG_ASSERT(NAME.getInt(i) == (size_t)-1);
            }
        } else if ((NAME.cell_nested_morphism == VAL.cell_nested_morphism) && (VAR.cell_nested_morphism == -1)) {
-           VAL = I.resolve(VAL, valType);
-           NAME = I.resolve(NAME, nameType);
+           OrderedSet rLS{(size_t)0}, rNS{(size_t)0};
+           VAL = I.resolve(VAL,rLS, valType);
+           NAME = I.resolve(NAME,rNS, nameType);
            DEBUG_ASSERT(VAR.size() == 1);
            std::unordered_map<std::string, std::set<T>> vals;
-           for (size_t i = 0, N = std::min({NAME.size(), VAL.size()}); i < N; i++) {
+           rLS &= rNS;
+           for (size_t i = 0, N = rLS.cardinality(); i < N; i++) {
+               if (rLS.contains(i))
                vals[NAME.getString(i)].insert(projector(VAL,i));
+//               else
+//                   DEBUG_ASSERT((NAME.getInt(i) == (size_t)-1)||(VAL.getInt(i) == (size_t)-1));
            }
            for (const auto &[k, v]: vals) {
                resolve(graph_id, VAR.getInt(0), k, flatten2(v));
-//                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(VAR.getInt(0)).content[k] = imploded.str();
            }
        } else if ((NAME.cell_nested_morphism == VAL.cell_nested_morphism) && (VAL.cell_nested_morphism == -1)) {
            DEBUG_ASSERT((VAL.size() == 1) && (NAME.size() == 1));
@@ -1513,10 +1545,10 @@ template <typename T>
            auto name = getOstringstream(I, delim, NAME);
            for (size_t idx = 0, N = VAR.size(); idx < N; idx++) {
                resolve(graph_id, VAR.getInt(0), name, val);
-//                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(VAR.getInt(idx)).content[name] = val;
            }
        } else {
-           NAME = I.resolve(NAME, nameType);
+           OrderedSet rLS{(size_t)0};
+           NAME = I.resolve(NAME, rLS, nameType);
            DEBUG_ASSERT((NAME.cell_nested_morphism != VAL.cell_nested_morphism) &&
                         (VAR.cell_nested_morphism != VAL.cell_nested_morphism) &&
                         (NAME.cell_nested_morphism != VAR.cell_nested_morphism));
@@ -1524,7 +1556,14 @@ template <typename T>
                DEBUG_ASSERT(VAR.size() == 1);
                size_t id = VAR.getInt(0);
                const auto &namesV = std::get<std::vector<std::string>>(NAME.content);
-               std::unordered_set<std::string> names(namesV.begin(), namesV.end());
+               std::unordered_set<std::string> names;
+               for (size_t idx = 0, N = rLS.cardinality(); idx<N; idx++) {
+                   if (rLS.contains(idx))
+                       names.insert(namesV.at(idx));
+//                   else
+//                       DEBUG_ASSERT((NAME.getInt(idx) == (size_t)-1));
+               }
+//               std::unordered_set<std::string> names(namesV.begin(), namesV.end());
                auto str = flattenT(I, delim, VAL);
                for (const auto &name: names) {
                    resolve(graph_id, VAR.getInt(0), name, str);
@@ -1533,7 +1572,13 @@ template <typename T>
            } else if (VAL.cell_nested_morphism == -1) {
                DEBUG_ASSERT(VAL.size() == 1);
                const auto &namesV = std::get<std::vector<std::string>>(NAME.content);
-               std::unordered_set<std::string> names(namesV.begin(), namesV.end());
+               std::unordered_set<std::string> names;
+               for (size_t idx = 0, N = rLS.cardinality(); idx<N; idx++) {
+                   if (rLS.contains(idx))
+                       names.insert(namesV.at(idx));
+//                   else
+//                       DEBUG_ASSERT((NAME.getInt(idx) == (size_t)-1));
+               }
                const auto val = flattenT(I, delim, VAL);
                for (size_t i = 0, N = VAR.size(); i < N; i++) {
                    auto id = VAR.getInt(i);
@@ -1547,10 +1592,14 @@ template <typename T>
                DEBUG_ASSERT(NAME.size() == 1);
                const auto &name = NAME.getString(0);
                const auto val = flattenT(I, delim, VAL);
+//               std::cout << rLS << std::endl;
+               if (rLS.contains(0))
                for (size_t i = 0, N = VAR.size(); i < N; i++) {
                    resolve(graph_id, VAR.getInt(i), name, val);
 //                            delta_updates_per_graph[graph_id].delta_plus_db.generateId(VAR.getInt(i)).content[name] = val;
                }
+//               else
+//                   DEBUG_ASSERT(NAME.getInt(0) == (size_t)-1);
            }
        }
    }

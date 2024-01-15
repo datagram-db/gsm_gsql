@@ -55,7 +55,7 @@ p3 = (V)--[∀n:nsubj]->(>>S)
        del T
        del M
 
-       (S)/*;
+       (S);
 
 p4 = (V)--[∀l:dobj||ccomp||nmod]->(Z)
       (Z)--[? case]->(T)
@@ -71,4 +71,4 @@ p4 = (V)--[∀l:dobj||ccomp||nmod]->(Z)
        del T
 
        (j)                                              // Instance of reference to be returned
-       */
+
