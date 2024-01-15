@@ -168,14 +168,31 @@ SimpleTable<D> left_equijoin(const SimpleTable<D>& lhs, const SimpleTable<D>& rh
     if (i.empty()) {
         return crossProduct(lhs, rhs);
     }
+    bool hasiPosLOneNested = false;
     std::vector<size_t> iposL, iposR;
     std::vector<size_t> remainingL, remainingR;
     bool firstStr = true;
+    size_t hasOneNested = -1, forindex = -1, iposLIndex = -1;
     for (const auto& str : i) {
         for (size_t j = 0, N = lhs.Schema.size(); j<N; j++) {
             if (firstStr)
                 remainingL.emplace_back(j);
             if (str == (lhs.Schema.at(j))) {
+                if ((!lhs.datum.empty()) && (lhs.datum.at(0).at(j).isNested)) {
+                    if (hasiPosLOneNested)
+                        throw std::runtime_error("ERROR: there could be only one nested value within the match matching a join!");
+                    hasiPosLOneNested = true;
+                    bool found = false;
+                    for (size_t k = 0, Q = lhs.datum.at(0).at(j).table.Schema.size(); k<Q; k++) {
+                        if (lhs.datum.at(0).at(j).table.Schema.at(k) == str) {
+                            hasOneNested = k;
+                            forindex = j;
+                            found = true;
+                            iposLIndex = iposL.size();
+                            break;
+                        }
+                    }
+                }
                 iposL.emplace_back(j);
                 if (!firstStr) break;
             }
@@ -208,9 +225,21 @@ SimpleTable<D> left_equijoin(const SimpleTable<D>& lhs, const SimpleTable<D>& rh
             if (!IL.contains(j))
                 remain.emplace_back(record.at(j));
         }
-        for (size_t j : iposL)
+        for (size_t j : iposL) {
             proj.emplace_back(record.at(j));
-        lM[proj].emplace_back(remain);
+        }
+        if (!hasiPosLOneNested)
+            lM[proj].emplace_back(remain);
+        else {
+            auto cpy = proj;
+            const auto& nestedRef = proj.at(iposLIndex).table.datum;
+            for (size_t j = 0, Q = nestedRef.size(); j<Q; j++) {
+                auto& extremelyLocalRef = cpy[iposLIndex];
+                extremelyLocalRef.val = nestedRef.at(j).at(hasOneNested).val;
+                extremelyLocalRef.isNested = false;
+                lM[cpy].emplace_back(remain);
+            }
+        }
     }
     for (const auto& record : rhs.datum) {
         std::vector<D> proj, remain;
@@ -233,6 +262,8 @@ SimpleTable<D> left_equijoin(const SimpleTable<D>& lhs, const SimpleTable<D>& rh
             for (const auto& lR : it->second) {
 //                for (const auto& rR : it2->second) {
                     auto v = it->first;
+                    if (hasiPosLOneNested)
+                        v[iposLIndex].isNested = true;
                     v.insert(v.end(), lR.begin(), lR.end());
                     v.insert(v.end(), remainingV.begin(), remainingV.end());
                     result.datum.emplace_back(v);
