@@ -427,7 +427,7 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
             }
         } break;
 
-#if 1
+
         case rewrite_expr::NODE_PROP: {
             auto vectorType = NestedResultTable::RT_VSTRING;
             auto simpleType = NestedResultTable::RT_STRING;
@@ -482,188 +482,7 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
                 return VAL.getContent(i);
             };
             complexInstantiate<std::vector<gsm_object_xi_content>>(graph_id, *this,I, delim, vectorType, simpleType,  resolve, resolve2, getFlattenedContent,projS, VAR, VAL, NAME);
-//            std::any match_rhs = I.interpret_closure_evaluate(target_ptr);
-//            if (match_rhs.has_value()) {
-//                auto hasProp = I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get());
-//                if (!hasProp.has_value()) return;
-//                std::tuple<std::pair<ssize_t,ssize_t>,std::vector<std::string>> NAME{{-1,-1},{}};
-//                {
-//                    auto tmp = get_v_opt<std::string>(hasProp);
-//                    if (tmp.has_value()) {
-//                        std::get<1>(NAME).emplace_back(tmp.value());
-//                    } else {
-//                        NAME = std::move(std::any_cast<std::tuple<std::pair<ssize_t,ssize_t>,std::vector<std::string>>>(hasProp));
-//                    }
-//                }
-//                const auto& record = table.datum.at(record_id);
-//                auto VAR = resolveIdsOverVariableName2(graph_id, pattern_id, ptr->ptr_or_else->prop, record, true);
-//                std::pair<ssize_t,ssize_t> VAL_REFS;
-//                bool hasVectorOfInts = false;
-//                std::vector<std::vector<gsm_object_xi_content>> VAL_VALS;
-//                {
-//                    auto test0 = get_v_opt<std::string>(match_rhs);
-//                    if (test0.has_value()) {
-//                        auto tmp = resolveIdsOverVariableName2(graph_id, pattern_id, test0.value(), record, true);
-//                        std::swap(VAL_REFS,std::get<0>(tmp));
-//                        for (size_t x : std::get<1>(tmp)) {
-//                            auto& W = VAL_VALS.emplace_back();
-//                            W.emplace_back(x);
-//                        }
-//                    } else {
-//                        auto test1 = get_v_opt<std::tuple<std::pair<ssize_t,ssize_t>,std::vector<size_t>>>(match_rhs);
-//                        if (test1.has_value()) {
-//                            hasVectorOfInts = true;
-//                            for (size_t x : std::get<1>(test1.value())) {
-//                                auto& W = VAL_VALS.emplace_back();
-//                                W.emplace_back(x);
-//                            }
-//                        } else {
-//                            auto test2 = get_v_opt<std::tuple<std::pair<ssize_t,ssize_t>,std::vector<std::vector<gsm_object_xi_content>>>>(hasProp);
-//                            if (test2.has_value()) {
-//                                VAL_VALS = std::get<1>(test2.value());
-//                            } else {
-//                                throw std::runtime_error("ERROR: type mismatch!");
-//                            }
-//                        }
-//                    }
-//                }
-//                // CASE 1
-//                if ((VAR.cell_nested_morphism == VAL_REFS.first) && (VAL_REFS.first == NAME.cell_nested_morphism)) {
-//                    const auto& var = std::get<1>(VAR);
-//                    const auto& name = std::get<1>(NAME);
-//                    bool isNotNested = VAL_REFS.first == -1;
-//                    for (size_t i = 0, N = std::min(var.size(), name.size()); i<N; i++) {
-//                        auto& reference = delta_updates_per_graph[graph_id].delta_plus_db.generateId(var.at(i)).phi[name.at(i)];
-//                        if (VAL_REFS.first == -1) {
-//                            DEBUG_ASSERT(VAL_VALS.size() == 1);
-//                            reference = VAL_VALS.at(0);
-//                        } else {
-//                            reference = std::move(VAL_VALS.at(i));
-//                        }
-//                    }
-//                }
-//                // CASE 2
-//                else if (VAR.cell_nested_morphism == VAL_REFS.first) {
-//                    const auto& var = std::get<1>(VAR);
-//                    bool isNotNested = VAL_REFS.first == -1;
-//                    for (const std::string& x : std::get<1>(NAME)) {
-//                        for (size_t i = 0, N = var.size(); i<N; i++) {
-//                            auto& reference = delta_updates_per_graph[graph_id].delta_plus_db.generateId(var.at(i)).phi[x];
-//                            if (VAL_REFS.first == -1) {
-//                                DEBUG_ASSERT(VAL_VALS.size() == 1);
-//                                reference = VAL_VALS.at(0);
-//                            } else {
-//                                reference = std::move(VAL_VALS.at(i));
-//                            }
-//                        }
-//                    }
-//                }
-//                // CASE 3
-//                else if ((NAME.cell_nested_morphism == VAR.cell_nested_morphism) && (NAME.cell_nested_morphism == -1)) {
-//                    const auto& var = std::get<1>(VAR);
-//                    const auto& name = std::get<1>(NAME);
-//                    std::vector<gsm_object_xi_content> imploded;
-//                    for (const auto& ref : VAL_VALS)
-//                        imploded.insert(imploded.end(), ref.begin(), ref.end());
-//                    remove_duplicates(imploded);
-//                    VAL_VALS.clear();
-//                    for (size_t i = 0, N = std::min({var.size(), name.size()}); i<N; i++) {
-//                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(var.at(i)).phi[name.at(i)] = imploded;
-//                    }
-//                } else if ((NAME.cell_nested_morphism == VAR.cell_nested_morphism) && (VAL_REFS.first == -1)) {
-//                    const auto& var = std::get<1>(VAR);
-//                    const auto& name = std::get<1>(NAME);
-//                    DEBUG_ASSERT(VAL_VALS.size() == 1);
-//                    for (size_t i = 0, N = std::min({var.size(), name.size()}); i<N; i++) {
-//                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(var.at(i)).phi[name.at(i)] = VAL_VALS.at(0);
-//                    }
-//                }
-//                // CASE 4
-//                else if ((NAME.cell_nested_morphism ==VAL_REFS.first) && (VAR.cell_nested_morphism == -1)) {
-//                    const auto& var = std::get<1>(VAR);
-//                    const auto& name = std::get<1>(NAME);
-//                    DEBUG_ASSERT(var.size() == 1);
-//                    DEBUG_ASSERT(name.size() == VAL_VALS.size());
-//                    for (size_t i = 0, N = name.size(); i<N; i++) {
-//                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(var.at(0)).phi[name.at(i)] = std::move(VAL_VALS.at(i));
-//                    }
-//                } else if ((NAME.cell_nested_morphism == VAL_REFS.first) && (VAL_REFS.first == -1)) {
-//                    const auto& var = std::get<1>(VAR);
-//                    const auto& name = std::get<1>(NAME);
-//                    DEBUG_ASSERT(VAL_VALS.size()==1);
-//                    for (unsigned long i : var) {
-//                        delta_updates_per_graph[graph_id].delta_plus_db.generateId(i).phi[name.at(0)] = VAL_VALS.at(0);
-//                    }
-//                } else {
-//                    DEBUG_ASSERT((NAME.cell_nested_morphism != VAL_REFS.first) &&
-//                                 (VAR.cell_nested_morphism != VAL_REFS.first) &&
-//                                 (NAME.cell_nested_morphism != VAR.cell_nested_morphism));
-//                    if (VAR.cell_nested_morphism == -1) {
-//                        DEBUG_ASSERT(std::get<1>(VAR).size() == 1);
-//                        size_t id = std::get<1>(VAR).at(0);
-//                        std::unordered_set<std::string> S(std::get<1>(NAME).begin(), std::get<1>(NAME).end());
-//                        std::vector<gsm_object_xi_content> imploded;
-//                        for (const auto& ref : VAL_VALS)
-//                            imploded.insert(imploded.end(), ref.begin(), ref.end());
-//                        remove_duplicates(imploded);
-//                        VAL_VALS.clear();
-//                        for (const auto& name : S) {
-//                            delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).phi[name] = imploded;
-//                        }
-//                    } else if (VAL_REFS.first == -1) {
-//                        DEBUG_ASSERT(VAL_VALS.size() == 1);
-//                        const auto& val = VAL_VALS.at(0);
-//                        for (const auto& name : std::get<1>(NAME)) {
-//                            for (const size_t id: std::get<1>(VAR)) {
-//                                delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).phi[name] = val;
-//                            }
-//                        }
-//                    } else {
-//                        DEBUG_ASSERT(NAME.cell_nested_morphism == -1);
-//                        DEBUG_ASSERT(std::get<1>(NAME).size() == 1);
-//                        const auto& name = std::get<1>(NAME).at(0);
-//                        std::vector<gsm_object_xi_content> imploded;
-//                        for (const auto& ref : VAL_VALS)
-//                            imploded.insert(imploded.end(), ref.begin(), ref.end());
-//                        remove_duplicates(imploded);
-//                        VAL_VALS.clear();
-//                        for (const size_t id: std::get<1>(VAR)) {
-//                            delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).phi[name] = imploded;
-//                        }
-//                    }
-//                }
-//            }
-            /*auto hasProp = I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get());
-            if (!hasProp.has_value()) return;
-            auto prop_name = std::any_cast<std::string>(hasProp);
-            if (prop_name   == "cc conj") {
-                I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get());
-            }
-            auto hasVar = I.interpret_closure_evaluate(ptr->ptr_or_else.get());
-            if (!hasVar.has_value()) return;
-            auto variable_name = std::any_cast<std::string>(hasVar);
-            const auto& record = table.datum.at(record_id);
-            std::any match_rhs = I.interpret_closure_evaluate(target_ptr);
-            auto isVariableName = get_v_opt<std::string>(match_rhs);
-            if (isVariableName.has_value()) {
-                auto orig = resolveIdsOverVariableName(graph_id, pattern_id, isVariableName.value(), record);
-                if (!orig.empty()) {
-                    auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record, true);
-                    for (size_t dst : orig) {
-                        for (const auto& id : object_ids) {
-                            delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).phi[prop_name].emplace_back(dst);
-                        }
-                    }
-                }
-
-            } else {
-                auto object_ids = resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record, true);
-                for (const auto& id : object_ids) {
-                    delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).phi[prop_name] = std::any_cast<std::vector<gsm_object_xi_content>>(match_rhs);
-                }
-            }*/
         } break;
-#endif
 
         case rewrite_expr::EDGE_LABEL: {
             throw std::runtime_error("ERROR: cannot change the edge label! Go for the creation of a new content.");
@@ -759,21 +578,11 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
             DEBUG_ASSERT((edges.t == NestedResultTable::R_EDGE) || (edges.t == NestedResultTable::R_NESTED_EDGE));
             if (edges.t == NestedResultTable::R_EDGE) {
                 edges.t = NestedResultTable::R_DO_EDGE_LABEL;
-//                edges.expectedType = NestedResultTable::RT_STRING;
             } else if (edges.t == NestedResultTable::R_NESTED_EDGE) {
                 edges.t = NestedResultTable::R_DO_NESTED_EDGE_LABEL;
-//                edges.expectedType = NestedResultTable::RT_STRING;
             } else
                 DEBUG_ASSERT(false);
             return edges;
-//            auto variable_name = std::any_cast<std::string>();
-//            const auto& record = table.datum.at(record_id);
-//            auto edges_ids = clos.resolveEdgesOverVariableName2(pattern_id, variable_name, record);
-//            std::vector<std::string> W;
-//            W.reserve(std::get<1>(edges_ids).size());
-//            for (const auto& x : std::get<1>(edges_ids))
-//                W.emplace_back(ptr2->findLabelFromID(x)->second);
-//            return {std::tuple<std::pair<ssize_t,ssize_t>,std::vector<std::string>>{std::get<0>(edges_ids), W}};
         } break;
 
             // Returning the specific XI for the nodes
@@ -786,34 +595,8 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                 edges.t = NestedResultTable::R_DO_NESTED_XI;
             } else
                 DEBUG_ASSERT(false);
-//            edges.expectedType = NestedResultTable::RT_STRING;
             edges.opt_offset = ptr->id;
             return edges;
-//            bool found = false;
-//            {
-//                auto strs = get_v_opt<std::string>(evaluation);
-//                if (strs.has_value()) {
-//                    found = true;
-//                    const auto& record = table.datum.at(record_id);
-//                    object_ids = std::move(clos.resolveIdsOverVariableName2(graph_id, pattern_id, strs.value(), record));
-//                }
-//            }
-//            if (!found) {
-//                auto strs = get_v_opt<std::tuple<std::pair<ssize_t,ssize_t>,std::vector<size_t>>>(evaluation);
-//                if (strs.has_value()) {
-//                    object_ids = strs.value();
-//                }
-//            }
-//            std::vector<std::string> W;
-//            W.reserve(std::get<1>(object_ids).size());
-//            for (size_t x : std::get<1>(object_ids)) {
-//                const auto& resolution = clos.resolve_xi(graph_id,x);
-//                if (xi_offset < resolution.size())
-//                    W.emplace_back(resolution.at(xi_offset));
-//                else
-//                    W.emplace_back("");
-//            }
-//            return {std::tuple<std::pair<ssize_t,ssize_t>,std::vector<std::string>>(std::get<0>(object_ids),W)};
 
         } break;
 
@@ -827,43 +610,13 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                 edges.t = NestedResultTable::R_DO_NESTED_ELL;
             } else
                 DEBUG_ASSERT(false);
-//            edges.expectedType = NestedResultTable::RT_STRING;
             edges.opt_offset = ptr->id;
             return edges;
-//            size_t ell_offset = ptr->id;
-//            std::tuple<std::pair<ssize_t,ssize_t>,std::vector<size_t>> object_ids;
-//            auto evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get());
-//            bool found = false;
-//            {
-//                auto strs = get_v_opt<std::string>(evaluation);
-//                if (strs.has_value()) {
-//                    found = true;
-//                    const auto& record = table.datum.at(record_id);
-//                    object_ids = clos.resolveIdsOverVariableName2(graph_id, pattern_id, strs.value(), record);
-//                }
-//            }
-//            if (!found) {
-//                auto strs = get_v_opt<std::tuple<std::pair<ssize_t,ssize_t>,std::vector<size_t>>>(evaluation);
-//                if (strs.has_value()) {
-//                    object_ids = strs.value();
-//                }
-//            }
-//            std::vector<std::string> W;
-//            W.reserve(std::get<1>(object_ids).size());
-//            for (size_t x : std::get<1>(object_ids)) {
-//                const auto& resolution = clos.resolve_ell(graph_id,x);
-//                if (ell_offset < resolution.size())
-//                    W.emplace_back(resolution.at(ell_offset));
-//                else
-//                    W.emplace_back("");
-//            }
-//            return {std::tuple<std::pair<ssize_t,ssize_t>,std::vector<std::string>>(std::get<0>(object_ids),W)};
         }
 
             // Returning the property associated to a node
         case rewrite_expr::NODE_PROP: {
             NestedResultTable prop_name = interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), false, false);
-//            std::tuple<std::pair<ssize_t,ssize_t>,std::vector<size_t>> object_ids;
             NestedResultTable evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get(), true, true);
             evaluation.fields = std::make_shared<NestedResultTable>(std::move(prop_name));
             if (evaluation.t == NestedResultTable::R_NODE) {
@@ -872,33 +625,11 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                 evaluation.t = NestedResultTable::R_DO_NESTED_PROP;
             } else
                 DEBUG_ASSERT(false);
-//            evaluation.expectedType = NestedResultTable::RT_STRING;
             return evaluation;
-//            bool found = false;
-//            {
-//                auto strs = get_v_opt<std::string>(evaluation);
-//                if (strs.has_value()) {
-//                    found = true;
-//                    const auto& record = table.datum.at(record_id);
-//                    object_ids = clos.resolveIdsOverVariableName2(graph_id, pattern_id, strs.value(), record);
-//                }
-//            }
-//            if (!found) {
-//                auto strs = get_v_opt<std::tuple<std::pair<size_t,size_t>,std::vector<size_t>>>(evaluation);
-//                if (strs.has_value()) {
-//                    object_ids = strs.value();
-//                }
-//            }
-//            std::vector<std::string> W;
-//            W.reserve(std::get<1>(object_ids).size());
-//            for (size_t x : std::get<1>(object_ids))
-//                W.emplace_back(clos.resolve_prop(graph_id, x, prop_name));
-//            return {std::tuple<std::pair<ssize_t,ssize_t>,std::vector<std::string>>(std::get<0>(object_ids),W)};
         } break;
 
         case rewrite_expr::NODE_CONT: {
             NestedResultTable prop_name = interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), false, false);
-//            std::tuple<std::pair<ssize_t,ssize_t>,std::vector<size_t>> object_ids;
             NestedResultTable evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get(), true, true);
             evaluation.fields = std::make_shared<NestedResultTable>(std::move(prop_name));
             if (evaluation.t == NestedResultTable::R_NODE) {
@@ -907,37 +638,7 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                 evaluation.t = NestedResultTable::R_DO_NESTED_CONTENT;
             } else
                 DEBUG_ASSERT(false);
-//            evaluation.expectedType = NestedResultTable::RT_CONTENT;
             return evaluation;
-//            size_t ell_offset = ptr->id;
-//            std::tuple<std::pair<ssize_t,ssize_t>,std::vector<std::vector<gsm_object_xi_content>>> W;
-//            auto hasProp = interpret_closure_evaluate(ptr->pi_key_arg_or_then.get());
-//            if (!hasProp.has_value()) return W;
-//            auto prop_name = std::any_cast<std::string>(hasProp);
-//            auto evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get());
-//            if (!evaluation.has_value()) return W;
-//            std::tuple<std::pair<ssize_t,ssize_t>,std::vector<size_t>> object_ids;
-//            bool found = false;
-//            {
-//                auto strs = get_v_opt<std::string>(evaluation);
-//                if (strs.has_value()) {
-//                    found = true;
-////                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
-//                    const auto& record = table.datum.at(record_id);
-//                    object_ids = clos.resolveIdsOverVariableName2(graph_id, pattern_id, strs.value(), record);
-//                }
-//            }
-//            if (!found) {
-//                auto strs = get_v_opt<std::tuple<std::pair<ssize_t,ssize_t>,std::vector<size_t>>>(evaluation);
-//                if (strs.has_value()) {
-//                    object_ids = strs.value();
-//                }
-//            }
-//            std::get<1>(W).reserve(std::get<1>(object_ids).size());
-//            for (size_t id : std::get<1>(object_ids)) {
-//                std::get<1>(W).emplace_back(clos.resolve_content(graph_id, id, prop_name));
-//            }
-//            return W;
         } break;
 
         case rewrite_expr::IFTE_RW: {
@@ -1009,16 +710,7 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                 edges.t = NestedResultTable::R_DO_NESTED_EDGE_SRC;
             } else
                 DEBUG_ASSERT(false);
-//            edges.expectedType = NestedResultTable::RT_SIZET;
             return edges;
-//            auto variable_name = std::any_cast<std::string>();
-//            const auto& record = table.datum.at(record_id);
-//            auto edges_ids = clos.resolveEdgesOverVariableName2(pattern_id, variable_name, record);
-//            std::vector<std::string> W;
-//            W.reserve(std::get<1>(edges_ids).size());
-//            for (const auto& x : std::get<1>(edges_ids))
-//                W.emplace_back(ptr2->findLabelFromID(x)->second);
-//            return {std::tuple<std::pair<ssize_t,ssize_t>,std::vector<std::string>>{std::get<0>(edges_ids), W}};
         } break;
 
         case rewrite_expr::EDGE_DST: {
@@ -1030,160 +722,13 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                 edges.t = NestedResultTable::R_DO_NESTED_EDGE_DST;
             } else
                 DEBUG_ASSERT(false);
-//            edges.expectedType = NestedResultTable::RT_SIZET;
             return edges;
-//            auto variable_name = std::any_cast<std::string>();
-//            const auto& record = table.datum.at(record_id);
-//            auto edges_ids = clos.resolveEdgesOverVariableName2(pattern_id, variable_name, record);
-//            std::vector<std::string> W;
-//            W.reserve(std::get<1>(edges_ids).size());
-//            for (const auto& x : std::get<1>(edges_ids))
-//                W.emplace_back(ptr2->findLabelFromID(x)->second);
-//            return {std::tuple<std::pair<ssize_t,ssize_t>,std::vector<std::string>>{std::get<0>(edges_ids), W}};
         }
 
         default:
             throw std::runtime_error("UNSUPPORTED OPERATION (FUTURE)");
     }
 }
-
-//
-//std::vector<size_t> closure::Interpret::interpret_closure_evaluate2(rewrite_expr *ptr) /*const*/ {
-//    if (!ptr)
-//        return {};
-//    switch (ptr->t) {
-//        case rewrite_expr::VARIABLE:
-//        case rewrite_expr::SCRIPT_CASE: {
-//            throw std::runtime_error("UNSUPPORTED OPERATION ON MUTUALLY NESTED");
-//        }
-//            // Returning the specific XI for the nodes
-//        case rewrite_expr::NODE_PROP:
-//        case rewrite_expr::NODE_ELL:
-//        case rewrite_expr::NODE_XI: {
-//            size_t xi_offset = ptr->id;
-//            std::vector<size_t> object_ids;
-//            auto evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get());
-//            bool found = false;
-//            {
-//                auto strs = get_v_opt<std::string>(evaluation);
-//                if (strs.has_value()) {
-//                    found = true;
-////                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
-//                    const auto& record = table.datum.at(record_id);
-//                    object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, strs.value(), record);
-//                }
-//            }
-//            if (!found) {
-//                auto strs = get_v_opt<std::vector<size_t>>(evaluation);
-//                if (strs.has_value()) {
-//                    object_ids = strs.value();
-//                }
-//            }
-//            // for each object_id in the vector, I continuously append
-//            return object_ids;
-//        } break;
-//
-//
-//        case rewrite_expr::NODE_CONT: {
-//            size_t ell_offset = ptr->id;
-//            std::vector<size_t> collected;
-//            auto hasProp = interpret_closure_evaluate(ptr->pi_key_arg_or_then.get());
-//            if (!hasProp.has_value()) return collected;
-//            auto prop_name = std::any_cast<std::string>(hasProp);
-//            auto evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get());
-//            if (!evaluation.has_value()) return collected;
-////            auto variable_name = std::any_cast<std::string>(hasVar);
-//            std::vector<size_t> object_ids;
-////            auto evaluation = interpret_closure_evaluate(ptr->ptr_or_else.get());
-//            bool found = false;
-//            {
-//                auto strs = get_v_opt<std::string>(evaluation);
-//                if (strs.has_value()) {
-//                    found = true;
-////                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
-//                    const auto& record = table.datum.at(record_id);
-//                    object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, strs.value(), record);
-//                }
-//            }
-//            if (!found) {
-//                auto strs = get_v_opt<std::vector<size_t>>(evaluation);
-//                if (strs.has_value()) {
-//                    object_ids = strs.value();
-//                }
-//            }
-////            const auto& record = table.datum.at(record_id);
-////            auto isVariableName = get_v_opt<std::string>(match_rhs);
-////            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
-////            const auto& record = table.datum.at(record_id);
-////            auto object_ids = clos.resolveIdsOverVariableName(graph_id, pattern_id, variable_name, record);
-////            std::vector<gsm_object_xi_content> collected;
-//            for (size_t id : object_ids) {
-//                for (const gsm_object_xi_content& ref : clos.resolve_content(graph_id, id, prop_name)) {
-//                    collected.emplace_back(ref.id);
-//                }
-////                auto local = clos.resolve_content(graph_id, id, prop_name);
-////                collected.insert(collected.end(), local.begin(), local.end());
-//            }
-//            remove_duplicates(collected);
-//            return collected;
-//        } break;
-//
-//            // Returning the edge label (if nested, imploding the collection into a string!) TODO: what if we need singled out?
-//        case rewrite_expr::EDGE_LABEL: {
-//            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
-//            const auto& record = table.datum.at(record_id);
-//            auto edges_ids = clos.resolveEdgesOverVariableName(pattern_id, variable_name, record);
-////            if (edges_ids.empty()) {
-////                clos.resolveEdgesOverVariableName(pattern_id, variable_name, record);
-////                return {};
-////            }
-//
-//            return edges_ids;
-//        } break;
-//
-//
-//        case rewrite_expr::IFTE_RW: {
-//            return interpret(ptr->ifcond) ?
-//                   interpret_closure_evaluate2(ptr->pi_key_arg_or_then.get()) :
-//                   interpret_closure_evaluate2(ptr->ptr_or_else.get());
-//        } break;
-//
-//        case rewrite_expr::EDGE_DST:
-//        case rewrite_expr::EDGE_SRC: {
-//            bool isSrc = ptr->t == rewrite_expr::EDGE_SRC;
-//            auto evaluation = (interpret_closure_evaluate(ptr->ptr_or_else.get()));
-////            auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
-//            const auto& record = table.datum.at(record_id);
-//            std::vector<size_t> edges_ids;
-//            bool found = false;
-//            {
-//                auto strs = get_v_opt<std::string>(evaluation);
-//                if (strs.has_value()) {
-//                    found = true;
-////                    auto variable_name = std::any_cast<std::string>(interpret_closure_evaluate(ptr->ptr_or_else.get()));
-//                    const auto& record = table.datum.at(record_id);
-//                    edges_ids = clos.resolveEdgesOverVariableName(pattern_id, strs.value(), record);
-//                }
-//            }
-//            if (!found) {
-//                auto strs = get_v_opt<std::vector<size_t>>(evaluation);
-//                if (strs.has_value()) {
-//                    edges_ids = strs.value();
-//                }
-//            }
-//
-//            std::vector<size_t> ids;
-//            for (size_t& x : edges_ids) {
-//                const auto& y = ptr2->resolveRecord(x);
-//                x = (isSrc) ? y->object_id : y->id_contained;
-//            }
-//            return ids;
-//        }
-//
-//        default:
-//            throw std::runtime_error("UNSUPPORTED OPERATION (FUTURE)");
-//    }
-//}
 
 static inline bool var_extractor(const test_pred& ptr,
                                  size_t& offsetForStar,

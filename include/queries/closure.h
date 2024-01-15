@@ -1260,7 +1260,7 @@ public:
                                                                 idx.second).val)) { // If this was not an optional match
                                                             size_t default_val = std::get<size_t>(
                                                                     sub_entries.at(idx.second).val);
-                                                            DEBUG_ASSERT(nodeVars.contains(operation.others));
+//                                                            DEBUG_ASSERT(nodeVars.contains(operation.others));
                                                             if (nodeVars.contains(operation.others)) {
                                                                 updates.set_removed(default_val);
                                                             } else if (edgeVars.contains(operation.others)) {

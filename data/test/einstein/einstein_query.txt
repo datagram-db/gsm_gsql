@@ -23,9 +23,10 @@ p2 = (>> H)<-[∀l:]--(X)                                   // Graph matching, S
                                       else
                                        (label l)
                                       ), X) as h
-       set (φ (label g), h) as Y
+       /*set (φ (label g), h) as Y*/
        del Z
        del K
+       del l
 
 
      (h)
@@ -69,4 +70,5 @@ p4 = (V)--[∀l:dobj||ccomp||nmod]->(Z)
        del V                                             // Removing a node
        del T
 
-       (j)                                              // Instance of reference to be returned*/
+       (j)                                              // Instance of reference to be returned
+       */
