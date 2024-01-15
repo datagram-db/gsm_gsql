@@ -35,6 +35,7 @@ Environment::Environment(Configuration &conf) : conf{conf} {
 //    hasOutput = false;
 //    prepare_server_full = false;
     script::compiler::ScriptVisitor::bindGSM(&result);
+    script::compiler::ScriptVisitor::doAutoImplode = true;
 }
 
 void Environment::schema_loading() {

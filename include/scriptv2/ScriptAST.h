@@ -283,7 +283,7 @@ namespace script::structures {
         ArrayList<DPtr<ScriptAST>> toList();
         std::function<DPtr<ScriptAST>(DPtr<ScriptAST>)> toFunction();
         StringMap<DPtr<ScriptAST>> toMap();
-        DPtr<ScriptAST> run();
+        DPtr<ScriptAST> run(bool implode=false);
 
 //        /**
 //         * Function to be used if the function needs to be interpreted as the ell/xi for an object
@@ -373,7 +373,7 @@ namespace script::structures {
             } else return (type == t::Double);
         }
 
-        std::string toString(bool quoted=false) const;
+        std::string toString(bool quoted=false, bool implode=false) const;
 
         /**
          * If the left subtype can be reconciled to the one on the right, then I shall proivde a transformation function for those!
@@ -478,6 +478,24 @@ namespace script::structures {
                 BOTCCT->type = t::BotT ;
             }
             return BOTCCT;
+        }
+
+        bool isImmediateInteger() const {
+                switch (type) {
+                    case ObjX:
+                        return arrayList[0]->isImmediateInteger() ;
+                    case Boolean:
+                    case Integer:
+                    case Double:
+                    case String:
+                    case Array:
+                    case Tuple:
+                    case TupleT:
+                    case Function:
+                        return true;
+                    default:
+                        return false;
+                }
         }
 
         static inline DPtr<ScriptAST> null_() {

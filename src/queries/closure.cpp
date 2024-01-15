@@ -439,9 +439,8 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
             NestedResultTable VAL = I.interpret_closure_evaluate(target_ptr, true, true);
             NestedResultTable NAME = I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), false, true);
             std::function<void(size_t, size_t, const std::string&, const std::string&)> resolve = [this](size_t graph_id, size_t var, const std::string& x, const std::string& val) {
-
-                if (val.starts_with("or or or"))
-                    std::cout << "ERR" << std::endl;
+//                if (val.starts_with("or or or"))
+//                    std::cout << "ERR" << std::endl;
                 return delta_updates_per_graph[graph_id].delta_plus_db.generateId(var).content[x] = val;
             };
             std::function<std::string(const std::set<std::string>&)> resolve2 = [](const std::set<std::string>& v) {
@@ -467,7 +466,9 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
             NestedResultTable VAL = I.interpret_closure_evaluate(target_ptr, true, true);
             NestedResultTable NAME = I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), false, true);
 
-            std::function<void(size_t, size_t, const std::string&, const std::vector<gsm_object_xi_content>&)> resolve = [this](size_t graph_id, size_t var, const std::string& x, const std::vector<gsm_object_xi_content>& val) {
+            std::function<void(size_t, size_t, const std::string&, const std::vector<gsm_object_xi_content>&)> resolve = [this,&I,&ptr](size_t graph_id, size_t var, const std::string& x, const std::vector<gsm_object_xi_content>& val) {
+                if (x.starts_with("{} revealed"))
+                    I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), false, true);
                 return delta_updates_per_graph[graph_id].delta_plus_db.generateId(var).phi[x] = val;
             };
             std::function<std::vector<gsm_object_xi_content>(const std::set<std::vector<gsm_object_xi_content>>&)> resolve2 = [](const std::set<std::vector<gsm_object_xi_content>>& v) {
@@ -733,9 +734,9 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
             if (!ptr->ptrResult) {
                 std::stringstream ss;
                 ss << ptr->prop;
-                return {script::compiler::ScriptVisitor::eval(ss, (scriptParser::ScriptContext**)&ptr->ptrResult, schema, table.datum.at(record_id))->run()};
+                return {script::compiler::ScriptVisitor::eval(ss, (scriptParser::ScriptContext**)&ptr->ptrResult, schema, table.datum.at(record_id))->run(true)};
             } else {
-                return {script::compiler::ScriptVisitor::eval((scriptParser::ScriptContext**)&ptr->ptrResult, schema, table.datum.at(record_id))->run()};
+                return {script::compiler::ScriptVisitor::eval((scriptParser::ScriptContext**)&ptr->ptrResult, schema, table.datum.at(record_id))->run(true)};
             }
         }
 

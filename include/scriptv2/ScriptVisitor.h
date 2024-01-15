@@ -20,6 +20,7 @@ namespace script {
     namespace compiler {
 
         struct ScriptVisitor : public scriptVisitor {
+            static bool doAutoImplode;
             static NodeLabelBijectionGraph<std::string,std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>> typecaster;
             DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> context;
             static closure* db; // WARNING: THIS CANNOT BE USED IN CONCURRENT SETTINGS WHERE MULTIPLE DATABASES ARE USED!

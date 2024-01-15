@@ -13,6 +13,7 @@
 
 namespace script {
     namespace compiler {
+        bool ScriptVisitor::doAutoImplode= false;
         closure* ScriptVisitor::db = nullptr;
         NodeLabelBijectionGraph<std::string,std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>> ScriptVisitor::typecaster {};
 
@@ -24,7 +25,7 @@ namespace script {
                 auto tmp = any_cast<DPtr<script::structures::ScriptAST>>(visit(x));
                 tmp->setContext(result->optGamma, result->db);
                 auto currDB = result->db;
-                result = tmp->run();
+                result = tmp->run(doAutoImplode);
                 if (!result->db)
                     result->db = currDB;
                 if (!result->optGamma)
@@ -499,12 +500,12 @@ namespace script {
                             ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::string_(std::get<std::string>(id.val))));
                         } else if (std::holds_alternative<size_t>(id.val)) {
                             ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::integer_((long long)std::get<size_t>(id.val))));
-                        } else if (std::holds_alternative<bool>(id.val)) {
+                        } /*else if (std::holds_alternative<bool>(id.val)) {
                             if (std::get<bool>(id.val))
                                 ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::true_()));
                             else
                                 ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::false_()));
-                        }
+                        }*/
                     } else {
                         ArrayList<DPtr<script::structures::ScriptAST>> listOfRows;
                         for (size_t k = 0; k<id.table.datum.size(); k++) {
@@ -519,12 +520,12 @@ namespace script {
                                         record[varName3] = (script::structures::ScriptAST::string_(std::get<std::string>(id3.val)));
                                     } else if (std::holds_alternative<size_t>(id.val)) {
                                         record[varName3] = ((script::structures::ScriptAST::integer_((long long)std::get<size_t>(id3.val))));
-                                    } else if (std::holds_alternative<bool>(id3.val)) {
+                                    } /*else if (std::holds_alternative<bool>(id3.val)) {
                                         if (std::get<bool>(id3.val))
                                             record[varName3] = (( script::structures::ScriptAST::true_()));
                                         else
                                             record[varName3] = ((script::structures::ScriptAST::false_()));
-                                    }
+                                    }*/
                                 }
                             }
                             listOfRows.emplace_back(script::structures::ScriptAST::tuple_(std::move(record)));
