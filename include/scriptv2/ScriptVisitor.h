@@ -21,31 +21,55 @@ namespace script {
 
         struct ScriptVisitor : public scriptVisitor {
             static bool doAutoImplode;
+            static ScriptVisitor* instance;
             static NodeLabelBijectionGraph<std::string,std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>> typecaster;
             DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> context;
             static closure* db; // WARNING: THIS CANNOT BE USED IN CONCURRENT SETTINGS WHERE MULTIPLE DATABASES ARE USED!
             ScriptVisitor();
-            static void bindGSM(closure* gsm) {
-                typecaster.clear();
-                db = gsm;
+            static void bindGSM(closure* gsm);
+
+            static ScriptVisitor* getInstance() {
+                if (!instance)
+                    instance = new ScriptVisitor();
+                return instance;
             }
-            static DPtr<script::structures::ScriptAST> eval(std::istream &is,
-                             scriptParser::ScriptContext** ptrResult,
-                                 const std::vector<std::string>& schema,
-                                 const std::vector<value>& nestedRow);
-            static DPtr<script::structures::ScriptAST> eval(std::istream& is,
-                             scriptParser::ScriptContext** ptrResult,
-                             DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> context);
-            static DPtr<script::structures::ScriptAST> eval(scriptParser::ScriptContext** ptrResult,
-                                     const std::vector<std::string>& schema,
-                                     const std::vector<value>& nestedRow);
+
+
+//            bool eval2Bool(script::structures::ScriptAST* tmp);
+//            static DPtr<script::structures::ScriptAST> eval(std::istream &is,
+//                             scriptParser::ScriptContext** ptrResult,
+//                                 const std::vector<std::string>& schema,
+//                                 const std::vector<value>& nestedRow);
+//            static DPtr<script::structures::ScriptAST> eval(std::istream& is,
+//                             scriptParser::ScriptContext** ptrResult,
+//                             DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> context);
+            static DPtr<script::structures::ScriptAST> eval(const char* str, size_t strlen,size_t patt,
+                                                            DPtr<script::structures::ScriptAST>& ptrResult,
+            const std::vector<std::string>& schema,
+            const std::vector<value>& nestedRow);
+
+            static bool evalBool(const char* data,size_t len,size_t patt,
+                                         DPtr<script::structures::ScriptAST>& ptrResult,
+                                         const std::vector<std::string>& schema,
+                                         const std::vector<value>& nestedRow);
+            static DPtr<script::structures::ScriptAST> eval3(const char* str, size_t strlen,
+                                                             DPtr<script::structures::ScriptAST>& ptrResult,
+            DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> context);
+//            static DPtr<script::structures::ScriptAST> eval2(
+//                    DPtr<script::structures::ScriptAST>& ptrResult,
+//                                     const std::vector<std::string>& schema,
+//                                     const std::vector<value>& nestedRow);
 
             static size_t isEnforced(const DPtr<script::structures::ScriptAST>& left,
                                    const DPtr<script::structures::ScriptAST>& right);
             static std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>> isEnforcedWithCast(const DPtr<script::structures::ScriptAST>& left,
                                    const DPtr<script::structures::ScriptAST>& right);
 
+
+
             std::any visitScript(scriptParser::ScriptContext *context) override;
+            DPtr<script::structures::ScriptAST> visitScript2(scriptParser::ScriptContext *context);
+//            DPtr<script::structures::ScriptAST> evalExpr(script::structures::ScriptAST* tmp);
             std::any visitSub(scriptParser::SubContext *context) override;
             std::any visitAtom_array(scriptParser::Atom_arrayContext *context) override;
             std::any visitSelect(scriptParser::SelectContext *context) override;

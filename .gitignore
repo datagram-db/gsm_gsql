@@ -56,3 +56,4 @@ __pycache__
 viz/parsers/__pycache__/
 /myeasylog.log
 /out.csv
+/cmake-build-debug-coverage/

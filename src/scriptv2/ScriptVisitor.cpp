@@ -4,10 +4,9 @@
 #include <queries/closure.h>
 #include "yaucl/graphs/NodeLabelBijectionGraph.h"
 #include <scriptv2/ScriptVisitor.h>
-#include <scriptv2/ScriptAST.h>
+#include <database/SchemaIndexer.h>
 #include <scriptv2/Funzione.h>
 #include "scriptv2/scriptLexer.h"
-
 
 #include "yaucl/strings/string_utils.h"
 
@@ -15,6 +14,7 @@ namespace script {
     namespace compiler {
         bool ScriptVisitor::doAutoImplode= false;
         closure* ScriptVisitor::db = nullptr;
+        ScriptVisitor* ScriptVisitor::instance = nullptr;
         NodeLabelBijectionGraph<std::string,std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::ScriptAST>&&)>> ScriptVisitor::typecaster {};
 
         std::any ScriptVisitor::visitScript(scriptParser::ScriptContext *context) {
@@ -33,6 +33,85 @@ namespace script {
             }
             return result;
         }
+
+        DPtr<script::structures::ScriptAST> ScriptVisitor::visitScript2(scriptParser::ScriptContext *context) {
+            return any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(0)));
+        }
+
+//        DPtr<script::structures::ScriptAST> ScriptVisitor::evalExpr(script::structures::ScriptAST* tmp) {
+////            tmp->setContext(this->context, db);
+////            tmp->setDBRecursively(db);
+//            auto result = tmp->run(doAutoImplode);
+//            return result;
+//        }
+
+        bool ScriptVisitor::evalBool(const char* data,size_t len,size_t patt,
+                                                                DPtr<script::structures::ScriptAST>& ptrResult,
+                                                                const std::vector<std::string>& schema,
+                                                                const std::vector<value>& nestedRow) {
+            script::structures::ScriptAST::globals.clear();
+            script::structures::ScriptAST::idxers->current_template =patt;
+            script::structures::ScriptAST::idxers->attemptInitialise(patt, &schema).initialize(&nestedRow);
+#if 1
+            // Setting up the environment variables from the record
+            for (size_t i = 0; i < std::min(schema.size(), nestedRow.size()); i++) {
+                const std::string &varName2 = schema.at(i);
+                const auto &id = nestedRow.at(i);
+                if (id.isNested)
+//                {
+//                    if (std::holds_alternative<double>(id.val)) {
+//                        script::structures::ScriptAST::globals.emplace(varName2, std::move(script::structures::ScriptAST::double_(
+//                                std::get<double>(id.val))));
+//                    } else if (std::holds_alternative<std::string>(id.val)) {
+//                        script::structures::ScriptAST::globals.emplace(varName2, std::move(script::structures::ScriptAST::string_(
+//                                std::get<std::string>(id.val))));
+//                    } else if (std::holds_alternative<size_t>(id.val)) {
+//                        script::structures::ScriptAST::globals.emplace(varName2, std::move(script::structures::ScriptAST::integer_(
+//                                (long long) std::get<size_t>(id.val))));
+//                    }
+//                } else
+                {
+                    ArrayList<DPtr<script::structures::ScriptAST>> listOfRows;
+                    for (size_t k = 0; k < id.table.datum.size(); k++) {
+                        StringMap<DPtr<script::structures::ScriptAST>> record;
+                        for (size_t j = 0; j < std::min(id.table.Schema.size(), id.table.datum.size()); j++) {
+                            const std::string &varName3 = id.table.Schema.at(j);
+                            const auto &id3 = id.table.datum.at(k).at(j);
+                            if (!id3.isNested) {
+                                if (std::holds_alternative<double>(id3.val)) {
+                                    record.emplace(varName3, std::move((script::structures::ScriptAST::double_(
+                                            std::get<double>(id3.val)))));
+//                                    record[varName3] = ;
+                                } else if (std::holds_alternative<std::string>(id.val)) {
+                                    record.emplace(varName3, std::move(script::structures::ScriptAST::string_(
+                                            std::get<std::string>(id3.val))));
+                                } else if (std::holds_alternative<size_t>(id.val)) {
+                                    record.emplace(varName3, std::move((script::structures::ScriptAST::integer_(
+                                            (long long) std::get<size_t>(id3.val)))));
+                                }
+                            }
+                        }
+                        listOfRows.emplace_back(std::move(script::structures::ScriptAST::tuple_(std::move(record))));
+                    }
+                    script::structures::ScriptAST::globals.emplace(varName2, std::move(script::structures::ScriptAST::array_(std::move(listOfRows))));
+                }
+            }
+#endif
+            if (!ptrResult.get()) {
+                antlr4::ANTLRInputStream input(data, len);
+                scriptLexer lexer(&input);
+                antlr4::CommonTokenStream tokens(&lexer);
+                scriptParser parser(&tokens);
+                ptrResult = getInstance()->visitScript2(parser.script());
+            }
+//            ptrResult->setDBRecursively(db);
+            return ptrResult->toBoolean(doAutoImplode);
+        }
+
+//        bool ScriptVisitor::eval2Bool(script::structures::ScriptAST* tmp) {
+//            tmp->setContext(this->context, db);
+//            return tmp->run(doAutoImplode)->toBoolean();
+//        }
 
         std::any ScriptVisitor::visitSub(scriptParser::SubContext *context) {
             auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr(0)));
@@ -419,34 +498,93 @@ namespace script {
             return {ptr};
         }
 
-        DPtr<script::structures::ScriptAST> ScriptVisitor::eval(scriptParser::ScriptContext** ptrResult,
+
+
+//        DPtr<script::structures::ScriptAST> ScriptVisitor::eval2(
+//                DPtr<script::structures::ScriptAST>& ptrResult,
+//                                 const std::vector<std::string>& schema,
+//                                 const std::vector<value>& nestedRow) {
+//
+//            if ((!ptrResult.get())) {
+//                return {nullptr};
+//            }
+////            std::unordered_map<std::string, DPtr<script::structures::ScriptAST>> contexto;
+//
+//            ScriptVisitor ptr;
+//            // Setting up the environment variables from the record
+//            for (size_t i = 0; i<std::min(schema.size(), nestedRow.size()); i++) {
+//                const std::string& varName2 = schema.at(i);
+//                const auto& id = nestedRow.at(i);
+//                if (!id.isNested) {
+//                    if (std::holds_alternative<double>(id.val)) {
+//                        ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::double_(std::get<double>(id.val))));
+//                    } else if (std::holds_alternative<std::string>(id.val)) {
+//                        ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::string_(std::get<std::string>(id.val))));
+//                    } else if (std::holds_alternative<size_t>(id.val)) {
+//                        ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::integer_((long long)std::get<size_t>(id.val))));
+//                    } else if (std::holds_alternative<bool>(id.val)) {
+//                        if (std::get<bool>(id.val))
+//                            ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::true_()));
+//                        else
+//                            ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::false_()));
+//                    }
+//                } else {
+//                    ArrayList<DPtr<script::structures::ScriptAST>> listOfRows;
+//                    for (size_t k = 0; k<id.table.datum.size(); k++) {
+//                        StringMap<DPtr<script::structures::ScriptAST>> record;
+//                        for (size_t j = 0; j<std::min(id.table.Schema.size(), id.table.datum.size()); j++) {
+//                            const std::string& varName3 = id.table.Schema.at(j);
+//                            const auto& id3 = id.table.datum.at(k).at(j);
+//                            if (!id3.isNested) {
+//                                if (std::holds_alternative<double>(id3.val)) {
+//                                    record[varName3] = script::structures::ScriptAST::double_(std::get<double>(id3.val));
+//                                } else if (std::holds_alternative<std::string>(id.val)) {
+//                                    record[varName3] = (script::structures::ScriptAST::string_(std::get<std::string>(id3.val)));
+//                                } else if (std::holds_alternative<size_t>(id.val)) {
+//                                    record[varName3] = ((script::structures::ScriptAST::integer_((long long)std::get<size_t>(id3.val))));
+//                                } else if (std::holds_alternative<bool>(id3.val)) {
+//                                    if (std::get<bool>(id3.val))
+//                                        record[varName3] = (( script::structures::ScriptAST::true_()));
+//                                    else
+//                                        record[varName3] = ((script::structures::ScriptAST::false_()));
+//                                }
+//                            }
+//                        }
+//                        listOfRows.emplace_back(script::structures::ScriptAST::tuple_(std::move(record)));
+//                    }
+//                    ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::array_(std::move(listOfRows))));
+//                }
+//            }
+////            ptr.context = std::move(contexto);
+////            ptrResult->setOptGammaRecursively(std::move(contexto));
+////            return true;
+////            auto result =ptr.evalExpr(ptrResult.get());
+//            return ptr.evalExpr(ptrResult.get());
+//        }
+
+        DPtr<script::structures::ScriptAST> ScriptVisitor::eval(const char* data,size_t len,size_t patt,
+                                                                DPtr<script::structures::ScriptAST>& ptrResult,
                                  const std::vector<std::string>& schema,
                                  const std::vector<value>& nestedRow) {
-
-            if ((!ptrResult) || (!*ptrResult)) {
-                return {nullptr};
-            }
-//            std::unordered_map<std::string, DPtr<script::structures::ScriptAST>> contexto;
-
-            ScriptVisitor ptr;
-            // Setting up the environment variables from the record
+            script::structures::ScriptAST::idxers->current_template =patt;
+            script::structures::ScriptAST::idxers->attemptInitialise(patt, &schema).initialize(&nestedRow);
+            script::structures::ScriptAST::globals.clear();
+//            ScriptVisitor ptr;
+#if 1
+//             Setting up the environment variables from the record
             for (size_t i = 0; i<std::min(schema.size(), nestedRow.size()); i++) {
                 const std::string& varName2 = schema.at(i);
                 const auto& id = nestedRow.at(i);
-                if (!id.isNested) {
-                    if (std::holds_alternative<double>(id.val)) {
-                        ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::double_(std::get<double>(id.val))));
-                    } else if (std::holds_alternative<std::string>(id.val)) {
-                        ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::string_(std::get<std::string>(id.val))));
-                    } else if (std::holds_alternative<size_t>(id.val)) {
-                        ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::integer_((long long)std::get<size_t>(id.val))));
-                    } else if (std::holds_alternative<bool>(id.val)) {
-                        if (std::get<bool>(id.val))
-                            ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::true_()));
-                        else
-                            ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::false_()));
-                    }
-                } else {
+                if (id.isNested) {
+//                    if (std::holds_alternative<double>(id.val)) {
+//                        script::structures::ScriptAST::globals.emplace(varName2, std::move(script::structures::ScriptAST::double_(std::get<double>(id.val))));
+//                    } else if (std::holds_alternative<std::string>(id.val)) {
+//                        script::structures::ScriptAST::globals.emplace(varName2, std::move(script::structures::ScriptAST::string_(std::get<std::string>(id.val))));
+//                    } else if (std::holds_alternative<size_t>(id.val)) {
+//                        script::structures::ScriptAST::globals.emplace(varName2, std::move(script::structures::ScriptAST::integer_((long long)std::get<size_t>(id.val))));
+//                    }
+//                } else
+//                {
                     ArrayList<DPtr<script::structures::ScriptAST>> listOfRows;
                     for (size_t k = 0; k<id.table.datum.size(); k++) {
                         StringMap<DPtr<script::structures::ScriptAST>> record;
@@ -455,125 +593,43 @@ namespace script {
                             const auto& id3 = id.table.datum.at(k).at(j);
                             if (!id3.isNested) {
                                 if (std::holds_alternative<double>(id3.val)) {
-                                    record[varName3] = script::structures::ScriptAST::double_(std::get<double>(id3.val));
+                                    record.emplace(varName3, std::move((script::structures::ScriptAST::double_(std::get<double>(id3.val)))));
                                 } else if (std::holds_alternative<std::string>(id.val)) {
-                                    record[varName3] = (script::structures::ScriptAST::string_(std::get<std::string>(id3.val)));
+                                    record.emplace(varName3, std::move (script::structures::ScriptAST::string_(std::get<std::string>(id3.val))));
                                 } else if (std::holds_alternative<size_t>(id.val)) {
-                                    record[varName3] = ((script::structures::ScriptAST::integer_((long long)std::get<size_t>(id3.val))));
-                                } else if (std::holds_alternative<bool>(id3.val)) {
-                                    if (std::get<bool>(id3.val))
-                                        record[varName3] = (( script::structures::ScriptAST::true_()));
-                                    else
-                                        record[varName3] = ((script::structures::ScriptAST::false_()));
+                                    record.emplace(varName3, std::move( ((script::structures::ScriptAST::integer_((long long)std::get<size_t>(id3.val))))));
                                 }
                             }
                         }
-                        listOfRows.emplace_back(script::structures::ScriptAST::tuple_(std::move(record)));
+                        listOfRows.emplace_back(std::move(script::structures::ScriptAST::tuple_(std::move(record))));
                     }
-                    ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::array_(std::move(listOfRows))));
+                    script::structures::ScriptAST::globals.emplace(varName2, std::move(script::structures::ScriptAST::array_(std::move(listOfRows))));
                 }
             }
-//            ptr.context = std::move(contexto);
-//            ptrResult->setOptGammaRecursively(std::move(contexto));
-//            return true;
-            auto result = std::any_cast<DPtr<script::structures::ScriptAST>>(ptr.visit(*ptrResult));
-            return result;
-        }
-
-        DPtr<script::structures::ScriptAST> ScriptVisitor::eval(std::istream &is,
-                                 scriptParser::ScriptContext** ptrResult,
-                                 const std::vector<std::string>& schema,
-                                 const std::vector<value>& nestedRow) {
-
-            if (ptrResult && *ptrResult) {
-                return eval(ptrResult, schema, nestedRow);
-            } else {
-                ScriptVisitor ptr;
-                // Setting up the environment variables from the record
-                for (size_t i = 0; i<std::min(schema.size(), nestedRow.size()); i++) {
-                    const std::string& varName2 = schema.at(i);
-                    const auto& id = nestedRow.at(i);
-                    if (!id.isNested) {
-                        if (std::holds_alternative<double>(id.val)) {
-                            ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::double_(std::get<double>(id.val))));
-                        } else if (std::holds_alternative<std::string>(id.val)) {
-                            ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::string_(std::get<std::string>(id.val))));
-                        } else if (std::holds_alternative<size_t>(id.val)) {
-                            ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::integer_((long long)std::get<size_t>(id.val))));
-                        } /*else if (std::holds_alternative<bool>(id.val)) {
-                            if (std::get<bool>(id.val))
-                                ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::true_()));
-                            else
-                                ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::false_()));
-                        }*/
-                    } else {
-                        ArrayList<DPtr<script::structures::ScriptAST>> listOfRows;
-                        for (size_t k = 0; k<id.table.datum.size(); k++) {
-                            StringMap<DPtr<script::structures::ScriptAST>> record;
-                            for (size_t j = 0; j<std::min(id.table.Schema.size(), id.table.datum.size()); j++) {
-                                const std::string& varName3 = id.table.Schema.at(j);
-                                const auto& id3 = id.table.datum.at(k).at(j);
-                                if (!id3.isNested) {
-                                    if (std::holds_alternative<double>(id3.val)) {
-                                        record[varName3] = script::structures::ScriptAST::double_(std::get<double>(id3.val));
-                                    } else if (std::holds_alternative<std::string>(id.val)) {
-                                        record[varName3] = (script::structures::ScriptAST::string_(std::get<std::string>(id3.val)));
-                                    } else if (std::holds_alternative<size_t>(id.val)) {
-                                        record[varName3] = ((script::structures::ScriptAST::integer_((long long)std::get<size_t>(id3.val))));
-                                    } /*else if (std::holds_alternative<bool>(id3.val)) {
-                                        if (std::get<bool>(id3.val))
-                                            record[varName3] = (( script::structures::ScriptAST::true_()));
-                                        else
-                                            record[varName3] = ((script::structures::ScriptAST::false_()));
-                                    }*/
-                                }
-                            }
-                            listOfRows.emplace_back(script::structures::ScriptAST::tuple_(std::move(record)));
-                        }
-                        ptr.context->insert(std::make_pair(varName2, script::structures::ScriptAST::array_(std::move(listOfRows))));
-                    }
-                }
-                antlr4::ANTLRInputStream input(is);
+#endif
+            if (!ptrResult.get()) {
+                antlr4::ANTLRInputStream input(data,len);
                 scriptLexer lexer(&input);
                 antlr4::CommonTokenStream tokens(&lexer);
                 scriptParser parser(&tokens);
-                if (ptrResult && (*ptrResult)) {
-                    *ptrResult = parser.script();
-                    return std::any_cast<DPtr<script::structures::ScriptAST>>(ptr.visit(*ptrResult));
-                } else
-                    return std::any_cast<DPtr<script::structures::ScriptAST>>(ptr.visit(parser.script()));
+                ptrResult = getInstance()->visitScript2(parser.script());
             }
-
-//            if (!ptrResult) {
-//
-//            } else {
-//                ptrResult->setOptGammaRecursively(contexto);
-//            }
-//            auto result = std::any_cast<DPtr<script::structures::ScriptAST>>(ptr.visit(parser.script()));
-//            return result;
+            return ptrResult->run(doAutoImplode);
         }
 
-        DPtr<script::structures::ScriptAST> ScriptVisitor::eval(std::istream &is,
-                                 scriptParser::ScriptContext** ptrResult,
+        DPtr<script::structures::ScriptAST> ScriptVisitor::eval3(const char* data, size_t len,
+                                                                 DPtr<script::structures::ScriptAST>& ptrResult,
                                                                 DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> context) {
             ScriptVisitor ptr;
             ptr.context = std::move(context);
-            if ((!ptrResult) || (!*ptrResult)) {/*
-                ptrResult->setOptGammaRecursively(context);
-            } else {*/
-                antlr4::ANTLRInputStream input(is);
+            if ((!ptrResult.get())) {
+                antlr4::ANTLRInputStream input(data, len);
                 scriptLexer lexer(&input);
                 antlr4::CommonTokenStream tokens(&lexer);
                 scriptParser parser(&tokens);
-                if ((ptrResult) &&  *ptrResult) {
-                    *ptrResult = parser.script();
-                } else {
-                    return std::any_cast<DPtr<script::structures::ScriptAST>>(ptr.visit(parser.script()));
-                }
-                //std::any_cast<DPtr<script::structures::ScriptAST>>(ptr.visit(parser.script()));
+                ptrResult = ptr.visitScript2(parser.script());
             }
-            return std::any_cast<DPtr<script::structures::ScriptAST>>(ptr.visit(*ptrResult));
-//            return result;
+            return ptrResult->run(doAutoImplode);
         }
 
         std::any ScriptVisitor::visitCos(scriptParser::CosContext *context) {
@@ -798,6 +854,12 @@ namespace script {
 
         std::any ScriptVisitor::visitType_any(scriptParser::Type_anyContext *context) {
             return {script::structures::ScriptAST::any_T()};
+        }
+
+        void ScriptVisitor::bindGSM(closure *gsm) {
+            typecaster.clear();
+            db = gsm;
+            script::structures::ScriptAST::setDBRecursively(db);
         }
 
     } // script

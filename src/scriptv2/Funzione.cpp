@@ -18,13 +18,14 @@ std::ostream &script::structures::operator<<(std::ostream &os, const Funzione &f
 
 
 void script::structures::Funzione::setDBRecursively(closure* db) {
-    database = db;
-    for (auto& ref : body)
-        ref->setDBRecursively(db);
-    if (externalToUpdate)
-        for (auto& [k,v] : *externalToUpdate) {
-            v->setDBRecursively(db);
-        }
+    return;
+//    database = db;
+//    for (auto& ref : body)
+//        ref->setDBRecursively(db);
+//    if (externalToUpdate)
+//        for (auto& [k,v] : *externalToUpdate) {
+//            v->setDBRecursively(db);
+//        }
 }
 
 script::structures::Funzione::Funzione(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& g, const std::string& x) : externalToUpdate{g}, parameter{x} {}
@@ -32,14 +33,14 @@ script::structures::Funzione::Funzione(DPtr<std::unordered_map<std::string, DPtr
 void script::structures::Funzione::setContext(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& context,
                                               closure* db) {
     externalToUpdate = context;
-    database = db;
+//    database = db;
     for (auto& ref : body)
         ref->setContext(context, db);
 }
 
 void script::structures::Funzione::addExpression(DPtr<ScriptAST>&& expr) {
     expr->optGamma = externalToUpdate;
-    expr->db = database;
+//    expr->db = database;
     body.emplace_back(expr);
 }
         DPtr<script::structures::ScriptAST> script::structures::Funzione::apply(DPtr<script::structures::ScriptAST> x) {

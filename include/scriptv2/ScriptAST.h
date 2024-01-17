@@ -11,6 +11,8 @@
 #include <queries/closure.h>
 #include <functional>
 #include <optional>
+struct TemplateIndexer;
+
 
 #ifndef ALLOC_TYPE
 #define ALLOC_TYPE(NAME,case) do { if (!(NAME).get()) { (NAME) = std::make_shared<ScriptAST>(); (NAME)->type = case; } return (NAME);  } while (0)
@@ -113,8 +115,10 @@ namespace script::structures {
         DPtr<Funzione> function;
         t type;
         DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>> optGamma;
-        closure* db{nullptr};
+        static closure* db;
         DPtr<ScriptAST> casted_type;
+        static TemplateIndexer* idxers;
+        static std::unordered_map<std::string, DPtr<ScriptAST>> globals;
 
         ScriptAST() { }
         ScriptAST(const ScriptAST&) = default;
@@ -123,7 +127,7 @@ namespace script::structures {
         ScriptAST& operator=(ScriptAST&&) = default;
 
         void setOptGammaRecursively(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& gamma);
-        void setDBRecursively( closure* datenbanken);
+        static void setDBRecursively( closure* datenbanken);
         void setOptGammaRecursively(std::unordered_map<std::string, DPtr<ScriptAST>>&& gamma);
 
         inline bool isType() const {
@@ -277,9 +281,9 @@ namespace script::structures {
             return val;
         }
 
-        bool toBoolean() ;
-        long long toInteger();
-        double toDouble();
+        bool toBoolean(bool implode=false) ;
+        long long toInteger(bool implode=false);
+        double toDouble(bool implode=false);
         ArrayList<DPtr<ScriptAST>> toList();
         std::function<DPtr<ScriptAST>(DPtr<ScriptAST>)> toFunction();
         StringMap<DPtr<ScriptAST>> toMap();

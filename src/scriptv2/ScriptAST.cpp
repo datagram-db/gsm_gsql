@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include <utility>
-#include <scriptv2/ScriptAST.h>
+#include "database/SchemaIndexer.h"
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::TRUE;
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::FALSE;
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::DOUBLET;
@@ -16,22 +16,16 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::ANYT;
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::BOTCCT;
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::NULLO;
 #include <scriptv2/Funzione.h>
+ std::unordered_map<std::string, DPtr<script::structures::ScriptAST>> script::structures::ScriptAST::globals;
+         TemplateIndexer* script::structures::ScriptAST::idxers = nullptr;
+closure* script::structures::ScriptAST::db{nullptr};
 
 void script::structures::ScriptAST::setDBRecursively( closure* datenbanken) {
     db = datenbanken;
-    for (auto & ref : arrayList)
-        ref->setDBRecursively(datenbanken);
-    for (auto & [k,v] : tuple)
-        v->setDBRecursively(datenbanken);
-    casted_type->setDBRecursively(datenbanken);
-    if (optGamma)
-        for (auto & [k,v] : *optGamma)
-            v->setDBRecursively(datenbanken);
-    if (function)
-        function->setDBRecursively(db);
+    return;
 }
 
-bool script::structures::ScriptAST::toBoolean()  {
+bool script::structures::ScriptAST::toBoolean(bool implode)  {
         switch (type) {
             case Boolean:
                 return bool_;
@@ -50,12 +44,12 @@ bool script::structures::ScriptAST::toBoolean()  {
             case Tuple:
                 return !tuple.empty();
             default:
-                return run()->toBoolean();
+                return run(implode)->toBoolean();
         }
 
 }
 
-double script::structures::ScriptAST::toDouble()  {
+double script::structures::ScriptAST::toDouble(bool implode)  {
     switch (type) {
         case Boolean:
             return bool_ ? 1.0 : 0.0;
@@ -73,14 +67,14 @@ double script::structures::ScriptAST::toDouble()  {
         case Function:
             return (double)function->body.size();
         default:
-            return run()->toDouble();
+            return run(implode)->toDouble();
     }
 }
 
 #include <algorithm>
 #include <numeric>
 
-long long script::structures::ScriptAST::toInteger()   {
+long long script::structures::ScriptAST::toInteger(bool implode)   {
     switch (type) {
         case ObjX:
             return arrayList[0]->toInteger() ;
@@ -100,7 +94,7 @@ long long script::structures::ScriptAST::toInteger()   {
         case Function:
             return (long long)function->body.size();
         default:
-            return run()->toInteger();
+            return run(implode)->toInteger();
     }
 }
 
@@ -514,21 +508,33 @@ std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::Scrip
 }
 
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::variableEval()  {
-    if (!optGamma.get()) {
-        std::cerr << "Error: variable cannot be solved: Gamma is null" << std::endl;
-        return null_();
+//    auto it3 = globals.find(string);
+    if (!idxers->contains(string)) {
+        if (!optGamma.get()) {
+//            std::cerr << "Error: variable cannot be solved: Gamma is null" << std::endl;
+            auto it3 = globals.find(string);
+            if (it3 == globals.end())
+                return null_();
+            else
+                return it3->second;
+        } else {
+            auto it = optGamma->find(string);
+            if (it != optGamma->end()) {
+                return it->second;
+            } else
+                return null_();
+        }
     } else {
-        auto it = optGamma->find(string);
-        if (it != optGamma->end()) {
-            return it->second;
-        } else
-            return null_();
+        return idxers->get(string);
     }
 }
 
 void script::structures::ScriptAST::setContext(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& g, closure* db) {
-    optGamma = g;
-    this->db = db;
+    if (optGamma.get() != g.get())  {
+        optGamma = g;
+    }
+    if (this->db != db)
+        this->db = db;
     if (type == Function) {
         function->setContext(g, db);
     } else {
@@ -538,6 +544,7 @@ void script::structures::ScriptAST::setContext(DPtr<std::unordered_map<std::stri
         for (auto & [k,v] : tuple) {
             v->setContext(g, db);
         }
+
     }
 }
 
@@ -985,7 +992,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
 //                const auto& m = db->phi(id);
 //                auto it = m.find(label);
 //                if (it != m.cend()) {
-                    for (const auto& content2 : db->resolve_content((size_t)optGamma->at("graph")->toInteger(), id, label)) {
+                    for (const auto& content2 : db->resolve_content((size_t)idxers->getNativeInt("graph"), id, label)) {
                         StringMap<DPtr<script::structures::ScriptAST>> content;
 //                        ArrayList<DPtr<script::structures::ScriptAST>> item;
                         content["id"] = ((script::structures::ScriptAST::integer_((long long)content2.id)));
@@ -1013,12 +1020,8 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
                 }
             }
             if (db) {
-                for (const std::string& label : db->phi_keys((size_t)optGamma->at("graph")->toInteger(), id)) {
-                    for (const auto& content2 : db->resolve_content((size_t)optGamma->at("graph")->toInteger(), id, label)) {
-//                        StringMap<DPtr<script::structures::ScriptAST>> content;
-////                        ArrayList<DPtr<script::structures::ScriptAST>> item;
-//                        content["id"] = ((script::structures::ScriptAST::integer_((long long)content2.id)));
-//                        content["score"] = ((script::structures::ScriptAST::double_(content2.score)));
+                for (const std::string& label : db->phi_keys((size_t)idxers->getNativeInt("graph"), id)) {
+                    for (const auto& content2 : db->resolve_content((size_t)idxers->getNativeInt("graph"), id, label)) {
                         v.emplace_back((script::structures::ScriptAST::integer_((long long)content2.id)));
                     }
                 }
@@ -1044,7 +1047,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
                 }
             }
             if (db) {
-                for (const std::string& val :  db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id))
+                for (const std::string& val :  db->resolve_ell((size_t)idxers->getNativeInt("graph"), id))
                     v.emplace_back(script::structures::ScriptAST::string_(val));
             } else {
                 std::cerr << "WARNING: No DB being associated. Returning an empty array for Xi" << std::endl;
@@ -1074,7 +1077,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
                 }
             }
             if (db) {
-                for (const std::string& val : db->resolve_xi((size_t)optGamma->at("graph")->toInteger(), id))
+                for (const std::string& val : db->resolve_xi((size_t)idxers->getNativeInt("graph"), id))
                     v.emplace_back(script::structures::ScriptAST::string_(val));
             } else {
                 std::cerr << "WARNING: No DB being associated. Returning an empty array for Xi" << std::endl;
@@ -1100,16 +1103,16 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
             } else {
 //                DPtr<script::structures::ScriptAST> ell;
                 ArrayList<DPtr<script::structures::ScriptAST>> xi, ells, errs;
-                for (const std::string& val : db->resolve_xi((size_t)optGamma->at("graph")->toInteger(), id))
+                for (const std::string& val : db->resolve_xi((size_t)idxers->getNativeInt("graph"), id))
                     xi.emplace_back(script::structures::ScriptAST::string_(val));
-                for (const std::string& val : db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id))
+                for (const std::string& val : db->resolve_ell((size_t)idxers->getNativeInt("graph"), id))
                     ells.emplace_back(script::structures::ScriptAST::string_(val));
                 vv["@xi"] = array_(std::move(xi));
                 vv["@ell"] = array_(std::move(ells));
                 StringMap<DPtr<script::structures::ScriptAST>> cont;
-                for (const std::string& label : db->objProperties((size_t)optGamma->at("graph")->toInteger(), id)) {
+                for (const std::string& label : db->objProperties((size_t)idxers->getNativeInt("graph"), id)) {
 //                    ArrayList<DPtr<script::structures::ScriptAST>> local;
-                    auto val = db->resolve_GoodProp((size_t)optGamma->at("graph")->toInteger(), id, label);
+                    auto val = db->resolve_GoodProp((size_t)idxers->getNativeInt("graph"), id, label);
                     if (val.has_value()) {
                         if (std::holds_alternative<std::string>(val.value())) {
                             cont[label] = string_(std::get<std::string>(val.value()));
@@ -1136,9 +1139,9 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
 //                for (const double val : db->err(id))
 //                    errs.emplace_back(script::structures::ScriptAST::double_(val));
 //                vv["@err"] = array_(std::move(errs));
-                for (const std::string& label : db->phi_keys((size_t)optGamma->at("graph")->toInteger(), id)) {
+                for (const std::string& label : db->phi_keys((size_t)idxers->getNativeInt("graph"), id)) {
                     ArrayList<DPtr<script::structures::ScriptAST>> local;
-                    for (const auto& content2 : db->resolve_content((size_t)optGamma->at("graph")->toInteger(), id, label)) {
+                    for (const auto& content2 : db->resolve_content((size_t)idxers->getNativeInt("graph"), id, label)) {
                         StringMap<DPtr<script::structures::ScriptAST>> content;
 ////                        ArrayList<DPtr<script::structures::ScriptAST>> item;
                         content["id"] = ((script::structures::ScriptAST::integer_((long long)content2.id)));
@@ -1246,11 +1249,12 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
 //                    casted_type->setOptGammaRecursively(optGamma);
 //            } else
             {
-                std::stringstream ss;
-                ss << arrayList[0]->run(implode)->toString(false,implode);
+//                std::stringstream ss;
+                auto ss = arrayList[0]->run(implode)->toString(false,implode);
+                DPtr<script::structures::ScriptAST> ptr;
                 //std::cerr << ss.str() << std::endl;
-
-                return script::compiler::ScriptVisitor::eval(ss, nullptr, optGamma);
+                return script::compiler::ScriptVisitor::eval3(ss.data(), ss.length(),ptr, optGamma);
+//                delete ((((scriptParser*)parser)));
             }
         }
 
@@ -1506,25 +1510,28 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
     if (!db) {
         std::cerr << "WARNING: No DB being associated. Returning an empty array for Xi" << std::endl;
     } else {
-        auto phi_object = db->phi_keys((size_t)optGamma->at("graph")->toInteger(), id);
+        auto phi_object = db->phi_keys((size_t)idxers->getNativeInt("graph"), id);
 //        const auto& phi_object = db->resolve_content(id);
         if (phi_object.empty()) {
-            auto objProps = db->objProperties((size_t)optGamma->at("graph")->toInteger(), id);
-            const auto& XI = db->resolve_xi((size_t)optGamma->at("graph")->toInteger(), id);
+            auto objProps = db->objProperties((size_t)idxers->getNativeInt("graph"), id);
+            const auto& XI = db->resolve_xi((size_t)idxers->getNativeInt("graph"), id);
             if (objProps.empty()) {
-                std::stringstream ss;
-                ss << db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id)[0];
-//                DPtr<script::structures::ScriptAST> ;
+                void* parser{nullptr};
+//                std::stringstream ss;
+                const auto& s = db->resolve_ell((size_t)idxers->getNativeInt("graph"), id).at(0);
+                DPtr<script::structures::ScriptAST> ptr;
 //                auto lfst = ;
-                auto lfst = compiler::ScriptVisitor::eval(ss, nullptr, optGamma);
+                auto lfst = compiler::ScriptVisitor::eval3(s.data(),s.length(), ptr, optGamma);
+//                delete ((((scriptParser*)parser)));
                 if (!lfst->isType()) {
                     ArrayList<DPtr<ScriptAST>> xi;
                     for (const std::string& val : XI) {
-
-                        std::stringstream ss2;
-                        ss2 << val;
-                        DPtr<script::structures::ScriptAST> local = compiler::ScriptVisitor::eval(ss2, nullptr, optGamma);
+                        DPtr<script::structures::ScriptAST> ptr;
+//                        std::stringstream ss2;
+//                        ss2 << val;
+                        DPtr<script::structures::ScriptAST> local = compiler::ScriptVisitor::eval3(val.data(),val.length(), ptr, optGamma);
                         xi.emplace_back(local->typeInference());
+//                        delete ((((scriptParser*)parser)));
                     }
                     auto x = mgu(xi); // Actually this?
                     if (!x->isType())
@@ -1534,20 +1541,23 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
                 } else
                     return lfst;
             } else {
-                std::stringstream ss;
-                ss <<  db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id)[0];
+//                std::stringstream ss;
+                const auto& s =  db->resolve_ell((size_t)idxers->getNativeInt("graph"), id).at(0);
+                DPtr<script::structures::ScriptAST> ptr;
 //                DPtr<script::structures::ScriptAST> lfst;
                 auto lfst =
-                compiler::ScriptVisitor::eval(ss, nullptr, optGamma);
+                compiler::ScriptVisitor::eval3(s.data(),s.length(), ptr, optGamma);
+//                delete ((scriptParser*)(ptr));
                 if (!lfst->isType())
                     throw std::runtime_error("ERROR: the label of an object should express a type!");
                 ArrayList<DPtr<ScriptAST>> xi;
                 for (const std::string& val : XI) {
-
-                    std::stringstream ss2;
-                    ss2 << val;
-                    DPtr<script::structures::ScriptAST> lfst2 = compiler::ScriptVisitor::eval(ss2, nullptr, optGamma);
+                    DPtr<script::structures::ScriptAST> ptr4;
+//                    std::stringstream ss2;
+//                    ss2 << val;
+                    DPtr<script::structures::ScriptAST> lfst2 = compiler::ScriptVisitor::eval3(val.data(),val.size(), ptr4, optGamma);
                     xi.emplace_back(lfst2->typeInference());
+//                    delete (scriptParser*)(ptr);
                 }
                 auto x = mgu(xi); // Actually this?
                 if (x->type == TupleT) {
@@ -1558,7 +1568,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
             }
         } else {
             for (const std::string& label : phi_object) {
-                auto v = db->resolve_content((size_t)optGamma->at("graph")->toInteger(), id, label);
+                auto v = db->resolve_content((size_t)idxers->getNativeInt("graph"), id, label);
                 ArrayList<DPtr<ScriptAST>> local;
                 for (const auto& content : v)
                     local.emplace_back(upTypeObjX(content.id));
@@ -1570,13 +1580,17 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::upTypeObjX(si
 //                    local.emplace_back(upTypeObjX(content.id));
 //                vv[k] = mgu(local);
 //            }
+            void* ptr{nullptr};
+//                    std::stringstream ss2;
+//                    ss2 << val;
+            DPtr<script::structures::ScriptAST>ptr4;
 
-            std::stringstream ss;
-            ss <<  db->resolve_ell((size_t)optGamma->at("graph")->toInteger(), id)[0];
+            const auto& s = db->resolve_ell((size_t)idxers->getNativeInt("graph"), id).at(0);
 //            auto lfst =
-            DPtr<script::structures::ScriptAST> lfst = compiler::ScriptVisitor::eval(ss, nullptr, optGamma);
+            DPtr<script::structures::ScriptAST> lfst = compiler::ScriptVisitor::eval3(s.data(),s.length(), ptr4, optGamma);
             if (!lfst->isType())
                 throw std::runtime_error("ERROR: the label of an object should express a type!");
+            delete (scriptParser*)(ptr);
             return lex_type_(std::move(lfst), std::move(vv));
         }
     }

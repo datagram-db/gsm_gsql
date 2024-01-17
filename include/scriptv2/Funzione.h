@@ -18,7 +18,7 @@ namespace script::structures {
         std::string parameter;
         ArrayList<DPtr<ScriptAST>> body;
         DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>> externalToUpdate;
-        closure* database;
+//        closure* database;
 
         void setDBRecursively(closure* db);
 

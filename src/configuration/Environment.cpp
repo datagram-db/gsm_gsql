@@ -120,10 +120,11 @@ void Environment::run_script() {
     DPtr<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>> map = std::make_shared<std::unordered_map<std::string, DPtr<script::structures::ScriptAST>>>();
     map->insert(std::make_pair("graph", script::structures::ScriptAST::integer_(conf.run_script_over_graph)));
     while ((str = getLine()) != "quit!") {
-        std::stringstream  ss;
-        ss << str;
-        DPtr<script::structures::ScriptAST> program = script::compiler::ScriptVisitor::eval(ss,nullptr, map);
+//        void* parser{nullptr};
+        DPtr<script::structures::ScriptAST> ptr;
+        DPtr<script::structures::ScriptAST> program = script::compiler::ScriptVisitor::eval3(str.c_str(), str.length(),ptr, map);
         std::cout << program->run()->toString() << std::endl;
+//        delete ((((scriptParser*)parser)));
     }
 }
 
@@ -310,7 +311,7 @@ void Environment::benchmark_log() const {
         LOG(INFO) << " * Merging old data with updates: " << result.materialise_time_final << " (ms)";
         LOG(INFO) << "=>  TOTAL Materialisation: " << result.materialise_time_collection+result.materialise_time_final << " (ms)";
         LOG(TRACE) << "Serialising into a csv file..." << std::flush;
-        std::ofstream file(file_name);
+        std::ofstream file(file_name, std::ios_base::app);
         if (doHeader)
             result.log_header(file);
         result.log_data(file);

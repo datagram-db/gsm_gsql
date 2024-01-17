@@ -1,0 +1,97 @@
+id:0
+ell:
+VBP
+root
+.
+xi:
+play
+.
+properties:
+"pos"	"4"
+.
+phi:
+"punct"
+	1.0	1
+;"nsubj"
+	1.0	2
+	1.0	3
+;"dobj"
+	1.0	4
+;.
+
+id:2
+ell:
+noun
+.
+xi:
+alice
+.
+properties:
+"number"	"singular"
+"pos"	"1"
+"specification"	"common"
+.
+phi:
+"cc"
+	1.0	5
+;"conj"
+	1.0	3
+;.
+
+id:5
+ell:
+CC
+.
+xi:
+and
+.
+properties:
+"pos"	"2"
+.
+phi:
+.
+
+id:3
+ell:
+noun
+.
+xi:
+bob
+.
+properties:
+"number"	"singular"
+"pos"	"3"
+"specification"	"common"
+.
+phi:
+.
+
+id:4
+ell:
+noun
+.
+xi:
+cricket
+.
+properties:
+"number"	"singular"
+"pos"	"5"
+"specification"	"common"
+.
+phi:
+.
+
+id:1
+ell:
+<dot>
+.
+xi:
+<dot>
+.
+properties:
+"pos"	"6"
+.
+phi:
+.
+
+

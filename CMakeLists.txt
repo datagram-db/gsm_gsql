@@ -94,7 +94,7 @@ add_library(yaucl_graph OBJECT
         )
 target_link_libraries(yaucl_graph  yaucl_hashing roaring)
 
-add_library(gsm_script ./antlr4/scriptv2/scriptBaseListener.cpp
+add_library(gsm_script OBJECT ./antlr4/scriptv2/scriptBaseListener.cpp
         ./antlr4/scriptv2/scriptBaseVisitor.cpp
         ./antlr4/scriptv2/scriptLexer.cpp
         ./antlr4/scriptv2/scriptParser.cpp
@@ -103,13 +103,13 @@ add_library(gsm_script ./antlr4/scriptv2/scriptBaseListener.cpp
         ./src/scriptv2/ScriptAST.cpp ./include/scriptv2/ScriptAST.h ./src/scriptv2/Funzione.cpp ./include/scriptv2/Funzione.h ./src/scriptv2/Javification.cpp ./include/scriptv2/Javification.h ./src/scriptv2/ScriptVisitor.cpp ./include/scriptv2/ScriptVisitor.h)
 target_link_libraries(gsm_script antlr4_static)
 
-add_library(gsm2  antlr4/graph_grammar/simple_graph_grammarLexer.cpp antlr4/graph_grammar/simple_graph_grammarParser.cpp antlr4/graph_grammar/simple_graph_grammarListener.cpp  antlr4/graph_grammar/simple_graph_grammarVisitor.cpp src/database/PhiTable.cpp include/database/PhiTable.h src/database/AttributeTable.cpp include/database/AttributeTable.h src/database/SimplifiedFuzzyStringMatching.cpp include/database/SimplifiedFuzzyStringMatching.h src/database/LinearGSM.cpp include/database/LinearGSM.h src/database/ActivityTable.cpp include/database/ActivityTable.h src/result.cpp include/result.h src/database/gsm_indices.cpp include/database/gsm_indices.h src/queries/DataQuery.cpp include/queries/DataQuery.h src/database/gsm_object_xi_content.cpp include/database/gsm_object_xi_content.h include/simple_pair_hash.h src/queries/DataPredicate.cpp include/queries/DataPredicate.h
+add_library(gsm2 OBJECT antlr4/graph_grammar/simple_graph_grammarLexer.cpp antlr4/graph_grammar/simple_graph_grammarParser.cpp antlr4/graph_grammar/simple_graph_grammarListener.cpp  antlr4/graph_grammar/simple_graph_grammarVisitor.cpp src/database/PhiTable.cpp include/database/PhiTable.h src/database/AttributeTable.cpp include/database/AttributeTable.h src/database/SimplifiedFuzzyStringMatching.cpp include/database/SimplifiedFuzzyStringMatching.h src/database/LinearGSM.cpp include/database/LinearGSM.h src/database/ActivityTable.cpp include/database/ActivityTable.h src/result.cpp include/result.h src/database/gsm_indices.cpp include/database/gsm_indices.h src/queries/DataQuery.cpp include/queries/DataQuery.h src/database/gsm_object_xi_content.cpp include/database/gsm_object_xi_content.h include/simple_pair_hash.h src/queries/DataPredicate.cpp include/queries/DataPredicate.h
         #src/database/AtomizingPipeline2.cpp include/database/AtomizingPipeline2.h
         submodules/easylogging/src/easylogging++.cc submodules/easylogging/src/easylogging++.h
         src/database/GSMPatternVisitor.cpp include/database/GSMPatternVisitor.h src/database/GraphEdgeMatchTable.cpp include/database/GraphEdgeMatchTable.h src/database/SimpleTable.cpp include/database/SimpleTable.h include/database/gsm_object.h src/database/gsm_object.cpp include/database/gsm_inmemory_db.h src/database/gsm_inmemory_db.cpp include/database/utility.h src/queries/preserve_results.cpp include/queries/preserve_results.h src/queries/delta_updates.cpp include/queries/delta_updates.h src/queries/closure.cpp include/queries/closure.h src/database/GSMIso.cpp include/database/GSMIso.h include/parsing.h include/configuration/base.h src/configuration/Serialisation.cpp include/configuration/Serialisation.h src/configuration/Configuration.cpp include/configuration/Configuration.h src/configuration/Environment.cpp include/configuration/Environment.h)
 target_link_libraries(gsm2 antlr4_static yaucl_structures roaring  yaucl_hashing yaucl_graph )
 
-add_executable(gsm2_server main.cpp src/queries/NestedResultTable.cpp include/queries/NestedResultTable.h)
+add_executable(gsm2_server main.cpp src/queries/NestedResultTable.cpp include/queries/NestedResultTable.h src/database/SchemaIndexer.cpp include/database/SchemaIndexer.h)
 target_link_libraries(gsm2_server  antlr4_static yaucl_structures roaring  yaucl_hashing yaucl_graph  gsm2 gsm_script)
 
 #enable_testing ()

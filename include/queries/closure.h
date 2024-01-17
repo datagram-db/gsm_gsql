@@ -1007,7 +1007,7 @@ public:
 //                fill_vector_with_case(object_id, cell.val);
             }
         }
-        return {object_id, false, offset.first, offset.second};
+        return {std::move(object_id), false, offset.first, offset.second};
     }
 
 //    inline
@@ -1099,7 +1099,7 @@ public:
                 else
                     object_id.emplace_back(-1);
             }
-            return {object_id, true, offset.first, offset.second};
+            return {std::move(object_id), true, offset.first, offset.second};
         }
     }
 
@@ -1160,8 +1160,8 @@ public:
             for (size_t time = 0, T = g.container_order.size(); time<T; time++)
                 // Visiting all the vertices associated to the same time
                 for (const auto& vertex : g.container_order.at(T-time-1)) {
-                    if (vertex == 0)
-                        std::cout << "HERE" << std::endl;
+//                    if (vertex == 0)
+//                        std::cout << "HERE" << std::endl;
 
                     /// TODO: sort the patterns in dependency order, i.e., depending which should be run first
                     ///       This needs to be inferred previously
@@ -1238,8 +1238,7 @@ public:
 
                                 Interpret I(graph_id, pattern_id, pattern_result.first, it->second, table_offset, *this, pr.morphisms, forloading);
                                 if (pattern.has_where) {
-                                    auto result = I.interpret(pattern.where, 1);
-                                    if ((result.empty())) {
+                                    if ((I.interpret(pattern.where, 1).empty())) {
                                         table_offset++;
                                         continue; //next entry
                                     }
@@ -1362,16 +1361,25 @@ static inline
 std::string getOstringstream(
         const closure::Interpret &I,
         const char *delim,const NestedResultTable &containingStrings)  {
-    std::ostringstream imploded;
+//    std::ostringstream imploded;
     switch (containingStrings.expectedType) {
         case NestedResultTable::RT_STRING:
             return std::get<std::string>(containingStrings.content);
 
         case NestedResultTable::RT_VSTRING: {
             const auto& it = std::get<std::vector<std::string>>(containingStrings.content);
-            std::copy(it.begin(), it.end(),
-                      std::ostream_iterator<std::string>(imploded, delim));
-            return imploded.str();
+            size_t len = 0;
+            for (const auto& x : it) len += x.size();
+            std::string s;
+            s.reserve(len);
+            for (size_t i = 0, N = it.size(); i<N; i++) {
+                s += it.at(i);
+                if (i != (N-2))
+                    s += (*delim);
+            }
+//            std::copy(it.begin(), it.end(),
+//                      std::ostream_iterator<std::string>(imploded, delim));
+            return s;
         }
 
         case NestedResultTable::RT_SIZET: {
@@ -1391,16 +1399,28 @@ std::string getOstringstream(
                     M[V.at(index)].insert(tmp.getString(i));
                 index++;
             }
+            std::string s; size_t len = 0;
             for (auto it = M.begin(), en = M.end(); it != en; ) {
-                std::ostringstream local;
-                std::copy(it->second.begin(), it->second.end(),
-                          std::ostream_iterator<std::string>(local, delim));
-                imploded << local.str();
+                for (const auto& x : it->second) len += x.size();
+                it++;
+            }
+            for (auto it = M.begin(), en = M.end(); it != en; ) {
+                s.reserve(len);
+                for (auto ptr = it->second.begin(), en = it->second.end(); ptr != en; ) {
+                    s += *ptr;
+                    ptr++;
+                    if (ptr != en)
+                        s += (*delim);
+                }
+//                std::ostringstream local;
+//                std::copy(it->second.begin(), it->second.end(),
+//                          std::ostream_iterator<std::string>(local, delim));
+//                imploded << local.str();
                 it++;
                 if (it != en)
-                    imploded << delim;
+                    s += (*delim);
             }
-            return imploded.str();
+            return s;
         }
 
 
@@ -1474,8 +1494,8 @@ static inline
                    NestedResultTable &NAME) {
        auto nameType = (NAME.size()) > 1 ? NestedResultTable::RT_VSTRING : NestedResultTable::RT_STRING;
        auto valType = (VAL.size()) > 1 ? vectorType : simpleType;
-       if (VAR.containsInt(30))
-           std::cerr << "DEBUG" << std::endl;
+//       if (VAR.containsInt(30))
+//           std::cerr << "DEBUG" << std::endl;
        if ((VAR.cell_nested_morphism == VAL.cell_nested_morphism) &&
            (VAL.cell_nested_morphism == NAME.cell_nested_morphism)) {
            OrderedSet rLS{(size_t)0}, rNS{(size_t)0};

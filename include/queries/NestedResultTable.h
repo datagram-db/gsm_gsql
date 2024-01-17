@@ -33,6 +33,11 @@ struct OrderedSet {
     size_t                  cardo;
 //    bool                    ignore;
 
+OrderedSet(const OrderedSet& x) : set{x.set}, cardo{x.cardo} {}
+OrderedSet(OrderedSet&& x) : set{x.set}, cardo{x.cardo} {}
+OrderedSet& operator=(const OrderedSet& x) { set = x.set; cardo = x.cardo; return *this; }
+OrderedSet& operator=(OrderedSet&& x) { set = std::move(x.set); cardo = x.cardo;return *this;}
+
     OrderedSet(roaring::Roaring64Map&& set, size_t cardinality) : set(set), cardo(cardinality){}
     OrderedSet(size_t maxSize) : cardo{maxSize}  {
         if (maxSize > 0) set.addRange(0, maxSize);
@@ -87,17 +92,7 @@ struct OrderedSet {
 };
 
 struct NestedResultTable {
-    ssize_t cell_nested_morphism{-1};
-    ssize_t column{-1};
-    std::variant<
-            std::string,
-            std::vector<std::string>,
-            size_t,
-            std::vector<size_t>,
-            std::vector<gsm_object_xi_content>,
-            std::vector<std::vector<gsm_object_xi_content>>,
-            std::shared_ptr<script::structures::ScriptAST>
-    > content{(size_t) 0};
+
     enum variant_type_cpp {
         RT_STRING,
         RT_VSTRING,
@@ -146,12 +141,36 @@ struct NestedResultTable {
         R_SCRIPT,//RT_SCRIPT,
         R_NONE//RT_NONE
     };
+
+    ssize_t cell_nested_morphism{-1};
+    ssize_t column{-1};
+    std::variant<
+            std::string,
+            std::vector<std::string>,
+            size_t,
+            std::vector<size_t>,
+            std::vector<gsm_object_xi_content>,
+            std::vector<std::vector<gsm_object_xi_content>>,
+            std::shared_ptr<script::structures::ScriptAST>
+    > content{(size_t) 0};
     variant_type t{R_NONE};
     bool areIndicesIndicated{false};
-//    std::vector<size_t> indices{};
     std::shared_ptr<NestedResultTable> fields{nullptr};
     size_t opt_offset{0};
     variant_type_cpp expectedType{RT_NONE};
+
+//    NestedResultTable& operator=(const NestedResultTable& x) = default;
+    NestedResultTable& operator=(NestedResultTable&& x) {
+        cell_nested_morphism = x.cell_nested_morphism;
+        column = x.column;
+        opt_offset = x.opt_offset;
+        expectedType= x.expectedType;
+        content = std::move(x.content);
+        t = x.t;
+        areIndicesIndicated = x.areIndicesIndicated;
+        fields = std::move(x.fields);
+        return *this;
+    }
 
 
     template<typename T> inline T getV(size_t i) const {
@@ -267,7 +286,7 @@ struct NestedResultTable {
     }
 
 
-    DEFAULT_COPY_ASSGN(NestedResultTable);
+    DEFAULT_COPY_CONSTRS(NestedResultTable);
 
     NestedResultTable()
             : areIndicesIndicated{false}, t{R_NONE}, content{(size_t) 0}, column{-1},
@@ -286,7 +305,7 @@ struct NestedResultTable {
                                                                                     t{R_LABEL}, expectedType{RT_STRING},
                                                                                     areIndicesIndicated{false} {}
 
-    NestedResultTable(const std::vector<std::string> &index, ssize_t cnm = -1, ssize_t c = -1) : cell_nested_morphism{
+    NestedResultTable(std::vector<std::string> &&index, ssize_t cnm = -1, ssize_t c = -1) : cell_nested_morphism{
             cnm}, column{c}, content(index), t{R_NESTED_LABEL}, expectedType{RT_VSTRING}, areIndicesIndicated{false} {}
 
 //    NestedResultTable(const std::vector<std::string> &index, ssize_t cnm = -1, ssize_t c = -1) : cell_nested_morphism{cnm},
@@ -295,18 +314,22 @@ struct NestedResultTable {
 //                                                                                            areIndicesIndicated{
 //                                                                                                    false} {}
 
-    NestedResultTable(const std::vector<size_t> &index, bool node_or_edge_otherwise, ssize_t cnm = -1, ssize_t c = -1)
+    NestedResultTable(std::vector<size_t> &&index, bool node_or_edge_otherwise, ssize_t cnm = -1, ssize_t c = -1)
             : cell_nested_morphism{cnm}, column{c}, content(index), expectedType{RT_VSIZET},
               t{node_or_edge_otherwise ? R_NESTED_NODE : R_NESTED_EDGE}, areIndicesIndicated{false} {}
-
-    NestedResultTable(const std::vector<size_t> &index, variant_type node_or_edge_otherwise, ssize_t cnm = -1,
+    NestedResultTable(const std::vector<size_t> &index, bool node_or_edge_otherwise, ssize_t cnm = -1, ssize_t c = -1)
+    : cell_nested_morphism{cnm}, column{c}, content(index), expectedType{RT_VSIZET},
+    t{node_or_edge_otherwise ? R_NESTED_NODE : R_NESTED_EDGE}, areIndicesIndicated{false} {}
+    NestedResultTable(std::vector<size_t> &&index, variant_type node_or_edge_otherwise, ssize_t cnm = -1,
                       ssize_t c = -1) : cell_nested_morphism{cnm}, column{c}, content(index), t{node_or_edge_otherwise},
                                         areIndicesIndicated{false}, expectedType{RT_VSIZET} {}
-
-    NestedResultTable(const std::vector<gsm_object_xi_content> &index, ssize_t cnm = -1, ssize_t c = -1)
+    NestedResultTable(const std::vector<size_t> &index, variant_type node_or_edge_otherwise, ssize_t cnm = -1,
+ssize_t c = -1) : cell_nested_morphism{cnm}, column{c}, content(index), t{node_or_edge_otherwise},
+areIndicesIndicated{false}, expectedType{RT_VSIZET} {}
+    NestedResultTable(std::vector<gsm_object_xi_content> &&index, ssize_t cnm = -1, ssize_t c = -1)
             : cell_nested_morphism{cnm}, column{c}, content(index), t{R_CONTENT}, areIndicesIndicated{false}, expectedType{RT_CONTENT} {}
 
-    NestedResultTable(const std::vector<std::vector<gsm_object_xi_content>> &index, ssize_t cnm = -1, ssize_t c = -1)
+    NestedResultTable(std::vector<std::vector<gsm_object_xi_content>> &&index, ssize_t cnm = -1, ssize_t c = -1)
             : cell_nested_morphism{cnm}, column{c}, content(index), t{R_NESTED_CONTENT}, areIndicesIndicated{false}, expectedType{RT_VCONTENT} {}
 
     NestedResultTable(std::shared_ptr<script::structures::ScriptAST> &&index, ssize_t cnm = -1, ssize_t c = -1)
