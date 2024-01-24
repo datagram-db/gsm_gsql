@@ -1,5 +1,5 @@
 p1 = (X)--[l:det||nmod_poss||amod||mark||case||punct]->(Y)                   // Graph matching, First pattern
-      where ((TEST "|varphi (var(\"Y\"))| == 0") ∧ ((Y unmatched p2 . K) ∧ (Y unmatched p3 . T)))
+      where ((TEST "= |𝜑 ⦃\"Y\"⦄ | 0 ") ∧ ((Y unmatched p2 . K) ∧ (Y unmatched p3 . T)))
      ↪  set (𝜋 (label l) @ X) as (𝜉 0 @ Y)                        // Property extension
        del Y                                             // Removing a node
 
@@ -37,6 +37,7 @@ p2 = (>> H)<-[∀l:]--(X)                                   // Graph matching, S
 p3 = (V)--[∀n:nsubj]->(>>S)
         --[? mark]->(M)
         --[? aux]->(A)
+        --[? neg]->(N)
         --[∀l:dobj||ccomp||nmod]->(>>Z) // Future work: nested join between >>Z and >>Z from the join, when required. This might require to re-do the join semantics
      (Z)--[? case]->(T)
 
@@ -44,9 +45,9 @@ p3 = (V)--[∀n:nsubj]->(>>S)
         //new s
         set(φ (if ((label l ) = nmod) then    // Defining the label in function of T, if this exists,
                                                                       // otherwise using V
-                                              SCRIPT "((xi var(\"A\"))[0]) ++ \" \" ++ ((xi var(\"V\"))[0]) ++ \" \" ++ ((xi var(\"T\"))[0])"
+                                              SCRIPT "(^(^(^(^ (^ ( [(𝜉 ⦃\"A\"⦄) 0])  \" \") ([ (𝜉 ⦃\"N\"⦄)  0])) \" \") ([ (𝜉 ⦃\"V\"⦄)  0])) \" \") ([ (𝜉 ⦃\"T\"⦄)  0])"
                                              else
-                                              SCRIPT "((xi var(\"A\"))[0]) ++ \" \" ++ ((xi var(\"V\"))[0])"
+                                              SCRIPT "^(^(^ (^ ( [(𝜉 ⦃\"A\"⦄) 0])  \" \") ([ (𝜉 ⦃\"N\"⦄)  0])) \" \") ([ (𝜉 ⦃\"V\"⦄)  0])"
                                              ), S) as Z
         //set(   𝜋 mark @ s) as (𝜉 0 @ M)
         //set(   φ orig , s) as S
@@ -63,7 +64,7 @@ p4 = (V)--[∀l:dobj||ccomp||nmod]->(Z)
      ↪  new j
         set(φ (if ((label l ) = nmod) then    // Defining the label in function of T, if this exists,
                                                                               // otherwise using V
-                                                      SCRIPT "((xi var(\"V\"))[0]) ++ \" \" ++ ((xi var(\"T\"))[0])"
+                                                      SCRIPT "^ (^ ( [(𝜉 ⦃\"V\"⦄) 0])  \" \") ([ (𝜉 ⦃\"T\"⦄)  0])"
                                                      else
                                                       (𝜉 0 @ V)
                                                      ), j) as Z

@@ -484,7 +484,7 @@ namespace script::structures {
             return BOTCCT;
         }
 
-        bool isImmediateInteger() const {
+        inline bool isImmediateInteger() const {
                 switch (type) {
                     case ObjX:
                         return arrayList[0]->isImmediateInteger() ;

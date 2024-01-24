@@ -125,7 +125,7 @@ namespace script {
             std::any visitPow(scriptParser::PowContext *context) override;
             std::any visitSin(scriptParser::SinContext *context) override;
             std::any visitFloor(scriptParser::FloorContext *context) override;
-            std::any visitTuple_pair(scriptParser::Tuple_pairContext *context) override;
+//            std::any visitTuple_pair(scriptParser::Tuple_pairContext *context) override;
             std::any visitType_bool(scriptParser::Type_boolContext *context) override;
             std::any visitEnsure(scriptParser::EnsureContext *context) override;
             std::any visitKind(scriptParser::KindContext *context) override;
@@ -150,6 +150,19 @@ namespace script {
             std::any visitNull(scriptParser::NullContext *context) override;
             std::any visitType_any(scriptParser::Type_anyContext *context) override;
 
+            std::any visitExpr_block(scriptParser::Expr_blockContext *context) override;
+
+            void innerBlock(scriptParser::Inner_blockContext*, ArrayList<DPtr<script::structures::ScriptAST>>&);
+            void inTuplePair(scriptParser::In_tuple_pairContext*, StringMap<DPtr<script::structures::ScriptAST>>&);
+            std::any visitInner_block(scriptParser::Inner_blockContext *context) override;
+
+            std::any visitIn_tuple_pair(scriptParser::In_tuple_pairContext *context) override;
+
+            std::any visitTerm_operand(scriptParser::Term_operandContext *context) override;
+
+            std::any visitExprterm(scriptParser::ExprtermContext *context) override;
+
+            std::any visitCp(scriptParser::CpContext *context) override;
         };
 
     } // script

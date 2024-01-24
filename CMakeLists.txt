@@ -22,7 +22,7 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     set(CMAKE_CXX_FLAGS_DEBUG "-g")
 else()
     message(WARNING "Compiling in optimized mode. Level=3")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
 include_directories(submodules/args)

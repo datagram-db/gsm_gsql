@@ -1,5 +1,5 @@
 
-// Generated from antlr4/script/script.g4 by ANTLR 4.11.1
+// Generated from antlr4/scriptv2/script.g4 by ANTLR 4.11.1
 
 #pragma once
 
@@ -19,16 +19,15 @@ public:
     T__26 = 27, T__27 = 28, T__28 = 29, T__29 = 30, T__30 = 31, T__31 = 32, 
     T__32 = 33, T__33 = 34, T__34 = 35, T__35 = 36, T__36 = 37, T__37 = 38, 
     T__38 = 39, T__39 = 40, T__40 = 41, T__41 = 42, T__42 = 43, T__43 = 44, 
-    VOID = 45, BOT = 46, COERCE = 47, ObjT = 48, TYPEOF = 49, SIGMA = 50, 
-    ASSERT = 51, STRINGT = 52, LABELT = 53, DOUBLET = 54, ANYT = 55, BOOLT = 56, 
-    INTT = 57, START = 58, KIND = 59, LISTT = 60, SUBTYPE = 61, ALPAREN = 62, 
-    ARPAREN = 63, LPAREN = 64, RPAREN = 65, BOOL = 66, AND_TYPE = 67, OR_TYPE = 68, 
-    FUN = 69, NOT = 70, IF = 71, THEN = 72, ELSE = 73, REMOVE = 74, FROM = 75, 
-    LOG = 76, POW = 77, SIN = 78, COS = 79, TAN = 80, PHI = 81, ELL = 82, 
-    XI = 83, INJ = 84, OBJ = 85, FLAT = 86, SELFX = 87, VARPHI = 88, CROSS = 89, 
-    SCRIPT = 90, GSQL = 91, CREATEDB = 92, VARNAME = 93, CREATE = 94, ELECT = 95, 
-    MAP = 96, DISJOINT = 97, FOLD = 98, ENFORCE = 99, EscapedString = 100, 
-    NUMBER = 101, INTEGER = 102, SPACE = 103, COMMENT = 104, LINE_COMMENT = 105
+    T__44 = 45, T__45 = 46, T__46 = 47, T__47 = 48, T__48 = 49, T__49 = 50, 
+    T__50 = 51, VOID = 52, BOT = 53, COERCE = 54, ObjT = 55, TYPEOF = 56, 
+    SIGMA = 57, ASSERT = 58, STRINGT = 59, LABELT = 60, DOUBLET = 61, ANYT = 62, 
+    BOOLT = 63, INTT = 64, START = 65, KIND = 66, LISTT = 67, SUBTYPE = 68, 
+    ALPAREN = 69, ARPAREN = 70, LPAREN = 71, RPAREN = 72, BOOL = 73, AND_TYPE = 74, 
+    OR_TYPE = 75, FUN = 76, NOT = 77, LOG = 78, POW = 79, SIN = 80, COS = 81, 
+    TAN = 82, PHI = 83, ELL = 84, XI = 85, INJ = 86, OBJ = 87, FLAT = 88, 
+    SELFX = 89, VARPHI = 90, CROSS = 91, VARNAME = 92, ENFORCE = 93, EscapedString = 94, 
+    NUMBER = 95, INTEGER = 96, SPACE = 97, COMMENT = 98, LINE_COMMENT = 99
   };
 
   explicit scriptLexer(antlr4::CharStream *input);

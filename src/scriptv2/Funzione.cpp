@@ -38,6 +38,12 @@ void script::structures::Funzione::setContext(DPtr<std::unordered_map<std::strin
         ref->setContext(context, db);
 }
 
+void script::structures::Funzione::addExpressios(ArrayList<DPtr<ScriptAST>>&& expr) {
+    body = std::move(expr);
+    for (auto& e : body)
+        e->optGamma = externalToUpdate;
+}
+
 void script::structures::Funzione::addExpression(DPtr<ScriptAST>&& expr) {
     expr->optGamma = externalToUpdate;
 //    expr->db = database;

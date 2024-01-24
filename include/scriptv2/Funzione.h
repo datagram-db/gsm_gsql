@@ -27,6 +27,7 @@ namespace script::structures {
         Funzione(DPtr<std::unordered_map<std::string, DPtr<ScriptAST>>>& g, const std::string& x); // : externalToUpdate{g}, parameter{x} {}
 
         void addExpression(DPtr<ScriptAST>&& expr);
+        void addExpressios(ArrayList<DPtr<ScriptAST>>&& expr) ;
 //        void addExpression(DPtr<ScriptAST>&& expr) {
 //            expr->optGamma = externalToUpdate;
 //            body.emplace_back(expr);
