@@ -6,6 +6,9 @@ import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
+import org.json.simple.JSONArray;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
@@ -18,6 +21,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+
+import org.json.simple.JSONObject;
 
 
 public class Main implements AutoCloseable {
@@ -63,8 +68,6 @@ public class Main implements AutoCloseable {
         String csv = "results.csv";
         CSVWriter writer = new CSVWriter(new FileWriter(csv, true));
 
-
-
         StatefulBeanToCsvBuilder<CypherResult> builder = new StatefulBeanToCsvBuilder<>(writer);
         StatefulBeanToCsv<CypherResult> beanWriter = builder.build();
 
@@ -75,7 +78,7 @@ public class Main implements AutoCloseable {
         List<String> fileStream = Files.readAllLines(Paths.get(csv));
         int noOfLines = fileStream.size();
         if (noOfLines == 0) {
-            writer.writeAll(Collections.singleton(new String[]{"Query", "Create (ms)", "Rewrite (ms)", "Total (ms)"}));
+            writer.writeAll(Collections.singleton(new String[]{"Query", "Iterations", "Sentence Length", "Avg. Create (ms)", "Avg. Rewrite (ms)", "Avg. Total (ms)"}));
         }
 
         beanWriter.write(results);
@@ -87,16 +90,24 @@ public class Main implements AutoCloseable {
         private String query;
 
         @CsvBindByPosition(position = 1)
-        private long create;
+        private int iterations;
 
         @CsvBindByPosition(position = 2)
-        private long rewrite;
+        private int sentenceLength;
 
         @CsvBindByPosition(position = 3)
-        private long total;
+        private float create;
 
-        CypherResult(String query, long create, long rewrite, long total) {
+        @CsvBindByPosition(position = 4)
+        private float rewrite;
+
+        @CsvBindByPosition(position = 5)
+        private float total;
+
+        CypherResult(String query, int iterations, int sentenceLength, float create, float rewrite, float total) {
             this.query = query;
+            this.iterations = iterations;
+            this.sentenceLength = sentenceLength;
             this.create = create;
             this.rewrite = rewrite;
             this.total = total;
@@ -131,26 +142,70 @@ public class Main implements AutoCloseable {
         return params;
     }
 
-    public static void runQueries(Map<String, List<String>> params, Main database) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException, IOException {
+    public static void createImportJson(Map<String, List<String>> params, Main database, JSONObject jsonObject, String sentence) {
+        try (FileWriter file = new FileWriter("temp.json")) {
+            file.write(getJsonArrayString(jsonObject, "nodes") + getJsonArrayString(jsonObject, "rels"));
+            runTests(params, database, sentence);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (CsvRequiredFieldEmptyException | CsvDataTypeMismatchException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void getCypherSentence(Map<String, List<String>> params, Main database) {
+        JSONParser parser = new JSONParser();
+
+        InputStream inputStream = Main.class.getClassLoader().getResourceAsStream(params.get("db").getFirst());
+        InputStreamReader streamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+
+        try (BufferedReader reader = new BufferedReader(streamReader);) {
+            JSONArray jsonArray = (JSONArray) parser.parse(reader);
+
+            for (int i = 0; i < jsonArray.toArray().length; i++) {
+                JSONObject jsonObject = (JSONObject) jsonArray.get(i);
+                createImportJson(params, database, (JSONObject) jsonObject.get("cypher"), jsonObject.get("first_sentence").toString());
+            }
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void runTests(Map<String, List<String>> params, Main database, String sentence) throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
         int loopNo = Integer.parseInt(params.get("it").getFirst());
         if (loopNo == 0) {
             loopNo = 1;
         }
 
-        String queryType = params.get("query").getFirst();
-
         float avgTime = 0;
+        float avgCreateTime = 0;
+        float avgRewriteTime = 0;
         for (int i = 0; i < loopNo; i++) {
-//            long createTime = database.runQuery(database.getQuery("queries/" + queryType + "Create.cypher"));
-            long createTime = database.runQuery(database.getQuery("queries/" + queryType + "Import.cypher"));
-            long rewriteTime = database.runQuery(database.getQuery("queries/" + queryType + "Rewrite.cypher"));
-            long totalTime = createTime + rewriteTime;
+            float createTime = database.runQuery(database.getQuery("queries/import.cypher")); // check for local file path
+            float rewriteTime = database.runQuery(database.getQuery("queries/complexRewrite.cypher"));
+            float totalTime = createTime + rewriteTime;
             avgTime += totalTime;
-            database.writeToCsv(new CypherResult(queryType, createTime, rewriteTime, totalTime));
+            avgCreateTime += createTime;
+            avgRewriteTime += rewriteTime;
+//            database.writeToCsv(new CypherResult(sentence, sentence.length(), createTime, rewriteTime, totalTime));
             System.out.println("Total execution time: " + totalTime + "ms");
             deleteGraph(database);
         }
+        database.writeToCsv(new CypherResult(sentence, loopNo, sentence.length(), avgCreateTime / loopNo, avgRewriteTime/ loopNo, avgTime / loopNo));
         System.out.println("Average execution time " + avgTime / loopNo + "ms");
+    }
+
+    public static String getJsonArrayString(JSONObject jsonObject, String arrName) {
+        String str = "";
+
+        System.out.println(jsonObject);
+        JSONArray msg = (JSONArray) jsonObject.get(arrName);
+        Iterator iterator = msg.iterator();
+        while (iterator.hasNext()) {
+            str = str.concat(iterator.next().toString() + "\n");
+        }
+
+        return str;
     }
 
     public static void deleteGraph(Main database) throws IOException {
@@ -162,62 +217,7 @@ public class Main implements AutoCloseable {
         Map<String, List<String>> params = getArguments(args);
 
         try (var database = new Main("bolt://localhost:7687", "neo4j", "Neo4j!!!")) {
-            runQueries(params, database);
-
-//            boolean loop = true;
-//            boolean logging = true;
-//
-//            while (loop) {
-//                Scanner myObj = new Scanner(System.in);  // Create a Scanner object
-//                System.out.println("Pick a query:");
-//                System.out.println("(1) Non-recursive (Alice and Bob play cricket)");
-//                System.out.println("(2) Recursive (Matt and Tray believe that either Alice and Bob and Carl play cricket or Carl and Dan will not have a way to amuse themselves)");
-//                System.out.println("(3) Clear graph");
-//                System.out.println("(4) Toggle logging (" + logging + ")");
-//                System.out.println("(q) Quit");
-//
-//                String input = myObj.nextLine();  // Read user input
-//                switch (input) {
-//                    case "1":
-//                        int loopNo = Integer.parseInt(params.get("it").getFirst());
-//                        if (loopNo == 0) {
-//                            loopNo = 1;
-//                        }
-//
-//                        for (int i = 0; i < loopNo; i++) {
-//                            long simpleCreateTime = database.runQuery(database.getQuery("queries/simpleCreate.cypher"));
-//                            long simpleRewriteTime = database.runQuery(database.getQuery("queries/simpleRewrite.cypher"));
-//                            long simpleTotal = simpleCreateTime + simpleRewriteTime;
-//                            if (logging) {
-//                                database.writeToCsv(new CypherResult("Simple", simpleCreateTime, simpleRewriteTime, simpleTotal));
-//                            }
-//                            System.out.println("Total execution time: " + simpleTotal + "ms");
-//                            deleteGraph(database);
-//                        }
-//
-//                        break;
-//                    case "2":
-//                        long complexCreateTime = database.runQuery(database.getQuery("queries/complexCreate.cypher"));
-//                        long complexRewriteTime = database.runQuery(database.getQuery("queries/complexRewrite.cypher"));
-//                        long complexTotal = complexCreateTime + complexRewriteTime;
-//                        if (logging) {
-//                            database.writeToCsv(new CypherResult("Complex", complexCreateTime, complexRewriteTime, complexTotal));
-//                        }
-//                        System.out.println("Total execution time: " + complexTotal + "ms");
-//                        break;
-//                    case "3":
-//                        deleteGraph(database);
-//                        break;
-//                    case "4":
-//                        logging = !logging;
-//                        break;
-//                    case "q":
-//                        loop = false;
-//                        break;
-//                }
-//            }
-        } catch (CsvRequiredFieldEmptyException | CsvDataTypeMismatchException e) {
-            throw new RuntimeException(e);
+            getCypherSentence(params, database);
         }
     }
 }

@@ -1,1 +1,0 @@
-CALL apoc.import.json('aliceAndBobTable.json')
