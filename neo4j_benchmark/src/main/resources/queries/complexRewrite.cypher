@@ -1,4 +1,3 @@
-EXPLAIN
 MATCH (a)-[:subj]->(b)-[:cc]->(c)
 WHERE (b)<-[:conj]-() OR (b)-[:conj]->()
 WITH a, Collect(b.name) as names, c

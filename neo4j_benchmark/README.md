@@ -10,3 +10,6 @@ Java program that runs creates a Cypher graph and rewrites, outputting the resul
 ### Arguments
 - `-it [number of iterations for each query]`
 - `-db [file path of database from news_scraper project]`
+- `-articles [number of articles to run through from .json]`
+- `-shouldDelete [true/false]` 
+  - _whether the database should clear after execution_

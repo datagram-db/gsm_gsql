@@ -41,13 +41,17 @@ public class Main implements AutoCloseable {
         return result.resultAvailableAfter(TimeUnit.MILLISECONDS);
     }
 
-    public long runQuery(String queryString) {
+    public long runQuery(String queryString, String type) {
         try (var session = driver.session()) {
             var runQuery = session.executeWrite(tx -> {
                 var query = new Query(queryString);
+                if (type.equals("rewrite") && tx.run(query).hasNext()) {
+                    System.out.println(query);
+                }
                 return tx.run(query).consume();
             });
 
+//            System.out.println(runQuery.query().text());
             return benchmark(runQuery);
         }
     }
@@ -58,8 +62,14 @@ public class Main implements AutoCloseable {
         InputStream inputStream = Main.class.getClassLoader().getResourceAsStream(filePath);
         InputStreamReader streamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
         BufferedReader reader = new BufferedReader(streamReader);
+        int i = 0;
         for (String line; (line = reader.readLine()) != null;) {
-            query = query.concat(" " + line);
+            if (i == 0) {
+                query = query.concat(line);
+            } else {
+                query = query.concat(" " + line);
+            }
+            i++;
         }
         return query;
     }
@@ -145,6 +155,7 @@ public class Main implements AutoCloseable {
     public static void createImportJson(Map<String, List<String>> params, Main database, JSONObject jsonObject, String sentence) {
         try (FileWriter file = new FileWriter("temp.json")) {
             file.write(getJsonArrayString(jsonObject, "nodes") + getJsonArrayString(jsonObject, "rels"));
+            file.close();
             runTests(params, database, sentence);
         } catch (IOException e) {
             e.printStackTrace();
@@ -161,8 +172,13 @@ public class Main implements AutoCloseable {
 
         try (BufferedReader reader = new BufferedReader(streamReader);) {
             JSONArray jsonArray = (JSONArray) parser.parse(reader);
+            int number = jsonArray.toArray().length;
 
-            for (int i = 0; i < jsonArray.toArray().length; i++) {
+            int numberOfArticles = Integer.parseInt(params.get("articles").getFirst());
+            if (numberOfArticles > 0) {
+                number = numberOfArticles;
+            }
+            for (int i = 0; i < number; i++) {
                 JSONObject jsonObject = (JSONObject) jsonArray.get(i);
                 createImportJson(params, database, (JSONObject) jsonObject.get("cypher"), jsonObject.get("first_sentence").toString());
             }
@@ -181,15 +197,22 @@ public class Main implements AutoCloseable {
         float avgCreateTime = 0;
         float avgRewriteTime = 0;
         for (int i = 0; i < loopNo; i++) {
-            float createTime = database.runQuery(database.getQuery("queries/import.cypher")); // check for local file path
-            float rewriteTime = database.runQuery(database.getQuery("queries/complexRewrite.cypher"));
+            float createTime = database.runQuery(database.getQuery("queries/import.cypher"), "create"); // check for local file path
+            float rewriteTime = database.runQuery(database.getQuery("queries/complexRewrite.cypher"), "rewrite");
             float totalTime = createTime + rewriteTime;
             avgTime += totalTime;
             avgCreateTime += createTime;
             avgRewriteTime += rewriteTime;
 //            database.writeToCsv(new CypherResult(sentence, sentence.length(), createTime, rewriteTime, totalTime));
-            System.out.println("Total execution time: " + totalTime + "ms");
-            deleteGraph(database);
+//            System.out.println("Total execution time: " + totalTime + "ms");
+
+            boolean shouldDelete = true;
+            if (params.get("shouldDelete") != null) {
+                shouldDelete = Boolean.parseBoolean(params.get("shouldDelete").getFirst());
+            }
+            if (shouldDelete) {
+                deleteGraph(database);
+            }
         }
         database.writeToCsv(new CypherResult(sentence, loopNo, sentence.length(), avgCreateTime / loopNo, avgRewriteTime/ loopNo, avgTime / loopNo));
         System.out.println("Average execution time " + avgTime / loopNo + "ms");
@@ -198,25 +221,29 @@ public class Main implements AutoCloseable {
     public static String getJsonArrayString(JSONObject jsonObject, String arrName) {
         String str = "";
 
-        System.out.println(jsonObject);
+//        System.out.println(jsonObject);
         JSONArray msg = (JSONArray) jsonObject.get(arrName);
-        Iterator iterator = msg.iterator();
-        while (iterator.hasNext()) {
-            str = str.concat(iterator.next().toString() + "\n");
+        for (Object o : msg) {
+            str = str.concat(o.toString() + "\n");
         }
 
         return str;
     }
 
     public static void deleteGraph(Main database) throws IOException {
-        database.runQuery(database.getQuery("queries/delete.cypher"));
+        database.runQuery(database.getQuery("queries/delete.cypher"), "delete");
         System.out.println("Cleared database");
     }
 
     public static void main(String... args) throws IOException {
         Map<String, List<String>> params = getArguments(args);
 
-        try (var database = new Main("bolt://localhost:7687", "neo4j", "Neo4j!!!")) {
+        String uri = "bolt://localhost:7687";
+//        String uri = "neo4j+s://a08db0f7.databases.neo4j.io";
+        String user = "neo4j";
+        String password = "Neo4j!!!";
+//        String password = "neo4j";
+        try (var database = new Main(uri, user, password)) {
             getCypherSentence(params, database);
         }
     }
