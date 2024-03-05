@@ -31,6 +31,8 @@ from parsers.SemiringProvenance import ProvenanceObject, provenance_object
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from watchfiles import watch
+
 app = FastAPI()
 
 origins = [
@@ -53,22 +55,26 @@ E_input = dict()
 N_removed = dict()
 N_inserted = dict()
 
+
 @app.get("/morphisms/{folder}", response_class=HTMLResponse)
 async def morphisms(folder):
     return parsers.NestedTables.generate_morphism_html(os.path.join(os.getcwd(), "data", folder), folder)
 
+
 def load_nodes_any(folder, N, file):
     if folder not in N:
         N[folder] = dict()
-        for obj in deserialize_gsm_file(os.path.join(os.getcwd(),"data",folder,file)):
+        for obj in deserialize_gsm_file(os.path.join(os.getcwd(), "data", folder, file)):
             N[folder][obj.id] = obj
     return N
+
 
 def load_edges_any(folder, N, E, file):
     N = load_nodes_any(folder, N, file)
     if folder not in E:
         E[folder] = to_vis_network_phi(N[folder].values())
     return (N, E)
+
 
 def load_result_nodes(folder):
     global N_result
@@ -78,25 +84,29 @@ def load_result_nodes(folder):
     #     for obj in deserialize_gsm_file(os.path.join(os.getcwd(),"data",folder,"result.json")):
     #         N[folder][obj.id] = obj
 
+
 def load_input_nodes(folder):
     global N_input
     global N_removed
     global N_inserted
-    with open(os.path.join(os.getcwd(),"data",folder,"removed.json"),"r") as f:
+    with open(os.path.join(os.getcwd(), "data", folder, "removed.json"), "r") as f:
         N_removed[folder] = set(json.load(f))
-    with open(os.path.join(os.getcwd(),"data",folder,"inserted.json"),"r") as f:
+    with open(os.path.join(os.getcwd(), "data", folder, "inserted.json"), "r") as f:
         N_inserted[folder] = set(json.load(f))
     N_input = load_nodes_any(folder, N_input, "input.json")
+
 
 def load_result_edges(folder):
     global N_result
     global E_result
     (N_result, E_result) = load_edges_any(folder, N_result, E_result, "result.json")
 
+
 def load_input_edges(folder):
     global N_input
     global E_input
     (N_input, E_input) = load_edges_any(folder, N_input, E_input, "input.json")
+
 
 @app.get("/result/nodes/{folder}")
 async def nodes(folder):
@@ -126,16 +136,20 @@ async def node(folder, id):
 
 from fastapi.responses import JSONResponse
 
+
 @app.get("/javascript/{file}")
 def javascript(file):
     return FileResponse(file)
 
+
 class CSSResponse(Response):
     media_type = "text/css"
+
 
 @app.get("/css/{file}")
 def javascript(file, response_class=CSSResponse):
     return FileResponse(file)
+
 
 @app.get("/input/node/{folder}/{id}")
 async def inode(folder, id):
@@ -143,11 +157,13 @@ async def inode(folder, id):
     global N_input
     return to_vis_network_node(N_input[folder][int(id)])
 
+
 @app.get("/result/edges/{folder}")
 async def edges(folder):
     load_result_edges(folder)
     global E_result
     return E_result[folder]
+
 
 @app.get("/input/edges/{folder}")
 async def iedges(folder):
@@ -155,22 +171,28 @@ async def iedges(folder):
     global E_input
     return E_input[folder]
 
+
 @app.get("/result/graph/{folder}", response_class=HTMLResponse)
 async def graph(folder):
-    with open("test.html","r") as f:
-        return f.read().replace("§", folder).replace('£','result')
+    with open("test.html", "r") as f:
+        return f.read().replace("§", folder).replace('£', 'result')
+
 
 @app.get("/input/graph/{folder}", response_class=HTMLResponse)
 async def graph(folder):
-    with open("test.html","r") as f:
-        content = f.read().replace("§", folder).replace('£','input')
+    with open("test.html", "r") as f:
+        content = f.read().replace("§", folder).replace('£', 'input')
         pos = content.find("<div id=\"title\">")
-        result = content[:pos]+parsers.NestedTables.generate_morphism_html(os.path.join(os.getcwd(), "data"), folder)+content[pos:]
-        return result # f.read().replace("§", folder).replace('£','input')
+        result = content[:pos] + parsers.NestedTables.generate_morphism_html(os.path.join(os.getcwd(), "data"),
+                                                                             folder) + content[pos:]
+        return result  # f.read().replace("§", folder).replace('£','input')
+
 
 if __name__ == '__main__':
-    uvicorn.run(app, port=9999, workers=1)
-
+    uvicorn.run("main:app", port=9999, workers=1,
+                reload=True,
+                reload_includes=["*.json", "*.ncsv"],
+                reload_dirs=["./data", "./data/0"])
 
 # # create app
 # # app = dash.Dash()

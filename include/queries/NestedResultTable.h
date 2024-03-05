@@ -264,7 +264,7 @@ struct NestedResultTable {
 
     inline
     OrderedSet compare(const struct NestedResultTable& x, ComparisonForNestedResultTable cmp ) const {
-        size_t N = std::max(size(), x.size());
+        size_t N = std::min(size(), x.size());
         roaring::Roaring64Map result;
         for (size_t i = 0; i<N; i++) {
             switch(cmp) {

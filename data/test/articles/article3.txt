@@ -1,0 +1,299 @@
+id:0
+ell:
+VBN
+root
+.
+xi:
+acknowledged
+.
+properties:
+"pos"	"13"
+"lemma"	"acknowledge"
+.
+phi:
+"nsubjpass"
+	1.0	1
+	1.0	2
+;"aux"
+	1.0	3
+;"nmod"
+	1.0	4
+;"auxpass"
+	1.0	5
+;.
+
+id:1
+ell:
+noun
+.
+xi:
+work
+.
+properties:
+"number"	"singular"
+"pos"	"3"
+"specification"	"common"
+.
+phi:
+"cc"
+	1.0	6
+;"det"
+	1.0	7
+;"conj"
+	1.0	2
+;"nmod"
+	1.0	8
+;"amod"
+	1.0	9
+;.
+
+id:7
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"1"
+.
+phi:
+.
+
+id:9
+ell:
+JJ
+.
+xi:
+outstanding
+.
+properties:
+"pos"	"2"
+.
+phi:
+.
+
+id:6
+ell:
+CC
+.
+xi:
+and
+.
+properties:
+"pos"	"4"
+.
+phi:
+.
+
+id:2
+ell:
+noun
+.
+xi:
+contribution
+.
+properties:
+"number"	"singular"
+"pos"	"5"
+"specification"	"common"
+.
+phi:
+.
+
+id:8
+ell:
+noun
+.
+xi:
+professor
+.
+properties:
+"number"	"singular"
+"pos"	"10"
+"specification"	"common"
+.
+phi:
+"det"
+	1.0	10
+;"amod"
+	1.0	11
+;"compound"
+	1.0	12
+;"case"
+	1.0	13
+;.
+
+id:13
+ell:
+IN
+.
+xi:
+of
+.
+properties:
+"pos"	"6"
+.
+phi:
+.
+
+id:10
+ell:
+det
+.
+xi:
+a
+.
+properties:
+"pos"	"7"
+.
+phi:
+.
+
+id:11
+ell:
+JJ
+.
+xi:
+newcastle
+.
+properties:
+"pos"	"8"
+.
+phi:
+.
+
+id:12
+ell:
+noun
+.
+xi:
+university
+.
+properties:
+"number"	"singular"
+"pos"	"9"
+"specification"	"common"
+.
+phi:
+.
+
+id:4
+ell:
+noun
+.
+xi:
+awards
+.
+properties:
+"number"	"plural"
+"pos"	"19"
+"specification"	"common"
+"lemma"	"award"
+.
+phi:
+"det"
+	1.0	14
+;"amod"
+	1.0	15
+	1.0	16
+;"compound"
+	1.0	17
+;"case"
+	1.0	18
+;.
+
+id:16
+ell:
+JJ
+.
+xi:
+annual
+.
+properties:
+"pos"	"16"
+.
+phi:
+.
+
+id:15
+ell:
+JJ
+.
+xi:
+biochemical
+.
+properties:
+"pos"	"17"
+.
+phi:
+.
+
+id:17
+ell:
+noun
+.
+xi:
+society
+.
+properties:
+"number"	"singular"
+"pos"	"18"
+"specification"	"common"
+.
+phi:
+.
+
+id:18
+ell:
+IN
+.
+xi:
+in
+.
+properties:
+"pos"	"14"
+.
+phi:
+.
+
+id:14
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"15"
+.
+phi:
+.
+
+id:3
+ell:
+VBZ
+.
+xi:
+has
+.
+properties:
+"pos"	"11"
+"lemma"	"have"
+.
+phi:
+.
+
+id:5
+ell:
+VBN
+.
+xi:
+been
+.
+properties:
+"pos"	"12"
+"lemma"	"be"
+.
+phi:
+.

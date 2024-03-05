@@ -1,0 +1,265 @@
+id:0
+ell:
+VB
+root
+.
+xi:
+sign
+.
+properties:
+"pos"	"1"
+.
+phi:
+"nmod"
+	1.0	1
+	1.0	2
+;"compound_prt"
+	1.0	3
+;.
+
+id:3
+ell:
+RP
+.
+xi:
+up
+.
+properties:
+"pos"	"2"
+.
+phi:
+.
+
+id:1
+ell:
+noun
+.
+xi:
+news
+.
+properties:
+"number"	"singular"
+"pos"	"10"
+"specification"	"common"
+.
+phi:
+"cc"
+	1.0	4
+;"conj"
+	1.0	2
+;"amod"
+	1.0	5
+;"case"
+	1.0	6
+;.
+
+id:6
+ell:
+IN
+.
+xi:
+for
+.
+properties:
+"pos"	"3"
+.
+phi:
+.
+
+id:5
+ell:
+JJ
+.
+xi:
+free
+.
+properties:
+"pos"	"4"
+.
+phi:
+"xcomp"
+	1.0	7
+;.
+
+id:7
+ell:
+VB
+.
+xi:
+get
+.
+properties:
+"pos"	"6"
+.
+phi:
+"dobj"
+	1.0	8
+;"mark"
+	1.0	9
+;.
+
+id:9
+ell:
+TO
+.
+xi:
+to
+.
+properties:
+"pos"	"5"
+.
+phi:
+.
+
+id:8
+ell:
+noun
+.
+xi:
+sunderland
+.
+properties:
+"number"	"singular"
+"pos"	"9"
+"specification"	"common"
+.
+phi:
+"det"
+	1.0	10
+;"amod"
+	1.0	11
+;.
+
+id:10
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"7"
+.
+phi:
+.
+
+id:11
+ell:
+aggregation
+.
+xi:
+latest
+.
+properties:
+"pos"	"8"
+.
+phi:
+.
+
+id:4
+ell:
+CC
+.
+xi:
+and
+.
+properties:
+"pos"	"11"
+.
+phi:
+.
+
+id:2
+ell:
+noun
+.
+xi:
+updates
+.
+properties:
+"number"	"plural"
+"pos"	"12"
+"specification"	"common"
+"lemma"	"update"
+.
+phi:
+"acl"
+	1.0	12
+;.
+
+id:12
+ell:
+VBN
+.
+xi:
+delivered
+.
+properties:
+"pos"	"13"
+"lemma"	"deliver"
+.
+phi:
+"advcl"
+	1.0	13
+;.
+
+id:13
+ell:
+noun
+.
+xi:
+inbox
+.
+properties:
+"number"	"singular"
+"pos"	"17"
+"specification"	"common"
+.
+phi:
+"advmod"
+	1.0	14
+;"nmod_poss"
+	1.0	15
+;"case"
+	1.0	16
+;.
+
+id:15
+ell:
+PRP$
+.
+xi:
+your
+.
+properties:
+"pos"	"16"
+"lemma"	"you"
+.
+phi:
+.
+
+id:14
+ell:
+RB
+.
+xi:
+straight
+.
+properties:
+"pos"	"14"
+.
+phi:
+.
+
+id:16
+ell:
+TO
+.
+xi:
+to
+.
+properties:
+"pos"	"15"
+.
+phi:
+.
