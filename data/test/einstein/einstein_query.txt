@@ -37,7 +37,6 @@ p3 = (V)--[∀n:nsubj]->(>> S)
         --[? mark]->(M)
         --[? aux]->(A)
         --[? neg]->(N)
-        //--[? xcomp]->(>> Q)
         --[∀l:dobj||ccomp||nmod||xcomp]->(>> Z) // Future work: nested join between >>Z and >>Z from the join, when required. This might require to re-do the join semantics
      (Z)--[? case]->(T)
 
@@ -60,10 +59,9 @@ p3 = (V)--[∀n:nsubj]->(>> S)
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-p4 = (V)//<-[∀ ? w:]--(B)
-         --[∀l:dobj||ccomp||nmod||xcomp]->(Z)
-        //--[? xcomp]->(>> Q)
-      (Z)--[? case]->(T)
+p4 = (>> V)<-[∀ ? w:]--(B)
+        --[∀l:dobj||ccomp||nmod||xcomp]->(Z)
+     (Z)--[? case]->(T)
       where ((V unmatched p3 . V) ∧ (ℓ 0 @ V ≠ noun))
      ↪  new j
         set(φ (if ((label l ) = nmod) then    // Defining the label in function of T, if this exists,
