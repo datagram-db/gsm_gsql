@@ -939,10 +939,10 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
                                 std::get<size_t>(
                                         table.datum.at(record_id).at(offsetForValue1).val));
                 } else {
-                    if (!table.datum.at(record_id).at(offsetForValue1).isNested)
+                    if (!table.datum.at(record_id).at(offsetForStar1).isNested)
                         return m;
                     for (const auto& row :
-                            table.datum.at(record_id).at(offsetForValue1).table.datum) {
+                            table.datum.at(record_id).at(offsetForStar1).table.datum) {
                         if (std::holds_alternative<size_t>(row.at(offsetNested1).val))
                             currentMatches.insert(
                                     std::get<size_t>(row.at(offsetNested1).val));
