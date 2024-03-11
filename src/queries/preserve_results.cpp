@@ -399,15 +399,6 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
         // coordinates of the variables within the nested table
         size_t offsetForStar = 0;
         for (const auto& k : result.Schema) {
-//            if (k == "V") {
-//                // Remembering the location of the sole nested cell
-//                nested_index[map_orig_offset].emplace_back(offsetForStar);
-//                auto& W = map_nested[map_orig_offset].emplace_back();
-//                // Remembering the offsets for the other nested cells
-//                for (const auto& w : result.Schema) {
-//                    W.put(w);
-//                }
-//            } else
             if (k != "*") {
                 if ((!result.datum.empty())) {
                     if (result.datum.at(0).at(offsetForStar).isNested) {

@@ -277,24 +277,21 @@ struct closure {
                 exit(1);
             }
             if (pattern.vec) {
-//                if (pattern.in.empty()) {
-//                    std::cerr << "ERROR: a vec entry-point requires some ingoing edges for the aggregation!"<< std::endl;
-//                    exit(2);
-//                } else {
+                if (pattern.in.empty()) {
+                    std::cerr << "ERROR: a vec entry-point requires some ingoing edges for the aggregation!"<< std::endl;
+                    exit(2);
+                } else {
                     for (const auto& [n,e] : vl.at(i).in) {
                         for (const auto& varName : n.var) {
                             if (varName != "ANY") {
                                 if (e.forall) {
                                     outgoing[i].insert(varName);
-                                } else {
-//                                    if (!pattern.in.empty()) {
-                                        ingoing[varName].insert(i);
-//                                    }
-                                }
+                                } else
+                                    ingoing[varName].insert(i);
                             }
                         }
                     }
-//                }
+                }
             } else {
                 auto varName = pattern.var.at(0);
                 if (pattern.rewrite_match_dst && !generated_variables.contains(pattern.rewrite_match_dst->var.at(0))) {
