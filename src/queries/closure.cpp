@@ -816,8 +816,11 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
         case test_pred::TEST_PRED_CASE_AND:
         {
             auto l = interpret(ptr.child_logic.at(0), maxSize);
+            std::cout<<l<<std::endl;
             if (l.empty()) return l;
-            l &= interpret(ptr.child_logic.at(1), maxSize);
+            auto l2 = interpret(ptr.child_logic.at(1), maxSize);
+            std::cout<<l2<<std::endl;
+            l &= l2;
 //            l.first &= r.first;
 //            l.second = std::max(l.second, r.second);
             return l;
@@ -841,7 +844,23 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
 
         case test_pred::TEST_PRED_CASE_SCRIPT: {
             bool result = script::compiler::ScriptVisitor::evalBool(ptr.nsoe.data(),ptr.nsoe.length(), pattern_id, ((ptr.ptrResult)), schema, table.datum.at(record_id));
-            return {result ? maxSize : 0};
+            if (!result) {
+                return {0};
+            } else {
+                OrderedSet n{(size_t)0};
+                for (auto rec : table.datum.at(record_id)) {
+                    if (std::holds_alternative<size_t>(rec.val))
+                        n.add(std::get<size_t>(rec.val));
+                    else if (rec.isNested)
+                        for (auto nestedRec : rec.table.datum) {
+                            for (auto nestedCell : nestedRec) {
+                                if (std::holds_alternative<size_t>(nestedCell.val))
+                                    n.add(std::get<size_t>(nestedCell.val));
+                            }
+                        }
+                }
+                return n;
+            }
         }
             break;
         case test_pred::MATCHED: {

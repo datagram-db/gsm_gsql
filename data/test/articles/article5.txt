@@ -1,0 +1,409 @@
+id:0
+ell:
+VBN
+root
+.
+xi:
+appointed
+.
+properties:
+"pos"	"12"
+"lemma"	"appoint"
+.
+phi:
+"nsubjpass"
+	1.0	1
+;"aux"
+	1.0	2
+;"nmod"
+	1.0	3
+;"auxpass"
+	1.0	4
+;"punct"
+	1.0	5
+;"dobj"
+	1.0	6
+;.
+
+id:3
+ell:
+noun
+.
+xi:
+part
+.
+properties:
+"number"	"singular"
+"pos"	"2"
+"specification"	"common"
+.
+phi:
+"nmod"
+	1.0	7
+;"case"
+	1.0	8
+;.
+
+id:8
+ell:
+IN
+.
+xi:
+as
+.
+properties:
+"pos"	"1"
+.
+phi:
+.
+
+id:7
+ell:
+noun
+.
+xi:
+network
+.
+properties:
+"number"	"singular"
+"pos"	"6"
+"specification"	"common"
+.
+phi:
+"det"
+	1.0	9
+;"amod"
+	1.0	10
+;"case"
+	1.0	11
+;.
+
+id:11
+ell:
+IN
+.
+xi:
+of
+.
+properties:
+"pos"	"3"
+.
+phi:
+.
+
+id:9
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"4"
+.
+phi:
+.
+
+id:10
+ell:
+JJ
+.
+xi:
+school-led
+.
+properties:
+"pos"	"5"
+.
+phi:
+.
+
+id:5
+ell:
+,
+.
+xi:
+,
+.
+properties:
+"pos"	"7"
+.
+phi:
+.
+
+id:1
+ell:
+noun
+.
+xi:
+university
+.
+properties:
+"number"	"singular"
+"pos"	"9"
+"specification"	"common"
+.
+phi:
+"compound"
+	1.0	12
+;.
+
+id:12
+ell:
+noun
+.
+xi:
+newcastle
+.
+properties:
+"number"	"singular"
+"pos"	"8"
+"specification"	"common"
+.
+phi:
+.
+
+id:2
+ell:
+VBZ
+.
+xi:
+has
+.
+properties:
+"pos"	"10"
+"lemma"	"have"
+.
+phi:
+.
+
+id:4
+ell:
+VBN
+.
+xi:
+been
+.
+properties:
+"pos"	"11"
+"lemma"	"be"
+.
+phi:
+.
+
+id:6
+ell:
+noun
+.
+xi:
+provider
+.
+properties:
+"number"	"singular"
+"pos"	"15"
+"specification"	"common"
+.
+phi:
+"det"
+	1.0	13
+;"nmod"
+	1.0	14
+;"amod"
+	1.0	15
+;.
+
+id:14
+ell:
+noun
+.
+xi:
+suite
+.
+properties:
+"number"	"singular"
+"pos"	"19"
+"specification"	"common"
+.
+phi:
+"det"
+	1.0	16
+;"nmod"
+	1.0	17
+;"amod"
+	1.0	18
+;"case"
+	1.0	19
+;.
+
+id:19
+ell:
+IN
+.
+xi:
+of
+.
+properties:
+"pos"	"16"
+.
+phi:
+.
+
+id:16
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"17"
+.
+phi:
+.
+
+id:18
+ell:
+JJ
+.
+xi:
+new
+.
+properties:
+"pos"	"18"
+.
+phi:
+.
+
+id:17
+ell:
+noun
+.
+xi:
+qualifications
+.
+properties:
+"number"	"plural"
+"pos"	"23"
+"specification"	"common"
+"lemma"	"qualification"
+.
+phi:
+"amod"
+	1.0	20
+	1.0	21
+;"case"
+	1.0	22
+;"appos"
+	1.0	23
+;.
+
+id:22
+ell:
+IN
+.
+xi:
+of
+.
+properties:
+"pos"	"20"
+.
+phi:
+.
+
+id:20
+ell:
+JJ
+.
+xi:
+national
+.
+properties:
+"pos"	"21"
+.
+phi:
+.
+
+id:21
+ell:
+JJ
+.
+xi:
+professional
+.
+properties:
+"pos"	"22"
+.
+phi:
+.
+
+id:23
+ell:
+noun
+.
+xi:
+npqs
+.
+properties:
+"number"	"plural"
+"pos"	"25"
+"specification"	"common"
+"lemma"	"npq"
+.
+phi:
+"punct"
+	1.0	24
+	1.0	25
+;.
+
+id:25
+ell:
+-LRB-
+.
+xi:
+(
+.
+properties:
+"pos"	"24"
+"lemma"	"-lrb-"
+.
+phi:
+.
+
+id:24
+ell:
+-RRB-
+.
+xi:
+)
+.
+properties:
+"pos"	"26"
+"lemma"	"-rrb-"
+.
+phi:
+.
+
+id:13
+ell:
+det
+.
+xi:
+a
+.
+properties:
+"pos"	"13"
+.
+phi:
+.
+
+id:15
+ell:
+JJ
+.
+xi:
+national
+.
+properties:
+"pos"	"14"
+.
+phi:
+.
