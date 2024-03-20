@@ -77,9 +77,8 @@ OrderedSet& operator=(OrderedSet&& x) { set = std::move(x.set); cardo = x.cardo;
         return set.contains(x);
     }
     void add(size_t x) {
-//        set.add(x);
-        if (set.addChecked(x))
-            cardo++;
+        if (set.addChecked(x) && (cardo < set.cardinality()))
+            cardo = set.cardinality();
     }
     OrderedSet& operator&=(const OrderedSet& x) {
         set &= x.set;

@@ -62,7 +62,8 @@ namespace script {
                 const auto &id = nestedRow.at(i);
                 if (id.isNested)
 //                {
-//                    if (std::holds_alternative<double>(id.val)) {
+//                    if (
+                    //                    girt <double>(id.val)) {
 //                        script::structures::ScriptAST::globals.emplace(varName2, std::move(script::structures::ScriptAST::double_(
 //                                std::get<double>(id.val))));
 //                    } else if (std::holds_alternative<std::string>(id.val)) {
@@ -85,10 +86,10 @@ namespace script {
                                     record.emplace(varName3, std::move((script::structures::ScriptAST::double_(
                                             std::get<double>(id3.val)))));
 //                                    record[varName3] = ;
-                                } else if (std::holds_alternative<std::string>(id.val)) {
+                                } else if (std::holds_alternative<std::string>(id3.val)) {
                                     record.emplace(varName3, std::move(script::structures::ScriptAST::string_(
                                             std::get<std::string>(id3.val))));
-                                } else if (std::holds_alternative<size_t>(id.val)) {
+                                } else if (std::holds_alternative<size_t>(id3.val)) {
                                     record.emplace(varName3, std::move((script::structures::ScriptAST::integer_(
                                             (long long) std::get<size_t>(id3.val)))));
                                 }
@@ -592,9 +593,9 @@ namespace script {
                             if (!id3.isNested) {
                                 if (std::holds_alternative<double>(id3.val)) {
                                     record.emplace(varName3, std::move((script::structures::ScriptAST::double_(std::get<double>(id3.val)))));
-                                } else if (std::holds_alternative<std::string>(id.val)) {
+                                } else if (std::holds_alternative<std::string>(id3.val)) {
                                     record.emplace(varName3, std::move (script::structures::ScriptAST::string_(std::get<std::string>(id3.val))));
-                                } else if (std::holds_alternative<size_t>(id.val)) {
+                                } else if (std::holds_alternative<size_t>(id3.val)) {
                                     record.emplace(varName3, std::move( ((script::structures::ScriptAST::integer_((long long)std::get<size_t>(id3.val))))));
                                 }
                             }

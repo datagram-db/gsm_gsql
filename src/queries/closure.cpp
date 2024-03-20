@@ -811,7 +811,7 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
                 if (std::get<1>(idResolutionL)) {
                     return getFullOrEmptySet(std::get<2>(idResolutionL));
                 } else {
-                    toIgnore.clearWithMaxCardinality(0);
+                    toIgnore.clearWithMaxCardinality(L.size());
                     for (const size_t val : nestedResult.set)
                         toIgnore.add(std::get<0>(idResolutionL)[val]);
                     return toIgnore;
@@ -837,8 +837,6 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
             std::cout<<l<<std::endl;
             std::cout<<l2<<std::endl;
             l &= l2;
-//            l.first &= r.first;
-//            l.second = std::max(l.second, r.second);
             return l;
         } break;
 
@@ -847,9 +845,6 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
             auto l = interpret(ptr.child_logic.at(0), maxSize);
             if (l.full()) return l;
             l |= interpret(ptr.child_logic.at(1), maxSize);
-//            auto r = interpret(ptr.child_logic.at(1), maxSize);
-//            l.first |= r.first;
-//            l.second = std::max(l.second, r.second);
             return l;
         } break;
 
@@ -938,8 +933,6 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
         case test_pred::UNMATCHED: {
             OrderedSet m{(size_t)0};
             auto it = this->ptr.at(graph_id).find(ptr.pattern_matched);
-//            if (it == this->ptr.at(graph_id).end())
-//                return m;
 
             std::set<size_t> currentMatches, otherMatches;
             {
@@ -969,13 +962,9 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
                 }
             }
 
-//            auto it = this->ptr.at(graph_id).find(ptr.pattern_matched);
             if (it == this->ptr.at(graph_id).end()) {
-//                m.fillWithPreviouslyLess(1);
-//                m.add(currentMatches.size());
                 for (unsigned long currentMatch : currentMatches)
                     m.add(currentMatch);
-//                m.add(currentMatches.)
                 return m;
             }
 
@@ -999,10 +988,6 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
                     if (offsetForStar == (size_t) - 1) {
                         if (std::holds_alternative<size_t>(tablese.datum.at(i).at(offsetForValue).val)) {
                             otherMatches.insert(std::get<size_t>(tablese.datum.at(i).at(offsetForValue).val));
-//                            if (currentMatches.contains(std::get<size_t>(tablese.datum.at(i).at(offsetForValue).val))) {
-//                                m.add(std::get<size_t>(tablese.datum.at(i).at(offsetForValue).val));
-//                                return m;
-//                            }
                         }
                     } else {
                         if (!tablese.datum.at(i).at(offsetForStar).isNested)
@@ -1010,16 +995,11 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
                         for (const auto& row : tablese.datum.at(i).at(offsetForStar).table.datum) {
                             if (std::holds_alternative<size_t>(row.at(offsetNested).val)) {
                                 otherMatches.insert(std::get<size_t>(row.at(offsetNested).val));
-//                                if (currentMatches.contains(std::get<size_t>(row.at(offsetNested).val))) {
-//                                    m.add(std::get<size_t>(row.at(offsetNested).val));
-//                                    return m;
-//                                }
                             }
                         }
                     }
                 }
             }
-//            m.fillWithPreviouslyLess(maxSize);
             std::vector<size_t> mat;
             std::set_difference(currentMatches.begin(), currentMatches.end(), otherMatches.begin(), otherMatches.end(), std::back_inserter(mat));
             for (unsigned long ma : mat)
