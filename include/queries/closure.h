@@ -831,6 +831,12 @@ public:
         NestedResultTable resolve(const NestedResultTable& x, OrderedSet& containment,
                                                 NestedResultTable::variant_type_cpp script_cast = NestedResultTable::RT_NONE) const;
 
+
+        std::tuple<std::vector<size_t>,bool,bool> resolveIDs(const NestedResultTable &x,
+//                                    OrderedSet& containment,
+                                    NestedResultTable::variant_type_cpp script_cast) const;
+
+        OrderedSet getFullOrEmptySet(bool result);
     };
 
     /*template <typename T>
@@ -1179,6 +1185,8 @@ public:
 ///       This needs to be inferred previously
         for (size_t pattern_id = 0, M = vl.size(); pattern_id < M; pattern_id++) {
             auto& pattern = vl[pattern_id];
+            if ((vertex == 0) && (pattern.pattern_name == "p4"))
+                std::cout << "HERE" << std::endl;
             if (morphs.find(pattern.pattern_name) == morphs.end())
                 continue; // Skipping if there are no results
             /*const*/ auto& pattern_result = morphs.at(pattern.pattern_name);

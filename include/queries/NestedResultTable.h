@@ -48,7 +48,10 @@ OrderedSet& operator=(OrderedSet&& x) { set = std::move(x.set); cardo = x.cardo;
 //        if (ignore) return;
         cardo = maxSize;
         set.addRange(0, maxSize);
+
     }
+
+
 
     void clearWithMaxCardinality(size_t maxSize) {
 //        if (ignore) return;
@@ -111,7 +114,7 @@ struct NestedResultTable {
         R_NODE, // RT_SIZET
         R_EDGE, // RT_SIZET
         R_EDGE_SRC,// RT_SIZET
-        R_NESTD_EDGE_SRC,// RT_VSIZET
+        R_NESTED_EDGE_SRC,// RT_VSIZET
         R_DO_EDGE_SRC,// RT_SIZET
         R_DO_NESTED_EDGE_SRC,// RT_VSIZET
         R_EDGE_DST,// RT_SIZET
@@ -368,7 +371,7 @@ areIndicesIndicated{false}, expectedType{RT_VSIZET} {}
 
             case R_NESTED_NODE:
             case R_NESTED_EDGE:
-            case R_NESTD_EDGE_SRC:
+            case R_NESTED_EDGE_SRC:
             case R_DO_NESTED_EDGE_SRC:
             case R_NESTED_EDGE_DST:
             case R_DO_NESTED_EDGE_DST:
@@ -404,7 +407,7 @@ static inline NestedResultTable::variant_type_cpp getExpectedType(NestedResultTa
 
         case NestedResultTable::R_NESTED_NODE:
         case NestedResultTable::R_NESTED_EDGE:
-        case NestedResultTable::R_NESTD_EDGE_SRC:
+        case NestedResultTable::R_NESTED_EDGE_SRC:
         case NestedResultTable::R_DO_NESTED_EDGE_SRC:
         case NestedResultTable::R_NESTED_EDGE_DST:
         case NestedResultTable::R_DO_NESTED_EDGE_DST:

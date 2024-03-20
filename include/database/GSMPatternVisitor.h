@@ -53,7 +53,8 @@ struct test_pred {
         TEST_PRED_CASE_SCRIPT,
         TRUE,
         MATCHED,
-        UNMATCHED
+        UNMATCHED,
+        FILL
     };
     cases t = TRUE;
     std::vector<test_side> args;
@@ -286,6 +287,16 @@ public:
             ptr->t = rewrite_expr::SCRIPT_CASE;
         }
         return {ptr};
+    }
+
+    std::any visitFill(simple_graph_grammarParser::FillContext *ctx) override {
+        if (ctx) {
+            test_pred pred;
+            pred.t = test_pred::FILL;
+            pred.child_logic.emplace_back(std::move(std::any_cast<test_pred>(visit(ctx->test_expr()))));
+            return {pred};
+        }
+        return {};
     }
 
     std::any visitScript_test(simple_graph_grammarParser::Script_testContext *ctx) override {

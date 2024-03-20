@@ -89,6 +89,9 @@ public:
   virtual void enterNeq_test(simple_graph_grammarParser::Neq_testContext *ctx) = 0;
   virtual void exitNeq_test(simple_graph_grammarParser::Neq_testContext *ctx) = 0;
 
+  virtual void enterFill(simple_graph_grammarParser::FillContext *ctx) = 0;
+  virtual void exitFill(simple_graph_grammarParser::FillContext *ctx) = 0;
+
   virtual void enterLt_test(simple_graph_grammarParser::Lt_testContext *ctx) = 0;
   virtual void exitLt_test(simple_graph_grammarParser::Lt_testContext *ctx) = 0;
 

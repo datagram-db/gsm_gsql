@@ -69,6 +69,8 @@ public:
 
     virtual std::any visitNeq_test(simple_graph_grammarParser::Neq_testContext *context) = 0;
 
+    virtual std::any visitFill(simple_graph_grammarParser::FillContext *context) = 0;
+
     virtual std::any visitLt_test(simple_graph_grammarParser::Lt_testContext *context) = 0;
 
     virtual std::any visitUnmatched(simple_graph_grammarParser::UnmatchedContext *context) = 0;

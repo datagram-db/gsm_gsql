@@ -115,6 +115,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitFill(simple_graph_grammarParser::FillContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitLt_test(simple_graph_grammarParser::Lt_testContext *ctx) override {
     return visitChildren(ctx);
   }

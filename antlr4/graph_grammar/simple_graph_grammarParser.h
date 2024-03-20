@@ -16,10 +16,10 @@ public:
     T__7 = 8, T__8 = 9, T__9 = 10, T__10 = 11, T__11 = 12, T__12 = 13, T__13 = 14, 
     T__14 = 15, T__15 = 16, T__16 = 17, T__17 = 18, T__18 = 19, T__19 = 20, 
     T__20 = 21, T__21 = 22, T__22 = 23, T__23 = 24, T__24 = 25, T__25 = 26, 
-    T__26 = 27, T__27 = 28, WHERE = 29, IF = 30, THEN = 31, ELSE = 32, AS = 33, 
-    VEC = 34, REWRITE_TO = 35, FORALL = 36, QM = 37, EQ = 38, STAR = 39, 
-    LPAR = 40, RPAR = 41, COL = 42, QPAR = 43, PPAR = 44, EscapedString = 45, 
-    OTHERS = 46, SPACE = 47, COMMENT = 48, LINE_COMMENT = 49
+    T__26 = 27, T__27 = 28, T__28 = 29, WHERE = 30, IF = 31, THEN = 32, 
+    ELSE = 33, AS = 34, VEC = 35, REWRITE_TO = 36, FORALL = 37, QM = 38, 
+    EQ = 39, STAR = 40, LPAR = 41, RPAR = 42, COL = 43, QPAR = 44, PPAR = 45, 
+    EscapedString = 46, OTHERS = 47, SPACE = 48, COMMENT = 49, LINE_COMMENT = 50
   };
 
   enum {
@@ -458,6 +458,17 @@ public:
     simple_graph_grammarParser::Test_expr_sideContext *dst = nullptr;
     std::vector<Test_expr_sideContext *> test_expr_side();
     Test_expr_sideContext* test_expr_side(size_t i);
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  FillContext : public Test_exprContext {
+  public:
+    FillContext(Test_exprContext *ctx);
+
+    Test_exprContext *test_expr();
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
 

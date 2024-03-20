@@ -806,19 +806,35 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
             if ((L.size() == 1) || (R.size() == 1) || (L.size() == R.size())) {
                 OrderedSet toIgnore{0};
                 auto tmp = resolve(L, toIgnore, getExpectedType(R.t));
-                return tmp.compare(resolve(R, toIgnore, getExpectedType(L.t)), cmp);
+                auto nestedResult = tmp.compare(resolve(R, toIgnore, getExpectedType(L.t)), cmp);
+                auto idResolutionL = resolveIDs(L, getExpectedType(R.t));
+                if (std::get<1>(idResolutionL)) {
+                    return getFullOrEmptySet(std::get<2>(idResolutionL));
+                } else {
+                    toIgnore.clearWithMaxCardinality(0);
+                    for (const size_t val : nestedResult.set)
+                        toIgnore.add(std::get<0>(idResolutionL)[val]);
+                    return toIgnore;
+                }
             } else {
                 throw std::runtime_error("ERROR: either both morphisms should be of the same size, of at least one of them should be of size 1");
             }
 
         } break;
 
+        case test_pred::FILL: {
+            auto l = interpret(ptr.child_logic.at(0), maxSize);
+            return getFullOrEmptySet(!l.empty());
+        }
+
         case test_pred::TEST_PRED_CASE_AND:
         {
             auto l = interpret(ptr.child_logic.at(0), maxSize);
-            std::cout<<l<<std::endl;
             if (l.empty()) return l;
             auto l2 = interpret(ptr.child_logic.at(1), maxSize);
+            std::cout << "AT THIS POINT:" << std::endl;
+            std::cout << "==============" << std::endl;
+            std::cout<<l<<std::endl;
             std::cout<<l2<<std::endl;
             l &= l2;
 //            l.first &= r.first;
@@ -844,23 +860,7 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
 
         case test_pred::TEST_PRED_CASE_SCRIPT: {
             bool result = script::compiler::ScriptVisitor::evalBool(ptr.nsoe.data(),ptr.nsoe.length(), pattern_id, ((ptr.ptrResult)), schema, table.datum.at(record_id));
-            if (!result) {
-                return {0};
-            } else {
-                OrderedSet n{(size_t)0};
-                for (auto rec : table.datum.at(record_id)) {
-                    if (std::holds_alternative<size_t>(rec.val))
-                        n.add(std::get<size_t>(rec.val));
-                    else if (rec.isNested)
-                        for (auto nestedRec : rec.table.datum) {
-                            for (auto nestedCell : nestedRec) {
-                                if (std::holds_alternative<size_t>(nestedCell.val))
-                                    n.add(std::get<size_t>(nestedCell.val));
-                            }
-                        }
-                }
-                return n;
-            }
+            return getFullOrEmptySet(result);
         }
             break;
         case test_pred::MATCHED: {
@@ -1030,6 +1030,201 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
     }
 }
 
+OrderedSet closure::Interpret::getFullOrEmptySet(bool result) {
+    if (!result) {
+        return {0};
+    } else {
+        OrderedSet n{(size_t)0};
+        for (auto rec : table.datum.at(record_id)) {
+            if (std::holds_alternative<size_t>(rec.val))
+                n.add(std::get<size_t>(rec.val));
+            else if (rec.isNested)
+                for (auto nestedRec : rec.table.datum) {
+                    for (auto nestedCell : nestedRec) {
+                        if (std::holds_alternative<size_t>(nestedCell.val))
+                            n.add(std::get<size_t>(nestedCell.val));
+                    }
+                }
+        }
+        return n;
+    }
+}
+
+std::tuple<std::vector<size_t>,bool,bool> closure::Interpret::resolveIDs(const NestedResultTable &x,
+//                             OrderedSet& containment,
+                             NestedResultTable::variant_type_cpp script_cast) const {
+    std::tuple<std::vector<size_t>,bool,bool> result{{}, false, false}; // ii)if the result would have contained strings instead
+                                                                        // iii)actually empty
+    switch (x.t) {
+        case NestedResultTable::R_NONE: {
+            return result;
+        }
+
+        case NestedResultTable::R_DO_EDGE_DST:
+        case NestedResultTable::R_DO_EDGE_SRC:
+        case NestedResultTable::R_DO_CONTENT:
+        case NestedResultTable::R_DO_PROP:
+        case NestedResultTable::R_DO_ELL:
+        case NestedResultTable::R_DO_XI:
+        case NestedResultTable::R_DO_EDGE_LABEL:
+        case NestedResultTable::R_NODE:
+        case NestedResultTable::R_EDGE:
+        case NestedResultTable::R_EDGE_SRC:
+        case NestedResultTable::R_EDGE_DST: {
+            size_t resolution = std::get<size_t>(x.content);
+            if (resolution!=(size_t)-1) {
+                std::get<0>(result).emplace_back(resolution);
+                std::get<2>(result) = true;
+            }
+            return result;
+        }
+
+        case NestedResultTable::R_CONTENT:
+        case NestedResultTable::R_XI:
+        case NestedResultTable::R_ELL:
+        case NestedResultTable::R_PROP:
+        case NestedResultTable::R_LABEL:
+        case NestedResultTable::R_EDGE_LABEL: {
+            std::get<2>(result) = std::get<1>(result) = true;
+            return result;
+        }
+
+        case NestedResultTable::R_NESTED_LABEL:
+        case NestedResultTable::R_NESTED_EDGE_LABEL: {
+            std::get<1>(result) = true;
+            if (!std::get<std::vector<std::string>>(x.content).empty()) {
+                std::get<2>(result) = true;
+            }
+            return result;
+        }
+
+        case NestedResultTable::R_NESTED_CONTENT: {
+            auto& ref = std::get<0>(result);
+            for (const auto& elementV : std::get<std::vector<std::vector<gsm_object_xi_content>>>(x.content)) {
+                for (const auto& element : elementV) {
+                    ref.emplace_back(element.id);
+                }
+            }
+            ref.erase(std::remove(ref.begin(), ref.end(), -1), ref.end());
+            std::get<2>(result) = !ref.empty();
+            return result;
+        }
+
+        case NestedResultTable::R_DO_NESTED_EDGE_DST:
+        case NestedResultTable::R_DO_NESTED_EDGE_SRC:
+        case NestedResultTable::R_DO_NESTED_CONTENT:
+        case NestedResultTable::R_DO_NESTED_PROP:
+        case NestedResultTable::R_DO_NESTED_ELL:
+        case NestedResultTable::R_DO_NESTED_XI:
+        case NestedResultTable::R_DO_NESTED_EDGE_LABEL:
+        case NestedResultTable::R_NESTED_EDGE_SRC:
+        case NestedResultTable::R_NESTED_EDGE_DST:
+        case NestedResultTable::R_NESTED_NODE:
+        case NestedResultTable::R_NESTED_EDGE:
+        case NestedResultTable::R_NESTED_PROP:
+        case NestedResultTable::R_NESTED_XI:
+        case NestedResultTable::R_NESTED_ELL:  {
+            auto& ref = std::get<0>(result);
+            ref = std::get<std::vector<size_t>>(x.content);
+            ref.erase(std::remove(ref.begin(), ref.end(), -1), ref.end());
+            std::get<2>(result) = !ref.empty();
+            return result;
+        }
+
+        case NestedResultTable::R_SCRIPT: {
+            switch (script_cast) {
+                case NestedResultTable::RT_STRING: {
+                    std::get<1>(result) = std::get<2>(result) = true;
+                    return result;
+                }
+
+                case NestedResultTable::RT_VSTRING: {
+                    std::vector<std::string> W;
+                    auto tmp = std::get<std::shared_ptr<script::structures::ScriptAST>>(x.content)->run();
+                    if (tmp->type == script::structures::String) {
+                        std::get<1>(result) = std::get<2>(result) = true;
+                    } else
+                    if ((tmp->type == script::structures::Tuple) || (tmp->type == script::structures::Array)) {
+                        std::get<1>(result) = true;
+                        std::get<2>(result) = !tmp->toList().empty();
+                    } else
+                        throw std::runtime_error("ERROR: expected a vector!");
+                    return result;
+                }
+
+                case NestedResultTable::RT_SIZET: {
+                    auto resolution = (size_t)std::get<std::shared_ptr<script::structures::ScriptAST>>(x.content)->toInteger(true);
+                    if (resolution!=(size_t)-1) {
+                        std::get<0>(result).emplace_back(resolution);
+                        std::get<2>(result) = true;
+                    }
+                    return result;
+                }
+
+                case NestedResultTable::RT_VSIZET:{
+                    auto tmp = std::get<std::shared_ptr<script::structures::ScriptAST>>(x.content)->run();
+                    if ((tmp->type == script::structures::Tuple) || (tmp->type == script::structures::Array)) {
+                        std::vector<size_t> W;
+                        for (const auto& y : tmp->toList()) {
+                            W.emplace_back(y->toInteger());
+                        }
+                    } else
+                        throw std::runtime_error("ERROR: expected a vector!");
+                }
+
+                case NestedResultTable::RT_CONTENT: {
+                    auto tmp = std::get<std::shared_ptr<script::structures::ScriptAST>>(x.content)->run();
+                    if (tmp->type == script::structures::Array) {
+                        if (tmp->arrayList.empty())
+                            return result;
+                        else {
+                            auto& ref = std::get<0>(result);
+                            for (const auto& y : tmp->arrayList) {
+                                auto r = y->run();
+                                ref.emplace_back(r->tuple["id"]->toInteger(true));
+                            }
+                            ref.erase(std::remove(ref.begin(), ref.end(), -1), ref.end());
+                            std::get<2>(result) = !ref.empty();
+                            return result;
+                        }
+                    }else
+                        throw std::runtime_error("ERROR: expected a vector!");
+                }
+
+                case NestedResultTable::RT_VCONTENT:{
+                    auto tmp = std::get<std::shared_ptr<script::structures::ScriptAST>>(x.content)->run();
+                    if (tmp->type == script::structures::Array) {
+                        if (tmp->arrayList.empty())
+                            return result;
+                        else {
+                            auto& ref = std::get<0>(result);
+                            for (const auto& y : tmp->arrayList) {
+                                auto r = y->run();
+                                if (r ->type != script::structures::Array)
+                                    throw std::runtime_error("ERROR: expected a vector of vectors!");
+                                for (const auto& z : y->arrayList) {
+                                    auto s = z->run();
+                                    ref.emplace_back(r->tuple["id"]->toInteger(true));
+                                }
+                            }
+                            ref.erase(std::remove(ref.begin(), ref.end(), -1), ref.end());
+                            std::get<2>(result) = !ref.empty();
+                            return result;
+                        }
+                    }else
+                        throw std::runtime_error("ERROR: expected a vector!");
+                }
+
+                case NestedResultTable::RT_NONE:
+                case NestedResultTable::RT_SCRIPT:
+                    throw std::runtime_error("ERROR: you need to provide a non-script other argument, so that the script can be correctly casted!");
+            }
+        }
+            break;
+            break;
+    }
+}
+
 NestedResultTable
 closure::Interpret::resolve(const NestedResultTable &x,
                             OrderedSet& containment,
@@ -1072,7 +1267,7 @@ closure::Interpret::resolve(const NestedResultTable &x,
             return x;
         }
 
-        case NestedResultTable::R_NESTD_EDGE_SRC:
+        case NestedResultTable::R_NESTED_EDGE_SRC:
         case NestedResultTable::R_NESTED_EDGE_DST:
         case NestedResultTable::R_NESTED_NODE:
         case NestedResultTable::R_NESTED_EDGE:

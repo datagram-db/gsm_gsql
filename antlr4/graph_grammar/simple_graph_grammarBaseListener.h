@@ -91,6 +91,9 @@ public:
   virtual void enterNeq_test(simple_graph_grammarParser::Neq_testContext * /*ctx*/) override { }
   virtual void exitNeq_test(simple_graph_grammarParser::Neq_testContext * /*ctx*/) override { }
 
+  virtual void enterFill(simple_graph_grammarParser::FillContext * /*ctx*/) override { }
+  virtual void exitFill(simple_graph_grammarParser::FillContext * /*ctx*/) override { }
+
   virtual void enterLt_test(simple_graph_grammarParser::Lt_testContext * /*ctx*/) override { }
   virtual void exitLt_test(simple_graph_grammarParser::Lt_testContext * /*ctx*/) override { }
 
