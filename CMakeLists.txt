@@ -40,6 +40,7 @@ include_directories(submodules/yaucl/antlr4/cpp/antlr4)
 include_directories(submodules/tabulate/include)
 
 
+#<<<<<<< HEAD
 add_library(yaucl_hashing OBJECT
         submodules/yaucl/include/yaucl/hashing/evaluateHashes.h
         submodules/yaucl/src/yaucl/hashing/evaluateHashes.c
@@ -123,3 +124,10 @@ add_executable(gsm_gsql_script src/tests/script_runs.cpp)
 #gtest_discover_tests(gsm_gsql_script)
 target_link_libraries(gsm_gsql_script PRIVATE Catch2::Catch2WithMain gsm_script gsm2)
 catch_discover_tests(gsm_gsql_script)
+#=======
+#add_library(gsm_gsql src/gsql_gsm/gsm_object_xi_content.cpp include/gsql_gsm/gsm_object_xi_content.h src/gsql_gsm/gsm_object.cpp include/gsql_gsm/gsm_object.h src/gsql_gsm/gsm_inmemory_db.cpp include/gsql_gsm/gsm_inmemory_db.h include/gsql_gsm/gsql_operators.h src/gsql_gsm/dump_to_xml.cpp include/gsql_gsm/dump_to_xml.h src/gsql_gsm/gsm_db_indices.cpp include/gsql_gsm/gsm_db_indices.h include/gsql_gsm/igc_operators.h include/gsql_gsm/json_operators.h)
+#target_link_libraries(gsm_gsql CURL::libcurl yaucl_graph yaucl_hashing roaring antlr4_static tinyxml2)
+#
+#add_executable(gsm_gsql_test main.cpp include/gsql_gsm/json_operators.h)
+#target_link_libraries(gsm_gsql_test CURL::libcurl yaucl_graph yaucl_hashing roaring antlr4_static tinyxml2 gsm_gsql )
+#>>>>>>> cb6185cf7859c5b5759ca7d570453d1da49bd026

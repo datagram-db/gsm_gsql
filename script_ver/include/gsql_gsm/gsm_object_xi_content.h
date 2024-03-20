@@ -32,7 +32,7 @@ struct gsm_object_xi_content {
     size_t id;
     double score;
 
-    gsm_object_xi_content(size_t id, double score=1.0);
+    gsm_object_xi_content(size_t id = 0, double score=1.0);
     gsm_object_xi_content(const gsm_object_xi_content&) = default;
     gsm_object_xi_content(gsm_object_xi_content&&) = default;
     gsm_object_xi_content& operator=(const gsm_object_xi_content&) = default;

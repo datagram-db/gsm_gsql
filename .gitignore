@@ -47,6 +47,7 @@ build/
 /cmake-build-debug/
 /cmake-build-release/
 /cmake-build-debug/
+/cmake-build-release/
 /dist/
 /viz/venv/*
 /viz/data/0/
@@ -57,3 +58,12 @@ viz/parsers/__pycache__/
 /myeasylog.log
 /out.csv
 /cmake-build-debug-coverage/
+/json_files/
+/csv_files/
+/bench_files/
+/graph_files/
+/igc_files/
+/api_keys/
+/data/
+/xml_files/
+question_mark.xml
