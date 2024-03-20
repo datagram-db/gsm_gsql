@@ -1,4 +1,4 @@
-# Generalised Semistructured Model
+# DatagramDB
 
 This repository provides a preliminary implementation of the Generalised Semistructured Model and of its associated language,
 Generalised Semistructured Query Language, as well.
@@ -21,4 +21,3 @@ For reproducing the experiments from the paper [TBA], please download [this](htt
 
 > Data: https://osf.io/pgf9h/files
 
-#>>>>>>> cb6185cf7859c5b5759ca7d570453d1da49bd026

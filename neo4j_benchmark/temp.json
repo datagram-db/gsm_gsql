@@ -1,0 +1,38 @@
+{"id":0,"type":"node","properties":{"name":" professor"}}
+{"id":1,"type":"node","properties":{"name":" of"}}
+{"id":3,"type":"node","properties":{"name":" acknowledged"}}
+{"id":4,"type":"node","properties":{"name":" work"}}
+{"id":7,"type":"node","properties":{"name":" outstanding"}}
+{"id":10,"type":"node","properties":{"name":" the"}}
+{"id":13,"type":"node","properties":{"name":" contribution"}}
+{"id":15,"type":"node","properties":{"name":" awards"}}
+{"id":16,"type":"node","properties":{"name":" in"}}
+{"id":19,"type":"node","properties":{"name":" and"}}
+{"id":22,"type":"node","properties":{"name":" society"}}
+{"id":28,"type":"node","properties":{"name":" biochemical"}}
+{"id":34,"type":"node","properties":{"name":" annual"}}
+{"id":40,"type":"node","properties":{"name":" university"}}
+{"id":43,"type":"node","properties":{"name":" a"}}
+{"id":46,"type":"node","properties":{"name":" newcastle"}}
+{"id":49,"type":"node","properties":{"name":" has"}}
+{"id":52,"type":"node","properties":{"name":" been"}}
+{"id":55,"type":"node","properties":{"name":" the"}}
+{"start":{"id":0,"type":"node","properties":{"name":" professor"}},"end":{"id":1,"type":"node","properties":{"name":" of"}},"id":2,"label":"case","type":"relationship"}
+{"start":{"id":3,"type":"node","properties":{"name":" acknowledged"}},"end":{"id":4,"type":"node","properties":{"name":" work"}},"id":5,"label":"nsubjpass","type":"relationship"}
+{"start":{"id":4,"type":"node","properties":{"name":" work"}},"end":{"id":7,"type":"node","properties":{"name":" outstanding"}},"id":8,"label":"amod","type":"relationship"}
+{"start":{"id":4,"type":"node","properties":{"name":" work"}},"end":{"id":10,"type":"node","properties":{"name":" the"}},"id":11,"label":"det","type":"relationship"}
+{"start":{"id":4,"type":"node","properties":{"name":" work"}},"end":{"id":13,"type":"node","properties":{"name":" contribution"}},"id":14,"label":"conj","type":"relationship"}
+{"start":{"id":15,"type":"node","properties":{"name":" awards"}},"end":{"id":16,"type":"node","properties":{"name":" in"}},"id":17,"label":"case","type":"relationship"}
+{"start":{"id":4,"type":"node","properties":{"name":" work"}},"end":{"id":19,"type":"node","properties":{"name":" and"}},"id":20,"label":"cc","type":"relationship"}
+{"start":{"id":15,"type":"node","properties":{"name":" awards"}},"end":{"id":22,"type":"node","properties":{"name":" society"}},"id":23,"label":"compound","type":"relationship"}
+{"start":{"id":3,"type":"node","properties":{"name":" acknowledged"}},"end":{"id":13,"type":"node","properties":{"name":" contribution"}},"id":26,"label":"nsubjpass","type":"relationship"}
+{"start":{"id":15,"type":"node","properties":{"name":" awards"}},"end":{"id":28,"type":"node","properties":{"name":" biochemical"}},"id":29,"label":"amod","type":"relationship"}
+{"start":{"id":4,"type":"node","properties":{"name":" work"}},"end":{"id":0,"type":"node","properties":{"name":" professor"}},"id":32,"label":"nmod","type":"relationship"}
+{"start":{"id":15,"type":"node","properties":{"name":" awards"}},"end":{"id":34,"type":"node","properties":{"name":" annual"}},"id":35,"label":"amod","type":"relationship"}
+{"start":{"id":3,"type":"node","properties":{"name":" acknowledged"}},"end":{"id":15,"type":"node","properties":{"name":" awards"}},"id":38,"label":"nmod","type":"relationship"}
+{"start":{"id":0,"type":"node","properties":{"name":" professor"}},"end":{"id":40,"type":"node","properties":{"name":" university"}},"id":41,"label":"compound","type":"relationship"}
+{"start":{"id":0,"type":"node","properties":{"name":" professor"}},"end":{"id":43,"type":"node","properties":{"name":" a"}},"id":44,"label":"det","type":"relationship"}
+{"start":{"id":0,"type":"node","properties":{"name":" professor"}},"end":{"id":46,"type":"node","properties":{"name":" newcastle"}},"id":47,"label":"amod","type":"relationship"}
+{"start":{"id":3,"type":"node","properties":{"name":" acknowledged"}},"end":{"id":49,"type":"node","properties":{"name":" has"}},"id":50,"label":"aux","type":"relationship"}
+{"start":{"id":3,"type":"node","properties":{"name":" acknowledged"}},"end":{"id":52,"type":"node","properties":{"name":" been"}},"id":53,"label":"auxpass","type":"relationship"}
+{"start":{"id":15,"type":"node","properties":{"name":" awards"}},"end":{"id":55,"type":"node","properties":{"name":" the"}},"id":56,"label":"det","type":"relationship"}

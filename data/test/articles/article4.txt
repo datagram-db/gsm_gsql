@@ -1,0 +1,224 @@
+id:0
+ell:
+noun
+root
+JJ
+.
+xi:
+change
+new
+.
+properties:
+"number"	"singular"
+"pos"	"2"
+"specification"	"common"
+.
+phi:
+"punct"
+	1.0	1
+;"compound"
+	1.0	2
+;"dep"
+	1.0	3
+;.
+
+id:2
+ell:
+noun
+det
+.
+xi:
+climate
+a
+.
+properties:
+"number"	"singular"
+"pos"	"1"
+"specification"	"common"
+.
+phi:
+.
+
+id:3
+ell:
+noun
+noun
+root
+.
+xi:
+catastrophe
+show
+.
+properties:
+"number"	"singular"
+"pos"	"3"
+"specification"	"common"
+.
+phi:
+"det"
+	1.0	2
+;"nmod"
+	1.0	4
+;"amod"
+	1.0	0
+;.
+
+id:1
+ell:
+<dot>
+IN
+.
+xi:
+!
+about
+.
+properties:
+"pos"	"4"
+.
+phi:
+.
+
+id:4
+ell:
+noun
+.
+xi:
+change
+.
+properties:
+"number"	"singular"
+"pos"	"6"
+"specification"	"common"
+.
+phi:
+"nmod"
+	1.0	5
+;"punct"
+	1.0	6
+	1.0	7
+;"acl"
+	1.0	8
+;"compound"
+	1.0	9
+;"case"
+	1.0	1
+;.
+
+id:9
+ell:
+noun
+.
+xi:
+climate
+.
+properties:
+"number"	"singular"
+"pos"	"5"
+"specification"	"common"
+.
+phi:
+.
+
+id:6
+ell:
+,
+.
+xi:
+,
+.
+properties:
+"pos"	"7"
+.
+phi:
+.
+
+id:8
+ell:
+VBN
+.
+xi:
+made
+.
+properties:
+"pos"	"8"
+"lemma"	"make"
+.
+phi:
+"nmod"
+	1.0	10
+;.
+
+id:10
+ell:
+noun
+.
+xi:
+children
+.
+properties:
+"number"	"plural"
+"pos"	"10"
+"specification"	"common"
+"lemma"	"child"
+.
+phi:
+"case"
+	1.0	11
+;.
+
+id:11
+ell:
+IN
+.
+xi:
+by
+.
+properties:
+"pos"	"9"
+.
+phi:
+.
+
+id:7
+ell:
+,
+.
+xi:
+,
+.
+properties:
+"pos"	"11"
+.
+phi:
+.
+
+id:5
+ell:
+noun
+.
+xi:
+grown-ups
+.
+properties:
+"number"	"plural"
+"pos"	"13"
+"specification"	"common"
+"lemma"	"grown-up"
+.
+phi:
+"case"
+	1.0	12
+;.
+
+id:12
+ell:
+IN
+.
+xi:
+for
+.
+properties:
+"pos"	"12"
+.
+phi:
+.

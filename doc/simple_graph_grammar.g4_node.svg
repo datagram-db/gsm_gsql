@@ -1,0 +1,210 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="railroad-diagram" width="833" height="72" viewBox="0 0 833 72">
+<style type="text/css">svg.railroad-diagram {
+    background-color: hsl(30,20%,95%);
+}
+svg.railroad-diagram path {
+    stroke-width: 3;
+    stroke: black;
+    fill-opacity: 0;
+}
+svg.railroad-diagram text {
+    font: bold 14px monospace;
+    text-anchor: middle;
+}
+svg.railroad-diagram text.label {
+    text-anchor: start;
+}
+svg.railroad-diagram text.comment {
+    font: italic 12px monospace;
+}
+svg.railroad-diagram rect {
+    stroke-width: 3;
+    stroke: black;
+    fill: #9db0e5;
+}
+svg.railroad-diagram rect[rx~="10"] {
+    fill: #c7a6d8;
+}</style>
+<g transform="translate(.5 .5)">
+<path d="M 20 31 v 20 m 10 -20 v 20 m -10 -10 h 20.5">
+</path>
+<g>
+<path d="M40 41h0">
+</path>
+<path d="M792 41h0">
+</path>
+<path d="M40 41h20">
+</path>
+<g>
+<path d="M60 41h0">
+</path>
+<path d="M772 41h0">
+</path>
+<path d="M60 41h10">
+</path>
+<g>
+<path d="M70 41h0">
+</path>
+<path d="M122 41h0">
+</path>
+<rect x="70" y="30" width="52" height="22" rx="10" ry="10">
+</rect>
+<text x="96" y="45">
+LPAR</text>
+</g>
+<path d="M122 41h10">
+</path>
+<g>
+<path d="M132 41h0">
+</path>
+<path d="M224 41h0">
+</path>
+<path d="M132 41a10 10 0 0 0 10 -10v0a10 10 0 0 1 10 -10">
+</path>
+<g>
+<path d="M152 21h52">
+</path>
+</g>
+<path d="M204 21a10 10 0 0 1 10 10v0a10 10 0 0 0 10 10">
+</path>
+<path d="M132 41h20">
+</path>
+<g>
+<path d="M152 41h0">
+</path>
+<path d="M204 41h0">
+</path>
+<rect x="152" y="30" width="52" height="22" rx="10" ry="10">
+</rect>
+<text x="178" y="45">
+STAR</text>
+</g>
+<path d="M204 41h20">
+</path>
+</g>
+<g>
+<path d="M224 41h0">
+</path>
+<path d="M308 41h0">
+</path>
+<path d="M224 41a10 10 0 0 0 10 -10v0a10 10 0 0 1 10 -10">
+</path>
+<g>
+<path d="M244 21h44">
+</path>
+</g>
+<path d="M288 21a10 10 0 0 1 10 10v0a10 10 0 0 0 10 10">
+</path>
+<path d="M224 41h20">
+</path>
+<g>
+<path d="M244 41h0">
+</path>
+<path d="M288 41h0">
+</path>
+<rect x="244" y="30" width="44" height="22" rx="10" ry="10">
+</rect>
+<text x="266" y="45">
+VEC</text>
+</g>
+<path d="M288 41h20">
+</path>
+</g>
+<path d="M308 41h10">
+</path>
+<g>
+<path d="M318 41h0">
+</path>
+<path d="M458 41h0">
+</path>
+<rect x="318" y="30" width="140" height="22">
+</rect>
+<text x="388" y="45">
+multiple_labels</text>
+</g>
+<path d="M458 41h10">
+</path>
+<g>
+<path d="M468 41h0">
+</path>
+<path d="M700 41h0">
+</path>
+<path d="M468 41a10 10 0 0 0 10 -10v0a10 10 0 0 1 10 -10">
+</path>
+<g>
+<path d="M488 21h192">
+</path>
+</g>
+<path d="M680 21a10 10 0 0 1 10 10v0a10 10 0 0 0 10 10">
+</path>
+<path d="M468 41h20">
+</path>
+<g>
+<path d="M488 41h0">
+</path>
+<path d="M680 41h0">
+</path>
+<path d="M488 41h20">
+</path>
+<g>
+<path d="M508 41h0">
+</path>
+<path d="M660 41h0">
+</path>
+<path d="M508 41h10">
+</path>
+<g>
+<path d="M518 41h0">
+</path>
+<path d="M562 41h0">
+</path>
+<rect x="518" y="30" width="44" height="22" rx="10" ry="10">
+</rect>
+<text x="540" y="45">
+COL</text>
+</g>
+<path d="M562 41h10">
+</path>
+<path d="M572 41h10">
+</path>
+<g>
+<path d="M582 41h0">
+</path>
+<path d="M650 41h0">
+</path>
+<rect x="582" y="30" width="68" height="22" rx="10" ry="10">
+</rect>
+<text x="616" y="45">
+OTHERS</text>
+</g>
+<path d="M650 41h10">
+</path>
+</g>
+<path d="M660 41h20">
+</path>
+</g>
+<path d="M680 41h20">
+</path>
+</g>
+<path d="M700 41h10">
+</path>
+<g>
+<path d="M710 41h0">
+</path>
+<path d="M762 41h0">
+</path>
+<rect x="710" y="30" width="52" height="22" rx="10" ry="10">
+</rect>
+<text x="736" y="45">
+RPAR</text>
+</g>
+<path d="M762 41h10">
+</path>
+</g>
+<path d="M772 41h20">
+</path>
+</g>
+<path d="M 792 41 h 20 m -10 -10 v 20 m 10 -20 v 20">
+</path>
+</g>
+</svg>

@@ -816,8 +816,11 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
         case test_pred::TEST_PRED_CASE_AND:
         {
             auto l = interpret(ptr.child_logic.at(0), maxSize);
+            std::cout<<l<<std::endl;
             if (l.empty()) return l;
-            l &= interpret(ptr.child_logic.at(1), maxSize);
+            auto l2 = interpret(ptr.child_logic.at(1), maxSize);
+            std::cout<<l2<<std::endl;
+            l &= l2;
 //            l.first &= r.first;
 //            l.second = std::max(l.second, r.second);
             return l;
@@ -841,7 +844,23 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
 
         case test_pred::TEST_PRED_CASE_SCRIPT: {
             bool result = script::compiler::ScriptVisitor::evalBool(ptr.nsoe.data(),ptr.nsoe.length(), pattern_id, ((ptr.ptrResult)), schema, table.datum.at(record_id));
-            return {result ? maxSize : 0};
+            if (!result) {
+                return {0};
+            } else {
+                OrderedSet n{(size_t)0};
+                for (auto rec : table.datum.at(record_id)) {
+                    if (std::holds_alternative<size_t>(rec.val))
+                        n.add(std::get<size_t>(rec.val));
+                    else if (rec.isNested)
+                        for (auto nestedRec : rec.table.datum) {
+                            for (auto nestedCell : nestedRec) {
+                                if (std::holds_alternative<size_t>(nestedCell.val))
+                                    n.add(std::get<size_t>(nestedCell.val));
+                            }
+                        }
+                }
+                return n;
+            }
         }
             break;
         case test_pred::MATCHED: {
@@ -890,11 +909,12 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
 
             for (const auto& [k,tablese] : it->second.second) {
                 for (size_t i = 0, N = tablese.datum.size(); i<N; i++) {
-                    if ((offsetForStar==(size_t)-1)) {
+                    if (offsetForStar == (size_t) - 1) {
                         if (std::holds_alternative<size_t>(tablese.datum.at(i).at(offsetForValue).val)) {
                             if (currentMatches.contains(std::get<size_t>(tablese.datum.at(i).at(offsetForValue).val))) {
-                                m.fillWithPreviouslyLess(maxSize);
-                                return m;
+//                                m.fillWithPreviouslyLess(maxSize);
+                                m.add(std::get<size_t>(tablese.datum.at(i).at(offsetForValue).val));
+//                                return m;
                             }
                         }
                     } else {
@@ -902,9 +922,10 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
                             return m;
                         for (const auto& row : tablese.datum.at(i).at(offsetForStar).table.datum) {
                             if (std::holds_alternative<size_t>(row.at(offsetForStar).val)) {
-                                if (currentMatches.contains(std::get<size_t>(row.at(offsetNested).val))){
-                                    m.fillWithPreviouslyLess(maxSize);
-                                    return m;
+                                if (currentMatches.contains(std::get<size_t>(row.at(offsetNested).val))) {
+//                                    m.fillWithPreviouslyLess(maxSize);
+                                    m.add(std::get<size_t>(row.at(offsetNested).val));
+//                                    return m;
                                 }
                             }
                         }
@@ -917,10 +938,10 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
         case test_pred::UNMATCHED: {
             OrderedSet m{(size_t)0};
             auto it = this->ptr.at(graph_id).find(ptr.pattern_matched);
-            if (it == this->ptr.at(graph_id).end())
-                return m;
+//            if (it == this->ptr.at(graph_id).end())
+//                return m;
 
-            std::unordered_set<size_t> currentMatches;
+            std::set<size_t> currentMatches, otherMatches;
             {
                 size_t offsetForStar1 = -1;
                 size_t offsetForValue1 = -1;
@@ -937,16 +958,27 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
                                 std::get<size_t>(
                                         table.datum.at(record_id).at(offsetForValue1).val));
                 } else {
-                    if (!table.datum.at(record_id).at(offsetForValue1).isNested)
+                    if (!table.datum.at(record_id).at(offsetForStar1).isNested)
                         return m;
                     for (const auto& row :
-                            table.datum.at(record_id).at(offsetForValue1).table.datum) {
+                            table.datum.at(record_id).at(offsetForStar1).table.datum) {
                         if (std::holds_alternative<size_t>(row.at(offsetNested1).val))
                             currentMatches.insert(
                                     std::get<size_t>(row.at(offsetNested1).val));
                     }
                 }
             }
+
+//            auto it = this->ptr.at(graph_id).find(ptr.pattern_matched);
+            if (it == this->ptr.at(graph_id).end()) {
+//                m.fillWithPreviouslyLess(1);
+//                m.add(currentMatches.size());
+                for (unsigned long currentMatch : currentMatches)
+                    m.add(currentMatch);
+//                m.add(currentMatches.)
+                return m;
+            }
+
             if (currentMatches.empty()) {
                 m.fillWithPreviouslyLess(maxSize);
                 return m;
@@ -964,24 +996,34 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
 
             for (const auto& [k,tablese] : it->second.second) {
                 for (size_t i = 0, N = tablese.datum.size(); i<N; i++) {
-                    if ((offsetForStar==(size_t)-1)) {
+                    if (offsetForStar == (size_t) - 1) {
                         if (std::holds_alternative<size_t>(tablese.datum.at(i).at(offsetForValue).val)) {
-                            if (currentMatches.contains(std::get<size_t>(tablese.datum.at(i).at(offsetForValue).val)))
-                                return m;
+                            otherMatches.insert(std::get<size_t>(tablese.datum.at(i).at(offsetForValue).val));
+//                            if (currentMatches.contains(std::get<size_t>(tablese.datum.at(i).at(offsetForValue).val))) {
+//                                m.add(std::get<size_t>(tablese.datum.at(i).at(offsetForValue).val));
+//                                return m;
+//                            }
                         }
                     } else {
                         if (!tablese.datum.at(i).at(offsetForStar).isNested)
                             return m;
                         for (const auto& row : tablese.datum.at(i).at(offsetForStar).table.datum) {
                             if (std::holds_alternative<size_t>(row.at(offsetNested).val)) {
-                                if (currentMatches.contains(std::get<size_t>(row.at(offsetNested).val)))
-                                    return m;
+                                otherMatches.insert(std::get<size_t>(row.at(offsetNested).val));
+//                                if (currentMatches.contains(std::get<size_t>(row.at(offsetNested).val))) {
+//                                    m.add(std::get<size_t>(row.at(offsetNested).val));
+//                                    return m;
+//                                }
                             }
                         }
                     }
                 }
             }
-            m.fillWithPreviouslyLess(maxSize);
+//            m.fillWithPreviouslyLess(maxSize);
+            std::vector<size_t> mat;
+            std::set_difference(currentMatches.begin(), currentMatches.end(), otherMatches.begin(), otherMatches.end(), std::back_inserter(mat));
+            for (unsigned long ma : mat)
+                m.add(ma);
             return m;
         }
             break;

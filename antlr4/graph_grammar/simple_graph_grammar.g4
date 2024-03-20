@@ -52,7 +52,7 @@ edge: '--' edgelabel '->' node #outedge
     ;
 edge_joining: node edge;
 
-edgelabel: QPAR (FORALL? | QM?) (var=OTHERS COL)? multiple_labels? PPAR;
+edgelabel: QPAR (FORALL? QM?) (var=OTHERS COL)? multiple_labels? PPAR;
 multiple_labels: (OTHERS '||')* OTHERS;
 
 WHERE: 'where';

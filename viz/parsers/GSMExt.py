@@ -125,7 +125,7 @@ def to_vis_network_node(obj:GsmSpecification, removed=None, inserted=None):
     if (obj.id in removed):
         d["color"] = "red"
     if (obj.id in inserted):
-        d["color"] = "cyan"
+        d["color"] = "#d2cceb"
     return d
 
 def to_vis_network_phi(objs:Iterable[GsmSpecification]):

@@ -194,7 +194,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
         }
 
         /// If I need to group-by
-        if (graph_grammar_entry_point.vec) {
+        if (graph_grammar_entry_point.vec && !graph_grammar_entry_point.hook.empty()) {
             // Indexing the hooks and the join edges
             std::map<std::pair<size_t, size_t>, std::set<size_t>> M; // <graph,objId> --> <edgeTarget>
             std::map<size_t, std::set<std::set<size_t>>> M2;         // <graph> --> [<edgeTarget>]
@@ -336,6 +336,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                 }
                 recordToRemove++;
             }
+
             // Removing the records not matching the hook
             remove_index(result.datum, idx_to_remove);
             remove_index(osagai, idx_to_remove);
@@ -362,9 +363,14 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
 //            std::cout << print_table(final_table) << std::endl;
 //            std::cout << "~~~~~~~~~~~~~~~~" << std::endl;
             std::swap(final_table, result);
+        } else if (graph_grammar_entry_point.vec && graph_grammar_entry_point.hook.empty()) {
+            all.emplace_back("graph");
+            std::reverse(all.begin(), all.end());
+            std::tie(result, nested_schema) = nest_or_groupby(result, all, "*");
+//            result.Schema = nested_schema;
         }
-        /// If I need to group-by: finish
 
+        /// If I need to group-by: finish
         std::sort(result.datum.begin(), result.datum.end());
         size_t graphInPos = 0;
         // Looking for where the "graph" is declared within the schema
@@ -376,6 +382,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
         }
         bool isFirst = false;
         std::string toLookFor;
+//        if (graph_grammar_entry_point.vec && !graph_grammar_entry_point.hook.empty()) {
         if (graph_grammar_entry_point.vec) {
             // If the match is a vec (it was grouped-by), then  getting the variable within the nested element
             // TODO: requiring that a vec has at least one ingoing edge (TODO: generalise!)
@@ -406,9 +413,9 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                         map_orig[map_orig_offset].emplace(k, offsetForStar); // Used f
                     }
                 } else
-                // Remembering that pattern map_orig_offset contains k in the current position
-                // This works under the assumption that * is always located at the last element of the table!
-                map_orig[map_orig_offset].emplace(k, offsetForStar); // Used f
+                    // Remembering that pattern map_orig_offset contains k in the current position
+                    // This works under the assumption that * is always located at the last element of the table!
+                    map_orig[map_orig_offset].emplace(k, offsetForStar); // Used f
             } else {
                 // Remembering the location of the sole nested cell
                 nested_index[map_orig_offset].emplace_back(offsetForStar);
@@ -492,7 +499,11 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                 }
                 // expectedOffset will contain now the information related to the main entry point.
                 // This will then contain the information related to the record of interest
-                local_results.second[std::get<size_t>(record.at(expectedOffset).val)].datum.emplace_back(record);
+                if (std::holds_alternative<bool>(record.at(expectedOffset).val)) {
+                    local_results.second[-1].datum.emplace_back(record);
+                } else {
+                    local_results.second[std::get<size_t>(record.at(expectedOffset).val)].datum.emplace_back(record);
+                }
             }
 
             if (verbose) {
