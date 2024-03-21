@@ -67,13 +67,13 @@ def skipFirst(s:str, val:str):
     else:
         return s[len(val):]
 
-def parse_cell(s:str, G):
+def parse_cell(s:str, G, currentGraph=None):
     if s is None:
         return None
     s = s.strip()
     m = re.search(r"^[-+]?(?:\b[0-9]+(?:\.[0-9]*)?|\.[0-9]+\b)(?:[eE][-+]?[0-9]+\b)?", s)
     if s.startswith("@"):
-        return parse_nested_table(s[1:], G)
+        return parse_nested_table(s[1:], G, currentGraph)
     if s.startswith("NULL"):
         return (None,s[4:].strip())
     elif s.startswith('"'):
@@ -88,13 +88,13 @@ def parse_cell(s:str, G):
     return None
 
 
-def parse_row(schema:list[str], s:str, G:int):
+def parse_row(schema:list[str], s:str, G:int, currentGraph=None):
     row = list()
     s = skipFirst(s, "[")
     if s is None:
         return None
     for x in range(len(schema)):
-        val = parse_cell(s, G)
+        val = parse_cell(s, G, currentGraph)
         if val is None:
             return None
         row.append(val[0])
@@ -108,7 +108,7 @@ def parse_row(schema:list[str], s:str, G:int):
     return None
 
 
-def parse_nested_table(s:str, G):
+def parse_nested_table(s:str, G, currentGraph = None):
     G = int(G)
     schema = list()
     # table = list()
@@ -134,9 +134,10 @@ def parse_nested_table(s:str, G):
     if 'graph' in schema:
         g = schema.index('graph')
     while s is not None:
-        result = parse_row(schema, s, G)
-        if result is not None and ((g==-1) or (result[0][g] == G)):
-            table.addRow(result[0])
+        result = parse_row(schema, s, G, currentGraph)
+        if result is not None and (((g==-1) and (currentGraph is None)) or (result[0][g] <= G)):
+            if (result[0][g] == G) or (currentGraph is None):
+                table.addRow(result[0])
             s = result[1]
         else:
             rest = skipFirst(s, "}")
