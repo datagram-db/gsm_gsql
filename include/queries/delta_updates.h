@@ -127,8 +127,15 @@ struct delta_updates {
 
     inline size_t replacedWith(size_t x) const {
         auto it = replacement_map.find(x);
+        // empty set, add x to set
+        std::unordered_set<size_t> replacement_set;
+        replacement_set.insert(x);
         while (it != replacement_map.end()) {
             x = it->second;
+            // add x to set, .insert returns bool if false then break
+            if (!replacement_set.insert(x).second) {
+                break;
+            }
             it = replacement_map.find(x);
         }
         return x;

@@ -58,13 +58,13 @@ N_inserted = dict()
 
 @app.get("/morphisms/{folder}", response_class=HTMLResponse)
 async def morphisms(folder):
-    return parsers.NestedTables.generate_morphism_html(os.path.join(os.getcwd(), "data", folder), folder)
+    return parsers.NestedTables.generate_morphism_html(os.path.join(os.getcwd(), folder, "0"), folder)
 
 
 def load_nodes_any(folder, N, file):
     if folder not in N:
         N[folder] = dict()
-        for obj in deserialize_gsm_file(os.path.join(os.getcwd(), "data", folder, file)):
+        for obj in deserialize_gsm_file(os.path.join(os.getcwd(), folder, "0", file)):
             N[folder][obj.id] = obj
     return N
 
@@ -89,9 +89,9 @@ def load_input_nodes(folder):
     global N_input
     global N_removed
     global N_inserted
-    with open(os.path.join(os.getcwd(), "data", folder, "removed.json"), "r") as f:
+    with open(os.path.join(os.getcwd(), folder, "0", "removed.json"), "r") as f:
         N_removed[folder] = set(json.load(f))
-    with open(os.path.join(os.getcwd(), "data", folder, "inserted.json"), "r") as f:
+    with open(os.path.join(os.getcwd(), folder, "0", "inserted.json"), "r") as f:
         N_inserted[folder] = set(json.load(f))
     N_input = load_nodes_any(folder, N_input, "input.json")
 
@@ -183,8 +183,8 @@ async def graph(folder):
     with open("test.html", "r") as f:
         content = f.read().replace("§", folder).replace('£', 'input')
         pos = content.find("<div id=\"title\">")
-        result = content[:pos] + parsers.NestedTables.generate_morphism_html(os.path.join(os.getcwd(), "data"),
-                                                                             folder) + content[pos:]
+        result = content[:pos] + parsers.NestedTables.generate_morphism_html(os.path.join(os.getcwd(), folder),
+                                                                             "0") + content[pos:]
         return result  # f.read().replace("§", folder).replace('£','input')
 
 
