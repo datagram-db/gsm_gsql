@@ -112,6 +112,7 @@ namespace script {
             std::any visitMod(scriptParser::ModContext *context) override;
             std::any visitFlat(scriptParser::FlatContext *context) override;
             std::any visitSelfcross(scriptParser::SelfcrossContext *context) override;
+            std::any visitSelfzip(scriptParser::SelfzipContext *context) override;
             std::any visitInj(scriptParser::InjContext *context) override;
             std::any visitCross(scriptParser::CrossContext *context) override;
             std::any visitAbs(scriptParser::AbsContext *context) override;

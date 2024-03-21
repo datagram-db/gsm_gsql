@@ -128,9 +128,7 @@ namespace script {
         std::any ScriptVisitor::visitAtom_array(scriptParser::Atom_arrayContext *context) {
             ArrayList<DPtr<script::structures::ScriptAST>> w;
             if (context) {
-                ArrayList<DPtr<script::structures::ScriptAST>> v;
-                innerBlock(context->expr_block()->inner_block(), v);
-                return v;
+                innerBlock(context->expr_block()->inner_block(), w);
             }
             auto result = script::structures::ScriptAST::array_(std::move(w));
             return result;
@@ -336,7 +334,8 @@ namespace script {
         }
 
         std::any ScriptVisitor::visitEval(scriptParser::EvalContext *context) {
-            auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr()));
+            auto expr = visit(context->expr());
+            auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(expr);
             auto ptr = script::structures::ScriptAST::unop_(this->context, script::structures::t::EvalE, std::move(lx));
 
             return {ptr};
@@ -439,9 +438,17 @@ namespace script {
         }
 
         std::any ScriptVisitor::visitSelfcross(scriptParser::SelfcrossContext *context) {
-            auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->operand()));
+            auto V = visit(context->operand());
+            auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(V);
             auto ptr = script::structures::ScriptAST::unop_(this->context, script::structures::t::SelfCrossE, std::move(lx));
            
+            return {ptr};
+        }
+
+        std::any ScriptVisitor::visitSelfzip(scriptParser::SelfzipContext *context) {
+            auto V = visit(context->operand());
+            auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(V);
+            auto ptr = script::structures::ScriptAST::unop_(this->context, script::structures::t::SelfZipE, std::move(lx));
             return {ptr};
         }
 
@@ -484,7 +491,8 @@ namespace script {
 
         std::any ScriptVisitor::visitLfold(scriptParser::LfoldContext *context) {
             auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->cp()->term(0)));
-            auto mx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->cp()->term(1)));
+            auto M = visit(context->cp()->term(1));
+            auto mx = std::any_cast<DPtr<script::structures::ScriptAST>>(M);
             auto rx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr()));
             return script::structures::ScriptAST::terop_(this->context, script::structures::t::LFoldE, std::move(lx), std::move(mx), std::move(rx));
         }
@@ -875,7 +883,8 @@ namespace script {
         }
 
         void ScriptVisitor::innerBlock(scriptParser::Inner_blockContext* b, ArrayList<DPtr<script::structures::ScriptAST>>& v) {
-            v.emplace_back(std::move(std::any_cast<DPtr<script::structures::ScriptAST>>(visit(b->expr()))));
+            auto V = visit(b->expr());
+            v.emplace_back(std::move(std::any_cast<DPtr<script::structures::ScriptAST>>(V)));
             if (b->inner_block()) {
                 innerBlock(b->inner_block(), v);
             }

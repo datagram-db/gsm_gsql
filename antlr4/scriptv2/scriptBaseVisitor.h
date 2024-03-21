@@ -163,6 +163,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitSelfzip(scriptParser::SelfzipContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitVarphi(scriptParser::VarphiContext *ctx) override {
     return visitChildren(ctx);
   }

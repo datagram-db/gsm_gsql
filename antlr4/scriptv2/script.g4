@@ -77,6 +77,7 @@ term :operand               #term_operand
           |  OBJ operand                           #obj
           |  FLAT operand                          #flat
          |  SELFX operand                     #selfcross
+         |  ZIP operand                     #selfzip
          |  VARPHI operand                        #varphi
          |  TYPEOF operand                        #typeof
      | ASSERT operand                        #ensure
@@ -172,6 +173,7 @@ INJ : 'inj';
 OBJ : 'J';
 FLAT : 'flat';
 SELFX : 'selfx';
+ZIP : 'zip';
 VARPHI : '𝜑';
 CROSS : '⨯';
 VARNAME   : [a-z]+ ;

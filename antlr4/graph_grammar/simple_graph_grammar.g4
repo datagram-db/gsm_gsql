@@ -24,7 +24,7 @@ rewrite_expr: '𝜉' num=OTHERS '@' nodeVar=rewrite_expr #node_xi
             | 'label' edgeVar=rewrite_expr            #edge_label
             | 'src'   edgeVar=rewrite_expr            #edge_src
             | 'dst'   edgeVar=rewrite_expr            #edge_dst
-            | IF LPAR ifcond=test_expr RPAR THEN then_effect=rewrite_expr (ELSE else_effect=rewrite_expr)?  #ifte_expr
+            | IF LPAR ifcond=test_expr RPAR 'over' OTHERS THEN then_effect=rewrite_expr (ELSE else_effect=rewrite_expr)?  #ifte_expr
             | OTHERS                                  #node_or_edge
             | LPAR rewrite_expr RPAR                  #just_par
             | 'SCRIPT' EscapedString                  #script

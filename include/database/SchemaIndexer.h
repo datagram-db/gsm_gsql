@@ -17,6 +17,7 @@
 struct SchemaIndexer {
     std::unordered_map<std::string, size_t>     field_to_schema;
     std::unordered_map<std::string, std::unordered_map<std::string, size_t>> nested_schema;
+    std::unordered_map<std::string, std::unordered_set<std::string>> nested_strings;
     std::set<size_t>                           isNull, cow;
     std::vector<DPtr<script::structures::ScriptAST>> values;
     std::set<size_t> strings;
@@ -32,7 +33,6 @@ struct SchemaIndexer {
         for (size_t i = 0, N = schema->size(); i<N; i++) {
             field_to_schema.emplace(schema->at(i), i);
         }
-
     }
 
     void initialize(const  std::vector<value>* nestedRow) {
@@ -40,6 +40,7 @@ struct SchemaIndexer {
         row = nestedRow;
         isNull.clear();
         cow.clear();
+        nested_schema.clear();
         for (size_t i = 0, N = std::min(nestedRow->size(), field_to_schema.size()); i<N; i++) {
             const auto& cell = nestedRow->at(i);
             if (!cell.isNested) {
@@ -52,6 +53,8 @@ struct SchemaIndexer {
                 if (!fullyIndexed) {
                     for (size_t j = 0, M = cell.table.Schema.size(); j<M; j++) {
                         nested_schema[schema->at(i)].emplace(cell.table.Schema.at(j), j);
+                        if (cell.table.Schema.at(j).ends_with("_label"))
+                            nested_strings[schema->at(i)].insert(cell.table.Schema.at(j));
                     }
                 }
                 // TODO: efficient nested values on demand (COW)
@@ -61,7 +64,18 @@ struct SchemaIndexer {
     }
 
     bool hasKey(const std::string& key) const {
-        return field_to_schema.contains(key);
+        auto it = key.find('.');
+        if (it == std::string::npos) {
+            return field_to_schema.contains(key);
+        } else {
+            auto nested = key.substr(0, it);
+            auto var = key.substr(it+1);
+            auto it2 = nested_schema.find(nested);
+            if (it2 == nested_schema.end())
+                return false;
+            else
+                return it2->second.find(var) != it2->second.end();
+        }
     }
 
     size_t getNativeInt(const std::string& key) const {

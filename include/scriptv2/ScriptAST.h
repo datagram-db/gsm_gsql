@@ -94,6 +94,7 @@ namespace script::structures {
         ObjX,
         CrossE,
         SelfCrossE,
+        SelfZipE,
         InjE,
         FlatE,
         LFoldE,

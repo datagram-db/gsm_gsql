@@ -125,6 +125,9 @@ public:
   virtual void enterSelfcross(scriptParser::SelfcrossContext *ctx) = 0;
   virtual void exitSelfcross(scriptParser::SelfcrossContext *ctx) = 0;
 
+  virtual void enterSelfzip(scriptParser::SelfzipContext *ctx) = 0;
+  virtual void exitSelfzip(scriptParser::SelfzipContext *ctx) = 0;
+
   virtual void enterVarphi(scriptParser::VarphiContext *ctx) = 0;
   virtual void exitVarphi(scriptParser::VarphiContext *ctx) = 0;
 

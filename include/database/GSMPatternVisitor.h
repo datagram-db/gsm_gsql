@@ -371,6 +371,7 @@ public:
             } else {
                 result->ptr_or_else = nullptr;
             }
+            result->prop = ctx->OTHERS()->getText();
             return {result};
         }
         return {};

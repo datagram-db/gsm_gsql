@@ -631,49 +631,74 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
 
         case rewrite_expr::IFTE_RW: {
             auto result = interpret(ptr->ifcond, 1);
+
             if (result.full()) {
                 return interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), force, node_or_edge_otherwise);
             } else if (result.empty()) {
                 return interpret_closure_evaluate(ptr->ptr_or_else.get(), force, node_or_edge_otherwise);
             } else {
+                NestedResultTable variableResolution;
+                if (node_or_edge_otherwise) {
+                    variableResolution = clos.resolveIdsOverVariableName2(graph_id, pattern_id, ptr->prop, table.datum.at(record_id));
+                } else {
+                    variableResolution = clos.resolveEdgesOverVariableName2(pattern_id, ptr->prop, table.datum.at(record_id));
+                }
+                if (variableResolution.expectedType != NestedResultTable::variant_type_cpp::RT_VSIZET) {
+                    throw std::runtime_error("ERROR: variable "+ptr->prop+" should be an int!");
+                }
                 DEBUG_ASSERT(result.cardinality() > 1);
-                OrderedSet toConsider{(size_t)0};
+                OrderedSet toConsider{(size_t)0}, none{(size_t)0};
                 auto l = interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), force, node_or_edge_otherwise);
+
                 // TODO: estimate the type of R just from the expression, so to save computational time.
                 //       by doing this, we can then compute r after updating toConsider with result, and only compute the results for the specific positions
                 auto r = interpret_closure_evaluate(ptr->ptr_or_else.get(), force, node_or_edge_otherwise);
-                l = resolve(l,toConsider,r.expectedType);
-                toConsider &= result;
-                switch (r.expectedType) {
+                NestedResultTable::variant_type_cpp casting;
+                if (l.t != NestedResultTable::variant_type::R_SCRIPT) {
+                    casting = getExpectedType(l.t);
+                } else if (r.t != NestedResultTable::variant_type::R_SCRIPT) {
+                    casting = getExpectedType(r.t);
+                }
+                l = resolve(l,toConsider,casting);
+//                std::cout << "R" << result << std::endl;
+                std::cout << toConsider << std::endl;
+                r = resolve(r,none,casting);
+                std::cout << none << std::endl;
+//                toConsider &= result;
+                std::cout << toConsider << std::endl;
+                switch (casting) {
                     case NestedResultTable::RT_VSTRING: {
                         std::vector<std::string> v;
-                        for (size_t i = 0; i< result.cardinality(); i++) {
-                            if (toConsider.contains(i))
-                                v.emplace_back(l.getV<std::string>(i));
+                        for (size_t j = 0; j< variableResolution.size(); j++) {
+                            size_t i = variableResolution.getInt(j);
+                            if (result.contains(i))
+                                v.emplace_back(l.getV<std::string>(j));
                             else
-                                v.emplace_back(r.getV<std::string>(i));
+                                v.emplace_back(r.getV<std::string>(j));
                         }
                         return {std::move(v), -1, -1};
                     }
                         break;
                     case NestedResultTable::RT_VSIZET: {
                         std::vector<size_t> v;
-                        for (size_t i = 0; i< result.cardinality(); i++) {
-                            if (toConsider.contains(i))
-                                v.emplace_back(l.getV<size_t>(i));
+                        for (size_t j = 0; j< variableResolution.size(); j++) {
+                            size_t i = variableResolution.getInt(j);
+                            if (result.contains(i))
+                                v.emplace_back(l.getV<size_t>(j));
                             else
-                                v.emplace_back(r.getV<size_t>(i));
+                                v.emplace_back(r.getV<size_t>(j));
                         }
                         return {std::move(v), true, -1, -1};
                     }
                         break;
                     case NestedResultTable::RT_VCONTENT:{
                         std::vector<std::vector<gsm_object_xi_content>> v;
-                        for (size_t i = 0; i< result.cardinality(); i++) {
-                            if (toConsider.contains(i))
-                                v.emplace_back(l.getV<std::vector<gsm_object_xi_content>>(i));
+                        for (size_t j = 0; j< variableResolution.size(); j++) {
+                            size_t i = variableResolution.getInt(j);
+                            if (result.contains(i))
+                                v.emplace_back(l.getV<std::vector<gsm_object_xi_content>>(j));
                             else
-                                v.emplace_back(r.getV<std::vector<gsm_object_xi_content>>(i));
+                                v.emplace_back(r.getV<std::vector<gsm_object_xi_content>>(j));
                         }
                         return {std::move(v), -1, -1};
                     }
@@ -1488,6 +1513,7 @@ closure::Interpret::resolve(const NestedResultTable &x,
                 }
 
                 case NestedResultTable::RT_SIZET:
+                    containment.fillWithPreviouslyLess(1);
                     return {(size_t)std::get<std::shared_ptr<script::structures::ScriptAST>>(x.content)->toInteger(true), false, x.cell_nested_morphism, x.column};
 
                 case NestedResultTable::RT_VSIZET:{

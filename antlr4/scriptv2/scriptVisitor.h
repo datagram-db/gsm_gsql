@@ -93,6 +93,8 @@ public:
 
     virtual std::any visitSelfcross(scriptParser::SelfcrossContext *context) = 0;
 
+    virtual std::any visitSelfzip(scriptParser::SelfzipContext *context) = 0;
+
     virtual std::any visitVarphi(scriptParser::VarphiContext *context) = 0;
 
     virtual std::any visitTypeof(scriptParser::TypeofContext *context) = 0;

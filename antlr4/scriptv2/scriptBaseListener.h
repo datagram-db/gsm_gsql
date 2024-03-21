@@ -127,6 +127,9 @@ public:
   virtual void enterSelfcross(scriptParser::SelfcrossContext * /*ctx*/) override { }
   virtual void exitSelfcross(scriptParser::SelfcrossContext * /*ctx*/) override { }
 
+  virtual void enterSelfzip(scriptParser::SelfzipContext * /*ctx*/) override { }
+  virtual void exitSelfzip(scriptParser::SelfzipContext * /*ctx*/) override { }
+
   virtual void enterVarphi(scriptParser::VarphiContext * /*ctx*/) override { }
   virtual void exitVarphi(scriptParser::VarphiContext * /*ctx*/) override { }
 

@@ -26,8 +26,9 @@ public:
     ALPAREN = 69, ARPAREN = 70, LPAREN = 71, RPAREN = 72, BOOL = 73, AND_TYPE = 74, 
     OR_TYPE = 75, FUN = 76, NOT = 77, LOG = 78, POW = 79, SIN = 80, COS = 81, 
     TAN = 82, PHI = 83, ELL = 84, XI = 85, INJ = 86, OBJ = 87, FLAT = 88, 
-    SELFX = 89, VARPHI = 90, CROSS = 91, VARNAME = 92, ENFORCE = 93, EscapedString = 94, 
-    NUMBER = 95, INTEGER = 96, SPACE = 97, COMMENT = 98, LINE_COMMENT = 99
+    SELFX = 89, ZIP = 90, VARPHI = 91, CROSS = 92, VARNAME = 93, ENFORCE = 94, 
+    EscapedString = 95, NUMBER = 96, INTEGER = 97, SPACE = 98, COMMENT = 99, 
+    LINE_COMMENT = 100
   };
 
   enum {
@@ -546,6 +547,18 @@ public:
     SinContext(TermContext *ctx);
 
     antlr4::tree::TerminalNode *SIN();
+    OperandContext *operand();
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  SelfzipContext : public TermContext {
+  public:
+    SelfzipContext(TermContext *ctx);
+
+    antlr4::tree::TerminalNode *ZIP();
     OperandContext *operand();
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;

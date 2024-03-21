@@ -17,7 +17,7 @@ p2 = (>> H)<-[∀l:]--(X)                                   // Graph matching, S
        set (φ orig , h) as H                             // This node will contain all the grouped element (>>)
        set (𝜋 conj @ h) as (𝜉 0 @ Z)                     // Optional, only if Z exists!
        set (𝜉 0 @ h) as (𝜉 0 @ H)
-       set (φ (if ((label l ) = nmod) then    // Defining the label in function of K, if this exists,
+       set (φ (if ((label l ) = nmod) over l then    // Defining the label in function of K, if this exists,
                                                                       // otherwise using l
                                        (𝜉 0 @ K)
                                       else
@@ -42,7 +42,7 @@ p3 = (V)--[∀n:nsubj]->(>> S)
 
      ↪
         //new s
-        set(φ (if ((label l ) = nmod) then    // Defining the label in function of T, if this exists,
+        set(φ (if ((label l ) = nmod) over l then    // Defining the label in function of T, if this exists,
                                                                       // otherwise using V
                                               SCRIPT "(^(^(^(^ (^ ( [(𝜉 ⦃\"A\"⦄) 0])  \" \") ([ (𝜉 ⦃\"N\"⦄)  0])) \" \") ([ (𝜉 ⦃\"V\"⦄)  0])) \" \") ([ (𝜉 ⦃\"T\"⦄)  0])"
                                              else
@@ -59,14 +59,19 @@ p3 = (V)--[∀n:nsubj]->(>> S)
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+
 p4 = (>> V)<-[∀ ? w:]--(B)
         --[∀l:dobj||ccomp||nmod||xcomp]->(Z)
+        --[? nmod_tmod]->(TN)
+        --[? compound_ptr]->(TB)
      (Z)--[? case]->(T)
       where ((V unmatched p3 . V) ∧ (ℓ 0 @ V ≠ noun))
      ↪  new j
-        set(φ (if ((label l ) = nmod) then    // Defining the label in function of T, if this exists,
+        set(φ when , j) as TN
+        set(φ (if ((label l ) = nmod) over l then    // Defining the label in function of T, if this exists,
                                                                               // otherwise using V
-                                                      SCRIPT "^ (^ ( [(𝜉 ⦃\"V\"⦄) 0])  \" \") ([ (𝜉 ⦃\"T\"⦄)  0])"
+                                                      SCRIPT "° (fun y → { l cp (fun x → { ^ (^ ([⦃x⦄ 0]) \" \") ([⦃x⦄ 1]) }) (\" \")  y } ) ( zip ( a {   (° (fun y → {[(𝜉 y) 0]}) ⦃\"*.V\"⦄)  ;   (° (fun y → {[(𝜉 y) 0]}) ⦃\"*.T\"⦄) } ))"
                                                      else
                                                       (𝜉 0 @ V)
                                                      ), j) as Z

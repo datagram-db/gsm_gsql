@@ -324,6 +324,9 @@ std::string script::structures::ScriptAST::toString(bool quot, bool implode) con
         case SelfCrossE:
             return "selfx (" + arrayList[0]->toString(true) +")";
 
+        case SelfZipE:
+            return "zip (" + arrayList[0]->toString(true) +")";
+
         case InjE:
             return "inj (" + arrayList[0]->toString(true) +")";
 
@@ -490,13 +493,22 @@ std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::Scrip
             };
         }
 
-        case TupleT:
-        case Tuple: {
+        case TupleT:{
             return [this](DPtr<script::structures::ScriptAST> x) {
                 std::string i = x->toString();
                 auto it = tuple.find(i);
                 if (it == tuple.end())
                     return script::structures::ScriptAST::star_T();
+                else
+                    return it->second;
+            };
+        }
+        case Tuple: {
+            return [this](DPtr<script::structures::ScriptAST> x) {
+                std::string i = x->toString();
+                auto it = tuple.find(i);
+                if (it == tuple.end())
+                    return script::structures::ScriptAST::null_();
                 else
                     return it->second;
             };
@@ -829,7 +841,8 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
                 return (run->type == Tuple) ? tuple_(std::move(return_)) : tuple_type_(std::move(return_));
             } else {
                 auto list = run->toList();
-                ArrayList<DPtr<script::structures::ScriptAST>> vv(list.size());
+                ArrayList<DPtr<script::structures::ScriptAST>> vv;
+                vv.reserve(list.size());
                 for (const auto& ref : list) {
                     vv.emplace_back(transf(ref));
                 }
@@ -933,8 +946,8 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
             return double_(std::ceil(arrayList[0]->toDouble()));
 
         case ConcatE: {
-            auto f = arrayList[0]->run(implode)->toString(false,implode);
-            auto s = arrayList[1]->run(implode)->toString(false,implode);
+            auto f = arrayList[0]->run(implode)->toString(false,true);
+            auto s = arrayList[1]->run(implode)->toString(false,true);
             return string_(f+s);
         }
 
@@ -1194,6 +1207,25 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
             }
             for (ArrayList<DPtr<script::structures::ScriptAST>>& res : yaucl::iterators::cartesian(v)) {
                 result.emplace_back(array_(std::move(res)));
+            }
+            return array_(std::move(result));
+        }
+
+        case SelfZipE: {
+            ArrayList<DPtr<script::structures::ScriptAST>> result;
+            ArrayList<ArrayList<DPtr<script::structures::ScriptAST>>> v;
+            size_t len = std::numeric_limits<size_t>::max();
+            for (const DPtr<script::structures::ScriptAST>& lptr : arrayList[0]->toList()) {
+                auto ref = lptr->toList();
+                len = std::min(len, ref.size());
+                v.emplace_back(ref);
+            }
+            for (size_t i = 0; i<len; i++) {
+                ArrayList<DPtr<script::structures::ScriptAST>> zipped;
+                for (const ArrayList<DPtr<script::structures::ScriptAST>>& vv : v) {
+                    zipped.emplace_back(vv[i]);
+                }
+                result.emplace_back(array_(std::move(zipped)));
             }
             return array_(std::move(result));
         }
@@ -1870,6 +1902,7 @@ std::optional<std::function<DPtr<script::structures::ScriptAST>(DPtr<script::str
         case ObjX:
         case CrossE:
         case SelfCrossE:
+        case SelfZipE:
         case InjE:
         case FlatE:
         case LFoldE:
