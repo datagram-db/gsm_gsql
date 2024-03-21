@@ -1,0 +1,385 @@
+id:0
+ell:
+VBZ
+root
+.
+xi:
+eats
+.
+properties:
+"pos"	"3"
+"lemma"	"eat"
+.
+phi:
+"nsubj"
+	1.0	1
+;"dobj"
+	1.0	2
+;.
+
+id:1
+ell:
+noun
+.
+xi:
+cat
+.
+properties:
+"number"	"singular"
+"pos"	"2"
+"specification"	"common"
+.
+phi:
+"det"
+	1.0	3
+;.
+
+id:3
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"1"
+.
+phi:
+.
+
+id:2
+ell:
+noun
+.
+xi:
+mice
+.
+properties:
+"number"	"plural"
+"pos"	"5"
+"specification"	"common"
+"lemma"	"mouse"
+.
+phi:
+"det"
+	1.0	4
+;.
+
+id:4
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"4"
+.
+phi:
+.
+
+~~
+id:0
+ell:
+VBN
+root
+.
+xi:
+eaten
+.
+properties:
+"pos"	"4"
+"lemma"	"eat"
+.
+phi:
+"nsubjpass"
+	1.0	1
+;"nmod"
+	1.0	2
+;"auxpass"
+	1.0	3
+;.
+
+id:1
+ell:
+noun
+.
+xi:
+mice
+.
+properties:
+"number"	"plural"
+"pos"	"2"
+"specification"	"common"
+"lemma"	"mouse"
+.
+phi:
+"det"
+	1.0	4
+;.
+
+id:4
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"1"
+.
+phi:
+.
+
+id:3
+ell:
+VBZ
+.
+xi:
+is
+.
+properties:
+"pos"	"3"
+"lemma"	"be"
+.
+phi:
+.
+
+id:2
+ell:
+noun
+.
+xi:
+cat
+.
+properties:
+"number"	"singular"
+"pos"	"7"
+"specification"	"common"
+.
+phi:
+"det"
+	1.0	5
+;"case"
+	1.0	6
+;.
+
+id:6
+ell:
+IN
+.
+xi:
+by
+.
+properties:
+"pos"	"5"
+.
+phi:
+.
+
+id:5
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"6"
+.
+phi:
+.
+
+~~
+id:0
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"4"
+.
+phi:
+.
+
+id:1
+ell:
+VBZ
+root
+.
+xi:
+eats
+.
+properties:
+"pos"	"3"
+"lemma"	"eat"
+.
+phi:
+"nsubj"
+	1.0	2
+;"dobj"
+	1.0	3
+;.
+
+id:2
+ell:
+noun
+.
+xi:
+mice
+.
+properties:
+"number"	"plural"
+"pos"	"2"
+"specification"	"common"
+"lemma"	"mouse"
+.
+phi:
+"det"
+	1.0	4
+;.
+
+id:4
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"1"
+.
+phi:
+.
+
+id:3
+ell:
+noun
+.
+xi:
+cat
+.
+properties:
+"number"	"singular"
+"pos"	"5"
+"specification"	"common"
+.
+phi:
+"det"
+	1.0	0
+;.
+
+~~
+id:0
+ell:
+VBN
+root
+.
+xi:
+eaten
+.
+properties:
+"pos"	"4"
+"lemma"	"eat"
+.
+phi:
+"nsubjpass"
+	1.0	1
+;"nmod"
+	1.0	2
+;"auxpass"
+	1.0	3
+;.
+
+id:1
+ell:
+noun
+.
+xi:
+cat
+.
+properties:
+"number"	"singular"
+"pos"	"2"
+"specification"	"common"
+.
+phi:
+"det"
+	1.0	4
+;.
+
+id:4
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"1"
+.
+phi:
+.
+
+id:3
+ell:
+VBZ
+.
+xi:
+is
+.
+properties:
+"pos"	"3"
+"lemma"	"be"
+.
+phi:
+.
+
+id:2
+ell:
+noun
+.
+xi:
+mice
+.
+properties:
+"number"	"plural"
+"pos"	"7"
+"specification"	"common"
+"lemma"	"mouse"
+.
+phi:
+"det"
+	1.0	5
+;"case"
+	1.0	6
+;.
+
+id:6
+ell:
+IN
+.
+xi:
+by
+.
+properties:
+"pos"	"5"
+.
+phi:
+.
+
+id:5
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"6"
+.
+phi:
+.
+

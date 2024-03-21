@@ -189,4 +189,131 @@ void fillFrom(nested_table& table, const RawTwowayTable& orig) {
 //        tmp.emplace_back(std::get<3>(ROW));
     }
 }
+
+
+struct IndexedSchemaCoordinates {
+    const nested_table* table;
+
+    IndexedSchemaCoordinates(const nested_table* ptr) : table{ptr}, isIndexed{false} {}
+    DEFAULT_COPY_ASSGN(IndexedSchemaCoordinates);
+
+    inline void index() {
+        if (isIndexed || (!table) || (table->datum.empty())) return;
+        isNested.resize(table->Schema.size(), false);
+        const auto& disSchema = table->Schema;
+        countNested = 0;
+        for (size_t i = 0, N = disSchema.size(); i<N; i++) {
+            const auto& mother = disSchema.at(i);
+            const auto& cellAt0 = table->datum.at(0).at(i);
+            colToIdx.emplace(mother, i);
+            if (cellAt0.isNested || (!cellAt0.table.Schema.empty())) {
+                isNested[i] = true;
+                countNested++;
+                const auto& nestSchema = cellAt0.table.Schema;
+                for (size_t j = 0, M = nestSchema.size(); j<M; j++) {
+                    const auto& pepper = nestSchema.at(j);
+                    auto it = nestedToMother.emplace(pepper, mother);
+                    if (!it.second)
+                        throw std::runtime_error("ERROR: field " + it.first->first +" was already associated to "+it.first->second);
+                    nestedToOffsetInMother.emplace(pepper, j);
+                    sitterToPeppers[mother].emplace_back(pepper);
+                }
+            }
+        }
+        isIndexed= true;
+    }
+
+    inline bool isNestedIdx(size_t idx) const {
+        return isNested.at(idx);
+    }
+
+    inline bool isNestedCol(const std::string& colName) const {
+        auto it = colToIdx.find(colName);
+        return (it != colToIdx.end()) && (isNestedIdx(it->second));
+    }
+
+    inline ssize_t mainHeaderKeyOffset(const std::string& colName) const {
+        auto it = colToIdx.find(colName);
+        return it == colToIdx.end() ? -1 : it->second;
+    }
+
+    inline bool hasMainHeaderKey(const std::string& colName) const {
+        return colToIdx.find(colName) == colToIdx.end();
+    }
+
+    inline bool hasNestedKey(const std::string& colName) const {
+        return nestedToOffsetInMother.find(colName) == nestedToOffsetInMother.end();
+    }
+
+    inline ssize_t nestedKeyOffset(const std::string& colName) const {
+        auto it = nestedToOffsetInMother.find(colName);
+        return it == nestedToOffsetInMother.end() ? -1 : it->second;
+    }
+
+    inline bool hasKeyAnywhere(const std::string& colName) const {
+        return (colToIdx.find(colName) != colToIdx.end()) ||
+                ( nestedToOffsetInMother.find(colName) != nestedToOffsetInMother.end());
+    }
+
+    inline bool fillNotNested(std::vector<std::string>& v) const {
+        v.reserve(isNested.size());
+        for (size_t i = 0; i<isNested.size(); i++) {
+            if (!isNested.at(i))
+                v.emplace_back(table->Schema.at(i));
+        }
+    }
+
+    inline bool fillNested(std::vector<std::string>& v) const {
+        v.reserve(isNested.size());
+        for (size_t i = 0; i<isNested.size(); i++) {
+            if (isNested.at(i))
+                v.emplace_back(table->Schema.at(i));
+        }
+    }
+
+    inline bool fillBothNested(std::vector<std::string>& y, std::vector<std::string>& n) const {
+        y.reserve(countNested);
+        n.reserve(table->Schema.size()-countNested);
+        for (size_t i = 0; i<isNested.size(); i++) {
+            if (!isNested.at(i)) {
+                n.emplace_back(table->Schema.at(i));
+            } else {
+                auto it = sitterToPeppers.find(table->Schema.at(i));
+                DEBUG_ASSERT(it !=sitterToPeppers.end() );
+                y.insert(y.end(), it->second.begin(), it->second.end());
+            }
+        }
+    }
+
+    inline void getAllParents(const std::string& pepper, std::unordered_set<std::string>& parents) const {
+        auto it = nestedToMother.find(pepper);
+        if (it != nestedToMother.end()) {
+            parents.insert(it->second);
+        }
+    }
+
+    inline bool hasNestedColumns() const {
+        return !nestedToOffsetInMother.empty();
+    }
+
+    inline std::vector<std::string> getNestedSchemaFromOffset(const std::string& i) const {
+        auto it = sitterToPeppers.find(i);
+        if (it != sitterToPeppers.end())
+            return it->second;
+        return {};
+    }
+
+private:
+    bool isIndexed;
+    size_t countNested;
+    std::vector<bool> isNested;
+    std::unordered_map<std::string, size_t> colToIdx;
+    std::unordered_map<std::string, size_t> nestedToOffsetInMother;
+    std::unordered_map<std::string, std::string> nestedToMother;
+    std::unordered_map<std::string, std::vector<std::string>> sitterToPeppers;
+};
+
+
+
+
 #endif //GSM2_UTILITY_H

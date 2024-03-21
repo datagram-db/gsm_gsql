@@ -46,7 +46,10 @@ struct SimpleTable {
     bool operator<(const SimpleTable<D>& rhs) const {
         return (Schema == rhs.Schema) && (datum<rhs.datum);
     }
+
 };
+
+
 
 #include"yaucl/structures/set_operations.h"
 
@@ -146,7 +149,11 @@ SimpleTable<D> natural_equijoin(const SimpleTable<D>& lhs, const SimpleTable<D>&
                     auto v = it->first;
                     v.insert(v.end(), lR.begin(), lR.end());
                     v.insert(v.end(), rR.begin(), rR.end());
-                    result.datum.emplace_back(v);
+                    auto& ref = result.datum.emplace_back(v);
+                    for (auto& x : ref) {
+                        if (!x.table.Schema.empty())
+                            x.isNested = true;
+                    }
                 }
             }
             it++;
@@ -159,7 +166,7 @@ SimpleTable<D> natural_equijoin(const SimpleTable<D>& lhs, const SimpleTable<D>&
 
 template <typename D>
 SimpleTable<D> left_equijoin(const SimpleTable<D>& lhs, const SimpleTable<D>& rhs, D bogus_value) {
-    // TODO: handling the fact that a variable is
+    // Providing the schema intersection fo the equi-join part
     std::set<std::string> i;
     {
         std::set<std::string> L{lhs.Schema.begin(), lhs.Schema.end()}, R{rhs.Schema.begin(), rhs.Schema.end()};
@@ -267,7 +274,11 @@ SimpleTable<D> left_equijoin(const SimpleTable<D>& lhs, const SimpleTable<D>& rh
                         v[iposLIndex].isNested = true;
                     v.insert(v.end(), lR.begin(), lR.end());
                     v.insert(v.end(), remainingV.begin(), remainingV.end());
-                    result.datum.emplace_back(v);
+                    auto& ref = result.datum.emplace_back(v);
+                    for (auto& x : ref) {
+                        if (!x.table.Schema.empty())
+                            x.isNested = true;
+                    }
 //                }
             }
             it++;
@@ -279,7 +290,11 @@ SimpleTable<D> left_equijoin(const SimpleTable<D>& lhs, const SimpleTable<D>& rh
                     auto v = it->first;
                     v.insert(v.end(), lR.begin(), lR.end());
                     v.insert(v.end(), rR.begin(), rR.end());
-                    result.datum.emplace_back(v);
+                    auto& ref = result.datum.emplace_back(v);
+                    for (auto& x : ref) {
+                        if (!x.table.Schema.empty())
+                            x.isNested = true;
+                    }
                 }
             }
             it++;
@@ -292,7 +307,11 @@ SimpleTable<D> left_equijoin(const SimpleTable<D>& lhs, const SimpleTable<D>& rh
             auto v = it->first;
             v.insert(v.end(), lR.begin(), lR.end());
             v.insert(v.end(), remainingV.begin(), remainingV.end());
-            result.datum.emplace_back(v);
+            auto& ref = result.datum.emplace_back(v);
+            for (auto& x : ref) {
+                if (!x.table.Schema.empty())
+                    x.isNested = true;
+            }
 //                }
         }
         it++;
@@ -312,6 +331,7 @@ struct NestedValue {
     NestedValue(D x) : val{x} {
         isNested = false;
     }
+    DEFAULT_COPY_ASSGN(NestedValue);
     NestedValue(const SimpleTable<NestedValue<D>> & x) : table{x} {
         isNested = true;
     }

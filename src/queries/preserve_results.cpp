@@ -26,6 +26,151 @@
 #include "queries/preserve_results.h"
 #include "database/utility.h"
 
+
+nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const IndexedSchemaCoordinates& rhs) {
+    static abstract_value abstract_true = true;
+    if (rhs.hasNestedColumns()) {
+        throw std::runtime_error("ERROR: this operator does not support RHS being a nested table");
+    }
+    std::vector<std::string> lhsNotNested, lhsNested, rhsSchema, sToNest, L, R;
+    std::vector<size_t> iposL, iposR;
+    std::unordered_set<std::string> sharedParents, sIR;
+
+    lhs.fillBothNested(lhsNested, lhsNotNested);
+    std::sort(lhsNotNested.begin(), lhsNotNested.end());
+    std::sort(lhsNested.begin(), lhsNested.end());
+    rhsSchema = rhs.table->Schema;
+    std::sort(rhsSchema.begin(), rhsSchema.end());
+    std::set_intersection(lhsNotNested.begin(), lhsNotNested.end(), rhsSchema.begin(), rhsSchema.end(), std::inserter(sIR, sIR.begin()));
+    if (sIR.empty()) {
+        return crossProduct(*lhs.table, *rhs.table);
+    }
+
+    for (const auto& x : sIR) {
+        iposL.emplace_back(lhs.mainHeaderKeyOffset(x));
+        iposR.emplace_back(rhs.mainHeaderKeyOffset(x));
+    }
+    std::set_intersection(lhsNested.begin(), lhsNested.end(), rhsSchema.begin(), rhsSchema.end(), std::back_inserter(sToNest));
+    if (sToNest.empty()) {
+        return left_equijoin<value>(*lhs.table, *rhs.table, abstract_true);
+    }
+
+    for (const auto& pepper : sToNest) {
+        lhs.getAllParents(pepper, sharedParents);
+        if (sharedParents.size()>1)
+            throw new std::runtime_error("ERROR: this implementation does not support rhs table being ");
+    }
+    std::string colN = *sToNest.begin();
+
+    std::map<std::vector<NestedValue<abstract_value>>, std::vector<std::vector<NestedValue<abstract_value>>>> rM, lM;
+    for (const auto& record : lhs.table->datum) {
+        std::vector<NestedValue<abstract_value>> proj, remain;
+        for (size_t j = 0, N = record.size(); j<N; j++) {
+            if (!sIR.contains(lhs.table->Schema.at(j)))
+                remain.emplace_back(record.at(j));
+        }
+        for (size_t j : iposL)
+            proj.emplace_back(record.at(j));
+        lM[proj].emplace_back(remain);
+    }
+    for (const auto& record : rhs.table->datum) {
+        std::vector<NestedValue<abstract_value>> proj, remain;
+        for (size_t j = 0, N = record.size(); j<N; j++) {
+            if (!sIR.contains(rhs.table->Schema.at(j)))
+                remain.emplace_back(record.at(j));
+        }
+        for (size_t j : iposR)
+            proj.emplace_back(record.at(j));
+        rM[proj].emplace_back(remain);
+    }
+
+    nested_table result;
+    size_t nestingOffset = -1;
+    result.Schema.insert(result.Schema.end(), sIR.begin(), sIR.end());
+    std::vector<std::string> matchingInternal;
+    for (const auto& ref : lhs.table->Schema) {
+        if (!sIR.contains(ref))  {
+            L.emplace_back(ref);
+            if (ref == colN) {
+                nestingOffset = L.size()-1;
+                matchingInternal = lhs.getNestedSchemaFromOffset(ref);
+                std::sort(matchingInternal.begin(), matchingInternal.end());
+            }
+        }
+    }
+    DEBUG_ASSERT(nestingOffset != -1);
+    for (const auto& ref : rhs.table->Schema)
+        if (!sIR.contains(ref))
+            R.emplace_back(ref);
+    size_t remainingSize = 0;
+    {
+        auto Rsorted = R;
+        std::vector<std::string> diff;
+        std::sort(Rsorted.begin(), Rsorted.end());
+        std::set_difference(Rsorted.begin(), Rsorted.end(), matchingInternal.begin(), matchingInternal.end(), std::back_inserter(diff));
+        remainingSize = diff.size();
+    }
+
+    std::vector<value> remainingV(remainingSize, abstract_true);
+    result.Schema.insert(result.Schema.end(), L.begin(), L.end());
+    auto it = lM.begin(), en = lM.end();
+    auto it2 = rM.begin(), en2 = rM.end();
+    bool hasiPosLOneNested = false;
+    nested_table fixed_table;
+    fixed_table.Schema = R;
+    while (it != en && it2 != en2) {
+        if (it->first < it2->first) {
+            for (const auto& lR : it->second) {
+                auto v = it->first;
+                v.insert(v.end(), lR.begin(), lR.end());
+                for (auto& nestedRow : v.at(it->first.size()+nestingOffset).table.datum) {
+                    nestedRow.insert(nestedRow.end(), remainingV.begin(), remainingV.end());
+                }
+                auto& ref = result.datum.emplace_back(v);
+                for (auto& x : ref) {
+                    if (!x.table.Schema.empty())
+                        x.isNested = true;
+                }
+            }
+            it++;
+        } else if (it2->first < it->first) {
+            it2++;
+        } else {
+            for (const auto& lR : it->second) {
+                auto refL = lR.at(nestingOffset);
+                fixed_table.datum = it2->second;
+                refL.table = left_equijoin<value>(refL.table, fixed_table, abstract_true);
+                        DEBUG_ASSERT(refL.isNested || (!refL.table.Schema.empty()));
+                auto v = it->first;
+                v.insert(v.end(), lR.begin(), (lR.begin()+nestingOffset));
+                v.emplace_back(refL);
+                v.insert(v.end(), (lR.begin()+nestingOffset+1), lR.end());
+                auto& ref = result.datum.emplace_back(v);
+                for (auto& x : ref) {
+                    if (!x.table.Schema.empty())
+                        x.isNested = true;
+                }
+            }
+            it++;
+            it2++;
+        }
+    }
+    while (it != en) {
+        for (const auto& lR : it->second) {
+            auto v = it->first;
+            v.insert(v.end(), lR.begin(), lR.end());
+            v.insert(v.end(), remainingV.begin(), remainingV.end());
+            auto& ref = result.datum.emplace_back(v);
+            for (auto& x : ref) {
+                if (!x.table.Schema.empty())
+                    x.isNested = true;
+            }
+        }
+        it++;
+    }
+    return result;
+}
+
 void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, bool verbose, const std::unordered_set<std::string>& nodes, const std::unordered_set<std::string>& edges) {
     abstract_value abstract_true = true;
     nested_index.clear();
@@ -188,7 +333,17 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                 if (!optional_match_table.datum.empty()) {
                     // TODO: when a field is nested in result but not nested in the optional table, then
                     //       it has to go inside each row, while equijoining the rest being outside the nesting
-                    result = left_equijoin<value>(result, optional_match_table, abstract_true);
+                    // FUTURE
+                    if (graph_grammar_entry_point.pattern_name == "p3pass") {
+                        // FUTURE
+                        IndexedSchemaCoordinates L{&result};
+                        IndexedSchemaCoordinates R{&optional_match_table};
+                        L.index();
+                        R.index();
+                        result = nested_natural_equijoin(L, R);
+                    } else {
+                        result = left_equijoin<value>(result, optional_match_table, abstract_true);
+                    }
                 }
             }
         }

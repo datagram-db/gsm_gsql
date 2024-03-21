@@ -78,6 +78,7 @@ p3pass = (V)--[∀n:nsubjpass]->(>> S)
        del V
        del T
        del M
+       del A
 
        (S);
 
