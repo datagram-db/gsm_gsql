@@ -563,6 +563,9 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
             // Returning the edge label (if nested, imploding the collection into a string!) TODO: what if we need singled out?
         case rewrite_expr::EDGE_LABEL: {
             auto edges = interpret_closure_evaluate(ptr->ptr_or_else.get(), true, false);
+            if (edges.t == NestedResultTable::R_NONE) {
+                interpret_closure_evaluate(ptr->ptr_or_else.get(), true, false);
+            }
             DEBUG_ASSERT((edges.t == NestedResultTable::R_EDGE) || (edges.t == NestedResultTable::R_NESTED_EDGE));
             if (edges.t == NestedResultTable::R_EDGE) {
                 edges.t = NestedResultTable::R_DO_EDGE_LABEL;

@@ -186,8 +186,8 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
             });
             for (const auto & optional_match_table : optional_match_tables) {
                 if (!optional_match_table.datum.empty()) {
-
-//                        std::cout << print_table(optional_match_table) << std::endl;
+                    // TODO: when a field is nested in result but not nested in the optional table, then
+                    //       it has to go inside each row, while equijoining the rest being outside the nesting
                     result = left_equijoin<value>(result, optional_match_table, abstract_true);
                 }
             }

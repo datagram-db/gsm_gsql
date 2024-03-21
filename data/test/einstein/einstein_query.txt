@@ -39,6 +39,30 @@ p3 = (V)--[∀n:nsubj]->(>> S)
         --[? neg]->(N)
         --[∀l:dobj||ccomp||nmod||xcomp]->(>> Z) // Future work: nested join between >>Z and >>Z from the join, when required. This might require to re-do the join semantics
      (Z)--[? case]->(T)
+     where (V unmatched p3pass . V)
+     ↪
+        //new s
+        set(φ (if ((label l ) = nmod) over l then    // Defining the label in function of T, if this exists,
+                                                                      // otherwise using V
+                                              SCRIPT "(^(^(^(^ (^ ( [(𝜉 ⦃\"A\"⦄) 0])  \" \") ([ (𝜉 ⦃\"N\"⦄)  0])) \" \") ([ (𝜉 ⦃\"V\"⦄)  0])) \" \") ([ (𝜉 ⦃\"T\"⦄)  0])"
+                                             else
+                                              SCRIPT "^(^(^ (^ ( [(𝜉 ⦃\"A\"⦄) 0])  \" \") ([ (𝜉 ⦃\"N\"⦄)  0])) \" \") ([ (𝜉 ⦃\"V\"⦄)  0])"
+                                             ), S) as Z
+        //set(   𝜋 mark @ s) as (𝜉 0 @ M)
+        //set(   φ orig , s) as S
+        //set(   𝜉 0 @ s) as (𝜉 0 @ S)
+       del V
+       del T
+       del M
+
+       (S);
+
+p3pass = (V)--[∀n:nsubjpass]->(>> S)
+        --[? mark]->(M)
+        --[? auxpass]->(A)
+        --[? neg]->(N)
+        --[∀l:ccomp||nmod||xcomp]->(>> Z) // Future work: nested join between >>Z and >>Z from the join, when required. This might require to re-do the join semantics
+     (Z)--[? case]->(T)
 
      ↪
         //new s
@@ -66,7 +90,7 @@ p4 = (>> V)<-[∀ ? w:]--(B)
         --[? nmod_tmod]->(TN)
         --[? compound_ptr]->(TB)
      (Z)--[? case]->(T)
-      where ((V unmatched p3 . V) ∧ (ℓ 0 @ V ≠ noun))
+      where ((V unmatched p3 . V) ∧ ((V unmatched p3pass . V) ∧ (ℓ 0 @ V ≠ noun)))
      ↪  new j
         set(φ when , j) as TN
         set(φ (if ((label l ) = nmod) over l then    // Defining the label in function of T, if this exists,

@@ -159,6 +159,7 @@ SimpleTable<D> natural_equijoin(const SimpleTable<D>& lhs, const SimpleTable<D>&
 
 template <typename D>
 SimpleTable<D> left_equijoin(const SimpleTable<D>& lhs, const SimpleTable<D>& rhs, D bogus_value) {
+    // TODO: handling the fact that a variable is
     std::set<std::string> i;
     {
         std::set<std::string> L{lhs.Schema.begin(), lhs.Schema.end()}, R{rhs.Schema.begin(), rhs.Schema.end()};
