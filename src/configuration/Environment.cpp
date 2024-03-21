@@ -171,8 +171,8 @@ void Environment::input() {
                     std::vector<std::vector<gsm_object>> dbs2;
                     result.asObjects(dbs2);
                     size_t idx2 = 1;
-                    auto output_viz_path = output_viz / std::to_string(idx2-1);
                     for (const auto& json2 : dbs2){
+                        auto output_viz_path = output_viz / std::to_string(idx2-1);
                         std::ofstream f{output_viz_path / "input.json"};
                         f << "[";
                         for (size_t i = 0, N = json2.size(); i<N; i++) {

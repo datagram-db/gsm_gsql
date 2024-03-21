@@ -43,6 +43,8 @@ bool script::structures::ScriptAST::toBoolean(bool implode)  {
             case TupleT:
             case Tuple:
                 return !tuple.empty();
+            case NullE:
+                return false;
             default:
                 return run(implode)->toBoolean();
         }
@@ -66,6 +68,8 @@ double script::structures::ScriptAST::toDouble(bool implode)  {
             return (double)tuple.size();
         case Function:
             return (double)function->body.size();
+        case NullE:
+            return 0.0;
         default:
             return run(implode)->toDouble();
     }
@@ -93,6 +97,8 @@ long long script::structures::ScriptAST::toInteger(bool implode)   {
             return (long long)tuple.size();
         case Function:
             return (long long)function->body.size();
+        case NullE:
+            return -1;
         default:
             return run(implode)->toInteger();
     }
@@ -411,7 +417,9 @@ ArrayList<DPtr<script::structures::ScriptAST>> script::structures::ScriptAST::to
             return arrayList;
         case Function:
             return function->body;
-        default:
+        case NullE: {
+            return {};
+        } default:
             return run()->toList();
     }
     return result;
@@ -448,6 +456,10 @@ StringMap<DPtr<script::structures::ScriptAST>> script::structures::ScriptAST::to
         case TupleT:
         case Tuple: {
             return tuple;
+        }
+
+        case NullE: {
+            break;
         }
 
         default:
