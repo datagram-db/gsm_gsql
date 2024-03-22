@@ -489,7 +489,7 @@ struct closure {
     void generateGraphsFromMaterialisedViews(std::vector<FlexibleGraph<std::string,std::string>>& simpleGraphs);
     void generateOODbFromMaterialisedViews(gsm2::tables::LinearGSM& simpleGraphs);
 
-    void perform_query(bool verbose = false) {
+    void perform_query(bool verbose = false, const std::string& output_folder = std::filesystem::path("viz") / "data") {
         LOG(INFO) << "Performing the query";
         bool materialise = false;
         isMaterialised = false;
@@ -524,7 +524,7 @@ struct closure {
         {
             LOG(TRACE) << "Instantiating the nested morphisms";
             auto nmorph_start = std::chrono::high_resolution_clock::now();
-            pr.instantiate_morphisms(vl, verbose, nodeVars, edgeVars);
+            pr.instantiate_morphisms(vl, verbose, nodeVars, edgeVars, output_folder);
             auto nmorph_end = std::chrono::high_resolution_clock::now();
             generate_nested_morphisms = std::chrono::duration<double, std::milli>(nmorph_end-nmorph_start).count();
         }
