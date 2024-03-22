@@ -172,14 +172,14 @@ nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const 
     return result;
 }
 
-void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, bool verbose, const std::unordered_set<std::string>& nodes, const std::unordered_set<std::string>& edges) {
+void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, bool verbose, const std::unordered_set<std::string>& nodes, const std::unordered_set<std::string>& edges, const std::string& output_folder) {
     abstract_value abstract_true = true;
     nested_index.clear();
     nested_index.resize(vl.size());
     map_orig.resize(vl.size()); // One element per pattern
     map_nested.resize(vl.size());   // One element per pattern
     size_t map_orig_offset = 0;
-    std::filesystem::path folder = std::filesystem::path("viz") / "data";
+    std::filesystem::path folder = output_folder;
 
     for (const auto& graph_grammar_entry_point: vl) {
         size_t versions = 1;
@@ -335,16 +335,11 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                     // TODO: when a field is nested in result but not nested in the optional table, then
                     //       it has to go inside each row, while equijoining the rest being outside the nesting
                     // FUTURE
-                    if (graph_grammar_entry_point.pattern_name == "p3pass") {
-                        // FUTURE
-                        IndexedSchemaCoordinates L{&result};
-                        IndexedSchemaCoordinates R{&optional_match_table};
-                        L.index();
-                        R.index();
-                        result = nested_natural_equijoin(L, R);
-                    } else {
-                        result = left_equijoin<value>(result, optional_match_table, abstract_true);
-                    }
+                    IndexedSchemaCoordinates L{&result};
+                    IndexedSchemaCoordinates R{&optional_match_table};
+                    L.index();
+                    R.index();
+                    result = nested_natural_equijoin(L, R);
                 }
             }
         }
