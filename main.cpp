@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
     if (alternative_output) {
         configuration.output_folder = args::get(alternative_output);
     } else {
-        configuration.output_folder = "viz/data";
+        configuration.output_folder = "";
     }
     if (script) {
         configuration.run_script_over_graph = args::get(script);

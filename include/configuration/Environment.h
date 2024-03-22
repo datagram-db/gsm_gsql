@@ -48,7 +48,7 @@ struct Environment {
             ss << conf.query->load_value;
             result.load_query_from_string(ss);
         }
-        result.perform_query(conf.full_server_output, conf.output_folder);
+        result.perform_query(conf.full_server_output);
         result.fillInForSerialization(dbs);
     }
 
@@ -70,7 +70,7 @@ struct Environment {
                 ss << conf.query->load_value;
                 result.load_query_from_string(ss);
             }
-            result.perform_query(conf.full_server_output, conf.output_folder);
+            result.perform_query(conf.full_server_output);
 
             output();
             input();

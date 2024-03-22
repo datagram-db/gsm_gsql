@@ -26,6 +26,7 @@
 #include "queries/preserve_results.h"
 #include "database/utility.h"
 
+
 nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const IndexedSchemaCoordinates& rhs) {
     static abstract_value abstract_true = true;
     if (rhs.hasNestedColumns()) {
@@ -139,7 +140,7 @@ nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const 
                 auto refL = lR.at(nestingOffset);
                 fixed_table.datum = it2->second;
                 refL.table = left_equijoin<value>(refL.table, fixed_table, abstract_true);
-                DEBUG_ASSERT(refL.isNested || (!refL.table.Schema.empty()));
+                        DEBUG_ASSERT(refL.isNested || (!refL.table.Schema.empty()));
                 auto v = it->first;
                 v.insert(v.end(), lR.begin(), (lR.begin()+nestingOffset));
                 v.emplace_back(refL);
@@ -178,7 +179,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
     map_orig.resize(vl.size()); // One element per pattern
     map_nested.resize(vl.size());   // One element per pattern
     size_t map_orig_offset = 0;
-    std::filesystem::path folder = output_folder;
+    std::filesystem::path folder = std::filesystem::path("viz") / "data";
 
     for (const auto& graph_grammar_entry_point: vl) {
         size_t versions = 1;
@@ -481,9 +482,6 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                         it3++;
                         result_set.clear();
                         for (; it3!=s.end(); it3++) {
-                            // TODO: Maybe check this later on
-                            if (!hookNodeIdToRecordOffset.contains(*it3))
-                                continue;
                             const auto& next = hookNodeIdToRecordOffset.at(*it3);
                             std::set_union(current.begin(), current.end(), next.begin(), next.end(), std::back_inserter(result_set));
                             std::swap(current, result_set);

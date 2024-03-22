@@ -92,7 +92,7 @@ struct preserve_results {
      *
      * @param vl    Collection of patterns
      */
-    void instantiate_morphisms(const std::vector<node_match>& vl, bool verbose = false, const std::unordered_set<std::string>& nodes = {}, const std::unordered_set<std::string>& edges = {}, const std::string& output_folder = "");
+    void instantiate_morphisms(const std::vector<node_match>& vl, bool verbose = false, const std::unordered_set<std::string>& nodes = {}, const std::unordered_set<std::string>& edges = {});
 
     /**
      * Preparing teh hook queries edges
