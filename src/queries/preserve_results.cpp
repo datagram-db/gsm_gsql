@@ -144,7 +144,8 @@ nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const 
                 auto v = it->first;
                 v.insert(v.end(), lR.begin(), (lR.begin()+nestingOffset));
                 v.emplace_back(refL);
-                v.insert(v.end(), (lR.begin()+nestingOffset+1), lR.end());
+                if (nestingOffset-1 != lR.size())
+                    v.insert(v.end(), (lR.begin()+nestingOffset+1), lR.end());
                 auto& ref = result.datum.emplace_back(v);
                 for (auto& x : ref) {
                     if (!x.table.Schema.empty())

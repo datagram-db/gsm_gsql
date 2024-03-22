@@ -54,7 +54,7 @@ p3 = (V)--[∀n:nsubj]->(>> S)
        del V
        del T
        del M
-
+       del A
        (S);
 
 p3pass = (V)--[∀n:nsubjpass]->(>> S)
@@ -68,10 +68,10 @@ p3pass = (V)--[∀n:nsubjpass]->(>> S)
         //new s
         set(φ (if ((label l ) = nmod) over l then    // Defining the label in function of T, if this exists,
                                                                       // otherwise using V
-                                              SCRIPT "(^(^(^(^ (^ ( [(𝜉 ⦃\"A\"⦄) 0])  \" \") ([ (𝜉 ⦃\"N\"⦄)  0])) \" \") ([ (𝜉 ⦃\"V\"⦄)  0])) \" \") ([ (𝜉 ⦃\"T\"⦄)  0])"
+                                              SCRIPT "(^(^(^(  ([ (𝜉 ⦃\"N\"⦄)  0])) \" \") ([ (𝜉 ⦃\"V\"⦄)  0])) \" \") ([ (𝜉 ⦃\"T\"⦄)  0])"
                                              else
-                                              SCRIPT "^(^(^ (^ ( [(𝜉 ⦃\"A\"⦄) 0])  \" \") ([ (𝜉 ⦃\"N\"⦄)  0])) \" \") ([ (𝜉 ⦃\"V\"⦄)  0])"
-                                             ), S) as Z
+                                              SCRIPT "^(^( ([ (𝜉 ⦃\"N\"⦄)  0])) \" \") ([ (𝜉 ⦃\"V\"⦄)  0])"
+                                             ), Z) as S
         //set(   𝜋 mark @ s) as (𝜉 0 @ M)
         //set(   φ orig , s) as S
         //set(   𝜉 0 @ s) as (𝜉 0 @ S)

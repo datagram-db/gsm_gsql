@@ -197,7 +197,7 @@ struct IndexedSchemaCoordinates {
     IndexedSchemaCoordinates(const nested_table* ptr) : table{ptr}, isIndexed{false} {}
     DEFAULT_COPY_ASSGN(IndexedSchemaCoordinates);
 
-    inline void index() {
+     void index() {
         if (isIndexed || (!table) || (table->datum.empty())) return;
         isNested.resize(table->Schema.size(), false);
         const auto& disSchema = table->Schema;
@@ -223,39 +223,39 @@ struct IndexedSchemaCoordinates {
         isIndexed= true;
     }
 
-    inline bool isNestedIdx(size_t idx) const {
+     bool isNestedIdx(size_t idx) const {
         return isNested.at(idx);
     }
 
-    inline bool isNestedCol(const std::string& colName) const {
+     bool isNestedCol(const std::string& colName) const {
         auto it = colToIdx.find(colName);
         return (it != colToIdx.end()) && (isNestedIdx(it->second));
     }
 
-    inline ssize_t mainHeaderKeyOffset(const std::string& colName) const {
+     ssize_t mainHeaderKeyOffset(const std::string& colName) const {
         auto it = colToIdx.find(colName);
         return it == colToIdx.end() ? -1 : it->second;
     }
 
-    inline bool hasMainHeaderKey(const std::string& colName) const {
+     bool hasMainHeaderKey(const std::string& colName) const {
         return colToIdx.find(colName) == colToIdx.end();
     }
 
-    inline bool hasNestedKey(const std::string& colName) const {
+     bool hasNestedKey(const std::string& colName) const {
         return nestedToOffsetInMother.find(colName) == nestedToOffsetInMother.end();
     }
 
-    inline ssize_t nestedKeyOffset(const std::string& colName) const {
+     ssize_t nestedKeyOffset(const std::string& colName) const {
         auto it = nestedToOffsetInMother.find(colName);
         return it == nestedToOffsetInMother.end() ? -1 : it->second;
     }
 
-    inline bool hasKeyAnywhere(const std::string& colName) const {
+     bool hasKeyAnywhere(const std::string& colName) const {
         return (colToIdx.find(colName) != colToIdx.end()) ||
                 ( nestedToOffsetInMother.find(colName) != nestedToOffsetInMother.end());
     }
 
-    inline bool fillNotNested(std::vector<std::string>& v) const {
+    inline  void fillNotNested(std::vector<std::string>& v) const {
         v.reserve(isNested.size());
         for (size_t i = 0; i<isNested.size(); i++) {
             if (!isNested.at(i))
@@ -263,7 +263,7 @@ struct IndexedSchemaCoordinates {
         }
     }
 
-    inline bool fillNested(std::vector<std::string>& v) const {
+    inline void fillNested(std::vector<std::string>& v) const {
         v.reserve(isNested.size());
         for (size_t i = 0; i<isNested.size(); i++) {
             if (isNested.at(i))
@@ -271,7 +271,7 @@ struct IndexedSchemaCoordinates {
         }
     }
 
-    inline bool fillBothNested(std::vector<std::string>& y, std::vector<std::string>& n) const {
+    inline void fillBothNested(std::vector<std::string>& y, std::vector<std::string>& n) const {
         y.reserve(countNested);
         n.reserve(table->Schema.size()-countNested);
         for (size_t i = 0; i<isNested.size(); i++) {

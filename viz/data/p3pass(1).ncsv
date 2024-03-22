@@ -1,0 +1,8 @@
+p3pass("graph", "V", "n_label", "S") {
+	[1, 0, "nsubjpass", @S("n", "S") {
+		["↑16", 1]
+}]
+	[3, 0, "nsubjpass", @S("n", "S") {
+		["↑17", 1]
+}]
+}

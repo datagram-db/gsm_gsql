@@ -242,7 +242,7 @@ SimpleTable<D> left_equijoin(const SimpleTable<D>& lhs, const SimpleTable<D>& rh
             auto cpy = proj;
             const auto& nestedRef = proj.at(iposLIndex).table.datum;
             for (size_t j = 0, Q = nestedRef.size(); j<Q; j++) {
-                auto& extremelyLocalRef = cpy[iposLIndex];
+                auto& extremelyLocalRef = cpy.at(iposLIndex);
                 extremelyLocalRef.val = nestedRef.at(j).at(hasOneNested).val;
                 extremelyLocalRef.isNested = false;
                 lM[cpy].emplace_back(remain);
@@ -271,7 +271,7 @@ SimpleTable<D> left_equijoin(const SimpleTable<D>& lhs, const SimpleTable<D>& rh
 //                for (const auto& rR : it2->second) {
                     auto v = it->first;
                     if (hasiPosLOneNested)
-                        v[iposLIndex].isNested = true;
+                        v.at(iposLIndex).isNested = true;
                     v.insert(v.end(), lR.begin(), lR.end());
                     v.insert(v.end(), remainingV.begin(), remainingV.end());
                     auto& ref = result.datum.emplace_back(v);
