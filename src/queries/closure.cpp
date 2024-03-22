@@ -860,10 +860,10 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
             auto l = interpret(ptr.child_logic.at(0), maxSize);
             if (l.empty()) return l;
             auto l2 = interpret(ptr.child_logic.at(1), maxSize);
-//            std::cout << "AT THIS POINT:" << std::endl;
-//            std::cout << "==============" << std::endl;
-//            std::cout<<l<<std::endl;
-//            std::cout<<l2<<std::endl;
+            std::cout << "AT THIS POINT:" << std::endl;
+            std::cout << "==============" << std::endl;
+            std::cout<<l<<std::endl;
+            std::cout<<l2<<std::endl;
             l &= l2;
             return l;
         } break;
@@ -968,8 +968,8 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
                 size_t offsetForValue1 = -1;
                 size_t offsetNested1 = -1;
                 if (!var_extractor(ptr, offsetForStar1, offsetForValue1, offsetNested1, ptr.nsoe, schema, table)) {
-                    m.fillWithPreviouslyLess(maxSize);
-                    return m;
+//                    m.fillWithPreviouslyLess(maxSize);
+                    return getFullOrEmptySet(true);
                 }
                 if (offsetNested1 == (size_t)(-1)) {
                     const auto&x =
@@ -997,8 +997,8 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
             }
 
             if (currentMatches.empty()) {
-                m.fillWithPreviouslyLess(maxSize);
-                return m;
+//                m.fillWithPreviouslyLess(maxSize);
+                return getFullOrEmptySet(true);
             }
 
             size_t offsetForStar = -1;
@@ -1007,8 +1007,8 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
             const std::string& _for_match = ptr.variable_matched;
             if (!var_extractor(ptr, offsetForStar, offsetForValue, offsetNested, ptr.variable_matched, it->second.first, it->second.second.begin()->second))
             {
-                m.fillWithPreviouslyLess(maxSize);
-                return m;
+//                m.fillWithPreviouslyLess(maxSize);
+                return getFullOrEmptySet(true);
             }
 
             for (const auto& [k,tablese] : it->second.second) {
