@@ -95,6 +95,7 @@ struct delta_updates {
      * @param dest
      */
     inline void replaceWith(size_t orig, size_t dest) {
+        if (orig == dest) return;
         if (replacement_map.contains(orig))
             std::cerr << "WARNING!" << std::endl;
         replacement_map[orig] = dest;
@@ -127,14 +128,12 @@ struct delta_updates {
 
     inline size_t replacedWith(size_t x) const {
         auto it = replacement_map.find(x);
-        // empty set, add x to set
-        std::unordered_set<size_t> replacement_set;
-        replacement_set.insert(x);
+        std::unordered_set<size_t> RB;
+        RB.insert(x);
         while (it != replacement_map.end()) {
             x = it->second;
-            // add x to set, .insert returns bool if false then break
-            if (!replacement_set.insert(x).second) {
-                break;
+            if (!RB.insert(x).second) {
+                return x;
             }
             it = replacement_map.find(x);
         }

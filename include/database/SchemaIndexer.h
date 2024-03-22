@@ -14,6 +14,10 @@
 #include "scriptv2/java_types.h"
 #include "scriptv2/ScriptAST.h"
 
+/**
+ * This class indices the schema for the programming language evaluation (script3)
+ * For the schema indexing for the join operations, please refer ot
+ */
 struct SchemaIndexer {
     std::unordered_map<std::string, size_t>     field_to_schema;
     std::unordered_map<std::string, std::unordered_map<std::string, size_t>> nested_schema;
@@ -125,7 +129,6 @@ struct TemplateIndexer {
         }
     }
 };
-
 
 
 #endif //GSM2_SCHEMAINDEXER_H

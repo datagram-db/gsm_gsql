@@ -12,24 +12,25 @@ import json
 import os.path
 import sys
 
+import numpy as np
+import pandas as pd
 import uvicorn
 from starlette.responses import HTMLResponse, Response, FileResponse
 from fastapi.responses import ORJSONResponse
 
-# import dash
-# import visdcc
-# import pandas as pd
-# import dash_core_components as dcc
-# import dash_html_components as html
-# from dash.dependencies import Input, Output, State
-#
 import parsers.NestedTables
 from parsers.GSMExt import GsmSpecification, gsm_object, to_vis_nodes, to_vis_network_phi, phi, to_vis_network_node
 from parsers.ReadGSMExt import serialize_gsm_model, deserialize_gsm_model, deserialize_gsm_file
 from parsers.SemiringProvenance import ProvenanceObject, provenance_object
 
-from fastapi import FastAPI
+from fastapi import Request, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import matplotlib.pyplot as plt
+import base64
+from io import BytesIO
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 
 from watchfiles import watch
 
@@ -54,6 +55,12 @@ N_input = dict()
 E_input = dict()
 N_removed = dict()
 N_inserted = dict()
+def html_base64_image(fig):
+    tmpfile = BytesIO()
+    fig.savefig(tmpfile, format='png')
+    encoded = base64.b64encode(tmpfile.getvalue()).decode('utf-8')
+    return '<img src=\'data:image/png;base64,{}\'>'.format(encoded)
+
 
 
 @app.get("/morphisms/{folder}", response_class=HTMLResponse)
@@ -186,6 +193,32 @@ async def graph(folder):
         result = content[:pos] + parsers.NestedTables.generate_morphism_html(os.path.join(os.getcwd(), folder),
                                                                              "0") + content[pos:]
         return result  # f.read().replace("§", folder).replace('£','input')
+
+
+@app.post("/renderConfusionMatrix")
+async def get_body(request: Request):
+    """
+    :param request: json request, for example, given a file result.json
+    {
+    "similarity_matrix": [[1,0,0],[0,1,0],[0,0,1]],
+    "sentences": ["a","b","c"]
+    }
+
+    :return: Returns the HTML rendering of this confusion matrix. If you fire the
+    request with the following command:
+
+    curl -X POST -H "Content-Type: application/json" -d @result.json http://127.0.0.1:9999/renderConfusionMatrix > test.html
+
+    you will then obtain the plot in an HTML rendering, quite simplistically.
+    """
+    payload = await request.json()
+    nd_a = np.array(payload["similarity_matrix"])
+    df = pd.DataFrame(nd_a, index=list(payload["sentences"]), columns=list(payload["sentences"]))
+    hm = sns.heatmap(data=df,
+                     annot=True)
+    fig = hm.get_figure()
+    html_content = "<html><body>"+html_base64_image(fig)+"</body></html>"
+    return HTMLResponse(content=html_content, status_code=200)
 
 
 if __name__ == '__main__':

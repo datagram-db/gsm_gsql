@@ -860,10 +860,10 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
             auto l = interpret(ptr.child_logic.at(0), maxSize);
             if (l.empty()) return l;
             auto l2 = interpret(ptr.child_logic.at(1), maxSize);
-            std::cout << "AT THIS POINT:" << std::endl;
-            std::cout << "==============" << std::endl;
-            std::cout<<l<<std::endl;
-            std::cout<<l2<<std::endl;
+//            std::cout << "AT THIS POINT:" << std::endl;
+//            std::cout << "==============" << std::endl;
+//            std::cout<<l<<std::endl;
+//            std::cout<<l2<<std::endl;
             l &= l2;
             return l;
         } break;
