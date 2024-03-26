@@ -176,6 +176,11 @@ struct NestedResultTable {
         return *this;
     }
 
+    template<typename T> inline bool hasTInVector(size_t i) const {
+        return (std::holds_alternative<std::vector<std::string>>(content)) &&
+                (std::get<std::vector<std::string>>(content).size() > i);
+    }
+
 
     template<typename T> inline T getV(size_t i) const {
         return std::get<std::vector<T>>(content).at(i);

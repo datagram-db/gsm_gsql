@@ -599,7 +599,7 @@ void convertMap(const NodeLabelBijectionGraph<size_t, std::string>& map,
     std::swap(final, original);
 }
 
-static inline void parse(char* string,
+static inline bool parse(char* string,
                          size_t len,
                          gsm2::tables::LinearGSM& forloading,
                          const std::unordered_map<std::string, gsm2::tables::AttributeTableType>& map_for_types,
@@ -627,53 +627,53 @@ static inline void parse(char* string,
             forloading.nodesInGraph.emplace_back(graphId_eventId.second);
         }
         ell.clear();
-        if (!(string = haspos(string, (char*)ID, 0, &len))) return;
-        if (sscanf(string, "%lu%n", &graphId_eventId.second, &scanSkip)==EOF) return;
+        if (!(string = haspos(string, (char*)ID, 0, &len))) return false;
+        if (sscanf(string, "%lu%n", &graphId_eventId.second, &scanSkip)==EOF) return false;
         forloading.nodesInGraph[graphId_eventId.first] = std::max(forloading.nodesInGraph[graphId_eventId.first],graphId_eventId.second);
         len-=scanSkip;
         string+=scanSkip;
-        if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string,  (char*)ELL, 0, &len))) return;
+        if (!(string = skipSpaces(string, &len))) return false;
+        if (!(string = haspos(string,  (char*)ELL, 0, &len))) return false;
         act_id = noLabel;
 
-        if (!(string = atreturn(string, &len))) return;
-        if (!(string = skipSpaces(string, &len))) return;
+        if (!(string = atreturn(string, &len))) return false;
+        if (!(string = skipSpaces(string, &len))) return false;
         while (*string != DOT) {
             char* beforeReturn = atreturn(string, &len);
             ell.emplace_back(string, beforeReturn-1);
             string = beforeReturn;
-            if (!(string = skipSpaces(string, &len))) return;
+            if (!(string = skipSpaces(string, &len)))  return false;
         }
 
         act_id = loadObjectEll(forloading, ell, noLabel, graphId_eventId);//// HOC!
 
         string++; len--;
-        if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string,  (char*)XI, 0, &len))) return;
+        if (!(string = skipSpaces(string, &len)))  return false;
+        if (!(string = haspos(string,  (char*)XI, 0, &len)))  return false;
         registerObjectByFirstLabel(forloading, act_id, graphId_eventId); //// HOC!
 
         xi.clear();
-        if (!(string = atreturn(string, &len))) return;
-        if (!(string = skipSpaces(string, &len))) return;
+        if (!(string = atreturn(string, &len)))  return false;
+        if (!(string = skipSpaces(string, &len)))  return false;
         while (*string != DOT) {
             char* beforeReturn = atreturn(string, &len);
             xi.emplace_back(string, beforeReturn-1);
             string = beforeReturn;
-            if (!(string = skipSpaces(string, &len))) return;
+            if (!(string = skipSpaces(string, &len)))  return false;
         }
         loadObjectXi(forloading, xi, graphId_eventId);//// HOC!
 
         string++; len--;
-        if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string,  (char*)PROP, 0, &len))) return;
+        if (!(string = skipSpaces(string, &len)))  return false;
+        if (!(string = haspos(string,  (char*)PROP, 0, &len)))  return false;
 
-        if (!(string = atreturn(string, &len))) return;
-        if (!(string = skipSpaces(string, &len))) return;
+        if (!(string = atreturn(string, &len)))  return false;
+        if (!(string = skipSpaces(string, &len)))  return false;
         while (*string != DOT) {
             char* beforeReturn = atreturn(string, &len);
             std::string tmp{string, beforeReturn-1};
             size_t idx = tmp.find("\t");
-            if (idx == std::string::npos) return;
+            if (idx == std::string::npos)  return false;
             std::string key = UNESCAPE(tmp.substr(0, idx));
             std::string val = UNESCAPE(tmp.substr(idx+1));
 
@@ -681,14 +681,14 @@ static inline void parse(char* string,
             loadObjectProperty(forloading, map_for_types, act_id, graphId_eventId, key, val);
 
             string = beforeReturn;
-            if (!(string = skipSpaces(string, &len))) return;
+            if (!(string = skipSpaces(string, &len)))  return false;
         }
         string++; len--;
-        if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string,  (char*)PHI, 0, &len))) return;
+        if (!(string = skipSpaces(string, &len)))  return false;
+        if (!(string = haspos(string,  (char*)PHI, 0, &len)))  return false;
 
-        if (!(string = atreturn(string, &len))) return;
-        if (!(string = skipSpaces(string, &len))) return;
+        if (!(string = atreturn(string, &len)))  return false;
+        if (!(string = skipSpaces(string, &len)))  return false;
 
         forloading.objectScoresLoading[graphId_eventId].emplace_back(1.0);
         while (*string != DOT) {
@@ -696,35 +696,36 @@ static inline void parse(char* string,
             std::string tmp{string, beforeReturn-1};
             tmp = UNESCAPE(tmp);
             string =beforeReturn;
-            if (!(string = skipSpaces(string, &len))) return;
+            if (!(string = skipSpaces(string, &len)))  return false;
             while (*string != ';') {
-                if (sscanf(string, "%lf\t%lu%n", &weight, &content,&scanSkip)==EOF) return;
+                if (sscanf(string, "%lf\t%lu%n", &weight, &content,&scanSkip)==EOF)  return false;
                 len-=scanSkip;
                 string+=scanSkip;
                 // Setting up the containment associated to the node
                 forloading.containment_tables[tmp].add(act_id, graphId_eventId, weight, content);
                 forloading.containment_relationships.emplace(tmp);
-                if (!(string = skipSpaces(string, &len))) return;
+                if (!(string = skipSpaces(string, &len)))  return false;
             }
             string++;
             len--;
-            if (!(string = skipSpaces(string, &len))) return;
+            if (!(string = skipSpaces(string, &len)))  return false;
         }
         string++;
         len--;
-        if (!(string = skipSpaces(string, &len))) return;
+        if (!(string = skipSpaces(string, &len)))  return false;
 
         if (strncmp(string,"~~",2)==0) {
             // Finding a new graph
             forloading.nodesInGraph.emplace_back(0);
             graphId_eventId.first++; string+=2; len-=2;
-            if (!(string = skipSpaces(string, &len))) return;
+            if (!(string = skipSpaces(string, &len)))  return false;
         }
     }
     maxGraphId = graphId_eventId.first;
+    return true;
 }
 
-static inline void parse(char* string,
+static inline bool parse(char* string,
                          size_t len,
                          std::vector<std::vector<gsm_object>>& db) {
     string = skipSpaces(string, &len);
@@ -754,59 +755,59 @@ static inline void parse(char* string,
 //            forloading.nodesInGraph.emplace_back(graphId_eventId.second);
 //        }
 //        ell.clear();
-        if (!(string = haspos(string, (char*)ID, 0, &len))) return;
+        if (!(string = haspos(string, (char*)ID, 0, &len)))  return false;
         current.scores.clear();
         current.ell.clear();
         current.xi.clear();
         current.content.clear();
         current.phi.clear();
-        if (sscanf(string, "%lu%n", &current.id, &scanSkip)==EOF) return;
+        if (sscanf(string, "%lu%n", &current.id, &scanSkip)==EOF)  return false;
 //        forloading.nodesInGraph[graphId_eventId.first] = std::max(forloading.nodesInGraph[graphId_eventId.first],graphId_eventId.second);
         len-=scanSkip;
         string+=scanSkip;
-        if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string,  (char*)ELL, 0, &len))) return;
+        if (!(string = skipSpaces(string, &len)))  return false;
+        if (!(string = haspos(string,  (char*)ELL, 0, &len)))  return false;
 //        act_id = noLabel;
 
-        if (!(string = atreturn(string, &len))) return;
-        if (!(string = skipSpaces(string, &len))) return;
+        if (!(string = atreturn(string, &len)))  return false;
+        if (!(string = skipSpaces(string, &len)))  return false;
         while (*string != DOT) {
             char* beforeReturn = atreturn(string, &len);
             current.ell.emplace_back(string, beforeReturn-1);
             string = beforeReturn;
-            if (!(string = skipSpaces(string, &len))) return;
+            if (!(string = skipSpaces(string, &len)))  return false;
         }
 
 
 //        act_id = loadObjectEll(forloading, ell, noLabel, graphId_eventId);//// HOC!
 
         string++; len--;
-        if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string,  (char*)XI, 0, &len))) return;
+        if (!(string = skipSpaces(string, &len)))  return false;
+        if (!(string = haspos(string,  (char*)XI, 0, &len)))  return false;
 //        registerObjectByFirstLabel(forloading, act_id, graphId_eventId); //// HOC!
 
 //        xi.clear();
-        if (!(string = atreturn(string, &len))) return;
-        if (!(string = skipSpaces(string, &len))) return;
+        if (!(string = atreturn(string, &len)))  return false;
+        if (!(string = skipSpaces(string, &len)))  return false;
         while (*string != DOT) {
             char* beforeReturn = atreturn(string, &len);
             current.xi.emplace_back(string, beforeReturn-1);
             string = beforeReturn;
-            if (!(string = skipSpaces(string, &len))) return;
+            if (!(string = skipSpaces(string, &len)))  return false;
         }
 //        loadObjectXi(forloading, xi, graphId_eventId);//// HOC!
 
         string++; len--;
-        if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string,  (char*)PROP, 0, &len))) return;
+        if (!(string = skipSpaces(string, &len)))  return false;
+        if (!(string = haspos(string,  (char*)PROP, 0, &len)))  return false;
 
-        if (!(string = atreturn(string, &len))) return;
-        if (!(string = skipSpaces(string, &len))) return;
+        if (!(string = atreturn(string, &len)))  return false;
+        if (!(string = skipSpaces(string, &len)))  return false;
         while (*string != DOT) {
             char* beforeReturn = atreturn(string, &len);
             std::string tmp{string, beforeReturn-1};
             size_t idx = tmp.find("\t");
-            if (idx == std::string::npos) return;
+            if (idx == std::string::npos)  return false;
             std::string key = UNESCAPE(tmp.substr(0, idx));
             std::string val = UNESCAPE(tmp.substr(idx+1));
 
@@ -815,14 +816,14 @@ static inline void parse(char* string,
 //            loadObjectProperty(forloading, map_for_types, act_id, graphId_eventId, key, val);
 
             string = beforeReturn;
-            if (!(string = skipSpaces(string, &len))) return;
+            if (!(string = skipSpaces(string, &len)))  return false;
         }
         string++; len--;
-        if (!(string = skipSpaces(string, &len))) return;
-        if (!(string = haspos(string,  (char*)PHI, 0, &len))) return;
+        if (!(string = skipSpaces(string, &len)))  return false;
+        if (!(string = haspos(string,  (char*)PHI, 0, &len)))  return false;
 
-        if (!(string = atreturn(string, &len))) return;
-        if (!(string = skipSpaces(string, &len))) return;
+        if (!(string = atreturn(string, &len)))  return false;
+        if (!(string = skipSpaces(string, &len)))  return false;
 
 //        forloading.objectScoresLoading[graphId_eventId].emplace_back(1.0);
         while (*string != DOT) {
@@ -830,33 +831,34 @@ static inline void parse(char* string,
             std::string tmp{string, beforeReturn-1};
             tmp = UNESCAPE(tmp);
             string =beforeReturn;
-            if (!(string = skipSpaces(string, &len))) return;
+            if (!(string = skipSpaces(string, &len)))  return false;
             while (*string != ';') {
-                if (sscanf(string, "%lf\t%lu%n", &weight, &content,&scanSkip)==EOF) return;
+                if (sscanf(string, "%lf\t%lu%n", &weight, &content,&scanSkip)==EOF)  return false;
                 len-=scanSkip;
                 string+=scanSkip;
                 // Setting up the containment associated to the node
                 current.phi[tmp].emplace_back(content, weight);
 //                forloading.containment_tables[tmp].add(act_id, graphId_eventId, weight, content);
 //                forloading.containment_relationships.emplace(tmp);
-                if (!(string = skipSpaces(string, &len))) return;
+                if (!(string = skipSpaces(string, &len)))  return false;
             }
             string++;
             len--;
-            if (!(string = skipSpaces(string, &len))) return;
+            if (!(string = skipSpaces(string, &len)))  return false;
         }
         string++;
         len--;
-        if (!(string = skipSpaces(string, &len))) return;
+        if (!(string = skipSpaces(string, &len)))  return false;
 
 
         if (strncmp(string,"~~",2)==0) {
             // Finding a new graph
             db.emplace_back();
             string+=2; len-=2;
-            if (!(string = skipSpaces(string, &len))) return;
+            if (!(string = skipSpaces(string, &len)))  return false;
         }
     }
+    return true;
 //    maxGraphId = graphId_eventId.first;
 }
 

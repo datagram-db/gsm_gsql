@@ -92,7 +92,8 @@ void Environment::loading_and_indexing() {
         LOG(TRACE) << "starting to parse data";
         auto loading_start = std::chrono::high_resolution_clock::now();
         result.new_data_slate();
-        parse(conf.data.load_value.data(), n, *result.forloading, propertyname_to_type, result.forloading->nGraphs);
+        if (!parse(conf.data.load_value.data(), n, *result.forloading, propertyname_to_type, result.forloading->nGraphs))
+            DEBUG_ASSERT(false);
         auto loading_end = std::chrono::high_resolution_clock::now();
         result.loading_time = std::chrono::duration<double, std::milli>(loading_end-loading_start).count();
         LOG(TRACE) << "data parsed in " << result.loading_time << " ms";

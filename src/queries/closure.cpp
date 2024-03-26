@@ -563,15 +563,15 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
             // Returning the edge label (if nested, imploding the collection into a string!) TODO: what if we need singled out?
         case rewrite_expr::EDGE_LABEL: {
             auto edges = interpret_closure_evaluate(ptr->ptr_or_else.get(), true, false);
-            if (edges.t == NestedResultTable::R_NONE) {
-                interpret_closure_evaluate(ptr->ptr_or_else.get(), true, false);
-            }
-            DEBUG_ASSERT((edges.t == NestedResultTable::R_EDGE) || (edges.t == NestedResultTable::R_NESTED_EDGE));
+//            if (edges.t == NestedResultTable::R_NONE) {
+//                interpret_closure_evaluate(ptr->ptr_or_else.get(), true, false);
+//            }
+//            DEBUG_ASSERT((edges.t == NestedResultTable::R_EDGE) || (edges.t == NestedResultTable::R_NESTED_EDGE));
             if (edges.t == NestedResultTable::R_EDGE) {
                 edges.t = NestedResultTable::R_DO_EDGE_LABEL;
             } else if (edges.t == NestedResultTable::R_NESTED_EDGE) {
                 edges.t = NestedResultTable::R_DO_NESTED_EDGE_LABEL;
-            } else
+            } else if (edges.t != NestedResultTable::R_NONE)
                 DEBUG_ASSERT(false);
             return edges;
         } break;
@@ -664,19 +664,19 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                 }
                 l = resolve(l,toConsider,casting);
 //                std::cout << "R" << result << std::endl;
-                std::cout << toConsider << std::endl;
+//                std::cout << toConsider << std::endl;
                 r = resolve(r,none,casting);
-                std::cout << none << std::endl;
+//                std::cout << none << std::endl;
 //                toConsider &= result;
-                std::cout << toConsider << std::endl;
+//                std::cout << toConsider << std::endl;
                 switch (casting) {
                     case NestedResultTable::RT_VSTRING: {
                         std::vector<std::string> v;
                         for (size_t j = 0; j< variableResolution.size(); j++) {
                             size_t i = variableResolution.getInt(j);
-                            if (result.contains(i))
+                            if ((result.contains(i)) && (l.hasTInVector<std::string>(j)))
                                 v.emplace_back(l.getV<std::string>(j));
-                            else
+                            else if (r.hasTInVector<std::string>(j))
                                 v.emplace_back(r.getV<std::string>(j));
                         }
                         return {std::move(v), -1, -1};
@@ -686,9 +686,9 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                         std::vector<size_t> v;
                         for (size_t j = 0; j< variableResolution.size(); j++) {
                             size_t i = variableResolution.getInt(j);
-                            if (result.contains(i))
+                            if ((result.contains(i)) && (l.hasTInVector<size_t>(j)))
                                 v.emplace_back(l.getV<size_t>(j));
-                            else
+                            else if (r.hasTInVector<size_t>(j))
                                 v.emplace_back(r.getV<size_t>(j));
                         }
                         return {std::move(v), true, -1, -1};
@@ -698,9 +698,9 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                         std::vector<std::vector<gsm_object_xi_content>> v;
                         for (size_t j = 0; j< variableResolution.size(); j++) {
                             size_t i = variableResolution.getInt(j);
-                            if (result.contains(i))
+                            if (result.contains(i)  && (l.hasTInVector<gsm_object_xi_content>(j)))
                                 v.emplace_back(l.getV<std::vector<gsm_object_xi_content>>(j));
-                            else
+                            else if (r.hasTInVector<gsm_object_xi_content>(j))
                                 v.emplace_back(r.getV<std::vector<gsm_object_xi_content>>(j));
                         }
                         return {std::move(v), -1, -1};
@@ -860,10 +860,10 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
             auto l = interpret(ptr.child_logic.at(0), maxSize);
             if (l.empty()) return l;
             auto l2 = interpret(ptr.child_logic.at(1), maxSize);
-            std::cout << "AT THIS POINT:" << std::endl;
-            std::cout << "==============" << std::endl;
-            std::cout<<l<<std::endl;
-            std::cout<<l2<<std::endl;
+//            std::cout << "AT THIS POINT:" << std::endl;
+//            std::cout << "==============" << std::endl;
+//            std::cout<<l<<std::endl;
+//            std::cout<<l2<<std::endl;
             l &= l2;
             return l;
         } break;

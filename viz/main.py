@@ -12,6 +12,7 @@ import json
 import os.path
 import sys
 
+
 import numpy as np
 import pandas as pd
 import uvicorn
@@ -194,6 +195,13 @@ async def graph(folder):
                                                                              folder) + content[pos:]
         return result  # f.read().replace("§", folder).replace('£','input')
 
+
+@app.get("/list", response_class=HTMLResponse)
+async def list():
+        graphs = []
+        for x in os.walk("./data"):
+            graphs = x[1]
+            
 
 @app.post("/renderConfusionMatrix")
 async def get_body(request: Request):

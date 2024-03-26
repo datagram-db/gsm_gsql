@@ -1,14 +1,17 @@
 p4("graph", "B", "*") {
-	[0, NULL, @*("V", "Z", "l_label", "l", "T", "w_label", "w") {
-		[0, 2, "dobj", "↑14", NULL, NULL, "↑NULL"]
+	[0, 0, @*("V", "Z", "l_label", "l", "T", "w_label", "w") {
+		[2, 4, "nmod", "↑10", 8, "nsubj", "↑13"]
 }]
-	[1, NULL, @*("V", "Z", "l_label", "l", "T", "w_label", "w") {
-		[0, 2, "nmod", "↑4", 6, NULL, "↑NULL"]
+	[0, NULL, @*("V", "Z", "l_label", "l", "T", "w_label", "w") {
+		[0, 1, "expl", "↑1", NULL, NULL, "↑NULL"]
+}]
+	[2, 8, @*("V", "Z", "l_label", "l", "T", "w_label", "w") {
+		[1, 3, "nmod", "↑11", 7, "dep", "↑4"]
 }]
 	[2, NULL, @*("V", "Z", "l_label", "l", "T", "w_label", "w") {
-		[1, 3, "dobj", "↑15", NULL, NULL, "↑NULL"]
+		[8, 9, "expl", "↑2", NULL, NULL, "↑NULL"]
 }]
 	[3, NULL, @*("V", "Z", "l_label", "l", "T", "w_label", "w") {
-		[0, 2, "nmod", "↑5", 6, NULL, "↑NULL"]
+		[0, 2, "nmod", "↑12", 5, NULL, "↑NULL"]
 }]
 }

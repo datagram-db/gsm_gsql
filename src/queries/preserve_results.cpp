@@ -27,7 +27,7 @@
 #include "database/utility.h"
 
 
-nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const IndexedSchemaCoordinates& rhs) {
+nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const IndexedSchemaCoordinates& rhs, bool isEquiJoin = false) {
     static abstract_value abstract_true = true;
     if (rhs.hasNestedColumns()) {
         throw std::runtime_error("ERROR: this operator does not support RHS being a nested table");
@@ -120,16 +120,19 @@ nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const 
     fixed_table.Schema = R;
     while (it != en && it2 != en2) {
         if (it->first < it2->first) {
-            for (const auto& lR : it->second) {
-                auto v = it->first;
-                v.insert(v.end(), lR.begin(), lR.end());
-                for (auto& nestedRow : v.at(it->first.size()+nestingOffset).table.datum) {
-                    nestedRow.insert(nestedRow.end(), remainingV.begin(), remainingV.end());
-                }
-                auto& ref = result.datum.emplace_back(v);
-                for (auto& x : ref) {
-                    if (!x.table.Schema.empty())
-                        x.isNested = true;
+            if (!isEquiJoin) {
+                for (const auto& lR : it->second) {
+                    auto v = it->first;
+                    v.insert(v.end(), lR.begin(), lR.end());
+                    for (auto& nestedRow : v.at(it->first.size()+nestingOffset).table.datum) {
+                        nestedRow.insert(nestedRow.end(), remainingV.begin(), remainingV.end());
+                    }
+                    DEBUG_ASSERT(v.size() == result.Schema.size());
+                    auto& ref = result.datum.emplace_back(v);
+                    for (auto& x : ref) {
+                        if (!x.table.Schema.empty())
+                            x.isNested = true;
+                    }
                 }
             }
             it++;
@@ -140,12 +143,13 @@ nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const 
                 auto refL = lR.at(nestingOffset);
                 fixed_table.datum = it2->second;
                 refL.table = left_equijoin<value>(refL.table, fixed_table, abstract_true);
-                        DEBUG_ASSERT(refL.isNested || (!refL.table.Schema.empty()));
+                DEBUG_ASSERT(refL.isNested || (!refL.table.Schema.empty()));
                 auto v = it->first;
                 v.insert(v.end(), lR.begin(), (lR.begin()+nestingOffset));
                 v.emplace_back(refL);
                 if (nestingOffset-1 != lR.size())
                     v.insert(v.end(), (lR.begin()+nestingOffset+1), lR.end());
+                DEBUG_ASSERT(v.size() == result.Schema.size());
                 auto& ref = result.datum.emplace_back(v);
                 for (auto& x : ref) {
                     if (!x.table.Schema.empty())
@@ -156,19 +160,29 @@ nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const 
             it2++;
         }
     }
-    while (it != en) {
-        for (const auto& lR : it->second) {
-            auto v = it->first;
-            v.insert(v.end(), lR.begin(), lR.end());
-            v.insert(v.end(), remainingV.begin(), remainingV.end());
-            auto& ref = result.datum.emplace_back(v);
-            for (auto& x : ref) {
-                if (!x.table.Schema.empty())
-                    x.isNested = true;
+    if (!isEquiJoin) {
+        while (it != en) {
+            for (const auto& lRecordReminder : it->second) {
+                auto lRecordCommon = it->first;
+#ifdef DEBUG
+                size_t lRSize = lRecordReminder.size();
+                size_t rvSize = 0;//remainingV.size();
+                size_t vSize = lRecordCommon.size();
+                DEBUG_ASSERT((lRSize+rvSize+vSize) == result.Schema.size());
+#endif
+                lRecordCommon.insert(lRecordCommon.end(), lRecordReminder.begin(), lRecordReminder.end());
+//            lRecordCommon.insert(lRecordCommon.end(), remainingV.begin(), remainingV.end());
+                DEBUG_ASSERT(lRecordCommon.size() == result.Schema.size());
+                auto& ref = result.datum.emplace_back(lRecordCommon);
+                for (auto& x : ref) {
+                    if (!x.table.Schema.empty())
+                        x.isNested = true;
+                }
             }
+            it++;
         }
-        it++;
     }
+    DEBUG_ASSERT(result.checkSchemaSizeCompliance());
     return result;
 }
 
@@ -292,6 +306,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
 //                    std::cout << print_table(matching_tables.at(1)) << std::endl;
                 }
                 result = natural_equijoin<value>(matching_tables.at(0), matching_tables.at(1));
+                DEBUG_ASSERT(result.checkSchemaSizeCompliance());
             }
         } else {
             // Having more than one table, sorting the tables by increasing size.
@@ -314,6 +329,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
 //                        std::cout << print_table(matching_tables.at(i)) << std::endl;
                     }
                     result = natural_equijoin(result, matching_tables.at(i));
+                    DEBUG_ASSERT(result.checkSchemaSizeCompliance());
                     if (result.datum.empty()) break; // Stopping as soon as I reckon the table becomes empty
                     if (verbose) {
 //                        std::cout << "with previous:" << std::endl;
@@ -324,6 +340,8 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                 }
             }
         }
+
+        DEBUG_ASSERT(result.checkSchemaSizeCompliance());
 
         if ((!result.datum.empty()) && (!optional_match_tables.empty())) {
             // Similarly, computing the left join against the optional tables for the optional matches
@@ -339,7 +357,10 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                     IndexedSchemaCoordinates R{&optional_match_table};
                     L.index();
                     R.index();
+                    DEBUG_ASSERT(result.checkSchemaSizeCompliance());
+                    DEBUG_ASSERT(optional_match_table.checkSchemaSizeCompliance());
                     result = nested_natural_equijoin(L, R);
+                    DEBUG_ASSERT(result.checkSchemaSizeCompliance());
                 }
             }
         }
@@ -509,6 +530,8 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                     final_row.emplace_back(tableCopy);
                 }
             }
+
+            DEBUG_ASSERT(result.checkSchemaSizeCompliance());
 //            std::cout << print_table(result) << std::endl;
 //            std::cout << "~~~~~~~~~~~~~~~~" << std::endl;
 //            std::cout << print_table(final_table) << std::endl;
@@ -518,6 +541,8 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
             all.emplace_back("graph");
             std::reverse(all.begin(), all.end());
             std::tie(result, nested_schema) = nest_or_groupby(result, all, "*");
+
+            DEBUG_ASSERT(result.checkSchemaSizeCompliance());
 //            result.Schema = nested_schema;
         }
 
@@ -782,8 +807,10 @@ void preserve_results::loadColumnarTablesFromEdges(std::vector<nested_table> &ma
             }
             auto& table = matching_tables.emplace_back();
             fillFrom(table, raw_table);
+            DEBUG_ASSERT(table.checkSchemaSizeCompliance());
             if (isForall && isDstForall) {
                 std::tie(table, ignore) = nest_or_groupby(table, first, nesting);
+                DEBUG_ASSERT(table.checkSchemaSizeCompliance());
 //                    std::cout << "BENE" << std::endl;
 //                    std::cout << print_table(result) << std::endl;
 //                    std::cout << "BENE" << std::endl;
@@ -828,8 +855,10 @@ void preserve_results::loadColumnarTablesFromEdges(std::vector<nested_table> &ma
             }
             auto& table = matching_tables.emplace_back();
             fillFrom(table, raw_table);
+            DEBUG_ASSERT(table.checkSchemaSizeCompliance());
             if (isForall && isDstForall) {
                 std::tie(table, ignore) = nest_or_groupby(table, first, nesting);
+                DEBUG_ASSERT(table.checkSchemaSizeCompliance());
 //                    std::cout << "BENE" << std::endl;
             }
         }

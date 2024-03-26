@@ -197,17 +197,17 @@
     function constructEdge(edgeID) {
         generateFromEdge(edges.get(edgeID));
     }
-    
+
     var previousSelection = [];
     var previousColor = {};
-    
+
     function arrayEquals(a, b) {
         return Array.isArray(a) &&
         Array.isArray(b) &&
         a.length === b.length &&
         a.every((val, index) => val === b[index]);
     }
-    
+
     function callrow(node) {
         const objects = [];
         var j = 0;
@@ -236,7 +236,7 @@
 	      var col = "#89B6F2";
 	       if (n.id in previousColor) {
 	          col = previousColor[n.id];
-	       } 
+	       }
                nodes.update({id:parseInt(previousSelection[i]), color:col});
 	   }
 	   for (var i = 0; i<objects.length; i++) {
@@ -256,7 +256,7 @@
                 }
             }
             nodes = new vis.DataSet(dataNodes);
-            
+
             $.getJSON("/" + type + "/edges/" + folder, function(dataEdges) {
                 edges = new vis.DataSet(dataEdges);
                 var data = {
