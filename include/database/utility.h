@@ -223,6 +223,8 @@ struct IndexedSchemaCoordinates {
         isIndexed= true;
     }
 
+
+
      bool isNestedIdx(size_t idx) const {
         return isNested.at(idx);
     }
@@ -231,6 +233,13 @@ struct IndexedSchemaCoordinates {
         auto it = colToIdx.find(colName);
         return (it != colToIdx.end()) && (isNestedIdx(it->second));
     }
+
+    const std::vector<std::string> getNestedSchemaAssociatedToCol(const std::string& key) const {
+         auto it = sitterToPeppers.find(key);
+         if (it == sitterToPeppers.end())
+             return empty_vector;
+         else return it->second;
+     }
 
      ssize_t mainHeaderKeyOffset(const std::string& colName) const {
         auto it = colToIdx.find(colName);
@@ -304,6 +313,7 @@ struct IndexedSchemaCoordinates {
     }
 
 private:
+    std::vector<std::string> empty_vector;
     bool isIndexed;
     size_t countNested;
     std::vector<bool> isNested;

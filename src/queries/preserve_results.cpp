@@ -27,7 +27,9 @@
 #include "database/utility.h"
 
 
-nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const IndexedSchemaCoordinates& rhs, bool isEquiJoin = false) {
+nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs,
+                                     const IndexedSchemaCoordinates& rhs,
+                                     bool isEquiJoin = false) {
     static abstract_value abstract_true = true;
     if (rhs.hasNestedColumns()) {
         throw std::runtime_error("ERROR: this operator does not support RHS being a nested table");
@@ -52,7 +54,11 @@ nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const 
     }
     std::set_intersection(lhsNested.begin(), lhsNested.end(), rhsSchema.begin(), rhsSchema.end(), std::back_inserter(sToNest));
     if (sToNest.empty()) {
-        return left_equijoin<value>(*lhs.table, *rhs.table, abstract_true);
+        if (isEquiJoin) {
+            return natural_equijoin<value>(*lhs.table, *rhs.table);
+        } else {
+            return left_equijoin<value>(*lhs.table, *rhs.table, abstract_true);
+        }
     }
 
     for (const auto& pepper : sToNest) {
@@ -62,6 +68,63 @@ nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const 
     }
     std::string colN = *sToNest.begin();
 
+    auto LHSNV = lhs.getNestedSchemaAssociatedToCol(colN);
+    std::vector<size_t> iposL2, iposR2, forReodreing;
+    std::set<std::string> i;
+    std::vector<std::string> resultingNestedSchema;
+    size_t missingToBeAdded = 0;
+    {
+        std::set<std::string> LN{LHSNV.begin(), LHSNV.end()}, RTBN{rhsSchema.begin(), rhsSchema.end()};
+        i = ordered_intersection(LN,RTBN);
+        std::vector<size_t> remainingL, remainingR;
+        bool firstStr = true;
+        for (const auto& str : i) {
+            for (size_t j = 0, N = LHSNV.size(); j<N; j++) {
+                if (firstStr)
+                    remainingL.emplace_back(j);
+                if (str == (LHSNV.at(j))) {
+                    iposL2.emplace_back(j);
+                    if (!firstStr) break;
+                }
+            }
+            for (size_t j = 0, N = rhsSchema.size(); j<N; j++) {
+                if (firstStr)
+                    remainingR.emplace_back(j);
+                if (str == (rhsSchema.at(j))) {
+                    iposR2.emplace_back(j);
+                    if (!firstStr) break;
+                }
+            }
+            firstStr = false;
+        }
+        std::vector<std::string> L2 = LHSNV, R2 = rhsSchema;
+        std::set<size_t> IL{iposL2.begin(), iposL2.end()}, IR{iposR2.begin(), iposR2.end()};
+        {
+            std::vector<size_t> tmpL{IL.begin(), IL.end()}, tmpR{IR.begin(), IR.end()};
+            remove_index(L2, tmpL);
+            remove_index(remainingL, tmpL);
+            remove_index(R2, tmpR);
+            remove_index(remainingR, tmpR);
+        }
+        for (size_t j : iposL2) {
+            resultingNestedSchema.emplace_back(LHSNV.at(j));
+            forReodreing.emplace_back(j);
+        }
+        for (size_t j = 0, N = LHSNV.size(); j<N; j++) {
+            if (!IL.contains(j)) {
+                resultingNestedSchema.emplace_back(LHSNV.at(j));
+                forReodreing.emplace_back(j);
+            }
+        }
+        for (size_t j = 0, N = R2.size(); j<N; j++) {
+            if (!IR.contains(j)) {
+                missingToBeAdded++;
+                resultingNestedSchema.emplace_back(R2.at(j));
+            }
+        }
+    }
+
+    DEBUG_ASSERT(lhs.table->checkSchemaSizeCompliance());
     std::map<std::vector<NestedValue<abstract_value>>, std::vector<std::vector<NestedValue<abstract_value>>>> rM, lM;
     for (const auto& record : lhs.table->datum) {
         std::vector<NestedValue<abstract_value>> proj, remain;
@@ -73,6 +136,8 @@ nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const 
             proj.emplace_back(record.at(j));
         lM[proj].emplace_back(remain);
     }
+//
+
     for (const auto& record : rhs.table->datum) {
         std::vector<NestedValue<abstract_value>> proj, remain;
         for (size_t j = 0, N = record.size(); j<N; j++) {
@@ -111,7 +176,7 @@ nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const 
         remainingSize = diff.size();
     }
 
-    std::vector<value> remainingV(remainingSize, abstract_true);
+    std::vector<value> remainingV(missingToBeAdded, abstract_true);
     result.Schema.insert(result.Schema.end(), L.begin(), L.end());
     auto it = lM.begin(), en = lM.end();
     auto it2 = rM.begin(), en2 = rM.end();
@@ -125,6 +190,7 @@ nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const 
                     auto v = it->first;
                     v.insert(v.end(), lR.begin(), lR.end());
                     for (auto& nestedRow : v.at(it->first.size()+nestingOffset).table.datum) {
+                        reorder(nestedRow, forReodreing);
                         nestedRow.insert(nestedRow.end(), remainingV.begin(), remainingV.end());
                     }
                     DEBUG_ASSERT(v.size() == result.Schema.size());
@@ -162,22 +228,34 @@ nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs, const 
     }
     if (!isEquiJoin) {
         while (it != en) {
-            for (const auto& lRecordReminder : it->second) {
-                auto lRecordCommon = it->first;
-#ifdef DEBUG
-                size_t lRSize = lRecordReminder.size();
-                size_t rvSize = 0;//remainingV.size();
-                size_t vSize = lRecordCommon.size();
-                DEBUG_ASSERT((lRSize+rvSize+vSize) == result.Schema.size());
-#endif
-                lRecordCommon.insert(lRecordCommon.end(), lRecordReminder.begin(), lRecordReminder.end());
-//            lRecordCommon.insert(lRecordCommon.end(), remainingV.begin(), remainingV.end());
-                DEBUG_ASSERT(lRecordCommon.size() == result.Schema.size());
-                auto& ref = result.datum.emplace_back(lRecordCommon);
+            for (const auto& lR : it->second) {
+                auto v = it->first;
+                v.insert(v.end(), lR.begin(), lR.end());
+                for (auto& nestedRow : v.at(it->first.size()+nestingOffset).table.datum) {
+                    reorder(nestedRow, forReodreing);
+                    nestedRow.insert(nestedRow.end(), remainingV.begin(), remainingV.end());
+                }
+                DEBUG_ASSERT(v.size() == result.Schema.size());
+                auto& ref = result.datum.emplace_back(v);
                 for (auto& x : ref) {
                     if (!x.table.Schema.empty())
                         x.isNested = true;
                 }
+//                auto lRecordCommon = it->first;
+//#ifdef DEBUG
+//                size_t lRSize = lRecordReminder.size();
+//                size_t rvSize = 0;//remainingV.size();
+//                size_t vSize = lRecordCommon.size();
+//                DEBUG_ASSERT((lRSize+rvSize+vSize) == result.Schema.size());
+//#endif
+//                lRecordCommon.insert(lRecordCommon.end(), lRecordReminder.begin(), lRecordReminder.end());
+////            lRecordCommon.insert(lRecordCommon.end(), remainingV.begin(), remainingV.end());
+//                DEBUG_ASSERT(lRecordCommon.size() == result.Schema.size());
+//                auto& ref = result.datum.emplace_back(lRecordCommon);
+//                for (auto& x : ref) {
+//                    if (!x.table.Schema.empty())
+//                        x.isNested = true;
+//                }
             }
             it++;
         }
