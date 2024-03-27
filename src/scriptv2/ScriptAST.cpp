@@ -532,8 +532,10 @@ std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::Scrip
 }
 
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::variableEval()  {
+
 //    auto it3 = globals.find(string);
     if (!idxers->contains(string)) {
+
         if (!optGamma.get()) {
 //            std::cerr << "Error: variable cannot be solved: Gamma is null" << std::endl;
             auto it3 = globals.find(string);
@@ -1101,6 +1103,8 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
                     id = it->toInteger();
                 }
             }
+            if (id == 3)
+                std::cout << "HERE" << std::endl;
             if (db) {
                 for (const std::string& val : db->resolve_xi((size_t)idxers->getNativeInt("graph"), id))
                     v.emplace_back(script::structures::ScriptAST::string_(val));

@@ -1,3 +1,0 @@
-[{"id":1, "ell":["noun"], "xi":["centre"], "properties":{"specification":"common", "number":"singular", "pos":"3.000000", "amod":"newcastle"}, "phi":[{"containment":"compound", "content":4, "properties":{}, "score":{"type": "ProvPhi", "parent":1,"label":"compound","child":4,"id":0}}], "scores":{"type": "ProvObject","object":1}}, 
-{"id":5, "ell":[], "xi":[], "properties":{}, "phi":[{"containment":" trafficked", "content":1, "properties":{}, "score":{"type": "ProvPhi", "parent":5,"label":" trafficked","child":1,"id":0}}], "scores":{"type": "ProvObject","object":5}}, 
-{"id":4, "ell":["noun"], "xi":["city"], "properties":{"specification":"common", "number":"singular", "pos":"2.000000"}, "phi":[], "scores":{"type": "ProvObject","object":4}}]

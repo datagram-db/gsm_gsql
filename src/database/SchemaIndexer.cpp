@@ -35,6 +35,8 @@ DPtr<script::structures::ScriptAST> SchemaIndexer::get(const std::string& key) {
         else {
             std::vector<DPtr<script::structures::ScriptAST>> nested_values;
             const auto nestedColCellIdx = it2->second.find(var)->second;
+            if (var == "NN")
+                std::cout << "NN" << std::endl;
             auto it = field_to_schema.find(nested);
             DEBUG_ASSERT(it != field_to_schema.end());
             for (const auto& RW : row->at(it->second).table.datum) {

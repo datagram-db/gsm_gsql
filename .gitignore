@@ -1,3 +1,4 @@
+viz/data/*
 cmake-build-debug/*
 *.dot
 *.pdf

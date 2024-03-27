@@ -1,6 +1,0 @@
-[{"id":0, "ell":["noun"], "xi":["traffic"], "properties":{"specification":"common", "number":"singular", "pos":"3.000000"}, "phi":[{"containment":"   is", "content":9, "properties":{}, "score":{"type": "ProvPhi", "parent":0,"label":"   is","child":9,"id":0}}], "scores":{"type": "ProvObject","object":0}}, 
-{"id":3, "ell":["noun"], "xi":["centre"], "properties":{"specification":"common", "number":"singular", "pos":"10.000000", "det":"the", "case":"in", "amod":"newcastle"}, "phi":[{"containment":"compound", "content":6, "properties":{}, "score":{"type": "ProvPhi", "parent":3,"label":"compound","child":6,"id":0}}], "scores":{"type": "ProvObject","object":3}}, 
-{"id":10, "ell":[], "xi":[], "properties":{}, "phi":[{"containment":"{\"  not \"}", "content":3, "properties":{}, "score":{"type": "ProvPhi", "parent":10,"label":"{\"  not \"}","child":3,"id":0}}], "scores":{"type": "ProvObject","object":10}}, 
-{"id":9, "ell":["∃"], "xi":["there"], "properties":{"pos":"1.000000"}, "phi":[], "scores":{"type": "ProvObject","object":9}}, 
-{"id":6, "ell":["noun"], "xi":["city"], "properties":{"specification":"common", "number":"singular", "pos":"9.000000"}, "phi":[], "scores":{"type": "ProvObject","object":6}}, 
-{"id":2, "ell":["CC"], "xi":["but"], "properties":{"pos":"4.000000"}, "phi":[], "scores":{"type": "ProvObject","object":2}}]

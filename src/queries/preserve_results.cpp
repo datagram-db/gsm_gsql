@@ -31,9 +31,6 @@ nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs,
                                      const IndexedSchemaCoordinates& rhs,
                                      bool isEquiJoin = false) {
     static abstract_value abstract_true = true;
-    if (rhs.hasNestedColumns()) {
-        throw std::runtime_error("ERROR: this operator does not support RHS being a nested table");
-    }
     std::vector<std::string> lhsNotNested, lhsNested, rhsSchema, sToNest, L, R;
     std::vector<size_t> iposL, iposR;
     std::unordered_set<std::string> sharedParents, sIR;
@@ -61,6 +58,9 @@ nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs,
         }
     }
 
+    if (rhs.hasNestedColumns()) {
+        throw std::runtime_error("ERROR: this operator does not support RHS being a nested table");
+    }
     for (const auto& pepper : sToNest) {
         lhs.getAllParents(pepper, sharedParents);
         if (sharedParents.size()>1)
@@ -386,7 +386,17 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
 //                    std::cout << print_table(matching_tables.at(0)) << std::endl;
 //                    std::cout << print_table(matching_tables.at(1)) << std::endl;
                 }
-                result = natural_equijoin<value>(matching_tables.at(0), matching_tables.at(1));
+                IndexedSchemaCoordinates L{&matching_tables.at(0)};
+                IndexedSchemaCoordinates R{&matching_tables.at(1)};
+                L.index();
+                R.index();
+//                DEBUG_ASSERT(result.checkSchemaSizeCompliance());
+//                DEBUG_ASSERT(optional_match_table.checkSchemaSizeCompliance());
+//                    if ((graph_grammar_entry_point.pattern_name == "p3") && (std::find(optional_match_table.Schema.begin(), optional_match_table.Schema.end(), "NN") != optional_match_table.Schema.end())) {
+//                        std::cout << "DEBUG" << std::endl;
+//                    }
+                result = nested_natural_equijoin(L, R, true);
+//                result = natural_equijoin<value>(matching_tables.at(0), matching_tables.at(1));
                 DEBUG_ASSERT(result.checkSchemaSizeCompliance());
             }
         } else {
@@ -409,7 +419,18 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                         serialised_nested_table(file, graph_grammar_entry_point.pattern_name, matching_tables.at(i), edges);
 //                        std::cout << print_table(matching_tables.at(i)) << std::endl;
                     }
-                    result = natural_equijoin(result, matching_tables.at(i));
+                    IndexedSchemaCoordinates L{&result};
+                    IndexedSchemaCoordinates R{&matching_tables.at(i)};
+                    L.index();
+                    R.index();
+//                DEBUG_ASSERT(result.checkSchemaSizeCompliance());
+//                DEBUG_ASSERT(optional_match_table.checkSchemaSizeCompliance());
+//                    if ((graph_grammar_entry_point.pattern_name == "p3") && (std::find(optional_match_table.Schema.begin(), optional_match_table.Schema.end(), "NN") != optional_match_table.Schema.end())) {
+//                        std::cout << "DEBUG" << std::endl;
+//                    }
+                    result = nested_natural_equijoin(L, R, true);
+
+//                    result = natural_equijoin(result, matching_tables.at(i));
                     DEBUG_ASSERT(result.checkSchemaSizeCompliance());
                     if (result.datum.empty()) break; // Stopping as soon as I reckon the table becomes empty
                     if (verbose) {
@@ -440,9 +461,9 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                     R.index();
                     DEBUG_ASSERT(result.checkSchemaSizeCompliance());
                     DEBUG_ASSERT(optional_match_table.checkSchemaSizeCompliance());
-                    if ((graph_grammar_entry_point.pattern_name == "p3") && (std::find(optional_match_table.Schema.begin(), optional_match_table.Schema.end(), "NN") != optional_match_table.Schema.end())) {
-                        std::cout << "DEBUG" << std::endl;
-                    }
+//                    if ((graph_grammar_entry_point.pattern_name == "p3") && (std::find(optional_match_table.Schema.begin(), optional_match_table.Schema.end(), "NN") != optional_match_table.Schema.end())) {
+//                        std::cout << "DEBUG" << std::endl;
+//                    }
                     result = nested_natural_equijoin(L, R);
                     DEBUG_ASSERT(result.checkSchemaSizeCompliance());
                 }

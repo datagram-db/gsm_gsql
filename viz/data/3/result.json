@@ -1,2 +1,0 @@
-[{"id":2, "ell":["noun"], "xi":["newcastle"], "properties":{"specification":"common", "number":"singular", "pos":"2.000000", "case":"in"}, "phi":[], "scores":{"type": "ProvObject","object":2}}, 
-{"id":4, "ell":["noun"], "xi":["traffic"], "properties":{"specification":"common", "number":"singular", "pos":"4.000000"}, "phi":[{"containment":"is   flowing ", "content":2, "properties":{}, "score":{"type": "ProvPhi", "parent":4,"label":"is   flowing ","child":2,"id":0}}], "scores":{"type": "ProvObject","object":4}}]

@@ -1185,7 +1185,7 @@ public:
 ///       This needs to be inferred previously
         for (size_t pattern_id = 0, M = vl.size(); pattern_id < M; pattern_id++) {
             auto& pattern = vl[pattern_id];
-            if ((vertex == 0) && (pattern.pattern_name == "p4"))
+            if ((vertex == 0) && (pattern.pattern_name == "p3expl"))
                 std::cout << "HERE" << std::endl;
             if (morphs.find(pattern.pattern_name) == morphs.end())
                 continue; // Skipping if there are no results
@@ -1579,7 +1579,7 @@ static inline
                resolve(graph_id, VAR.getInt(0), k, flatten2(v));
            }
        } else if ((NAME.cell_nested_morphism == VAL.cell_nested_morphism) && (VAL.cell_nested_morphism == -1)) {
-           DEBUG_ASSERT((VAL.size() == 1) && (NAME.size() == 1));
+           DEBUG_ASSERT((VAL.size() <= 1) && (NAME.size() == 1));
            auto val = flattenT(I, delim, VAL);
            auto name = getOstringstream(I, delim, NAME);
            for (size_t idx = 0, N = VAR.size(); idx < N; idx++) {

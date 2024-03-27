@@ -594,12 +594,12 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
             // Returning the specific ELLS for the nodes
         case rewrite_expr::NODE_ELL: {
             NestedResultTable edges = interpret_closure_evaluate(ptr->ptr_or_else.get(), true, true);
-            DEBUG_ASSERT((edges.t == NestedResultTable::R_NODE) || (edges.t == NestedResultTable::R_NESTED_NODE));
+//            DEBUG_ASSERT((edges.t == NestedResultTable::R_NODE) || (edges.t == NestedResultTable::R_NESTED_NODE));
             if (edges.t == NestedResultTable::R_NODE) {
                 edges.t = NestedResultTable::R_DO_ELL;
             } else if (edges.t == NestedResultTable::R_NESTED_NODE) {
                 edges.t = NestedResultTable::R_DO_NESTED_ELL;
-            } else
+            } else if (edges.t != NestedResultTable::R_NONE)
                 DEBUG_ASSERT(false);
             edges.opt_offset = ptr->id;
             return edges;
