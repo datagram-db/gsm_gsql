@@ -170,20 +170,19 @@ namespace gsm2 {
             for (const auto& entry : main_registry.table) {
                 auto id = entry.event_id;
             }
-
             // Creating a gsm_index
             for (const auto& [k1,v] : containment_tables) {
                 for (const auto& record_obj : v.table) {
                     auto& gRef = all_indices[record_obj.graph_id];
 //                    auto cDst = gRef.containedBy.addUniqueStateOrGetExisting(record_obj.object_id);
-//                    auto oDst = gRef.containerOf.addUniqueStateOrGetExisting(record_obj.object_id);
+                    auto oDst = gRef.containerOf.addUniqueStateOrGetExisting(record_obj.object_id);
                     const auto& labels = ell(resolver);
 //                    ssize_t act_label = labels.empty() ? getMappedValueFromAction("") : getMappedValueFromAction(labels.at(0));
 //                    auto src = gRef.siblinghood.addUniqueStateOrGetExisting(record_obj.id_contained);
 //                    auto cSrc = gRef.containedBy.addUniqueStateOrGetExisting(record_obj.id_contained);
-//                    auto oSrc = gRef.containerOf.addUniqueStateOrGetExisting(record_obj.id_contained);
+                    auto oSrc = gRef.containerOf.addUniqueStateOrGetExisting(record_obj.id_contained);
 //                    gRef.containedBy.addNewEdgeFromId(cSrc, cDst, k1);
-//                    gRef.containerOf.addNewEdgeFromId(oDst, oSrc, k1);
+                    gRef.containerOf.addNewEdgeFromId(oDst, oSrc, k1);
                     resolver.graphid = record_obj.graph_id;
                     resolver.eventid = record_obj.object_id;
 
@@ -203,15 +202,16 @@ namespace gsm2 {
 //                    }
                 }
             }
-//            for (auto& ref : all_indices){
+            for (auto& ref : all_indices){
 //                // Converting from the index id to the id of the actual data structure
 //                ref.containement_order = ref.containedBy.g.topological_sort(-1);
 //                convertMap(ref.containedBy, ref.containement_order);
-//                ref.container_order = ref.containerOf.g.topological_sort(ref.containerOf.getId(0));
+                ref.container_order = ref.containerOf.g.topological_sort(ref.containerOf.getId(0));
+                ref.containerOf.clear();
 //                convertMap(ref.containerOf, ref.container_order);
 //                ref.traversal_order = ref.siblinghood.g.topological_sort(-1);
 //                convertMap(ref.siblinghood, ref.traversal_order);
-//            }
+            }
             objectScores.resize(nGraphs);
             for (size_t i = 0; i<nGraphs; i++) {
                 auto& ref = objectScores[i];

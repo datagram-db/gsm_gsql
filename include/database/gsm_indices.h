@@ -33,7 +33,7 @@ struct gsm_db_indices {
     // This is the relationship beween sibling elements, thus allowing efficient traversals
 //    NodeLabelBijectionGraph<size_t, std::string>   siblinghood;
     // Associating each item to its container
-//    NodeLabelBijectionGraph<size_t, std::string> containedBy /*, containerOf*/;
+    NodeLabelBijectionGraph<size_t, std::string> /*,containedBy*/  containerOf;
     std::unordered_map<size_t, std::vector<size_t>> /*containement_order,*/ container_order; //, traversal_order;
 
 

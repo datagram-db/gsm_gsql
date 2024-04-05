@@ -1185,8 +1185,8 @@ public:
 ///       This needs to be inferred previously
         for (size_t pattern_id = 0, M = vl.size(); pattern_id < M; pattern_id++) {
             auto& pattern = vl[pattern_id];
-            if ((vertex == 0) && (pattern.pattern_name == "p3expl"))
-                std::cout << "HERE" << std::endl;
+//            if ((vertex == 0) && (pattern.pattern_name == "p3expl"))
+//                std::cout << "HERE" << std::endl;
             if (morphs.find(pattern.pattern_name) == morphs.end())
                 continue; // Skipping if there are no results
             /*const*/ auto& pattern_result = morphs.at(pattern.pattern_name);

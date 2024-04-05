@@ -609,7 +609,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                                 result_set.clear();
                                 continue;
                             }
-                            const auto& next = hookNodeIdToRecordOffset.at(*it3);
+                            const auto& next = nextTwo->second;
                             std::set_union(current.begin(), current.end(), next.begin(), next.end(), std::back_inserter(result_set));
                             std::swap(current, result_set);
                             result_set.clear();
