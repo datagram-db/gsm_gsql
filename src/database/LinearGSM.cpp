@@ -175,43 +175,43 @@ namespace gsm2 {
             for (const auto& [k1,v] : containment_tables) {
                 for (const auto& record_obj : v.table) {
                     auto& gRef = all_indices[record_obj.graph_id];
-                    auto cDst = gRef.containedBy.addUniqueStateOrGetExisting(record_obj.object_id);
-                    auto oDst = gRef.containerOf.addUniqueStateOrGetExisting(record_obj.object_id);
+//                    auto cDst = gRef.containedBy.addUniqueStateOrGetExisting(record_obj.object_id);
+//                    auto oDst = gRef.containerOf.addUniqueStateOrGetExisting(record_obj.object_id);
                     const auto& labels = ell(resolver);
 //                    ssize_t act_label = labels.empty() ? getMappedValueFromAction("") : getMappedValueFromAction(labels.at(0));
-                    auto src = gRef.siblinghood.addUniqueStateOrGetExisting(record_obj.id_contained);
-                    auto cSrc = gRef.containedBy.addUniqueStateOrGetExisting(record_obj.id_contained);
-                    auto oSrc = gRef.containerOf.addUniqueStateOrGetExisting(record_obj.id_contained);
-                    gRef.containedBy.addNewEdgeFromId(cSrc, cDst, k1);
-                    gRef.containerOf.addNewEdgeFromId(oDst, oSrc, k1);
+//                    auto src = gRef.siblinghood.addUniqueStateOrGetExisting(record_obj.id_contained);
+//                    auto cSrc = gRef.containedBy.addUniqueStateOrGetExisting(record_obj.id_contained);
+//                    auto oSrc = gRef.containerOf.addUniqueStateOrGetExisting(record_obj.id_contained);
+//                    gRef.containedBy.addNewEdgeFromId(cSrc, cDst, k1);
+//                    gRef.containerOf.addNewEdgeFromId(oDst, oSrc, k1);
                     resolver.graphid = record_obj.graph_id;
                     resolver.eventid = record_obj.object_id;
 
-                    const auto& labels2 = ell(resolver);
-                    ssize_t act_label2 = labels.empty() ? getMappedValueFromAction("") : getMappedValueFromAction(labels2.at(0));
-                    for (const auto& [k2,v2] : containment_tables) {
-                        if (k2 == k1) continue;
-                        auto it2 = v.primary_index.find(act_label2);
-                        if (it2 == v.primary_index.end())
-                            continue;
-                        auto iterator = it2->second;
-                        iterator.second++;
-                        for (; iterator.first != iterator.second; iterator.first++) {
-                            auto dst = gRef.siblinghood.addUniqueStateOrGetExisting(iterator.first->id_contained);
-                            gRef.siblinghood.addNewEdgeFromId(src, dst, k2);
-                        }
-                    }
+//                    const auto& labels2 = ell(resolver);
+//                    ssize_t act_label2 = labels.empty() ? getMappedValueFromAction("") : getMappedValueFromAction(labels2.at(0));
+//                    for (const auto& [k2,v2] : containment_tables) {
+//                        if (k2 == k1) continue;
+//                        auto it2 = v.primary_index.find(act_label2);
+//                        if (it2 == v.primary_index.end())
+//                            continue;
+//                        auto iterator = it2->second;
+//                        iterator.second++;
+//                        for (; iterator.first != iterator.second; iterator.first++) {
+//                            auto dst = gRef.siblinghood.addUniqueStateOrGetExisting(iterator.first->id_contained);
+//                            gRef.siblinghood.addNewEdgeFromId(src, dst, k2);
+//                        }
+//                    }
                 }
             }
-            for (auto& ref : all_indices){
-                // Converting from the index id to the id of the actual data structure
-                ref.containement_order = ref.containedBy.g.topological_sort(-1);
-                convertMap(ref.containedBy, ref.containement_order);
-                ref.container_order = ref.containerOf.g.topological_sort(ref.containerOf.getId(0));
-                convertMap(ref.containerOf, ref.container_order);
-                ref.traversal_order = ref.siblinghood.g.topological_sort(-1);
-                convertMap(ref.siblinghood, ref.traversal_order);
-            }
+//            for (auto& ref : all_indices){
+//                // Converting from the index id to the id of the actual data structure
+//                ref.containement_order = ref.containedBy.g.topological_sort(-1);
+//                convertMap(ref.containedBy, ref.containement_order);
+//                ref.container_order = ref.containerOf.g.topological_sort(ref.containerOf.getId(0));
+//                convertMap(ref.containerOf, ref.container_order);
+//                ref.traversal_order = ref.siblinghood.g.topological_sort(-1);
+//                convertMap(ref.siblinghood, ref.traversal_order);
+//            }
             objectScores.resize(nGraphs);
             for (size_t i = 0; i<nGraphs; i++) {
                 auto& ref = objectScores[i];

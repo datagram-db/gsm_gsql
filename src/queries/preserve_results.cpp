@@ -603,12 +603,19 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                         it3++;
                         result_set.clear();
                         for (; it3!=s.end(); it3++) {
+                            auto nextTwo = hookNodeIdToRecordOffset.find(*it3);
+                            if (nextTwo == hookNodeIdToRecordOffset.end()) {
+                                current.clear();
+                                result_set.clear();
+                                continue;
+                            }
                             const auto& next = hookNodeIdToRecordOffset.at(*it3);
                             std::set_union(current.begin(), current.end(), next.begin(), next.end(), std::back_inserter(result_set));
                             std::swap(current, result_set);
                             result_set.clear();
                         }
-                        emplaced.emplace_back(current);
+                        if (!current.empty())
+                            emplaced.emplace_back(current);
                     }
                 }
                 recordToRemove++;

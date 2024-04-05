@@ -197,7 +197,7 @@ async def graph(folder):
 
 
 @app.get("/list", response_class=HTMLResponse)
-async def list():
+async def lists():
         graphs = []
         for x in os.walk("./data"):
             graphs = x[1]

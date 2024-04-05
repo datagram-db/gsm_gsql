@@ -526,6 +526,11 @@ std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::Scrip
             };
         }
 
+        case NullE:
+            return [this](DPtr<script::structures::ScriptAST> x) {
+                return script::structures::ScriptAST::string_("");
+            };
+
         default:
             return run()->toFunction();
     }
