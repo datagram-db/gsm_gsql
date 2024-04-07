@@ -206,7 +206,12 @@ namespace gsm2 {
 //                // Converting from the index id to the id of the actual data structure
 //                ref.containement_order = ref.containedBy.g.topological_sort(-1);
 //                convertMap(ref.containedBy, ref.containement_order);
-                ref.container_order = ref.containerOf.g.topological_sort(ref.containerOf.getId(0));
+                ref.container_order = ref.containerOf.g.topological_sort(0);
+                for (auto& [time,order] : ref.container_order) {
+                    for (auto& val : order) {
+                        val = ref.containerOf.getUniqueLabel(val);
+                    }
+                }
                 ref.containerOf.clear();
 //                convertMap(ref.containerOf, ref.container_order);
 //                ref.traversal_order = ref.siblinghood.g.topological_sort(-1);
