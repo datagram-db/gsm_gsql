@@ -44,7 +44,7 @@ struct SchemaIndexer {
         row = nestedRow;
         isNull.clear();
         cow.clear();
-        nested_schema.clear();
+        if (!fullyIndexed) nested_schema.clear();
         for (size_t i = 0, N = std::min(nestedRow->size(), field_to_schema.size()); i<N; i++) {
             const auto& cell = nestedRow->at(i);
             if (!cell.isNested) {

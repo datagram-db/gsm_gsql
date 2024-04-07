@@ -574,6 +574,7 @@ namespace script {
                                  const std::vector<std::string>& schema,
                                  const std::vector<value>& nestedRow) {
             script::structures::ScriptAST::idxers->current_template =patt;
+//            script::structures::ScriptAST::idxers->map.clear(); // Doing this all the times makes it successful, but also slows down the computation.
             script::structures::ScriptAST::idxers->attemptInitialise(patt, &schema).initialize(&nestedRow);
             script::structures::ScriptAST::globals.clear();
 //            ScriptVisitor ptr;
