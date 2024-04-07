@@ -44,7 +44,7 @@ struct SchemaIndexer {
         row = nestedRow;
         isNull.clear();
         cow.clear();
-        if (!fullyIndexed) nested_schema.clear();
+        if (!fullyIndexed) nested_schema.clear(); // Rationale: the nested schema is always there, despite the table might be empty
         for (size_t i = 0, N = std::min(nestedRow->size(), field_to_schema.size()); i<N; i++) {
             const auto& cell = nestedRow->at(i);
             if (!cell.isNested) {

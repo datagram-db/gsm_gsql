@@ -1,5 +1,5 @@
-p1 = (X)--[l:det||nmod_poss||amod||mark||case||punct||advmod]->(Y)                   // Graph matching, First pattern
-      where ((TEST "= |𝜑 ⦃\"Y\"⦄ | 0 ") ∧ ((Y unmatched p2 . K) ∧ ((Y unmatched p3 . T) ∧ ((Y unmatched p2 . Z) ∧ ((ℓ 0 @ Y ≠ noun) ∧ ((Y unmatched p3 . ADM) ∧ ((Y unmatched p3expl . ADM) ∧ ((Y unmatched p3pass . ADM) ∧ ((Y unmatched p4 . ADM))))))))))
+p1 = (X)--[l:det||nmod_poss||amod||mark||case||punct||advmod||advcl||cc]->(Y)                   // Graph matching, First pattern
+      where ((TEST "= |𝜑 ⦃\"Y\"⦄ | 0 ") ∧ ((Y unmatched p2 . K) ∧ ((Y unmatched p3 . T) ∧ ((Y unmatched p2 . Z) ∧ ((ℓ 0 @ Y ≠ noun) ∧ (ℓ 0 @ Y ≠ verb))))))
      ↪  set (𝜋 (label l) @ X) as (𝜉 0 @ Y)                        // Property extension
        del Y                                             // Removing a node
 
@@ -11,7 +11,7 @@ p2 = (>> H)<-[∀l:]--(X)                                   // Graph matching, S
            --[conj] hook
            --[? case]->(K)
            --[? c : cc]->(Z)
-           --[? g:]->(Y)
+           //--[? g:]->(Y)
     //where ((Y unmatched p4 . V) ∧ ((Y unmatched p2 . X) /*∧ (Y unmatched p3 . V)*/))
      ↪  new h                                             // Creating a new node standing for H
        set (φ orig , h) as H                             // This node will contain all the grouped element (>>)
@@ -47,7 +47,7 @@ p3 = (>> V)<-[∀ ? w:]--(B)
         --[∀ ge: dobj||ccomp||nmod||dep||obj||obl||xcomp]->( Z) // Future work: nested join between >>Z and >>Z from the join, when required. This might require to re-do the join semantics
      (Z)--[? case]->(T)
      (S)--[? neg]->(NN)
-     where ((V unmatched p3pass . V) ∧ (ℓ 0 @ V = verb))
+     where ((V unmatched p3pass . V) ∧ ((V unmatched p3expl . V) ∧(ℓ 0 @ V = verb)))
      ↪
         //new s
         set(φ (SCRIPT "[(° (fun y → { l cp (fun x → { ^ (^ ([⦃x⦄ 0]) \" \") ([⦃x⦄ 1]) }) (\" \")  y } ) ( zip ( a {   (° (fun y → {[(𝜉 y) 0]}) ⦃\"*.A\"⦄)  ; (° (fun y → {[(𝜉 y) 0]}) ⦃\"*.N\"⦄) ;  (° (fun y → {[(𝜉 y) 0]}) ⦃\"*.V\"⦄) ; (° (fun y → {[(𝜉 y) 0]}) ⦃\"*.T\"⦄) } ) )) 0]"), S) as Z
@@ -56,7 +56,7 @@ p3 = (>> V)<-[∀ ? w:]--(B)
         //set(   𝜉 0 @ s) as (𝜉 0 @ S)
         set(𝜋 expl @ S) as (ℓ 0 @ E)
        set (φ iobj , S) as IOZ
-       set (𝜋 adv @ S) as (𝜉 0 @ ADM)
+       set (φ adv , S) as ADM
        set (φ dep , S) as Z
        del V
        del T
@@ -64,7 +64,6 @@ p3 = (>> V)<-[∀ ? w:]--(B)
        del A
        del E
        del NN
-       del ADM
        (S);
 
 p3expl = (V)--[∀n:nsubj]->(>> S)
@@ -73,12 +72,12 @@ p3expl = (V)--[∀n:nsubj]->(>> S)
         --[? neg]->(N)
         --[? iobj]->(IOW)
         --[? advmod||advcl]->(>> ADM)
-        --[? xcomp]->(XC)
+        --[? xcomp||dep]->(XC)
         --[l:expl]->(>> Z) // Future work: nested join between >>Z and >>Z from the join, when required. This might require to re-do the join semantics
      (Z)--[? case]->(T)
      (S)--[? neg]->(NN)
-     (S)--[nmod]->(C)
-     where ((V unmatched p3pass . V) ∧ ((V unmatched p3 . V) ∧ (ℓ 0 @ V = verb)))
+     //(S)--[nmod]->(C)
+     where (((ℓ 0 @ V = verb)))
      ↪
         //new s
         set(φ (if ((label l ) = nmod) over l then    // Defining the label in function of T, if this exists,
@@ -86,17 +85,16 @@ p3expl = (V)--[∀n:nsubj]->(>> S)
                                               SCRIPT "(^(^(^(^(^(^ (^ ( [(𝜉 ⦃\"A\"⦄) 0])  \" \") ([ (𝜉 ⦃\"N\"⦄)  0])) \" \") ([ (𝜉 ([⦃\"S.NN\"⦄ 0]))  0])) \" \") ([ (𝜉 ⦃\"V\"⦄)  0])) \" \") ([ (𝜉 ⦃\"T\"⦄)  0])"
                                              else
                                               SCRIPT "^(^(^ (^(^(^ ( [(𝜉 ⦃\"A\"⦄) 0])  \" \") ([ (𝜉 ⦃\"N\"⦄)  0])) \" \") ([ (𝜉 ([⦃\"S.NN\"⦄ 0]))  0])) \" \") ([ (𝜉 ⦃\"V\"⦄)  0])"
-                                             ), S) as C
+                                             ), S) as Z
         set(𝜋 expl @ S) as (ℓ 0 @ Z)
        set (φ iobj , S) as IOW
        set (𝜋 adv @ S) as (𝜉 0 @ ADM)
-      // set (φ dep , S) as XC
+      set (φ dep , S) as XC
        del V
        del T
        del M
        del A
        del NN
-       del Z
        del ADM
        (S);
 
@@ -111,7 +109,7 @@ p3pass = (V)--[∀n:nsubjpass]->(>> S)
         --[? l:ccomp||nmod||dep||xcomp]->(Z) // Future work: nested join between >>Z and >>Z from the join, when required. This might require to re-do the join semantics
      (Z)--[? case]->(T)
      (S)--[? neg]->(NN)
-     where (ℓ 0 @ V = verb)
+     where ((V unmatched p3expl . V) ∧ (ℓ 0 @ V = verb))
      ↪
         //new s
         set(φ (if ((label l ) = nmod) over l then    // Defining the label in function of T, if this exists,

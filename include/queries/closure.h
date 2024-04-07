@@ -1188,8 +1188,8 @@ public:
 ///       This needs to be inferred previously
         for (size_t pattern_id = 0, M = vl.size(); pattern_id < M; pattern_id++) {
             auto& pattern = vl[pattern_id];
-            if ((vertex == 3) && (pattern.pattern_name == "p3"))
-                std::cout << "HERE" << std::endl;
+//            if ((vertex == 3) && (pattern.pattern_name == "p2"))
+//                std::cout << "HERE" << std::endl;
             if (morphs.find(pattern.pattern_name) == morphs.end())
                 continue; // Skipping if there are no results
             /*const*/ auto& pattern_result = morphs.at(pattern.pattern_name);
@@ -1267,6 +1267,8 @@ public:
                             continue; //next entry
                         }
                     }
+
+                    std::cout << "Graph #" << graph_id << ": applying pattern " << pattern.pattern_name << " for node " << vertex << std::endl;
 
                     for (const auto& operation : pattern.rwr_to) {
                         switch (operation.t) {
@@ -1582,6 +1584,8 @@ static inline
                resolve(graph_id, VAR.getInt(0), k, flatten2(v));
            }
        } else if ((NAME.cell_nested_morphism == VAL.cell_nested_morphism) && (VAL.cell_nested_morphism == -1)) {
+           OrderedSet rLS{(size_t)0};
+           NAME = I.resolve(NAME, rLS, nameType);
            DEBUG_ASSERT((VAL.size() <= 1) && (NAME.size() == 1));
            auto val = flattenT(I, delim, VAL);
            auto name = getOstringstream(I, delim, NAME);
