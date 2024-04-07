@@ -1407,8 +1407,12 @@ std::string getOstringstream(
         }
 
         case NestedResultTable::RT_SIZET: {
-            OrderedSet toIgnore{0};
-            return std::get<std::string>(I.resolve(containingStrings, toIgnore, NestedResultTable::RT_STRING).content);
+            OrderedSet toIgnore(0);
+            auto result = I.resolve(containingStrings, toIgnore, NestedResultTable::RT_STRING);
+            if (result.size() == 0)
+                return "";
+            else
+                return std::get<std::string>(result.content);
         }
 
         case NestedResultTable::RT_VSIZET: {

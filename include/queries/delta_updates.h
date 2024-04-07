@@ -77,8 +77,8 @@ struct delta_updates {
      */
     inline void set_removed(size_t default_val){
         size_t toRemove = getOrDefault(replacement_map, default_val, default_val);
-        if ((toRemove == 8) || (default_val == 8))
-            std::cerr << "EHRE" << std::endl;
+//        if ((toRemove == 8) || (default_val == 8))
+//            std::cerr << "EHRE" << std::endl;
         if (!newIterationInsertedObjects.contains(toRemove))
             removed_objects.insert(toRemove);
         else
@@ -97,9 +97,9 @@ struct delta_updates {
     inline void replaceWith(size_t orig, size_t dest) {
         if (removed_objects.contains(dest))return;
         if (orig == dest) return;
-        if ((orig == 3) && (dest == 8)) {
-            std::cerr << "DEBUG!" << std::endl;
-        }
+//        if ((orig == 3) && (dest == 8)) {
+//            std::cerr << "DEBUG!" << std::endl;
+//        }
         if (replacement_map.contains(orig)) {
             std::cerr << "WARNING!" << std::endl;
 //            DEBUG_ASSERT(replacement_map.find(orig)->second == dest);
