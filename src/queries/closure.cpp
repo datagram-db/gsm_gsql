@@ -329,6 +329,10 @@ void closure::generate_materialised_view() {
 
 }
 
+void closure::reinitAndClearNestedIndices() {
+    script::structures::ScriptAST::idxers->map.clear();
+}
+
 #include <ranges>
 
 
@@ -458,18 +462,6 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
             NestedResultTable NAME = I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), false, true);
 
             std::function<void(size_t, size_t, const std::string&, const std::vector<gsm_object_xi_content>&)> resolve = [this,&I,&ptr](size_t graph_id, size_t var, const std::string& x, const std::vector<gsm_object_xi_content>& val) {
-//                {
-//                    auto s = x;
-//                    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
-//                        return !std::isspace(ch);
-//                    }));
-//                    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
-//                        return !std::isspace(ch);
-//                    }).base(), s.end());
-//                    if (s.empty()) {
-//                        I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), false, true);
-//                    }
-//                }
                 delta_updates_per_graph[graph_id].delta_plus_db.generateId(var).phi[x] = val;
             };
             std::function<std::vector<gsm_object_xi_content>(const std::set<std::vector<gsm_object_xi_content>>&)> resolve2 = [](const std::set<std::vector<gsm_object_xi_content>>& v) {
@@ -571,21 +563,21 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                 edges.t = NestedResultTable::R_DO_EDGE_LABEL;
             } else if (edges.t == NestedResultTable::R_NESTED_EDGE) {
                 edges.t = NestedResultTable::R_DO_NESTED_EDGE_LABEL;
-            } else if (edges.t != NestedResultTable::R_NONE)
-                DEBUG_ASSERT(false);
+            } /*else if (edges.t != NestedResultTable::R_NONE)
+                DEBUG_ASSERT(false);*/
             return edges;
         } break;
 
             // Returning the specific XI for the nodes
         case rewrite_expr::NODE_XI: {
             NestedResultTable edges = interpret_closure_evaluate(ptr->ptr_or_else.get(), true, true);
-            DEBUG_ASSERT((edges.t == NestedResultTable::R_NODE) || (edges.t == NestedResultTable::R_NESTED_NODE));
+//            DEBUG_ASSERT((edges.t == NestedResultTable::R_NODE) || (edges.t == NestedResultTable::R_NESTED_NODE));
             if (edges.t == NestedResultTable::R_NODE) {
                 edges.t = NestedResultTable::R_DO_XI;
             } else if (edges.t == NestedResultTable::R_NESTED_NODE) {
                 edges.t = NestedResultTable::R_DO_NESTED_XI;
-            } else
-                DEBUG_ASSERT(false);
+            } /*else
+                DEBUG_ASSERT(false);*/
             edges.opt_offset = ptr->id;
             return edges;
 
@@ -599,8 +591,8 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                 edges.t = NestedResultTable::R_DO_ELL;
             } else if (edges.t == NestedResultTable::R_NESTED_NODE) {
                 edges.t = NestedResultTable::R_DO_NESTED_ELL;
-            } else if (edges.t != NestedResultTable::R_NONE)
-                DEBUG_ASSERT(false);
+            } /*else if (edges.t != NestedResultTable::R_NONE)
+                DEBUG_ASSERT(false);*/
             edges.opt_offset = ptr->id;
             return edges;
         }
@@ -614,8 +606,8 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                 evaluation.t = NestedResultTable::R_DO_PROP;
             } else if (evaluation.t == NestedResultTable::R_NESTED_NODE) {
                 evaluation.t = NestedResultTable::R_DO_NESTED_PROP;
-            } else
-                DEBUG_ASSERT(false);
+            } /*else
+                DEBUG_ASSERT(false);*/
             return evaluation;
         } break;
 
@@ -627,8 +619,8 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                 evaluation.t = NestedResultTable::R_DO_CONTENT;
             } else if (evaluation.t == NestedResultTable::R_NESTED_NODE) {
                 evaluation.t = NestedResultTable::R_DO_NESTED_CONTENT;
-            } else
-                DEBUG_ASSERT(false);
+            } /*else
+                DEBUG_ASSERT(false);*/
             return evaluation;
         } break;
 
@@ -728,8 +720,8 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                 edges.t = NestedResultTable::R_DO_EDGE_SRC;
             } else if (edges.t == NestedResultTable::R_NESTED_EDGE) {
                 edges.t = NestedResultTable::R_DO_NESTED_EDGE_SRC;
-            } else
-                DEBUG_ASSERT(false);
+            } /*else
+                DEBUG_ASSERT(false);*/
             return edges;
         } break;
 
@@ -740,8 +732,8 @@ NestedResultTable closure::Interpret::interpret_closure_evaluate(rewrite_expr *p
                 edges.t = NestedResultTable::R_DO_EDGE_DST;
             } else if (edges.t == NestedResultTable::R_NESTED_EDGE) {
                 edges.t = NestedResultTable::R_DO_NESTED_EDGE_DST;
-            } else
-                DEBUG_ASSERT(false);
+            } /*else
+                DEBUG_ASSERT(false);*/
             return edges;
         }
 

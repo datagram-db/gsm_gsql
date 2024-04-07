@@ -1158,6 +1158,7 @@ public:
         }
         for (size_t graph_id = 0, N = forloading->all_indices.size(); graph_id < N; graph_id++) { // on parallel...do
             // For each graph in the collection
+            reinitAndClearNestedIndices();
             const auto& g = forloading->all_indices.at(graph_id);
             /*const*/ auto& morphs = pr.morphisms.at(graph_id);
             auto& updates = delta_updates_per_graph[graph_id];
@@ -1177,6 +1178,8 @@ public:
         }
     }
 
+    void reinitAndClearNestedIndices();
+
     inline
     void rewriteOverAllPatterns(bool hasDelRewrite, size_t graph_id,
                                 std::unordered_map<std::string, std::pair<std::vector<std::string>, std::unordered_map<size_t, nested_table>>> &morphs,
@@ -1185,8 +1188,8 @@ public:
 ///       This needs to be inferred previously
         for (size_t pattern_id = 0, M = vl.size(); pattern_id < M; pattern_id++) {
             auto& pattern = vl[pattern_id];
-//            if ((vertex == 0) && (pattern.pattern_name == "p3expl"))
-//                std::cout << "HERE" << std::endl;
+            if ((vertex == 3) && (pattern.pattern_name == "p3"))
+                std::cout << "HERE" << std::endl;
             if (morphs.find(pattern.pattern_name) == morphs.end())
                 continue; // Skipping if there are no results
             /*const*/ auto& pattern_result = morphs.at(pattern.pattern_name);

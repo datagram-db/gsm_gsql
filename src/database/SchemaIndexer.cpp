@@ -5,6 +5,8 @@
 #include "database/SchemaIndexer.h"
 
 DPtr<script::structures::ScriptAST> SchemaIndexer::get(const std::string& key) {
+    if (key == "*.V")
+        std::cout << "CC" << std::endl;
     if (!row)
         return script::structures::ScriptAST::null_();
     auto itChar = key.find('.');

@@ -95,9 +95,12 @@ struct delta_updates {
      * @param dest
      */
     inline void replaceWith(size_t orig, size_t dest) {
+        if (removed_objects.contains(dest))return;
         if (orig == dest) return;
-        if (replacement_map.contains(orig))
+        if (replacement_map.contains(orig)) {
             std::cerr << "WARNING!" << std::endl;
+//            DEBUG_ASSERT(replacement_map.find(orig)->second == dest);
+        }
         replacement_map[orig] = dest;
     }
     /**

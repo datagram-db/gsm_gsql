@@ -1,6 +1,6 @@
 id:0
 ell:
-VBZ
+verb
 root
 .
 xi:
@@ -81,7 +81,7 @@ phi:
 ~~
 id:0
 ell:
-VBN
+verb
 root
 .
 xi:
@@ -133,7 +133,7 @@ phi:
 
 id:3
 ell:
-VBZ
+verb
 .
 xi:
 is
@@ -206,7 +206,7 @@ phi:
 
 id:1
 ell:
-VBZ
+verb
 root
 .
 xi:
@@ -274,7 +274,7 @@ phi:
 ~~
 id:0
 ell:
-VBN
+verb
 root
 .
 xi:
@@ -325,7 +325,7 @@ phi:
 
 id:3
 ell:
-VBZ
+verb
 .
 xi:
 is

@@ -70,6 +70,10 @@ void Environment::schema_loading() {
 }
 
 void Environment::loading_and_indexing() {
+    if (!std::filesystem::exists(conf.data.load_value)) {
+        LOG(TRACE) << "Not loading, as the following file does not exist: " << conf.data.load_value;
+        return;
+    }
     size_t n;
     LOG(INFO) << "Loading data";
     if (conf.data.file_or_string_otherwise) {

@@ -1,5 +1,5 @@
-p1 = (X)--[l:det||nmod_poss||amod||mark||case||punct||cc]->(Y)                   // Graph matching, First pattern
-      where ((TEST "= |𝜑 ⦃\"Y\"⦄ | 0 ") ∧ ((Y unmatched p2 . K) ∧ ((Y unmatched p3 . T) ∧ ((Y unmatched p2 . Z) ∧ (ℓ 0 @ Y ≠ noun)))))
+p1 = (X)--[l:det||nmod_poss||amod||mark||case||punct||advmod]->(Y)                   // Graph matching, First pattern
+      where ((TEST "= |𝜑 ⦃\"Y\"⦄ | 0 ") ∧ ((Y unmatched p2 . K) ∧ ((Y unmatched p3 . T) ∧ ((Y unmatched p2 . Z) ∧ ((ℓ 0 @ Y ≠ noun) ∧ ((Y unmatched p3 . ADM) ∧ ((Y unmatched p3expl . ADM) ∧ ((Y unmatched p3pass . ADM) ∧ ((Y unmatched p4 . ADM))))))))))
      ↪  set (𝜋 (label l) @ X) as (𝜉 0 @ Y)                        // Property extension
        del Y                                             // Removing a node
 
@@ -12,7 +12,7 @@ p2 = (>> H)<-[∀l:]--(X)                                   // Graph matching, S
            --[? case]->(K)
            --[? c : cc]->(Z)
            --[? g:]->(Y)
-    //where ((Y unmatched p4 . V) ∧ ((Y unmatched p2 . X) ∧ (Y unmatched p3 . V)))
+    //where ((Y unmatched p4 . V) ∧ ((Y unmatched p2 . X) /*∧ (Y unmatched p3 . V)*/))
      ↪  new h                                             // Creating a new node standing for H
        set (φ orig , h) as H                             // This node will contain all the grouped element (>>)
        set (𝜋 conj @ h) as (𝜉 0 @ Z)                     // Optional, only if Z exists!
@@ -23,7 +23,6 @@ p2 = (>> H)<-[∀l:]--(X)                                   // Graph matching, S
                                       else
                                        (label l)
                                       ), X) as h
-       /*set (φ (label g), h) as Y*/
        del Z
        del K
        del l
@@ -33,39 +32,48 @@ p2 = (>> H)<-[∀l:]--(X)                                   // Graph matching, S
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-p3 = (V)--[∀n:nsubj]->(>> S)
+    // This matches any direct clause with subject and (in)direct object.
+    // Still, we want to avoid having multiple matches: the idea is to group them by as in 4.
+    
+p3 = (>> V)<-[∀ ? w:]--(B)
+        --[n:nsubj]->(>> S)
         --[? mark]->(M)
         --[? aux]->(A)
         --[? neg]->(N)
         --[? expl]->(E)
-        --[∀l:dobj||ccomp||nmod||xcomp||dep]->(>> Z) // Future work: nested join between >>Z and >>Z from the join, when required. This might require to re-do the join semantics
+        --[? iobj]->(IOZ)
+        --[? advmod||advcl]->(>> ADM)
+        //--[? xcomp]->(XC)
+        --[∀ ge: dobj||ccomp||nmod||dep||obj||obl||xcomp]->( Z) // Future work: nested join between >>Z and >>Z from the join, when required. This might require to re-do the join semantics
      (Z)--[? case]->(T)
      (S)--[? neg]->(NN)
      where ((V unmatched p3pass . V) ∧ (ℓ 0 @ V = verb))
      ↪
         //new s
-        set(φ (if ((label l ) = nmod) over l then    // Defining the label in function of T, if this exists,
-                                                                      // otherwise using V
-                                              SCRIPT "(^(^(^(^(^(^ (^ ( [(𝜉 ⦃\"A\"⦄) 0])  \" \") ([ (𝜉 ⦃\"N\"⦄)  0])) \" \") ([ (𝜉 ⦃\"S.NN\"⦄)  0])) \" \") ([ (𝜉 ⦃\"V\"⦄)  0])) \" \") ([ (𝜉 ⦃\"T\"⦄)  0])"
-                                             else
-                                              SCRIPT "^(^(^ (^(^(^ ( [(𝜉 ⦃\"A\"⦄) 0])  \" \") ([ (𝜉 ⦃\"N\"⦄)  0])) \" \") ([ (𝜉 ⦃\"S.NN\"⦄)  0])) \" \") ([ (𝜉 ⦃\"V\"⦄)  0])"
-                                             ), S) as Z
+        set(φ (SCRIPT "[(° (fun y → { l cp (fun x → { ^ (^ ([⦃x⦄ 0]) \" \") ([⦃x⦄ 1]) }) (\" \")  y } ) ( zip ( a {   (° (fun y → {[(𝜉 y) 0]}) ⦃\"*.A\"⦄)  ; (° (fun y → {[(𝜉 y) 0]}) ⦃\"*.N\"⦄) ;  (° (fun y → {[(𝜉 y) 0]}) ⦃\"*.V\"⦄) ; (° (fun y → {[(𝜉 y) 0]}) ⦃\"*.T\"⦄) } ) )) 0]"), S) as Z
         //set(   𝜋 mark @ s) as (𝜉 0 @ M)
         //set(   φ orig , s) as S
         //set(   𝜉 0 @ s) as (𝜉 0 @ S)
         set(𝜋 expl @ S) as (ℓ 0 @ E)
+       set (φ iobj , S) as IOZ
+       set (𝜋 adv @ S) as (𝜉 0 @ ADM)
+       set (φ dep , S) as Z
        del V
        del T
        del M
        del A
        del E
        del NN
+       del ADM
        (S);
 
 p3expl = (V)--[∀n:nsubj]->(>> S)
         --[? mark]->(M)
         --[? aux]->(A)
         --[? neg]->(N)
+        --[? iobj]->(IOW)
+        --[? advmod||advcl]->(>> ADM)
+        --[? xcomp]->(XC)
         --[l:expl]->(>> Z) // Future work: nested join between >>Z and >>Z from the join, when required. This might require to re-do the join semantics
      (Z)--[? case]->(T)
      (S)--[? neg]->(NN)
@@ -80,12 +88,16 @@ p3expl = (V)--[∀n:nsubj]->(>> S)
                                               SCRIPT "^(^(^ (^(^(^ ( [(𝜉 ⦃\"A\"⦄) 0])  \" \") ([ (𝜉 ⦃\"N\"⦄)  0])) \" \") ([ (𝜉 ([⦃\"S.NN\"⦄ 0]))  0])) \" \") ([ (𝜉 ⦃\"V\"⦄)  0])"
                                              ), S) as C
         set(𝜋 expl @ S) as (ℓ 0 @ Z)
+       set (φ iobj , S) as IOW
+       set (𝜋 adv @ S) as (𝜉 0 @ ADM)
+      // set (φ dep , S) as XC
        del V
        del T
        del M
        del A
        del NN
        del Z
+       del ADM
        (S);
 
 p3pass = (V)--[∀n:nsubjpass]->(>> S)
@@ -93,7 +105,10 @@ p3pass = (V)--[∀n:nsubjpass]->(>> S)
         --[? auxpass]->(A)
         --[? neg]->(N)
         --[? expl]->(E)
-        --[? l:ccomp||nmod||xcomp||dep]->(Z) // Future work: nested join between >>Z and >>Z from the join, when required. This might require to re-do the join semantics
+        --[? iobj]->(IOB)
+        --[? advmod||advcl]->(>> ADM)
+       // --[? xcomp]->(XC)
+        --[? l:ccomp||nmod||dep||xcomp]->(Z) // Future work: nested join between >>Z and >>Z from the join, when required. This might require to re-do the join semantics
      (Z)--[? case]->(T)
      (S)--[? neg]->(NN)
      where (ℓ 0 @ V = verb)
@@ -108,7 +123,9 @@ p3pass = (V)--[∀n:nsubjpass]->(>> S)
         //set(   𝜋 mark @ s) as (𝜉 0 @ M)
         //set(   φ orig , s) as S
         //set(   𝜉 0 @ s) as (𝜉 0 @ S)
-
+       set (φ iobj , Z) as IOB
+       set (𝜋 adv @ Z) as (𝜉 0 @ ADM)
+       //set (φ dep , Z) as XC
         set(𝜋 expl @ s) as (ℓ 0 @ E)
        del V
        del T
@@ -116,31 +133,37 @@ p3pass = (V)--[∀n:nsubjpass]->(>> S)
        del A
        del E
        del NN
+       del ADM
        (S);
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-
+       // Case matching the sentences having no subject!
 p4 = (>> V)<-[∀ ? w:]--(B)
-        --[l:dobj||ccomp||nmod||xcomp||dep]->(Z)
+        --[∀l:dobj||ccomp||nmod||dep||obj||xcomp]->(Z)
         --[? nmod_tmod]->(TN)
         --[? expl]->(E)
+        --[? iobj]->(IOA)
+        --[? advmod||advcl]->(>> ADM)
         --[? compound_ptr]->(TB)
      (Z)--[? case]->(T)
       where ((V unmatched p3 . V) ∧ ((V unmatched p3pass . V) ∧ ((V unmatched p3expl3 . V) ∧ (ℓ 0 @ V = verb))))
      ↪  new j
         set(φ when , j) as TN
         set(𝜋 expl @ j) as (ℓ 0 @ E)
+       set (𝜋 adv @ j) as (𝜉 0 @ ADM)
+       set (φ iobj , j) as IOA
+       //set (φ dep , j) as XC
         set(φ (if ((label l ) = nmod) over l then    // Defining the label in function of T, if this exists,
                                                                               // otherwise using V
-                                                      SCRIPT "° (fun y → { l cp (fun x → { ^ (^ ([⦃x⦄ 0]) \" \") ([⦃x⦄ 1]) }) (\" \")  y } ) ( zip ( a {   (° (fun y → {[(𝜉 y) 0]}) ⦃\"*.V\"⦄)  ;   (° (fun y → {[(𝜉 y) 0]}) ⦃\"*.T\"⦄) } ))"
+                                                      SCRIPT "° (fun y → { l cp (fun x → { ^ (^ ([⦃x⦄ 0]) \" \") ([⦃x⦄ 1]) }) (\" \")  y } ) ( zip ( a {   (° (fun y → {[(𝜉 y) 0]}) ⦃\"*.V\"⦄)  ; (° (fun y → {[(𝜉 y) 0]}) ⦃\"*.T\"⦄) } ))"
                                                      else
                                                       (𝜉 0 @ V)
                                                      ), j) as Z
        del V                                             // Removing a node
        del T
        del E
+       del ADM
        (j)                                              // Instance of reference to be returned
 
 

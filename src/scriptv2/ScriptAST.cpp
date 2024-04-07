@@ -1108,8 +1108,8 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
                     id = it->toInteger();
                 }
             }
-            if (id == 3)
-                std::cout << "HERE" << std::endl;
+//            if (id == 3)
+//                std::cout << "HERE" << std::endl;
             if (db) {
                 for (const std::string& val : db->resolve_xi((size_t)idxers->getNativeInt("graph"), id))
                     v.emplace_back(script::structures::ScriptAST::string_(val));
@@ -1238,15 +1238,19 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
             size_t len = std::numeric_limits<size_t>::max();
             for (const DPtr<script::structures::ScriptAST>& lptr : arrayList[0]->toList()) {
                 auto ref = lptr->toList();
-                len = std::min(len, ref.size());
-                v.emplace_back(ref);
-            }
-            for (size_t i = 0; i<len; i++) {
-                ArrayList<DPtr<script::structures::ScriptAST>> zipped;
-                for (const ArrayList<DPtr<script::structures::ScriptAST>>& vv : v) {
-                    zipped.emplace_back(vv[i]);
+                if (!ref.empty()) {
+                    len = std::min(len, ref.size());
+                    v.emplace_back(ref);
                 }
-                result.emplace_back(array_(std::move(zipped)));
+            }
+            if (!v.empty()) {
+                for (size_t i = 0; i<len; i++) {
+                    ArrayList<DPtr<script::structures::ScriptAST>> zipped;
+                    for (const ArrayList<DPtr<script::structures::ScriptAST>>& vv : v) {
+                        zipped.emplace_back(vv[i]);
+                    }
+                    result.emplace_back(array_(std::move(zipped)));
+                }
             }
             return array_(std::move(result));
         }
