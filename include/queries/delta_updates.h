@@ -100,10 +100,10 @@ struct delta_updates {
 //        if ((orig == 3) && (dest == 8)) {
 //            std::cerr << "DEBUG!" << std::endl;
 //        }
-        if (replacement_map.contains(orig)) {
-            std::cerr << "WARNING!" << std::endl;
+//        if (replacement_map.contains(orig)) {
+//            std::cerr << "WARNING!" << std::endl;
 //            DEBUG_ASSERT(replacement_map.find(orig)->second == dest);
-        }
+//        }
         replacement_map[orig] = dest;
     }
     /**

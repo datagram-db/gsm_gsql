@@ -461,8 +461,6 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
             NestedResultTable NAME = I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), false, true);
 
             std::function<void(size_t, size_t, const std::string&, const std::vector<gsm_object_xi_content>&)> resolve = [this,&I,&ptr](size_t graph_id, size_t var, const std::string& x, const std::vector<gsm_object_xi_content>& val) {
-                if (x.contains("wanted"))
-                    std::cout << "ERR" << std::endl;
                 delta_updates_per_graph[graph_id].delta_plus_db.generateId(var).phi[x] = val;
             };
             std::function<std::vector<gsm_object_xi_content>(const std::set<std::vector<gsm_object_xi_content>>&)> resolve2 = [](const std::set<std::vector<gsm_object_xi_content>>& v) {
@@ -812,17 +810,20 @@ OrderedSet closure::Interpret::interpret(test_pred &ptr, size_t maxSize) /*const
             else if (ptr.t == test_pred::TEST_PRED_CASE_NEQ)
                 cmp = CFNRT_NEQ;
             NestedResultTable L, R;
+            bool leftResolved = false, rightResolved = false;
             if (std::holds_alternative<std::string>(ptr.args.at(0))) {
                 L = NestedResultTable{std::get<std::string>(ptr.args.at(0))};
             } else {
                 auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(0)).get();
                 L = interpret_closure_evaluate(j, false, false);
+                leftResolved = true;
             }
             if (std::holds_alternative<std::string>(ptr.args.at(1))) {
                 R = NestedResultTable{std::get<std::string>(ptr.args.at(1))};
             } else {
                 auto j = std::get<std::shared_ptr<rewrite_expr>>(ptr.args.at(1)).get();
                 R = interpret_closure_evaluate(j, false, false);
+                rightResolved = true;
             }
             if ((L.size() == 1) || (R.size() == 1) || (L.size() == R.size())) {
                 OrderedSet toIgnore{0};

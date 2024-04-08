@@ -1188,8 +1188,7 @@ public:
 ///       This needs to be inferred previously
         for (size_t pattern_id = 0, M = vl.size(); pattern_id < M; pattern_id++) {
             auto& pattern = vl[pattern_id];
-//            if ((vertex == 3) && (pattern.pattern_name == "p2"))
-//                std::cout << "HERE" << std::endl;
+
             if (morphs.find(pattern.pattern_name) == morphs.end())
                 continue; // Skipping if there are no results
             /*const*/ auto& pattern_result = morphs.at(pattern.pattern_name);
@@ -1268,7 +1267,7 @@ public:
                         }
                     }
 
-                    std::cout << "Graph #" << graph_id << ": applying pattern " << pattern.pattern_name << " for node " << vertex << std::endl;
+//                    std::cout << "Graph #" << graph_id << ": applying pattern " << pattern.pattern_name << " for node " << vertex << std::endl;
 
                     for (const auto& operation : pattern.rwr_to) {
                         switch (operation.t) {
@@ -1318,6 +1317,8 @@ public:
                             case rewrite_to::SET_RW: {
                                 DEBUG_ASSERT(operation.from);
                                 DEBUG_ASSERT(operation.to);
+//                                if ((graph_id == 1) && (pattern.pattern_name == "p4"))
+//                                    std::cout << "HERE" << std::endl;
 
                                 //std::any rhs = I.interpret_closure_evaluate(operation.from.get());
                                 interpret_closure_set(operation.to.get(), graph_id, pattern_id, pattern_result.first, it->second, table_offset, operation.from.get(), I);

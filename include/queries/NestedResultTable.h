@@ -177,8 +177,8 @@ struct NestedResultTable {
     }
 
     template<typename T> inline bool hasTInVector(size_t i) const {
-        return (std::holds_alternative<std::vector<std::string>>(content)) &&
-                (std::get<std::vector<std::string>>(content).size() > i);
+        return (std::holds_alternative<std::vector<T>>(content)) &&
+                (std::get<std::vector<T>>(content).size() > i);
     }
 
 
@@ -266,14 +266,16 @@ struct NestedResultTable {
             }
 
             case RT_SCRIPT:
-            case RT_NONE:
                 throw std::runtime_error("Cannot cast a script");
+
+            case RT_NONE:
+                return (size_t)-1;
         }
     }
 
     inline
     OrderedSet compare(const struct NestedResultTable& x, ComparisonForNestedResultTable cmp ) const {
-        size_t N = std::min(size(), x.size());
+        size_t N = std::max(size(), x.size());
         roaring::Roaring64Map result;
         for (size_t i = 0; i<N; i++) {
             switch(cmp) {
