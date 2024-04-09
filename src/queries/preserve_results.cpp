@@ -606,37 +606,46 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                     // Hook intersection should target all the outputs that are associated to the aggregation, if any
                     if (ordered_intersection(s, offsets).size() == s.size()) {
                         found = true;
-                        break;
+                        auto& inEmplaced = emplaced.emplace_back();
+                        for (const auto& x : s) {
+                            auto it3 = hookNodeIdToRecordOffset.find(x);
+                            if (it3 != hookNodeIdToRecordOffset.end()) {
+                                for (const auto& y : it3->second)
+                                    inEmplaced.emplace_back(y);
+                            }
+                        }
+                        remove_duplicates(inEmplaced);
+//                        break;
                     }
                 }
                 // If not found, then removing the entry from the match
                 if (!found)
                     idx_to_remove.emplace_back(recordToRemove);
-                else {
-                    std::vector<size_t> result_set;
-                    for (const auto& s : it->second) {
-                        auto it3 = s.begin();
-                        if (!hookNodeIdToRecordOffset.contains(*it3))
-                            continue;
-                        auto current = hookNodeIdToRecordOffset.at(*it3);
-                        it3++;
-                        result_set.clear();
-                        for (; it3!=s.end(); it3++) {
-                            auto nextTwo = hookNodeIdToRecordOffset.find(*it3);
-                            if (nextTwo == hookNodeIdToRecordOffset.end()) {
-                                current.clear();
-                                result_set.clear();
-                                continue;
-                            }
-                            const auto& next = nextTwo->second;
-                            std::set_union(current.begin(), current.end(), next.begin(), next.end(), std::back_inserter(result_set));
-                            std::swap(current, result_set);
-                            result_set.clear();
-                        }
-                        if (!current.empty())
-                            emplaced.emplace_back(current);
-                    }
-                }
+//                else {
+//                    std::vector<size_t> result_set;
+//                    for (const auto& s : it->second) {
+//                        auto it3 = s.begin();
+//                        if (!hookNodeIdToRecordOffset.contains(*it3))
+//                            continue;
+//                        auto current = hookNodeIdToRecordOffset.at(*it3);
+//                        it3++;
+//                        result_set.clear();
+//                        for (; it3!=s.end(); it3++) {
+//                            auto nextTwo = hookNodeIdToRecordOffset.find(*it3);
+//                            if (nextTwo == hookNodeIdToRecordOffset.end()) {
+//                                current.clear();
+//                                result_set.clear();
+//                                continue;
+//                            }
+//                            const auto& next = nextTwo->second;
+//                            std::set_union(current.begin(), current.end(), next.begin(), next.end(), std::back_inserter(result_set));
+//                            std::swap(current, result_set);
+//                            result_set.clear();
+//                        }
+//                        if (!current.empty())
+//                            emplaced.emplace_back(current);
+//                    }
+//                }
                 recordToRemove++;
             }
 

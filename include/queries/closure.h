@@ -1167,8 +1167,7 @@ public:
             for (size_t time = 0, T = g.container_order.size(); time<T; time++)
                 // Visiting all the vertices associated to the same time
                 for (const auto& vertex : g.container_order.at(T-time-1)) {
-//                    if (vertex == 0)
-//                        std::cout << "HERE" << std::endl;
+
                     rewriteOverAllPatterns(hasDelRewrite, graph_id, morphs, updates, vertex);
 
                 }
@@ -1267,8 +1266,9 @@ public:
                         }
                     }
 
-                    std::cout << "Graph #" << graph_id << ": applying pattern " << pattern.pattern_name << " for node " << vertex << std::endl;
-
+//                    std::cout << "Graph #" << graph_id << ": applying pattern " << pattern.pattern_name << " for node " << vertex << std::endl;
+//                    if ((vertex == 0) && (pattern.pattern_name == "p3"))
+//                        std::cout << "HERE" << std::endl;
                     for (const auto& operation : pattern.rwr_to) {
                         switch (operation.t) {
 
