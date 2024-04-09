@@ -1267,7 +1267,7 @@ public:
                         }
                     }
 
-//                    std::cout << "Graph #" << graph_id << ": applying pattern " << pattern.pattern_name << " for node " << vertex << std::endl;
+                    std::cout << "Graph #" << graph_id << ": applying pattern " << pattern.pattern_name << " for node " << vertex << std::endl;
 
                     for (const auto& operation : pattern.rwr_to) {
                         switch (operation.t) {

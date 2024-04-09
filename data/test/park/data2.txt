@@ -1,7 +1,6 @@
 id:0
 ell:
-VBP
-root
+verb
 .
 xi:
 believe
@@ -82,7 +81,7 @@ phi:
 
 id:3
 ell:
-VB
+verb
 .
 xi:
 have
@@ -209,7 +208,7 @@ phi:
 
 id:15
 ell:
-VB
+verb
 .
 xi:
 amuse
@@ -252,7 +251,7 @@ phi:
 
 id:2
 ell:
-VBP
+verb
 .
 xi:
 play

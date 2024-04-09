@@ -267,6 +267,8 @@ nested_table nested_natural_equijoin(const IndexedSchemaCoordinates& lhs,
     return result;
 }
 
+#include <yaucl/structures/eq_class.h>
+
 void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, bool verbose, const std::unordered_set<std::string>& nodes, const std::unordered_set<std::string>& edges, const std::string& output_folder) {
     abstract_value abstract_true = true;
     nested_index.clear();
@@ -476,27 +478,39 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
         /// If I need to group-by
         if (graph_grammar_entry_point.vec && !graph_grammar_entry_point.hook.empty()) {
             // Indexing the hooks and the join edges
-            std::map<std::pair<size_t, size_t>, std::set<size_t>> graphAndObject_to_edgeTarget; // <graph,objId> --> <edgeTarget>
-            std::map<size_t, std::set<std::set<size_t>>> graphToEdgeTarget;         // <graph> --> [<edgeTarget>]
+//            std::map<std::pair<size_t, size_t>, std::set<size_t>> graphAndObject_to_edgeTarget; // <graph,objId> --> <edgeTarget>
+//            std::map<size_t, std::set<std::set<size_t>>> graphToEdgeTarget;         // <graph> --> [<edgeTarget>]
+
+            std::unordered_map<size_t, std::set<std::set<size_t>>> graph_to_equivalentClasses;
+            std::unordered_map<size_t, equivalence_class<size_t>> graph_to_eqClassViaHooks;
             for (const auto& t : hooks_for_vecs) {
 //                std::cout <<print_table(t)<<std::endl;
                 DEBUG_ASSERT(t.Schema.at(0) == "graph");
                 DEBUG_ASSERT(t.Schema.at(1) == t.Schema.at(2));
                 DEBUG_ASSERT(t.Schema.size() == 3);
                 for (const auto& rec : t.datum) {
+                    graph_to_eqClassViaHooks[std::get<size_t>(rec.at(0).val)].insert(std::get<size_t>(rec.at(1).val),
+                                      std::get<size_t>(rec.at(2).val));
 //                        auto& ref = M[std::make_pair(std::get<size_t>(rec.at(0).val), std::get<size_t>(rec.at(1).val))];
-                    auto&  ref1 = graphAndObject_to_edgeTarget[std::make_pair(std::get<size_t>(rec.at(0).val), std::get<size_t>(rec.at(1).val))];
-                    ref1.insert(std::get<size_t>(rec.at(1).val));
-                    ref1.insert(std::get<size_t>(rec.at(2).val));
-                    auto& ref2 = graphAndObject_to_edgeTarget[std::make_pair(std::get<size_t>(rec.at(0).val), std::get<size_t>(rec.at(2).val))];
-                    ref2.insert(std::get<size_t>(rec.at(2).val));
-                    ref2.insert(std::get<size_t>(rec.at(1).val));
+//                    auto&  ref1 = graphAndObject_to_edgeTarget[std::make_pair(std::get<size_t>(rec.at(0).val), std::get<size_t>(rec.at(1).val))];
+//                    ref1.insert(std::get<size_t>(rec.at(1).val));
+//                    ref1.insert(std::get<size_t>(rec.at(2).val));
+//                    auto& ref2 = graphAndObject_to_edgeTarget[std::make_pair(std::get<size_t>(rec.at(0).val), std::get<size_t>(rec.at(2).val))];
+//                    ref2.insert(std::get<size_t>(rec.at(2).val));
+//                    ref2.insert(std::get<size_t>(rec.at(1).val));
                 }
             }
-            for (const auto& [k,v] : graphAndObject_to_edgeTarget) {
-                graphToEdgeTarget[k.first].insert(v);
+            for (auto& [graph_id, eq_compiler] : graph_to_eqClassViaHooks) {
+                for (const auto& [class_id, constituents] : eq_compiler.calculateEquivalenceClass()) {
+                    graph_to_equivalentClasses[graph_id].insert(std::set<size_t>{constituents.begin(), constituents.end()});
+                }
             }
-            graphAndObject_to_edgeTarget.clear();
+            graph_to_eqClassViaHooks.clear();
+
+//            for (const auto& [k,v] : graphAndObject_to_edgeTarget) {
+//                graphToEdgeTarget[k.first].insert(v);
+//            }
+//            graphAndObject_to_edgeTarget.clear();
 
             /// Looking in the schema of the result table, where the 'graph' variable is (graphPos), as well as the variable
             /// associated to entrypoint for the match (foundInPos)
@@ -522,8 +536,8 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
             std::vector<size_t> idx_to_remove; // Indices for the rows to be removed in the main table, as they do not match
             // with the other "spare" edges, for hooks or "join" edges (not within the ego-net)
             for (const auto& record : result.datum) {
-                auto fg = graphToEdgeTarget.find(std::get<size_t>(record.at(graphPos).val));
-                if (fg == graphToEdgeTarget.end())
+                auto fg = graph_to_equivalentClasses.find(std::get<size_t>(record.at(graphPos).val));
+                if (fg == graph_to_equivalentClasses.end())
                     idx_to_remove.emplace_back(recordToRemove);
                 else {
                     bool found = false;
@@ -563,8 +577,8 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                         graphInPos++;
                     }
                 }
-                auto it = graphToEdgeTarget.find(std::get<size_t>(topRow.at(graphInPos).val));
-                DEBUG_ASSERT(it != graphToEdgeTarget.end());
+                auto it = graph_to_equivalentClasses.find(std::get<size_t>(topRow.at(graphInPos).val));
+                DEBUG_ASSERT(it != graph_to_equivalentClasses.end());
                 const auto& nestedTableInTable = topRow.at(topRow.size() - 1).table;
 //                std::cout << print_table(nestedTableInTable) << std::endl;
                 if (foundInPos == -1) {
@@ -587,6 +601,7 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                     hookNodeIdToRecordOffset[cell].emplace_back(recordId++);
                     offsets.insert(cell);
                 }
+                auto& emplaced = osagai.emplace_back();
                 for (const auto& s : it->second) {
                     // Hook intersection should target all the outputs that are associated to the aggregation, if any
                     if (ordered_intersection(s, offsets).size() == s.size()) {
@@ -594,7 +609,6 @@ void preserve_results::instantiate_morphisms(const std::vector<node_match> &vl, 
                         break;
                     }
                 }
-                auto& emplaced = osagai.emplace_back();
                 // If not found, then removing the entry from the match
                 if (!found)
                     idx_to_remove.emplace_back(recordToRemove);

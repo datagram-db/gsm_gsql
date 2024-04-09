@@ -1,7 +1,6 @@
 id:0
 ell:
-VBP
-root
+verb
 .
 xi:
 play

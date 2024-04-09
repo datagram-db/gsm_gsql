@@ -1,0 +1,263 @@
+id:0
+ell:
+verb
+root
+.
+xi:
+play
+.
+properties:
+"pos"	"4"
+.
+phi:
+"nsubj"
+	1.0	1
+	1.0	2
+;"dobj"
+	1.0	3
+;.
+
+id:1
+ell:
+noun
+.
+xi:
+alice
+.
+properties:
+"number"	"singular"
+"pos"	"1"
+"specification"	"common"
+.
+phi:
+"cc"
+	1.0	4
+;"conj"
+	1.0	2
+;.
+
+id:4
+ell:
+CC
+.
+xi:
+and
+.
+properties:
+"pos"	"2"
+.
+phi:
+.
+
+id:2
+ell:
+noun
+.
+xi:
+bob
+.
+properties:
+"number"	"singular"
+"pos"	"3"
+"specification"	"common"
+.
+phi:
+.
+
+id:3
+ell:
+noun
+.
+xi:
+cricket
+.
+properties:
+"number"	"singular"
+"pos"	"5"
+"specification"	"common"
+.
+phi:
+.
+
+~~
+id:0
+ell:
+verb
+root
+.
+xi:
+plays
+.
+properties:
+"pos"	"2"
+"lemma"	"play"
+.
+phi:
+"dobj"
+	1.0	1
+;"nsubj"
+	1.0	2
+;.
+
+id:2
+ell:
+noun
+.
+xi:
+alice
+.
+properties:
+"number"	"singular"
+"pos"	"1"
+"specification"	"common"
+.
+phi:
+.
+
+id:1
+ell:
+noun
+.
+xi:
+cricket
+.
+properties:
+"number"	"singular"
+"pos"	"3"
+"specification"	"common"
+.
+phi:
+.
+
+~~
+id:0
+ell:
+verb
+root
+.
+xi:
+plays
+.
+properties:
+"pos"	"2"
+"lemma"	"play"
+.
+phi:
+"nsubj"
+	1.0	1
+;"dobj"
+	1.0	2
+;.
+
+id:1
+ell:
+noun
+.
+xi:
+bob
+.
+properties:
+"number"	"singular"
+"pos"	"1"
+"specification"	"common"
+.
+phi:
+.
+
+id:2
+ell:
+noun
+.
+xi:
+cricket
+.
+properties:
+"number"	"singular"
+"pos"	"3"
+"specification"	"common"
+.
+phi:
+.
+
+~~
+id:0
+ell:
+verb
+root
+.
+xi:
+play
+.
+properties:
+"pos"	"4"
+.
+phi:
+"dobj"
+	1.0	1
+;"nsubj"
+	1.0	2
+	1.0	3
+;.
+
+id:3
+ell:
+noun
+.
+xi:
+alice
+.
+properties:
+"number"	"singular"
+"pos"	"1"
+"specification"	"common"
+.
+phi:
+"cc"
+	1.0	4
+;"conj"
+	1.0	2
+;.
+
+id:4
+ell:
+CC
+.
+xi:
+or
+.
+properties:
+"pos"	"2"
+.
+phi:
+.
+
+id:2
+ell:
+noun
+.
+xi:
+bob
+.
+properties:
+"number"	"singular"
+"pos"	"3"
+"specification"	"common"
+.
+phi:
+.
+
+id:1
+ell:
+noun
+.
+xi:
+cricket
+.
+properties:
+"number"	"singular"
+"pos"	"5"
+"specification"	"common"
+.
+phi:
+.
+

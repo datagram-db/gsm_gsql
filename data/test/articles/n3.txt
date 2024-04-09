@@ -1,0 +1,594 @@
+id:0
+ell:
+verb
+root
+.
+xi:
+is
+.
+properties:
+"pos"	"2"
+"lemma"	"be"
+"end"	"2"
+"begin"	"1"
+.
+phi:
+"expl"
+	1.0	1
+;"nsubj"
+	1.0	2
+;.
+
+id:1
+ell:
+∃
+.
+xi:
+There
+.
+properties:
+"pos"	"1"
+"lemma"	"there"
+"end"	"1"
+"begin"	"0"
+.
+phi:
+.
+
+id:2
+ell:
+noun
+.
+xi:
+traffic
+.
+properties:
+"number"	"singular"
+"pos"	"4"
+"specification"	"common"
+"end"	"4"
+"begin"	"3"
+.
+phi:
+"neg"
+	1.0	3
+;"nmod"
+	1.0	4
+;.
+
+id:3
+ell:
+det
+.
+xi:
+no
+.
+properties:
+"pos"	"3"
+"end"	"3"
+"begin"	"2"
+.
+phi:
+.
+
+id:4
+ell:
+noun
+.
+xi:
+centre
+.
+properties:
+"number"	"singular"
+"pos"	"9"
+"specification"	"common"
+"end"	"9"
+"begin"	"8"
+.
+phi:
+"det"
+	1.0	5
+;"compound"
+	1.0	6
+	1.0	7
+;"case"
+	1.0	8
+;.
+
+id:8
+ell:
+IN
+.
+xi:
+in
+.
+properties:
+"pos"	"5"
+"end"	"5"
+"begin"	"4"
+.
+phi:
+.
+
+id:5
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"6"
+"end"	"6"
+"begin"	"5"
+.
+phi:
+.
+
+id:6
+ell:
+noun
+.
+xi:
+Newcastle
+.
+properties:
+"number"	"singular"
+"pos"	"7"
+"specification"	"proper"
+"end"	"7"
+"begin"	"6"
+.
+phi:
+.
+
+id:7
+ell:
+noun
+.
+xi:
+city
+.
+properties:
+"number"	"singular"
+"pos"	"8"
+"specification"	"common"
+"end"	"8"
+"begin"	"7"
+.
+phi:
+.
+
+~~
+id:0
+ell:
+noun
+.
+xi:
+city
+.
+properties:
+"number"	"singular"
+"pos"	"7"
+"specification"	"common"
+"end"	"7"
+"begin"	"6"
+.
+phi:
+.
+
+id:1
+ell:
+verb
+root
+.
+xi:
+is
+.
+properties:
+"pos"	"2"
+"lemma"	"be"
+"end"	"2"
+"begin"	"1"
+.
+phi:
+"expl"
+	1.0	2
+;"nsubj"
+	1.0	3
+;.
+
+id:2
+ell:
+∃
+.
+xi:
+There
+.
+properties:
+"pos"	"1"
+"lemma"	"there"
+"end"	"1"
+"begin"	"0"
+.
+phi:
+.
+
+id:3
+ell:
+noun
+.
+xi:
+traffic
+.
+properties:
+"number"	"singular"
+"pos"	"3"
+"specification"	"common"
+"end"	"3"
+"begin"	"2"
+.
+phi:
+"nmod"
+	1.0	4
+;.
+
+id:4
+ell:
+noun
+.
+xi:
+centre
+.
+properties:
+"number"	"singular"
+"pos"	"8"
+"specification"	"common"
+"end"	"8"
+"begin"	"7"
+.
+phi:
+"det"
+	1.0	5
+;"compound"
+	1.0	6
+	1.0	0
+;"case"
+	1.0	7
+;.
+
+id:7
+ell:
+IN
+.
+xi:
+in
+.
+properties:
+"pos"	"4"
+"end"	"4"
+"begin"	"3"
+.
+phi:
+.
+
+id:5
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"5"
+"end"	"5"
+"begin"	"4"
+.
+phi:
+.
+
+id:6
+ell:
+noun
+.
+xi:
+Newcastle
+.
+properties:
+"number"	"singular"
+"pos"	"6"
+"specification"	"proper"
+"end"	"6"
+"begin"	"5"
+.
+phi:
+.
+
+~~
+id:0
+ell:
+verb
+root
+.
+xi:
+is
+.
+properties:
+"pos"	"2"
+"lemma"	"be"
+"end"	"2"
+"begin"	"1"
+.
+phi:
+"expl"
+	1.0	1
+;"nsubj"
+	1.0	2
+;"dep"
+	1.0	3
+;.
+
+id:1
+ell:
+∃
+.
+xi:
+There
+.
+properties:
+"pos"	"1"
+"lemma"	"there"
+"end"	"1"
+"begin"	"0"
+.
+phi:
+.
+
+id:2
+ell:
+noun
+.
+xi:
+traffic
+.
+properties:
+"number"	"singular"
+"pos"	"3"
+"specification"	"common"
+"end"	"3"
+"begin"	"2"
+.
+phi:
+.
+
+id:3
+ell:
+RB
+.
+xi:
+not
+.
+properties:
+"pos"	"5"
+"end"	"5"
+"begin"	"4"
+.
+phi:
+"cc"
+	1.0	4
+;"nmod"
+	1.0	5
+;.
+
+id:4
+ell:
+CC
+.
+xi:
+but
+.
+properties:
+"pos"	"4"
+"end"	"4"
+"begin"	"3"
+.
+phi:
+.
+
+id:5
+ell:
+noun
+.
+xi:
+centre
+.
+properties:
+"number"	"singular"
+"pos"	"10"
+"specification"	"common"
+"end"	"10"
+"begin"	"9"
+.
+phi:
+"det"
+	1.0	6
+;"compound"
+	1.0	7
+	1.0	8
+;"case"
+	1.0	9
+;.
+
+id:9
+ell:
+IN
+.
+xi:
+in
+.
+properties:
+"pos"	"6"
+"end"	"6"
+"begin"	"5"
+.
+phi:
+.
+
+id:6
+ell:
+det
+.
+xi:
+the
+.
+properties:
+"pos"	"7"
+"end"	"7"
+"begin"	"6"
+.
+phi:
+.
+
+id:8
+ell:
+noun
+.
+xi:
+Newcastle
+.
+properties:
+"number"	"singular"
+"pos"	"8"
+"specification"	"proper"
+"end"	"8"
+"begin"	"7"
+.
+phi:
+.
+
+id:7
+ell:
+noun
+.
+xi:
+city
+.
+properties:
+"number"	"singular"
+"pos"	"9"
+"specification"	"common"
+"end"	"9"
+"begin"	"8"
+.
+phi:
+.
+
+~~
+id:0
+ell:
+verb
+.
+xi:
+is
+.
+properties:
+"pos"	"5"
+"lemma"	"be"
+"end"	"5"
+"begin"	"4"
+.
+phi:
+.
+
+id:1
+ell:
+verb
+root
+.
+xi:
+flowing
+.
+properties:
+"pos"	"6"
+"lemma"	"flow"
+"end"	"6"
+"begin"	"5"
+.
+phi:
+"aux"
+	1.0	0
+;"nmod"
+	1.0	2
+;"punct"
+	1.0	3
+;"nsubj"
+	1.0	4
+;.
+
+id:2
+ell:
+noun
+.
+xi:
+Newcastle
+.
+properties:
+"number"	"singular"
+"pos"	"2"
+"specification"	"proper"
+"end"	"2"
+"begin"	"1"
+.
+phi:
+"case"
+	1.0	5
+;.
+
+id:5
+ell:
+IN
+.
+xi:
+In
+.
+properties:
+"pos"	"1"
+"lemma"	"in"
+"end"	"1"
+"begin"	"0"
+.
+phi:
+.
+
+id:3
+ell:
+,
+.
+xi:
+,
+.
+properties:
+"pos"	"3"
+"end"	"3"
+"begin"	"2"
+.
+phi:
+.
+
+id:4
+ell:
+noun
+.
+xi:
+traffic
+.
+properties:
+"number"	"singular"
+"pos"	"4"
+"specification"	"common"
+"end"	"4"
+"begin"	"3"
+.
+phi:
+.
+

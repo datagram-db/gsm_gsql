@@ -1,0 +1,454 @@
+id:0
+ell:
+VBD
+root
+.
+xi:
+carried
+.
+properties:
+"pos"	"23"
+"lemma"	"carry"
+.
+phi:
+"ccomp"
+	1.0	1
+;"nmod"
+	1.0	2
+;"punct"
+	1.0	3
+	1.0	4
+;"nsubj"
+	1.0	5
+;"compound_prt"
+	1.0	6
+;.
+
+id:1
+ell:
+VBG
+.
+xi:
+driving
+.
+properties:
+"pos"	"17"
+"lemma"	"drive"
+.
+phi:
+"aux"
+	1.0	7
+;"nsubj"
+	1.0	8
+;"dobj"
+	1.0	9
+;.
+
+id:7
+ell:
+VBZ
+.
+xi:
+is
+.
+properties:
+"pos"	"16"
+"lemma"	"be"
+.
+phi:
+.
+
+id:8
+ell:
+noun
+.
+xi:
+pollution
+.
+properties:
+"number"	"singular"
+"pos"	"1"
+"specification"	"common"
+.
+phi:
+"nmod"
+	1.0	10
+	1.0	11
+	1.0	12
+;"punct"
+	1.0	13
+	1.0	14
+;.
+
+id:11
+ell:
+noun
+.
+xi:
+rivers
+.
+properties:
+"number"	"plural"
+"pos"	"3"
+"specification"	"common"
+"lemma"	"river"
+.
+phi:
+"cc"
+	1.0	15
+;"conj"
+	1.0	10
+;"nmod"
+	1.0	16
+;"case"
+	1.0	17
+;.
+
+id:17
+ell:
+IN
+.
+xi:
+in
+.
+properties:
+"pos"	"2"
+.
+phi:
+.
+
+id:15
+ell:
+CC
+.
+xi:
+and
+.
+properties:
+"pos"	"4"
+.
+phi:
+.
+
+id:10
+ell:
+noun
+.
+xi:
+canals
+.
+properties:
+"number"	"plural"
+"pos"	"5"
+"specification"	"common"
+"lemma"	"canal"
+.
+phi:
+.
+
+id:16
+ell:
+noun
+.
+xi:
+wastewater
+.
+properties:
+"number"	"singular"
+"pos"	"10"
+"specification"	"common"
+.
+phi:
+"amod"
+	1.0	18
+	1.0	19
+;"case"
+	1.0	20
+;.
+
+id:20
+ell:
+IN
+.
+xi:
+from
+.
+properties:
+"pos"	"6"
+.
+phi:
+.
+
+id:18
+ell:
+VBN
+.
+xi:
+managed
+.
+properties:
+"pos"	"8"
+"lemma"	"manage"
+.
+phi:
+"advmod"
+	1.0	21
+;.
+
+id:21
+ell:
+RB
+.
+xi:
+inadequately
+.
+properties:
+"pos"	"7"
+.
+phi:
+.
+
+id:19
+ell:
+JJ
+.
+xi:
+urban
+.
+properties:
+"pos"	"9"
+.
+phi:
+.
+
+id:13
+ell:
+,
+.
+xi:
+,
+.
+properties:
+"pos"	"11"
+.
+phi:
+.
+
+id:12
+ell:
+noun
+.
+xi:
+aquaculture
+.
+properties:
+"number"	"singular"
+"pos"	"14"
+"specification"	"common"
+.
+phi:
+"case"
+	1.0	22
+;.
+
+id:22
+ell:
+RB
+.
+xi:
+rather
+.
+properties:
+"pos"	"12"
+.
+phi:
+"mwe"
+	1.0	23
+;.
+
+id:23
+ell:
+IN
+.
+xi:
+than
+.
+properties:
+"pos"	"13"
+.
+phi:
+.
+
+id:14
+ell:
+,
+.
+xi:
+,
+.
+properties:
+"pos"	"15"
+.
+phi:
+.
+
+id:9
+ell:
+noun
+.
+xi:
+resistance
+.
+properties:
+"number"	"singular"
+"pos"	"20"
+"specification"	"common"
+.
+phi:
+"amod"
+	1.0	24
+	1.0	25
+;.
+
+id:24
+ell:
+JJ
+.
+xi:
+environmental
+.
+properties:
+"pos"	"18"
+.
+phi:
+.
+
+id:25
+ell:
+JJ
+.
+xi:
+antimicrobial
+.
+properties:
+"pos"	"19"
+.
+phi:
+.
+
+id:3
+ell:
+,
+.
+xi:
+,
+.
+properties:
+"pos"	"21"
+.
+phi:
+.
+
+id:5
+ell:
+noun
+.
+xi:
+research
+.
+properties:
+"number"	"singular"
+"pos"	"22"
+"specification"	"common"
+.
+phi:
+.
+
+id:6
+ell:
+RP
+.
+xi:
+out
+.
+properties:
+"pos"	"24"
+.
+phi:
+.
+
+id:2
+ell:
+noun
+.
+xi:
+thailand
+.
+properties:
+"number"	"singular"
+"pos"	"26"
+"specification"	"common"
+.
+phi:
+"acl_relcl"
+	1.0	26
+;"case"
+	1.0	27
+;.
+
+id:27
+ell:
+IN
+.
+xi:
+in
+.
+properties:
+"pos"	"25"
+.
+phi:
+.
+
+id:26
+ell:
+VBN
+.
+xi:
+found
+.
+properties:
+"pos"	"28"
+"lemma"	"find"
+.
+phi:
+"aux"
+	1.0	28
+;.
+
+id:28
+ell:
+VBZ
+.
+xi:
+has
+.
+properties:
+"pos"	"27"
+"lemma"	"have"
+.
+phi:
+.
+
+id:4
+ell:
+<dot>
+.
+xi:
+<dot>
+.
+properties:
+"pos"	"29"
+.
+phi:
+.
+
