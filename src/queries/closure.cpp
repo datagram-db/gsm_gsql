@@ -427,7 +427,6 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
             NestedResultTable VAL = I.interpret_closure_evaluate(target_ptr, true, true);
             NestedResultTable NAME = I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), false, true);
             std::function<void(size_t, size_t, const std::string&, const std::string&)> resolve = [this](size_t graph_id, size_t var, const std::string& x, const std::string& val) {
-
                 delta_updates_per_graph[graph_id].delta_plus_db.generateId(var).content[x] = val;
             };
             std::function<std::string(const std::set<std::string>&)> resolve2 = [](const std::set<std::string>& v) {
@@ -461,6 +460,8 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
             NestedResultTable NAME = I.interpret_closure_evaluate(ptr->pi_key_arg_or_then.get(), false, true);
 
             std::function<void(size_t, size_t, const std::string&, const std::vector<gsm_object_xi_content>&)> resolve = [this,&I,&ptr](size_t graph_id, size_t var, const std::string& x, const std::vector<gsm_object_xi_content>& val) {
+                if (x.contains("is is"))
+                    std::cout << "ERROR" << std::endl;
                 delta_updates_per_graph[graph_id].delta_plus_db.generateId(var).phi[x] = val;
             };
             std::function<std::vector<gsm_object_xi_content>(const std::set<std::vector<gsm_object_xi_content>>&)> resolve2 = [](const std::set<std::vector<gsm_object_xi_content>>& v) {

@@ -537,7 +537,8 @@ std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::Scrip
 }
 
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::variableEval()  {
-
+//    if (string.contains("S.NN"))
+//        std::cout << "DEBUG" << std::endl;
 //    auto it3 = globals.find(string);
     if (!idxers->contains(string)) {
 
@@ -1012,7 +1013,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
                 id = (size_t) arrayList[0]->toInteger();
             } else {
                 auto it = arrayList[0]->run(implode);
-                if (it->type == t::NullE) {
+                if ((it->type == t::NullE) || (it->type == t::String)) {
                     return script::structures::ScriptAST::array_(std::move(v));
                 } else {
                     id = it->toInteger();
@@ -1045,7 +1046,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
                 id = (size_t) arrayList[0]->toInteger();
             } else {
                 auto it = arrayList[0]->run(implode);
-                if (it->type == t::NullE) {
+                if ((it->type == t::NullE) || (it->type == t::String)) {
                     return script::structures::ScriptAST::array_(std::move(v));
                 } else {
                     id = it->toInteger();
@@ -1072,7 +1073,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
                 id = (size_t) arrayList[0]->toInteger();
             } else {
                 auto it = arrayList[0]->run(implode);
-                if (it->type == t::NullE) {
+                if ((it->type == t::NullE) || (it->type == t::String)) {
                     return script::structures::ScriptAST::array_(std::move(v));
                 } else {
                     id = it->toInteger();
@@ -1102,7 +1103,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
                 id = (size_t) arrayList[0]->toInteger();
             } else {
                 auto it = arrayList[0]->run(implode);
-                if (it->type == t::NullE) {
+                if ((it->type == t::NullE) || (it->type == t::String)) {
                     return script::structures::ScriptAST::array_(std::move(v));
                 } else {
                     id = it->toInteger();
@@ -1126,7 +1127,7 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
                 id = (size_t) arrayList[0]->toInteger();
             } else {
                 auto it = arrayList[0]->run(implode);
-                if (it->type == t::NullE) {
+                if ((it->type == t::NullE) || (it->type == t::String)) {
                     script::structures::ScriptAST::tuple_(std::move(vv));
                 } else {
                     id = it->toInteger();
