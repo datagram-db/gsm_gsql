@@ -16,7 +16,7 @@ import sys
 import numpy as np
 import pandas as pd
 import uvicorn
-from starlette.responses import HTMLResponse, Response, FileResponse
+from starlette.responses import HTMLResponse, Response, FileResponse, PlainTextResponse
 from fastapi.responses import ORJSONResponse
 
 import parsers.NestedTables
@@ -178,6 +178,16 @@ async def iedges(folder):
     load_input_edges(folder)
     global E_input
     return E_input[folder]
+
+
+@app.get("/cypher/{folder}", response_class=PlainTextResponse)
+async def cypher(folder):
+    with open(os.path.join("data", str(folder), "result.json")) as f:
+        from gsm.as_cypher_graph import CreateGraph
+        builder = CreateGraph()
+        data = json.load(f)
+        return builder.cypher_graph(data)
+    return ""
 
 
 @app.get("/result/graph/{folder}", response_class=HTMLResponse)
