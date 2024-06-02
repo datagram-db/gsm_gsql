@@ -1,0 +1,16 @@
+neo4j, Desktop Client with Python Connection Graph DBMS (5.12.0)
+----------------------------------------------------------------
+Running the experiments for 20 times
+
+Simple
+~~~~~~
+loading+indexing (ms): 1.8265380859375
+querying+materialisation (ms): 7.02979736328125
+Final Deletion time (ms): 0.798095703125
+
+
+Complex
+~~~~~~~
+loading+indexing (ms): 9.32279052734375
+querying+materialisation (ms): 192.5824951171875
+Final Deletion time (ms): 0.93701171875

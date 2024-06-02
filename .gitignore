@@ -70,3 +70,5 @@ viz/parsers/__pycache__/
 /xml_files/
 question_mark.xml
 /gen/
+/target/
+/.idea/

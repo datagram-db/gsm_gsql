@@ -291,7 +291,7 @@ void Environment::output() {
 
 void Environment::prepare_output_folders() {
     if ((conf.output_folder.empty())) {
-        output_viz = std::filesystem::path("viz") / "data";
+        output_viz = std::filesystem::path("visualizer") / "python" / "data";
     } else {
         output_viz = conf.output_folder;
     }

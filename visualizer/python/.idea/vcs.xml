@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../script_ver/submodules/tinyxml2" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../submodules/args" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../submodules/easylogging" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../submodules/tabulate" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../submodules/yaucl" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../submodules/yaucl/submodules/CRoaring" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../submodules/yaucl/submodules/antlr4" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../submodules/yaucl/submodules/date" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../submodules/yaucl/submodules/json" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../submodules/yaucl/submodules/magic_enum" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../submodules/yaucl/submodules/rapidcsv" vcs="Git" />
+  </component>
+</project>
