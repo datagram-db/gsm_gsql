@@ -1,7 +1,0 @@
-extern "C" {
-    struct @@name@@_secondary {
-    @@fields(fixed)@@
-    @@fields[offset](!fixed)@@
-    @@fields?[trailing](!fixed)@@
-    };
-}
