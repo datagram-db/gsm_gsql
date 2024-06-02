@@ -182,13 +182,8 @@ async def iedges(folder):
 
 @app.get("/cypher/{folder}", response_class=PlainTextResponse)
 async def cypher(folder):
-    with open(os.path.join("data", str(folder), "result.json")) as f:
-        from gsm.as_cypher_graph import CreateGraph
-        builder = CreateGraph()
-        data = json.load(f)
-        return builder.cypher_graph(data)
-    return ""
-
+    from fast_graph.neo4j_conn import ext_neo4j
+    return ext_neo4j(folder)
 
 @app.get("/result/graph/{folder}", response_class=HTMLResponse)
 async def graph(folder):
@@ -206,40 +201,81 @@ async def graph(folder):
         return result  # f.read().replace("§", folder).replace('£','input')
 
 
-@app.get("/list", response_class=HTMLResponse)
+def create_button(html, text):
+    f"<a href=\"#\" onClick=\"MyWindow=window.open('{html}','MyWindow','width=600,height=300'); return false;\">{text}</a>"
+
+def dropdown(i):
+    return f"""    <li><div class="btn-group">
+      <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+      Graph #{i} <span class="caret"></span></button>
+      <ul class="dropdown-menu" role="menu">
+        <li><a href="#" onClick="MyWindow=window.open('/input/graph/{i}','MyWindow','width=600,height=300'); return false;">Input</a></li>
+        <li><a href="#" onClick="MyWindow=window.open('/result/graph/{i}','MyWindow','width=600,height=300'); return false;">Result</a></li>
+      </ul>
+    </div></li>"""
+
+def generate_lists():
+    l = [y for x in os.walk("./data") for y in x[1]]
+    graphs = "<ul>" + (" ".join(map(dropdown, map(int, sorted(l, key=lambda x: int(x)))))) + "</ul>"
+    return graphs
+
+def index_page():
+    lists = generate_lists()
+    return f"""<html lang="en">
+<head>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <div class="jumbotron">
+    <h1>Query Results</h1>      
+    <p>Visualising the query results</p>
+  </div>
+  <p>{lists}</p>        
+</div>
+
+</body>
+</html>"""
+
+@app.get("/", response_class=HTMLResponse)
 async def lists():
-        graphs = []
-        for x in os.walk("./data"):
-            graphs = x[1]
-            
+    return index_page()
 
-@app.post("/renderConfusionMatrix")
-async def get_body(request: Request):
-    """
-    :param request: json request, for example, given a file result.json
-    {
-    "similarity_matrix": [[1,0,0],[0,1,0],[0,0,1]],
-    "sentences": ["a","b","c"]
-    }
 
-    :return: Returns the HTML rendering of this confusion matrix. If you fire the
-    request with the following command:
-
-    curl -X POST -H "Content-Type: application/json" -d @result.json http://127.0.0.1:9999/renderConfusionMatrix > test.html
-
-    you will then obtain the plot in an HTML rendering, quite simplistically.
-    """
-    payload = await request.json()
-    nd_a = np.array(payload["similarity_matrix"])
-    df = pd.DataFrame(nd_a, index=list(payload["sentences"]), columns=list(payload["sentences"]))
-    hm = sns.heatmap(data=df,
-                     annot=True)
-    fig = hm.get_figure()
-    html_content = "<html><body>"+html_base64_image(fig)+"</body></html>"
-    return HTMLResponse(content=html_content, status_code=200)
+# @app.post("/renderConfusionMatrix")
+# async def get_body(request: Request):
+#     """
+#     :param request: json request, for example, given a file result.json
+#     {
+#     "similarity_matrix": [[1,0,0],[0,1,0],[0,0,1]],
+#     "sentences": ["a","b","c"]
+#     }
+#
+#     :return: Returns the HTML rendering of this confusion matrix. If you fire the
+#     request with the following command:
+#
+#     curl -X POST -H "Content-Type: application/json" -d @result.json http://127.0.0.1:9999/renderConfusionMatrix > test.html
+#
+#     you will then obtain the plot in an HTML rendering, quite simplistically.
+#     """
+#     payload = await request.json()
+#     nd_a = np.array(payload["similarity_matrix"])
+#     df = pd.DataFrame(nd_a, index=list(payload["sentences"]), columns=list(payload["sentences"]))
+#     hm = sns.heatmap(data=df,
+#                      annot=True)
+#     fig = hm.get_figure()
+#     html_content = "<html><body>"+html_base64_image(fig)+"</body></html>"
+#     return HTMLResponse(content=html_content, status_code=200)
 
 
 if __name__ == '__main__':
+    print(sorted([y for x in os.walk("./data") for y in x[1]], key=lambda x:int(x)))
     uvicorn.run("main:app", port=9999, workers=1,
                 reload=True,
                 reload_includes=["*.json", "*.ncsv"],

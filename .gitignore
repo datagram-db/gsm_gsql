@@ -1,4 +1,5 @@
 viz/data/*
+viz/cypher_running_times.txt
 cmake-build-debug/*
 *.dot
 *.pdf
@@ -68,3 +69,4 @@ viz/parsers/__pycache__/
 /data/
 /xml_files/
 question_mark.xml
+/gen/
