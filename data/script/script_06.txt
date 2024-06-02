@@ -1,2 +1,0 @@
-stringa := < "ciao" >> "bene" ; "tutta" >> 2 ; "dritta" >> "premiata" >;
-( stringa [[ {"ciao"; "dritta"; "teleditta"} ]] ) == < "ciao" >> "bene" ; "dritta" >> "premiata" >

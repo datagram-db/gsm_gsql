@@ -1,3 +1,0 @@
-/* This script is just for testing simple mathematical expressions on integers */
-
-((((1 + 2) + 4) * 3) - 1)/2

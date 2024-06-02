@@ -1,1 +1,0 @@
-typeof (OBJ 3)
