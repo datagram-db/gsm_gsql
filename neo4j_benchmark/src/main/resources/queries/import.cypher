@@ -1,1 +1,0 @@
-CALL apoc.import.json('/home/fox/CLionProjects/gsm_gsql/neo4j_benchmark/temp.json')
