@@ -2,8 +2,6 @@ package it.giacomobergami.datatypelang.compiler.parser.grammar.terms;
 
 import it.giacomobergami.datatypelang.compiler.parser.grammar.TableColumnEntry;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.Token;
-import it.giacomobergami.datatypelang.utils.funcs.Opt;
 
 /**
  * This class is used both as a $ for the table (no input is read)

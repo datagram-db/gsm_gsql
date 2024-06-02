@@ -9,7 +9,7 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.State;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.grammar.items.ItemWithLookahead;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.StackVisitor;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.Token;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.myToken;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.NonTerminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Terminal;
@@ -42,7 +42,11 @@ public class ParserLexer {
     MultiTaskEditor mte;
 
 
+
+
     public ParserLexer(File grammarFile) {
+        if (grammarFile == null)
+            return;
         Style error = myStyle.CONTEXT.addStyle("__ERROR__", null);
         StyleConstants.setForeground(error, new Color(255,0,0));
         StyleConstants.setBold(error, true);
@@ -193,11 +197,20 @@ public class ParserLexer {
         grammar.compileRulesToJavaClasses(s);
     }
 
-    public void showEditor(String s) {
+    public void showEditor(String s, ParserLexer parserLexer) {
         mte = new MultiTaskEditor(sc);
         mte.setVisible(true);
         mte.setText(s);
     }
+
+    public void initEditor(StyleCollection sc, String s) {
+        this.sc = sc;
+        mte = new MultiTaskEditor(sc);
+        mte.setVisible(true);
+        mte.setText(s);
+    }
+
+
 
     public void setStyleCollection(KeywordStyledDocument ksd) {
         ksd.updateStyleCollection(sc);
@@ -206,7 +219,7 @@ public class ParserLexer {
     public void showError(OnInput onInput) {
         if (mte!=null) {
             if (onInput.asGrammarTerm().isTerminal()) {
-                Token t = (Token) onInput;
+                myToken t = (myToken) onInput;
                 mte.setError(t);
             }
         }

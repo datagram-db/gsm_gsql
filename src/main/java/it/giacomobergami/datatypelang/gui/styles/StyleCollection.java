@@ -1,8 +1,10 @@
 package it.giacomobergami.datatypelang.gui.styles;
 
+import antlr4.parsing;
 import it.giacomobergami.datatypelang.compiler.lexer.Lexer;
 import it.giacomobergami.datatypelang.compiler.lexer.TerminalIterator;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.Token;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.myToken;
+import it.giacomobergami.datatypelang.gui.MultiTaskEditor;
 import it.giacomobergami.datatypelang.utils.funcs.Opt;
 
 import javax.swing.text.Style;
@@ -38,12 +40,24 @@ public class StyleCollection {
         s.toRegexGroups().forEach(x->mm.put(x,s));
     }
 
+    public TerminalIterator antlrTokenize(String s, MultiTaskEditor mte) {
+        return parsing.fromANTLR4(s, mte);
+    }
+
     public TerminalIterator tokenize(String s) {
         return lex.lex(s);
     }
 
-    public Opt<myStyle> onStyle(Token t) {
-        return mm.containsKey(t.getType()) ? Opt.of(mm.get(t.getType())) : Opt.err();
+    public Opt<Style> onStyle(myToken t) {
+        if (mm.containsKey(t.getType()))
+            return Opt.of(mm.get(t.getType()).asStyle());
+        else if (mm.containsKey(t.getData()))
+            return Opt.of(mm.get(t.getData()).asStyle());
+        else if (t.getType().equals("__ERROR__"))
+            return Opt.of(error);
+        else
+            return Opt.err();
+
     }
 
 }

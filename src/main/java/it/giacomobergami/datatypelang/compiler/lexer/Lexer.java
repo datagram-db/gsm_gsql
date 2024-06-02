@@ -2,11 +2,10 @@ package it.giacomobergami.datatypelang.compiler.lexer;
 
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Varepsilon;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.Token;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.myToken;
 import it.giacomobergami.datatypelang.utils.Streams;
 import it.giacomobergami.datatypelang.utils.regex.Match;
 
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -32,7 +31,7 @@ public class Lexer {
         return new TerminalIterator(Streams.toStream(Match.patterns(tokenPatterns).with(input)).map(matcher -> {
             for (String tokenType : enumClazz.keySet()) {
                 String match = matcher.fromGroupsGet(tokenType);
-                if (match!=null) return new Token(tokenType, match, matcher.start(tokenType), matcher.end(tokenType));
+                if (match!=null) return new myToken(tokenType, match, matcher.start(tokenType), matcher.end(tokenType));
             }
             return new Varepsilon();
         }).filter(p));

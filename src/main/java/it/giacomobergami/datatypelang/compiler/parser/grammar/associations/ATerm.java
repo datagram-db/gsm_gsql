@@ -3,7 +3,7 @@ package it.giacomobergami.datatypelang.compiler.parser.grammar.associations;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.ReducedStack;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.GrammarTerm;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Terminal;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.Token;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.myToken;
 import it.giacomobergami.datatypelang.utils.funcs.Opt;
 
 /**
@@ -12,9 +12,9 @@ import it.giacomobergami.datatypelang.utils.funcs.Opt;
 public class ATerm extends Association {
 
     private final Terminal term;
-    private final Token token;
+    private final myToken token;
 
-    ATerm(Terminal term, Token token) {
+    ATerm(Terminal term, myToken token) {
         this.term = term;
         this.token = token;
     }

@@ -8,14 +8,18 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Terminal;
 /**
  * Created by vasistas on 11/12/16.
  */
-public class Token implements OnStack, OnInput {
+public class myToken implements OnStack, OnInput {
 
     public final String type;
     public final String data;
     public final Terminal term;
     public final int start,end;
 
-    public Token(String type, String data, int start, int end) {
+    public String getData() {
+        return data;
+    }
+
+    public myToken(String type, String data, int start, int end) {
         this.type = type;
         this.data = data;
         this.term = new Terminal(type);
@@ -55,9 +59,9 @@ public class Token implements OnStack, OnInput {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Token)) return false;
+        if (!(o instanceof myToken)) return false;
 
-        Token token = (Token) o;
+        myToken token = (myToken) o;
 
         if (type != null ? !type.equals(token.type) : token.type != null) return false;
         if (data != null ? !data.equals(token.data) : token.data != null) return false;

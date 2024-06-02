@@ -1,0 +1,68 @@
+{
+  "det": {
+    "every": ["quantifier","∀"],
+    "each": ["quantifier","∀"],
+    "all": ["quantifier","∀"],
+    "some": ["quantifier","∃"],
+    "any": ["quantifier","∃"]
+  },
+  "IN" : {
+    "after": ["cmp",">"],
+    "from": ["operator","sources"]
+  },
+  "JJ" : {
+    "equal": ["cmp","="],
+    "same": ["cmp","="],
+    "many": ["cmp","="],
+    "aggregated": ["previous_operator", "aggregate"],
+    "select": ["operator", "return"],
+    "return": ["operator", "return"]
+  },
+  "WRB" : {
+    "where": ["operator", "filter"]
+  },
+  "VBG" : {
+    "having": ["operator", "filter"]
+  },
+  "VBP" :  {
+    "have": ["operator", "filter"]
+  },
+  "RB" : {
+    "earlier": ["cmp","<"],
+    "later": ["cmp",">"],
+    "before": ["cmp","="]
+  },
+  "aggregation": {
+    "at least": ["cmp",">="],
+    "at most": ["cmp","<="],
+    "least": ["aggregation{at}","min{>=}"],
+    "most": ["aggregation{at}","max{<=}"],
+    "highest": ["aggregation","max"],
+    "lowest": ["aggregation","min"],
+    "smallest": ["aggregation","min"],
+    "largest": ["aggregation","max"],
+    "earliest": ["aggregation","min"],
+    "latest": ["aggregation","max"]
+  },
+  "cmp": {
+    "greater": ["cmp",">"],
+    "more": ["cmp","<"],
+    "less": ["cmp","<"],
+    "larger": ["cmp",">"],
+    "smaller": ["cmp","<"],
+    "higher": ["cmp",">"],
+    "lower": ["cmp","<"],
+    "after": ["cmp",">"],
+    "before": ["cmp","<"]
+  },
+  "noun": {
+    "minimum": ["operator","aggregation_min"],
+    "maximum": ["operator","aggregation_max"],
+    "total": ["operator","aggregation_sum"],
+    "number": ["operator","aggregation_count"],
+    "average": ["operator","aggregation_avg"],
+    "count": ["operator","aggregation_count"],
+    "aggregate": ["operator", "aggregation_generic"],
+    "group": ["operator", "aggregation_generic"]
+  }
+}

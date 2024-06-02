@@ -2,7 +2,8 @@ package it.giacomobergami.datatypelang.gui.editor;
 
 import it.giacomobergami.datatypelang.compiler.lexer.TerminalIterator;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.Token;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.myToken;
+import it.giacomobergami.datatypelang.gui.MultiTaskEditor;
 import it.giacomobergami.datatypelang.gui.styles.StyleCollection;
 import it.giacomobergami.datatypelang.gui.styles.myStyle;
 import it.giacomobergami.datatypelang.utils.ForFiles;
@@ -12,7 +13,7 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.Style;
-import java.io.File;
+import java.io.*;
 
 /**
  * http://stackoverflow.com/a/30040486/1376095
@@ -20,10 +21,12 @@ import java.io.File;
 
 public class KeywordStyledDocument extends DefaultStyledDocument  {
     private static final long serialVersionUID = 1L;
+    private final MultiTaskEditor multiTaskEditor;
     private Style _defaultStyle;
     private StyleCollection styles;
 
-    public KeywordStyledDocument(StyleCollection sc) {
+    public KeywordStyledDocument(StyleCollection sc, MultiTaskEditor multiTaskEditor) {
+        this.multiTaskEditor = multiTaskEditor;
         _defaultStyle = myStyle.getDefault();
         styles = sc;
     }
@@ -32,6 +35,7 @@ public class KeywordStyledDocument extends DefaultStyledDocument  {
         this.styles = sc;
     }
 
+    @Override
     public void insertString (int offset, String str, AttributeSet a) throws BadLocationException {
         super.insertString(offset, str, a);
         refreshDocument();
@@ -49,6 +53,7 @@ public class KeywordStyledDocument extends DefaultStyledDocument  {
         }
     }
 
+
     public void clear() {
         try {
             remove(0,getLength());
@@ -57,30 +62,43 @@ public class KeywordStyledDocument extends DefaultStyledDocument  {
         }
     }
 
+    @Override
     public void remove (int offs, int len) throws BadLocationException {
         super.remove(offs, len);
         refreshDocument();
     }
 
+    public void writeFile(File f) throws IOException, BadLocationException {
+        Writer out = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(f), "UTF-8"));
+        try {
+            out.write(getText(0, getLength()));
+        } finally {
+            out.close();
+        }
+    }
+
+
     private synchronized void refreshDocument() throws BadLocationException {
         String text = getText(0, getLength());
 
         setCharacterAttributes(0, text.length(), _defaultStyle, true);
-        TerminalIterator l = styles.tokenize(text);
+        TerminalIterator l = styles.antlrTokenize(text, multiTaskEditor);
         while (l.hasNext()) {
             OnInput oi = l.next();
             if (oi.nonEmpty()) {
-                Token t = (Token)oi;
-                Opt<myStyle> st = styles.onStyle(t);
+                myToken t = (myToken)oi;
+
+                Opt<Style> st = styles.onStyle(t);
                 if (!st.isError()) {
-                    setCharacterAttributes(t.start(), t.end()-t.start()+1, styles.onStyle(t).value().asStyle(), true);
+                    setCharacterAttributes(t.start(), t.end()/*-t.start()+1*/, styles.onStyle(t).value(), true);
                 }
             }
         }
     }
 
-    public void setError(Token t) {
-        setCharacterAttributes(t.start(), t.end()-t.start()+1,styles.error,true);
+    public void setError(myToken t) {
+        setCharacterAttributes(t.start(), t.end()-t.start()+1,(Style)styles.error,true);
     }
 
 

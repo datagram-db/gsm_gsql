@@ -2,7 +2,7 @@ package it.giacomobergami.datatypelang.compiler.parser.grammar.terms;
 
 import it.giacomobergami.datatypelang.compiler.parser.grammar.TableColumnEntry;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.input.OnInput;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.Token;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.myToken;
 
 /**
  * A terminal represents a regex exception through its regex
@@ -26,7 +26,7 @@ public class Terminal implements TableColumnEntry {
 
     @Override
     public OnInput toInput() {
-        return new Token(terminalCase,null, -1, -1);
+        return new myToken(terminalCase,null, -1, -1);
     }
 
     public String caso() {
@@ -63,7 +63,7 @@ public class Terminal implements TableColumnEntry {
 
     @Override
     public OnInput asOnInput() {
-        return new Token(terminalCase,null, -1, -1);
+        return new myToken(terminalCase,null, -1, -1);
     }
 }
 

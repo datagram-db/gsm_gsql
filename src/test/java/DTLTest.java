@@ -18,7 +18,7 @@ public class DTLTest {
         //Parsing the input for the programming language
         ParserLexer parserLexer = new ParserLexer(new File("typetest/typeslang.txt").getAbsoluteFile());
         File ff = new File("typetest/input.txt").getAbsoluteFile();
-        parserLexer.showEditor(ForFiles.toString(ff));
+        parserLexer.showEditor(ForFiles.toString(ff), parserLexer);
         OptErr<ANTerm,OnInput> result = parserLexer.parseInput(ff);
         if (result.isError()) {
             System.err.println(result.error());

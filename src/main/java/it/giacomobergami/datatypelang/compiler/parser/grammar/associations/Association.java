@@ -5,7 +5,7 @@ import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.NonTerminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.terms.Terminal;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.OnStack;
 import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.ReducedStack;
-import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.Token;
+import it.giacomobergami.datatypelang.compiler.parser.grammar.stack.myToken;
 import it.giacomobergami.datatypelang.utils.funcs.Opt;
 
 /**
@@ -18,7 +18,7 @@ public abstract class Association {
     public abstract String getUnderlyingString();
     public abstract Opt<ReducedStack> getSubTree();
 
-    public static  Association assocL(Terminal token, Token term) {
+    public static  Association assocL(Terminal token, myToken term) {
         return new ATerm(token,term);
     }
 
@@ -27,7 +27,7 @@ public abstract class Association {
     }
 
     public static Association assoc(GrammarTerm gt, OnStack element) {
-        return  (gt.isTerminal() && (element instanceof Token)) ? assocL((Terminal)gt,(Token) element) : assocR((NonTerminal)gt,(ReducedStack) element);
+        return  (gt.isTerminal() && (element instanceof myToken)) ? assocL((Terminal)gt,(myToken) element) : assocR((NonTerminal)gt,(ReducedStack) element);
     }
 
 }
