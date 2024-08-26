@@ -28,7 +28,7 @@ static inline void parse_schema_map(std::istream& stream,
     }
 }
 
-Environment::Environment(Configuration &conf) : conf{conf} {
+Environment::Environment(const Configuration &conf) : conf{conf} {
     // Binding the query results for the script evaluator
     LOG(INFO) << "Initialisation";
     LOG(TRACE) << "Binding result to script visitor";

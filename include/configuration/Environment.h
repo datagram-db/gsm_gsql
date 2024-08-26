@@ -13,7 +13,7 @@
 struct Environment {
     // Result for the intermediate query graphs
     closure result;
-    struct Configuration& conf;
+    struct Configuration conf;
 
     // loaded settings
     std::unordered_map<std::string, gsm2::tables::AttributeTableType> propertyname_to_type;
@@ -22,7 +22,7 @@ struct Environment {
 //    bool prepare_server_full;
     std::filesystem::path output_viz;
 
-    Environment(struct Configuration& conf);
+    Environment(const struct Configuration& conf);
     void schema_loading();
     void loading_and_indexing();
     void run_script();

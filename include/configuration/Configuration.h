@@ -14,6 +14,7 @@ struct ConfigurationArguments {
     std::string load_value{""};
     bool        file_or_string_otherwise{false};
 
+    ConfigurationArguments(const std::string &lv, bool bo) : load_value(lv), file_or_string_otherwise(bo) {}
     ConfigurationArguments() = default;
     ConfigurationArguments(const ConfigurationArguments&) = default;
     ConfigurationArguments(ConfigurationArguments&&) = default;
@@ -33,6 +34,9 @@ struct Configuration {
     std::string                     benchmark_log;
 
     std::vector<Serialisation>      conf;
+
+    Configuration() {}
+    Configuration(const Configuration&) = default;
 };
 
 
