@@ -1,4 +1,6 @@
-# DatagramDB
+
+
+# <img src="doc/export-2024-08-26 121525.svg" style="height:80px; width: auto;" /> DatagramDB
 
 This repository provides a preliminary implementation of the Generalised Semistructured Model and of its associated language,
 Generalised Semistructured Query Language, as well.
