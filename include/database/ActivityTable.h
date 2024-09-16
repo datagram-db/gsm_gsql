@@ -30,6 +30,7 @@
 #include <vector>
 #include <ostream>
 #include <string>
+#include <cstdint>
 
 namespace gsm2 {
     namespace tables {
