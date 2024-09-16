@@ -13,12 +13,13 @@ Please read the Wiki for better documentation: https://github.com/datagram-db/gs
 * Wiktor Zegadło (2023)
 * Oliver R. Fox (2024 - )
 
-## Python bindings
+## Python3.10 bindings
 
+As the main project requires to have a C++ compiler supporting C++23, the user should consider havng g++13 installed.
 To run the C++ pipeline from python3, you can run the following command after cloning the full repository:
 
 ```bash
-pip3 install DatagramDB/
+python3.10 -m pip install DatagramDB/
 ```
 
 After doing this, you can run the C++ server from Python3 as follows:
