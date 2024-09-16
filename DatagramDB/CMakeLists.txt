@@ -13,15 +13,7 @@ include_directories(../submodules/easylogging/src)
 add_subdirectory(../submodules/easylogging binbuild/easylogging)
 
 Include(FetchContent)
-FetchContent_Declare(
-        Catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG        v3.0.1 # or a later release
-)
-FetchContent_MakeAvailable(Catch2)
-list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
-include(Catch)
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
     message(WARNING "Compiling in debug mode")
