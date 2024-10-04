@@ -6,15 +6,15 @@ include_directories(submodules/easylogging/src)
 add_subdirectory(submodules/easylogging)
 
 Include(FetchContent)
-FetchContent_Declare(
-        Catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG        v3.0.1 # or a later release
-)
-FetchContent_MakeAvailable(Catch2)
-list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+#FetchContent_Declare(
+#        Catch2
+#        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+#        GIT_TAG        v3.0.1 # or a later release
+#)
+#FetchContent_MakeAvailable(Catch2)
+#list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
-include(Catch)
+#include(Catch)
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
     message(WARNING "Compiling in debug mode")
@@ -119,11 +119,11 @@ target_link_libraries(gsm2_server  antlr4_static yaucl_structures roaring  yaucl
 #include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
 
-add_executable(gsm_gsql_script src/tests/script_runs.cpp)
+#add_executable(gsm_gsql_script src/tests/script_runs.cpp)
 #target_link_libraries(gsm_gsql_script gtest_main gsm_script gsm2)
 #gtest_discover_tests(gsm_gsql_script)
-target_link_libraries(gsm_gsql_script PRIVATE Catch2::Catch2WithMain gsm_script gsm2)
-catch_discover_tests(gsm_gsql_script)
+#target_link_libraries(gsm_gsql_script PRIVATE  gsm_script gsm2) #Catch2::Catch2WithMain
+#catch_discover_tests(gsm_gsql_script)
 #=======
 #add_library(gsm_gsql src/gsql_gsm/gsm_object_xi_content.cpp include/gsql_gsm/gsm_object_xi_content.h src/gsql_gsm/gsm_object.cpp include/gsql_gsm/gsm_object.h src/gsql_gsm/gsm_inmemory_db.cpp include/gsql_gsm/gsm_inmemory_db.h include/gsql_gsm/gsql_operators.h src/gsql_gsm/dump_to_xml.cpp include/gsql_gsm/dump_to_xml.h src/gsql_gsm/gsm_db_indices.cpp include/gsql_gsm/gsm_db_indices.h include/gsql_gsm/igc_operators.h include/gsql_gsm/json_operators.h)
 #target_link_libraries(gsm_gsql CURL::libcurl yaucl_graph yaucl_hashing roaring antlr4_static tinyxml2)

@@ -1,6 +1,6 @@
 [submodule "submodules/yaucl"]
 	path = submodules/yaucl
-	url = git@github.com:datagramdb/yaucl.git
+	url = https://github.com/datagramdb/yaucl
 [submodule "submodules/tabulate"]
 	path = submodules/tabulate
 	url = https://github.com/p-ranav/tabulate
@@ -13,3 +13,6 @@
 [submodule "submodules/easylogging"]
 	path = submodules/easylogging
 	url = https://github.com/abumq/easyloggingpp
+[submodule "submodules/pybind11"]
+	path = submodules/pybind11
+	url = https://github.com/pybind/pybind11

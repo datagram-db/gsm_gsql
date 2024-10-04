@@ -13,23 +13,6 @@ Please read the Wiki for better documentation: https://github.com/datagram-db/gs
 * Wiktor Zegadło (2023)
 * Oliver R. Fox (2024 - )
 
-## Python bindings
-
-To run the C++ pipeline from python3, you can run the following command after cloning the full repository:
-
-```bash
-pip3 install DatagramDB/
-```
-
-After doing this, you can run the C++ server from Python3 as follows:
-
-```python3
-from PyDatagramDB import DatagramDB
-d = DatagramDB("data_file.txt", "query_file.txt", "materialisation_folder", isSerializationFull=True)
-d.run()
-```
-
-The computation results will be stored in a folder named ```materialisation_folder```.
 
 ## MetaModel
 
