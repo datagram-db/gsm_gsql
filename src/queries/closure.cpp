@@ -363,6 +363,9 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
             }
             const auto& record = table.datum.at(record_id);
             auto lhs = resolveIdsOverVariableName2(graph_id, pattern_id, ptr->ptr_or_else->prop, record, true);
+            if (((lhs.cell_nested_morphism == -1) || (lhs.column == -1)) && (ptr->ptr_or_else->prop == "Z")) {
+                resolveIdsOverVariableName2(graph_id, pattern_id, ptr->ptr_or_else->prop, record, true);
+            }
             bool isXI = ptr->t == rewrite_expr::NODE_XI;
             NestedResultTable rhs = I.interpret_closure_evaluate(target_ptr, true, true);
             size_t xi_offset = ptr->id;
@@ -375,8 +378,10 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
                         const auto &id = lhs.getInt(i);
                         auto &xi = isXI ? delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).xi
                                         : delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).ell;
+                        if (xi.empty())
+                            xi.resize(xi_offset+1, "");
                         if (xi.size() <= xi_offset)
-                            xi.insert(xi.end(), xi.size() - xi_offset + 1, "");
+                            xi.insert(xi.end(), xi_offset - xi.size() + 1, "");
                         xi[xi_offset] = rhs.getString(i);
                     }
                 }
@@ -384,8 +389,10 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
                 const auto &id = lhs.getInt(0);
                 auto &xi = isXI ? delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).xi
                                 : delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).ell;
+                if (xi.empty())
+                    xi.resize(xi_offset+1, "");
                 if (xi.size() <= xi_offset)
-                    xi.insert(xi.end(), xi.size() - xi_offset + 1, "");
+                    xi.insert(xi.end(), xi_offset - xi.size() + 1, "");
                 auto tmp = getOstringstream(I, delim, rhs);
                 xi[xi_offset] = tmp;
             } else if (rhs.cell_nested_morphism == -1) {
@@ -398,8 +405,10 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
                     const auto &id = lhs.getInt(i);
                     auto &xi = isXI ? delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).xi
                                     : delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).ell;
+                    if (xi.empty())
+                        xi.resize(xi_offset+1, "");
                     if (xi.size() <= xi_offset)
-                        xi.insert(xi.end(), xi.size() - xi_offset + 1, "");
+                        xi.insert(xi.end(), xi_offset - xi.size() + 1, "");
                     xi[xi_offset] = R0;
                 }
             } else {
@@ -408,8 +417,10 @@ void closure::interpret_closure_set(rewrite_expr *ptr,
                     const size_t& id = lhs.getInt(i);
                     auto &xi = isXI ? delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).xi
                                     : delta_updates_per_graph[graph_id].delta_plus_db.generateId(id).ell;
+                    if (xi.empty())
+                        xi.resize(xi_offset+1, "");
                     if (xi.size() <= xi_offset)
-                        xi.insert(xi.end(), xi.size() - xi_offset + 1, "");
+                        xi.insert(xi.end(), xi_offset - xi.size() + 1, "");
                     xi[xi_offset] = imploded;
                 }
             }

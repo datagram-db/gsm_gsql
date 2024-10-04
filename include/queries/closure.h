@@ -1083,8 +1083,12 @@ public:
         if (!v.empty())
             return {v, true};
         auto offset = pr.resolve_entry_match(pattern_id, variable_name);
-        if (offset.second<0)
-            return {v, true, offset.first, offset.second};
+        if (offset.second<0) {
+            if ((offset.first < 0) && buildNewIds)
+                return {resolve(graph_id, newObjectToVariable(graph_id, variable_name)), true, offset.first, offset.second};
+            else
+                return {v, true, offset.first, offset.second};
+        }
         if (offset.first<0) {
             const auto& cell = record.at(offset.second);
             DEBUG_ASSERT(!cell.isNested);
