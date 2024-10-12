@@ -46,6 +46,46 @@ struct Configuration {
 namespace py = pybind11;
 
 PYBIND11_MODULE(pydatagramdb, m) {
+py::class_<result>(m, "result")
+.def(py::init<size_t,size_t,size_t>())
+.def_readwrite("graphid", &result::graphid)
+.def_readwrite("eventid", &result::eventid)
+.def_readwrite("globalEdgeId", &result::globalEdgeId);
+
+py::class_<gsm_object_xi_content>(m, "gsm_object_xi_content")
+.def(py::init<size_t, double, size_t, std::map<std::string,union_minimal>>())
+.def_readwrite("id", &gsm_object_xi_content::id)
+.def_readwrite("score", &gsm_object_xi_content::score)
+.def_readwrite("orig_edge_id", &gsm_object_xi_content::orig_edge_id)
+.def_readwrite("property_values", &gsm_object_xi_content::property_values);
+
+py::class_<gsm_object>(m, "gsm_object")
+.def(py::init<size_t,
+        std::vector<std::string>,
+        std::vector<std::string>,
+        std::vector<double>,
+        std::unordered_map<std::string, std::vector<gsm_object_xi_content>>,
+        std::unordered_map<std::string,union_minimal>>())
+.def_readwrite("id", &gsm_object::id)
+.def_readwrite("ell", &gsm_object::ell)
+.def_readwrite("xi", &gsm_object::xi)
+.def_readwrite("scores", &gsm_object::scores)
+.def_readwrite("phi", &gsm_object::phi)
+.def_readwrite("content", &gsm_object::content);
+
+py::class_<gsm2::tables::LinearGSM>(m, "LinearGSM")
+.def(py::init<>())
+.def("resolveContent", &gsm2::tables::LinearGSM::resolveContent)
+.def("resolveProperties", &gsm2::tables::LinearGSM::resolveProperties)
+.def("objectRelationships", &gsm2::tables::LinearGSM::objectRelationships)
+.def("containmentRelationships", &gsm2::tables::LinearGSM::containmentRelationships)
+.def("ell", &gsm2::tables::LinearGSM::ell_)
+.def("xi", &gsm2::tables::LinearGSM::xi_)
+.def("load_databases", &gsm2::tables::LinearGSM::load_databases)
+.def("resolveContainmentLabels", &gsm2::tables::LinearGSM::resolveContainmentLabels)
+.def("resolvePropertyLabels", &gsm2::tables::LinearGSM::resolvePropertyLabels)
+.def("index", &gsm2::tables::LinearGSM::index)
+;
 
 py::class_<ConfigurationArguments>(m, "ConfigurationArguments")
 .def(py::init<std::string, bool>())
@@ -58,6 +98,14 @@ py::enum_<SerialisationType>(m, "SerialisationType", py::arithmetic())
 .value("REMOVED_DATA", REMOVED_DATA)
 .value("NONE_ST", NONE_ST)
 .value("INSERTED_DATA", INSERTED_DATA)
+.export_values();
+
+py::enum_<gsm2::tables::AttributeTableType>(m, "AttributeTableType", py::arithmetic())
+.value("DoubleAtt", gsm2::tables::DoubleAtt)
+.value("SizeTAtt", gsm2::tables::SizeTAtt)
+.value("LongAtt", gsm2::tables::LongAtt)
+.value("StringAtt", gsm2::tables::StringAtt)
+.value("BoolAtt", gsm2::tables::BoolAtt)
 .export_values();
 
 py::enum_<SerialisationStyle>(m, "SerialisationStyle", py::arithmetic())
