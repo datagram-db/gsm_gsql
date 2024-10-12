@@ -249,6 +249,10 @@ namespace gsm2 {
                 return ell_values.resolve_object_id({object.graphid, object.eventid});
             }
 
+            inline const std::vector<std::string>& ell_(size_t graphid, size_t eventid) const {
+                return ell_values.resolve_object_id({graphid, eventid});
+            }
+
             inline const std::vector<std::string>& ell(size_t graphid, size_t eventid) const {
                 return ell_values.resolve_object_id({graphid, eventid});
             }
@@ -297,9 +301,17 @@ namespace gsm2 {
                 return xi_values.resolve_object_id({object.graphid, object.eventid});
             }
 
+            inline const std::vector<std::string>& xi_(size_t graphid, size_t eventid) const {
+                return xi_values.resolve_object_id({graphid, eventid});
+            }
+
             inline const std::vector<std::string>& xi(size_t graphid, size_t eventid) const {
                 return xi_values.resolve_object_id({graphid, eventid});
             }
+
+            std::pair<double,double> load_databases(std::vector<std::vector<gsm_object>> &db,
+                                                                       const std::unordered_map<std::string, gsm2::tables::AttributeTableType> &schema
+            );
 
 
 //            /**
@@ -448,8 +460,13 @@ static inline size_t loadObjectEll2(gsm2::tables::LinearGSM &db,
     if (!ell.empty()) {
         // Sending to fuzzy ell match
         std::string pop = ell.front();
-        std::vector<std::string> rest{ell.begin()+1, ell.end()};
-        db.ell_values.addGramsToMap(pop, graphId_eventId, rest);
+        if (ell.size() > 1) {
+            std::vector<std::string> rest{ell.begin()+1, ell.end()};
+            db.ell_values.addGramsToMap(pop, graphId_eventId, rest);
+        } else {
+            std::vector<std::string> rest;
+            db.ell_values.addGramsToMap(pop, graphId_eventId, rest);
+        }
         act_id = db.label_map.put(pop).first;
     } else {
         act_id = noLabel;
@@ -479,8 +496,13 @@ static inline void loadObjectXi2(gsm2::tables::LinearGSM &db, const std::vector<
     if (!xi.empty()) {
         // Sending to fuzzy xi match
         std::string front = xi[0];
-        std::vector<std::string> rest{xi.begin()+1, xi.end()};
-        db.xi_values.addGramsToMap(front, graphId_eventId, rest);
+        if (xi.size() > 1) {
+            std::vector<std::string> rest{xi.begin()+1, xi.end()};
+            db.xi_values.addGramsToMap(front, graphId_eventId, rest);
+        } else {
+            std::vector<std::string> rest;
+            db.xi_values.addGramsToMap(front, graphId_eventId, rest);
+        }
     }
 }
 

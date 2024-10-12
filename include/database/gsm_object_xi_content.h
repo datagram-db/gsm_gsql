@@ -37,6 +37,7 @@ struct gsm_object_xi_content {
     size_t orig_edge_id{(size_t)-1};
     std::map<std::string,union_minimal> property_values;
 
+
     gsm_object_xi_content(size_t id = 0, double score=1.0, size_t orig_edge_id=(size_t)-1, const std::map<std::string,union_minimal>& property_values = {});
     gsm_object_xi_content(const gsm_object_xi_content&) = default;
     gsm_object_xi_content(gsm_object_xi_content&&) = default;
@@ -44,6 +45,7 @@ struct gsm_object_xi_content {
     gsm_object_xi_content& operator=(gsm_object_xi_content&&) = default;
     bool operator==(const gsm_object_xi_content &rhs) const;
     bool operator!=(const gsm_object_xi_content &rhs) const;
+
 
     bool operator<(const gsm_object_xi_content &rhs) const {
         return (id <rhs.id) || (id == rhs.id && (score == rhs.score) && (property_values == rhs.property_values));

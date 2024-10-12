@@ -27,8 +27,9 @@
 
 gsm_object::gsm_object(uint_fast32_t id, const std::vector<std::string> &ell, const std::vector<std::string> &xi,
                        const std::vector<double> &scores,
-                       const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi)
-        : id(id), ell(ell), xi(xi), scores(scores), phi(phi) {}
+                       const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi,
+                       const std::unordered_map<std::string, union_minimal> &content)
+        : id(id), ell(ell), xi(xi), scores(scores), phi(phi), content{content} {}
 
 void gsm_object::updateWith(const gsm_object& old) {
     if ((old.id != id) && (id == -1)) {

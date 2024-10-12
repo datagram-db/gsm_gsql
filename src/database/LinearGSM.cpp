@@ -122,6 +122,7 @@ namespace gsm2 {
                         }
                     }
                 }
+                target.nGraphs = db.size();
                 auto loading_end = std::chrono::high_resolution_clock::now();
                 loading = std::chrono::duration<double, std::milli>(loading_end-loading_start).count();
             }
@@ -133,6 +134,12 @@ namespace gsm2 {
             }
             target.nGraphs = db.size();
             return {loading, indexing};
+        }
+
+        std::pair<double,double> LinearGSM::load_databases(std::vector<std::vector<gsm_object>> &db,
+                                                const std::unordered_map<std::string, gsm2::tables::AttributeTableType> &schema
+        ) {
+            return primary_memory_load_direct(db, schema, *this);
         }
 
         void LinearGSM::clear() {
