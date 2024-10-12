@@ -182,5 +182,3 @@ if __name__ == "__main__":
     ser.initializeWithLoadedDatabases()
 
     obj = ser.getObjectFromDb(0,0)
-
-    print(dict(obj.containment))
