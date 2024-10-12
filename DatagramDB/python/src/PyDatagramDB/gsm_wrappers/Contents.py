@@ -19,6 +19,10 @@ class ContentWrapper:
         from python.src.PyDatagramDB.gsm_wrappers import GSMObject
         return GSMObject.gsm_object(self.odb_id, self._content.id, self.parent)
 
+    def obj(self):
+        return self._content
+
+
 class Contents:
     def __init__(self, odb_id, id, parent):
         self._id = id
@@ -42,3 +46,6 @@ class Contents:
 
     def __dict__(self):
         return {self._resolve_content(item) for item in self.parent.resolveContainmentLabels(self._odb_id, self._id)}
+
+    def obj(self):
+        return {item : self.parent.resolveContent(self._odb_id, self._id, str(item)) for item in self.parent.resolveContainmentLabels(self._odb_id, self._id)}

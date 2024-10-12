@@ -75,6 +75,7 @@ py::class_<gsm_object>(m, "gsm_object")
 
 py::class_<gsm2::tables::LinearGSM>(m, "LinearGSM")
 .def(py::init<>())
+.def_readonly("objectScores", &gsm2::tables::LinearGSM::objectScores)
 .def("resolveContent", &gsm2::tables::LinearGSM::resolveContent)
 .def("resolveProperties", &gsm2::tables::LinearGSM::resolveProperties)
 .def("objectRelationships", &gsm2::tables::LinearGSM::objectRelationships)

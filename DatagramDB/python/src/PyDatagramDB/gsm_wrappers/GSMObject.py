@@ -8,6 +8,10 @@ class gsm_object:
         self.parent = parent
 
     @property
+    def scores(self):
+        return self.parent.objectScores[self._odb_id][self._id]
+
+    @property
     def id(self):
         return self._id
 
@@ -31,3 +35,6 @@ class gsm_object:
     def containment(self):
         from PyDatagramDB.gsm_wrappers.Contents import Contents
         return Contents(self._odb_id, self._id, self.parent)
+
+    def obj(self):
+        return pydatagramdb.gsm_object(self._id, self.ell, self.xi, self.scores, self.containment.obj(), self.properties().obj())

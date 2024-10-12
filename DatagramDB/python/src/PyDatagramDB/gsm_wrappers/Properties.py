@@ -20,5 +20,7 @@ class Properties:
             yield (item, self.parent.resolveProperties(self._odb_id, self._id, str(item)))
 
     def __dict__(self):
-        return {self.parent.resolveProperties(self._odb_id, self._id, str(item)) for item in self.parent.resolvePropertyLabels(self._odb_id, self._id)}
+        return {str(item): self.parent.resolveProperties(self._odb_id, self._id, str(item)) for item in self.parent.resolvePropertyLabels(self._odb_id, self._id)}
 
+    def obj(self):
+        return self.__dict__()
