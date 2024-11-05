@@ -1386,6 +1386,9 @@ public:
 
 };
 
+
+std::string getFromScript(const NestedResultTable & containingStrings);
+
 static inline
 std::string getOstringstream(
         const closure::Interpret &I,
@@ -1457,12 +1460,14 @@ std::string getOstringstream(
         }
 
 
+        case NestedResultTable::RT_SCRIPT:
+            return getFromScript(containingStrings);
+
         case NestedResultTable::RT_NONE:
             return "";
 
         case NestedResultTable::RT_CONTENT:
         case NestedResultTable::RT_VCONTENT:
-        case NestedResultTable::RT_SCRIPT:
             throw std::runtime_error("Unexpected type");
     }
 }

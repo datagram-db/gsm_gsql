@@ -336,6 +336,10 @@ void closure::reinitAndClearNestedIndices() {
 #include <ranges>
 
 
+std::string getFromScript(const NestedResultTable & containingStrings) {
+    return std::get<std::shared_ptr<script::structures::ScriptAST>>(containingStrings.content).get()->run()->toString();
+}
+
 void closure::interpret_closure_set(rewrite_expr *ptr,
                                     size_t graph_id,
                                     size_t pattern_id,
