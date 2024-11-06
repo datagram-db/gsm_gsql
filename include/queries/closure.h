@@ -591,16 +591,50 @@ struct closure {
                 auto it = updates.delta_plus_db.O.find(id);
                 if (it != updates.delta_plus_db.O.end()) {
                     for (const auto& [key_content,v] : it->second.phi) {
+                        std::vector<size_t> W;
+                        for (const auto& id : v) {
+                            size_t tmp = updates.replacedWith(id.id);
+                            if (updates.newIterationInsertedObjects.contains(tmp))
+                                tmp = id.id;
+                            if (!updates.hasXBeenRemoved(tmp)) {
+                                W.emplace_back(tmp);
+                            }
+                        }
+                        if (!W.empty())
                         result.insert(key_content);
                     }
                 }
             }
         }
-        auto v = forloading->resolveContainmentLabels(graphid, id);
-        result.insert(v.begin(), v.end());
-        v.clear();
-        v.insert(v.begin(), result.begin(), result.end());
-        return v;
+//        auto v = forloading->resolveContainmentLabels(graphid, id);
+//        std::vector<std::string> result;
+//                std::pair<size_t,size_t>cp{graphid, id};
+        auto& updates = delta_updates_per_graph.at(graphid);
+        for (const auto& [key, table] : forloading->containment_tables) {
+            auto it = table.secondary_index.find(graphid);
+            if (table.secondary_index.find(graphid)!= table.secondary_index.end()) {
+                auto it2 = it->second.find(id);
+                if (it2 != it->second.end()) {
+                    bool hasInstance = false;
+                    for (const auto& recotd_ptr : it2->second) {
+                        auto currId = recotd_ptr->id_contained;
+                        size_t tmp =updates.replacedWith(currId);
+                        if (/*it != updates.replacement_map.end() &&*/ (!updates.newIterationInsertedObjects.contains(tmp)))
+                            currId = tmp;
+                        if (!updates.hasXBeenRemoved(currId))
+                            hasInstance = true;
+                    }
+                    if (hasInstance) {
+                        result.insert(key);
+                    }
+                }
+            }
+        }
+//        return result;
+//        result.insert(v.begin(), v.end());
+//        v.clear();
+//        v.insert(v.begin(), result.begin(), result.end());
+        return {result.begin(), result.end()};
     }
 
 
@@ -643,6 +677,9 @@ struct closure {
         auto legacy = forloading->resolveContent(graphid, id, key_content);
         bool subst=false;
         if (!delta_updates_per_graph.empty()) {
+            auto& updates = delta_updates_per_graph.at(graphid);
+            std::vector<size_t> idx_removal;
+            size_t idx = 0;
             for (auto& ref : legacy) {
                 size_t tmp = delta_updates_per_graph.at(graphid).replacedWith(ref.id);
 //                auto& map = delta_updates_per_graph.at(graphid).replacement_map;
@@ -651,7 +688,12 @@ struct closure {
                     ref.id = tmp;
                     subst = true;
                 }
+                if (updates.hasXBeenRemoved(ref.id)) {
+                    idx_removal.emplace_back(idx);
+                }
+                idx++;
             }
+            remove_index(legacy, idx_removal);
         }
         if (subst)
             remove_duplicates(legacy);
