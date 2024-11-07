@@ -33,6 +33,8 @@ public:
 
     virtual std::any visitUpdate_expr(simple_graph_grammarParser::Update_exprContext *context) = 0;
 
+    virtual std::any visitInheritfrom(simple_graph_grammarParser::InheritfromContext *context) = 0;
+
     virtual std::any visitNode_xi(simple_graph_grammarParser::Node_xiContext *context) = 0;
 
     virtual std::any visitNode_ell(simple_graph_grammarParser::Node_ellContext *context) = 0;

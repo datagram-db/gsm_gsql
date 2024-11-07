@@ -15,6 +15,7 @@ many_edges : edge+;
 rewrite_to: 'del' OTHERS                                                                                        #del_node_or_edge
           | 'new' dst=OTHERS                                                                                   #neu_obj
           | 'set' to=rewrite_expr 'as' from=rewrite_expr                                                        #update_expr
+          | from=OTHERS 'inheritpropfrom' to=OTHERS                                                 #inheritfrom
           ;
 
 

@@ -43,6 +43,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitInheritfrom(simple_graph_grammarParser::InheritfromContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitNode_xi(simple_graph_grammarParser::Node_xiContext *ctx) override {
     return visitChildren(ctx);
   }

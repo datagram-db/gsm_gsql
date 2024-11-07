@@ -132,10 +132,11 @@ struct rewrite_to {
         DEL_RW,
         NEU_RW,
         SET_RW,
+        INHERIT_PROP,
         NONE_OF_REWRITE
     };
     std::shared_ptr<rewrite_expr> from{nullptr}, to{nullptr};
-    std::string  others;
+    std::string  others, others2;
     cases        t;
 
     rewrite_to() : from{nullptr}, to{nullptr},  others{}, t{NONE_OF_REWRITE} {}
@@ -336,6 +337,17 @@ public:
 //            ptr->t = rewrite_expr::NODE_CONT;
         }
         return {ptr};
+    }
+
+    std::any visitInheritfrom(simple_graph_grammarParser::InheritfromContext *ctx) override {
+        if (ctx) {
+            rewrite_to result;
+            result.t = rewrite_to::INHERIT_PROP;
+            result.others = ctx->OTHERS(0)->getText();
+            result.others2 = ctx->OTHERS(1)->getText();
+            return {result};
+        }
+        return {};
     }
 
     std::any visitDel_node_or_edge(simple_graph_grammarParser::Del_node_or_edgeContext *ctx) override {

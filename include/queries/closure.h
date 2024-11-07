@@ -1370,6 +1370,29 @@ public:
                                 interpret_closure_set(operation.to.get(), graph_id, pattern_id, pattern_result.first, it->second, table_offset, operation.from.get(), I);
                             } break;
 
+                            case rewrite_to::INHERIT_PROP: {
+                                // Removing objects from the final result
+                                auto target_id = resolveIdsOverVariableName2(graph_id, pattern_id, operation.others2,  it->second.datum.at(table_offset), false);
+                                auto source_id = resolveIdsOverVariableName2(graph_id, pattern_id, operation.others,  it->second.datum.at(table_offset), true);
+
+                                for (size_t j = 0, MM = source_id.size(); j<MM; j++) {
+                                    auto idx_src = source_id.getInt(j);
+                                    auto srcProps = objProperties(graph_id, idx_src);
+                                    std::unordered_set<std::string> S{srcProps.begin(), srcProps.end()};
+                                    for (size_t i = 0, N = target_id.size(); i<N; i++) {
+                                        auto idx_dst = target_id.getInt(i);
+                                        for (const auto& dstProp :objProperties(graph_id, idx_dst) ) {
+                                            if (!S.contains(dstProp)) {
+                                                auto val = resolve_prop(graph_id, idx_dst, dstProp);
+                                                delta_updates_per_graph[graph_id].delta_plus_db.generateId(idx_src).content[dstProp] = val;
+                                            }
+                                        }
+                                    }
+                                }
+
+
+                            }
+
                             case rewrite_to::NONE_OF_REWRITE:
                                 break;
                         }

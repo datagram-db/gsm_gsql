@@ -35,6 +35,9 @@ public:
   virtual void enterUpdate_expr(simple_graph_grammarParser::Update_exprContext *ctx) = 0;
   virtual void exitUpdate_expr(simple_graph_grammarParser::Update_exprContext *ctx) = 0;
 
+  virtual void enterInheritfrom(simple_graph_grammarParser::InheritfromContext *ctx) = 0;
+  virtual void exitInheritfrom(simple_graph_grammarParser::InheritfromContext *ctx) = 0;
+
   virtual void enterNode_xi(simple_graph_grammarParser::Node_xiContext *ctx) = 0;
   virtual void exitNode_xi(simple_graph_grammarParser::Node_xiContext *ctx) = 0;
 
