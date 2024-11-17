@@ -308,6 +308,8 @@ void closure::generate_materialised_view() {
                 size_t new_id = legacy_object_old_data.id;
                 auto& obj = updates.delta_plus_db.O[new_id];
                 obj.id = new_id;
+                if ((graphid== 2) && (legacy_object_old_data.id == 3))
+                    std::cout << "DREBUG" << std::endl;
                 obj.updateWith(legacy_object_old_data);
                 for (auto& [k, v] :obj.phi) {
                     i = 0;

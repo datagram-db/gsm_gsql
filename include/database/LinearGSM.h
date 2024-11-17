@@ -73,7 +73,16 @@ namespace gsm2 {
             const std::map<size_t, std::string>::const_iterator findLabelFromID(size_t k) const {
                 DEBUG_ASSERT(minRecordToContaimentLabel.begin()->first == 0);
                 auto it = minRecordToContaimentLabel.lower_bound(k);
-                if (it->first>k) it--;
+                if ((it == minRecordToContaimentLabel.end())) {
+                    if (!minRecordToContaimentLabel.empty()) {
+                        auto it2 = minRecordToContaimentLabel.end();
+                        return std::prev(it2);
+                    }else {
+                        return it;
+                    }
+                }
+                if ((it->first>k))
+                    it--;
                 return it;
             }
             const std::map<size_t, std::string>::const_iterator notALabel() const {
@@ -82,6 +91,15 @@ namespace gsm2 {
             const gsm2::tables::PhiTable::record* resolveRecord(size_t k) const {
                 DEBUG_ASSERT(minRecordToContaimentLabel.begin()->first == 0);
                 auto it = minRecordToContaimentLabel.lower_bound(k);
+                if ((it == minRecordToContaimentLabel.end())) {
+                    if (!minRecordToContaimentLabel.empty()) {
+                        auto it2 = minRecordToContaimentLabel.end();
+                        it2 = std::prev(it2);
+                        return &containment_tables.at(it->second).table.at(k-it2->first);
+                    }else {
+                        return nullptr;
+                    }
+                }
                 if (it->first>k) it--;
                 return &containment_tables.at(it->second).table.at(k-it->first);
             }

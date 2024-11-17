@@ -537,7 +537,7 @@ std::function<DPtr<script::structures::ScriptAST>(DPtr<script::structures::Scrip
 }
 
 DPtr<script::structures::ScriptAST> script::structures::ScriptAST::variableEval()  {
-//    if (string.contains("S.NN"))
+//    if (string.contains("*.TB"))
 //        std::cout << "DEBUG" << std::endl;
 //    auto it3 = globals.find(string);
     if (!idxers->contains(string)) {

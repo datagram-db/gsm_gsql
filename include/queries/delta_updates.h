@@ -77,8 +77,8 @@ struct delta_updates {
      */
     inline void set_removed(size_t default_val){
         size_t toRemove = getOrDefault(replacement_map, default_val, default_val);
-//        if ((toRemove == 8) || (default_val == 8))
-//            std::cerr << "EHRE" << std::endl;
+        if ((toRemove == 6) || (default_val == 6))
+            std::cerr << "EHRE" << std::endl;
         if (!newIterationInsertedObjects.contains(toRemove))
             removed_objects.insert(toRemove);
         else
@@ -87,6 +87,15 @@ struct delta_updates {
 
     inline void edge_removed(size_t default_val) {
         removed_edges.insert(default_val);
+    }
+
+    inline void expandInto(size_t val, std::set<size_t>& res) {
+        res.insert(val);
+        auto it = replacement_map.find(val);
+        if (it != replacement_map.end()) {
+            res.insert(it->second);
+            expandInto(it->second, res);
+        }
     }
 
     /**
@@ -131,6 +140,8 @@ struct delta_updates {
     }
 
     void updateWith(const std::vector<delta_updates> &vector1);
+
+
 
     inline size_t replacedWith(size_t x) const {
         auto it = replacement_map.find(x);

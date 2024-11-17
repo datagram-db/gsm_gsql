@@ -122,12 +122,12 @@ struct closure {
             for (const auto& [idX,object] : delta_updates_per_graph.at(i).delta_plus_db.O) {
                 if (delta_updates_per_graph.at(i).removed_objects.contains(idX))
                     continue;
-//                if (idX == 6)
+//                if (idX == 3)
 //                    std::cout << "HERE" << std::endl;
                 for (const auto& [edgelabel,records] : object.phi) {
                     size_t recordsId = 0;
                     for (const auto& record: records) {
-                        if (delta_updates_per_graph.at(i).removed_objects.contains(record.id)) {
+                        if (delta_updates_per_graph.at(i).hasXBeenRemoved(record.id)) {
 //                            std::cout << idX << "R.." << record.id <<std::endl;
                             recordsId++;
                             continue;
@@ -1306,15 +1306,16 @@ public:
                     Interpret I(graph_id, pattern_id, pattern_result.first, it->second, table_offset, *this, pr.morphisms,
                                 forloading);
                     if (pattern.has_where) {
+//                        std::cout << "TGraph #" << graph_id << ": applying pattern " << pattern.pattern_name << " for node " << vertex << std::endl;
                         if ((I.interpret(pattern.where, 1).empty())) {
                             table_offset++;
                             continue; //next entry
                         }
                     }
 
-//                    std::cout << "Graph #" << graph_id << ": applying pattern " << pattern.pattern_name << " for node " << vertex << std::endl;
-//                    if ((vertex == 0) && (pattern.pattern_name == "p3"))
-//                        std::cout << "HERE" << std::endl;
+
+                    if ((vertex == 3) && (graph_id == 2))
+                        std::cout << "HERE" << std::endl;
                     for (const auto& operation : pattern.rwr_to) {
                         switch (operation.t) {
 
