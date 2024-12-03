@@ -371,7 +371,11 @@ namespace script {
         }
 
         std::any ScriptVisitor::visitIfte(scriptParser::IfteContext *context) {
-            return std::any();
+            auto lx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->cp()->term(0)));
+            auto M = visit(context->cp()->term(1));
+            auto mx = std::any_cast<DPtr<script::structures::ScriptAST>>(M);
+            auto rx = std::any_cast<DPtr<script::structures::ScriptAST>>(visit(context->expr()));
+            return script::structures::ScriptAST::terop_(this->context, script::structures::t::IfteE, std::move(lx), std::move(mx), std::move(rx));
         }
 
 

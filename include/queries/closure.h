@@ -1303,19 +1303,22 @@ public:
                         }
                     }
 
+//                    if ((vertex == 0) && (graph_id == 0))
+//                        std::cout << "HERE" << std::endl;
+
                     Interpret I(graph_id, pattern_id, pattern_result.first, it->second, table_offset, *this, pr.morphisms,
                                 forloading);
                     if (pattern.has_where) {
 //                        std::cout << "TGraph #" << graph_id << ": applying pattern " << pattern.pattern_name << " for node " << vertex << std::endl;
+
                         if ((I.interpret(pattern.where, 1).empty())) {
                             table_offset++;
                             continue; //next entry
                         }
                     }
+//                    std::cout << "FGraph #" << graph_id << ": applying pattern " << pattern.pattern_name << " for node " << vertex << std::endl;
 
 
-                    if ((vertex == 3) && (graph_id == 2))
-                        std::cout << "HERE" << std::endl;
                     for (const auto& operation : pattern.rwr_to) {
                         switch (operation.t) {
 

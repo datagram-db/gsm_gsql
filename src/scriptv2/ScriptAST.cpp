@@ -647,11 +647,20 @@ DPtr<script::structures::ScriptAST> script::structures::ScriptAST::run(bool impl
             return lx->javaComparator(rx) == 0 ? true_() : false_();
         }
 
-        case IfteE:
-            return arrayList[0]->toBoolean() ? arrayList[0]->run(implode) : arrayList[1]->run(implode);
+        case IfteE: {
+            auto cond = arrayList[0]->toBoolean();
+            if (cond) {
+                auto tmp = arrayList[1]->run(implode);
+                return tmp;
+            } else {
+                auto tmp = arrayList[2]->run(implode);
+                return tmp;
+            }
+        }
+            return arrayList[0]->toBoolean() ? arrayList[1]->run(implode) : arrayList[2]->run(implode);
 
         case ImplyE:
-            return arrayList[0]->toBoolean() ? arrayList[0]->run(implode) : arrayList[1]->run(implode);
+            return arrayList[0]->toBoolean() ? arrayList[1]->run(implode) : arrayList[0]->run(implode);
 
         case InvokeE:
         case ApplyE:
