@@ -11,6 +11,7 @@ dist/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+visualizer/python/*.zip
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
@@ -72,3 +73,8 @@ question_mark.xml
 /gen/
 /target/
 /.idea/
+/CMakeFiles/
+/DatagramDB/.idea/
+/DatagramDB/.venv/
+/DatagramDB/.idea/
+/visualizer/python/data/

@@ -2,10 +2,14 @@ cmake_minimum_required(VERSION 3.22.1)
 project(gsm2)
 set(CMAKE_CXX_STANDARD 23)
 
+find_package(LibXml2 REQUIRED)
+include_directories(${LIBXML2_INCLUDE_DIR})
 include_directories(submodules/easylogging/src)
 add_subdirectory(submodules/easylogging)
-
+include_directories(submodules/rapidjson/include)
 Include(FetchContent)
+add_subdirectory(submodules/stxxl)
+include_directories(submodules/stxxl/include)
 #FetchContent_Declare(
 #        Catch2
 #        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
@@ -53,6 +57,26 @@ add_library(yaucl_hashing OBJECT
         submodules/yaucl/include/yaucl/hashing/uset_hash.h)
 target_include_directories(yaucl_hashing PUBLIC ${CMAKE_SOURCE_DIR}/include/yaucl/hashing/ ${CMAKE_CURRENT_BINARY_DIR})
 
+add_library(yaucl_data OBJECT
+        submodules/yaucl/src/yaucl/data/csv/csv.cpp
+        submodules/yaucl/src/yaucl/data/new_iovec.cpp
+        submodules/yaucl/src/yaucl/data/MemoryMappingFile.cpp
+        submodules/yaucl/src/yaucl/data/mmapFile.cpp
+        submodules/yaucl/src/yaucl/data/VariadicSizeArrayElements.cpp
+        submodules/yaucl/src/yaucl/data/VarSizeNDPSorter.cpp
+        submodules/yaucl/src/yaucl/data/xml.cpp
+        submodules/yaucl/include/yaucl/data/json.h
+        submodules/yaucl/src/yaucl/data/VarSizeNDPSorter.cpp
+        submodules/yaucl/src/yaucl/data/malloc_freelist.c
+#        submodules/yaucl/src/yaucl/data/csv/CSV2.cpp
+#        submodules/yaucl/include/yaucl/data/csv/CSV2.h
+        submodules/yaucl/src/yaucl/data/SecondaryMemoryMalloc.cpp
+        submodules/yaucl/include/yaucl/data/SecondaryMemoryMalloc.h
+        submodules/yaucl/include/yaucl/data/smart_malloc.h
+        submodules/yaucl/src/yaucl/data/smart_malloc.cpp
+        submodules/yaucl/include/yaucl/data/smart_index_pointer.h
+        submodules/yaucl/src/yaucl/data/smart_index_pointer.cpp)
+
 
 add_library(yaucl_structures OBJECT #submodules/yaucl/src/yaucl/structures/StringPrevNext.cpp
      #   submodules/yaucl/include/yaucl/structures/StringPrevNext.h
@@ -95,6 +119,13 @@ add_library(yaucl_graph OBJECT
         )
 target_link_libraries(yaucl_graph  yaucl_hashing roaring)
 
+add_library(gsm_load OBJECT antlr4/schema_language/schemaBaseListener.cpp
+        antlr4/schema_language/schemaBaseVisitor.cpp
+        antlr4/schema_language/schemaLexer.cpp
+        antlr4/schema_language/schemaListener.cpp
+        antlr4/schema_language/schemaParser.cpp
+        antlr4/schema_language/schemaVisitor.cpp)
+
 add_library(gsm_script OBJECT ./antlr4/scriptv2/scriptBaseListener.cpp
         ./antlr4/scriptv2/scriptBaseVisitor.cpp
         ./antlr4/scriptv2/scriptLexer.cpp
@@ -112,6 +143,14 @@ target_link_libraries(gsm2 antlr4_static yaucl_structures roaring  yaucl_hashing
 
 add_executable(gsm2_server main.cpp src/queries/NestedResultTable.cpp include/queries/NestedResultTable.h src/database/SchemaIndexer.cpp include/database/SchemaIndexer.h)
 target_link_libraries(gsm2_server  antlr4_static yaucl_structures roaring  yaucl_hashing yaucl_graph  gsm2 gsm_script)
+
+add_executable(data_loader_test data.cpp)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${STXXL_CXX_FLAGS}")
+
+# add STXXL includes path
+include_directories(${STXXL_INCLUDE_DIRS})
+target_link_libraries(data_loader_test antlr4_static yaucl_structures roaring  yaucl_hashing yaucl_graph yaucl_data ${LIBXML2_LIBRARIES} ${STXXL_LIBRARIES} gsm_load)
 
 #enable_testing ()
 #set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
