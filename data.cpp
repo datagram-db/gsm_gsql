@@ -177,10 +177,13 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
                             break;
                         case LJSON:
                             load_ljson(entity, true);
+                            break;
                         case JSON:
                             load_json(entity, true);
+                            break;
                         case XML:
                             load_xml(entity, true);
+                            break;
                         default:
                             break;
                     }
@@ -196,10 +199,13 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
                             break;
                         case LJSON:
                             load_ljson(entity, false);
+                            break;
                         case JSON:
                             load_json(entity, false);
+                            break;
                         case XML:
-                            load_xml(entity, true);
+                            load_xml(entity, false);
+                            break;
                         default:
                             break;
                     }
