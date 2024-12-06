@@ -8,6 +8,8 @@
 #include "antlr4/schema_language/schemaBaseVisitor.h"
 #include <yaucl/data/json.h>
 
+#include "submodules/yaucl/RocksDBMap.h"
+
 enum FileType {
     JSON,
     LJSON,
@@ -138,7 +140,7 @@ void character_callback(void *ctx,
 
 #include <yaucl/structures/any_to_uint_bimap.h>
 #include <yaucl/strings/serializers.h>
-#include <stxxl.h>
+//#include <stxxl.h>
 
 struct DataLoaderFromSchema : schemaBaseVisitor {
 
@@ -400,20 +402,20 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
     }
 
     size_t globalObjectId = 0;
-    struct CompareGreaterString {
-        bool operator () (const std::string& a, const std::string& b) const {
-            return a > b;
-        }
-        static std::string max_value() {
-            return std::string(10000, std::numeric_limits<unsigned char>::max());
-        }
-    };
+//    struct CompareGreaterString {
+//        bool operator () (const std::string& a, const std::string& b) const {
+//            return a > b;
+//        }
+//        static std::string max_value() {
+//            return std::string(10000, std::numeric_limits<unsigned char>::max());
+//        }
+//    };
 
 
-    typedef stxxl::map<std::string,size_t,CompareGreaterString, 4096, 4096> map_type;
-    std::map<std::tuple<size_t,size_t,size_t>,size_t> mampa;
-    std::list<stxxl::map<std::string,size_t,CompareGreaterString>> result;
-    std::vector<std::list<stxxl::map<std::string,size_t,CompareGreaterString>>::reverse_iterator> offsetMap;
+    typedef yaucl::structures::RocksDBStringSizeTMap map_type;
+    std::map<std::tuple<size_t,size_t,size_t>,map_type> mampa;
+//    std::list<map_type> result;
+//    std::vector<std::list<map_type>::reverse_iterator> offsetMap;
 
 
 //    std::map<std::tuple<std::string,std::string,std::string>, std::unordered_map<std::string,size_t>> increasingIdCorrespondence;
@@ -423,22 +425,18 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
 
     inline void update(const std::string& ns, const std::string& e, const std::string& f, const std::string& value, size_t set) {
         std::tuple<size_t, size_t, size_t> s{namespace_idx.put(ns).first,entities_idx.put(e).first,fields_idx.put(f).first};
-        size_t offset = mampa.emplace(s, mampa.size()).first->second;
-        if (result.size() == offset) {
-            result.emplace_back((map_type::node_block_type::raw_size)*3, (map_type::leaf_block_type::raw_size)*3);
-            offsetMap.emplace_back(result.rbegin());
-        }
-        (*offsetMap[offset])[value] = set;
+//        size_t offset = mampa.emplace(s, mampa.size()).first->second;
+//        if (result.size() == offset) {
+//            result.emplace_back();
+//            offsetMap.emplace_back(result.rbegin());
+//        }
+        (mampa[s]).put(value,set);
     }
 
     inline size_t retrieve(const std::string& ns, const std::string& e, const std::string& f, const std::string& value) {
         std::tuple<size_t, size_t, size_t> s{namespace_idx.put(ns).first,entities_idx.put(e).first,fields_idx.put(f).first};
-        size_t offset = mampa.emplace(s, mampa.size()).first->second;
-        if (result.size() == offset) {
-            result.emplace_back((map_type::node_block_type::raw_size)*3, (map_type::leaf_block_type::raw_size)*3);
-            offsetMap.emplace_back(result.rbegin());
-        }
-        return (*offsetMap[offset])[value];
+        auto result = (mampa[s]).get(value);
+        return result.value();
     }
     
     std::vector<NestingState> state_stack;
@@ -458,14 +456,14 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
                         toppe.data_row.emplace_back(toppe.key, b ? "true" : "false");
                     else
                         toppe.data_row.emplace_back(toppe.key, b ? 1.0 : 0.0);
-                }
-            } else if (!_isFirstPass) {
-                auto f = toppe.entity_stack->find(toppe.key).value();
-                auto result = retrieve(f->ext_namespace, f->ext_entity, f->ext_field, b ? "true"
-                                                                          : "false");
+                } else {
+                    auto f = toppe.entity_stack->find(toppe.key).value();
+                    auto result = retrieve(f->ext_namespace, f->ext_entity, f->ext_field, b ? "true"
+                                                                                            : "false");
 //                auto result = increasingIdCorrespondence[{f->ext_namespace, f->ext_entity, f->ext_field}][(b ? "true"
 //                                                                                                             : "false")];
-                toppe.containment.emplace_back(toppe.key, result);
+                    toppe.containment.emplace_back(toppe.key, result);
+                }
             }
         }
         toppe.isThisScore = false;
@@ -484,12 +482,12 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
                     if ((toppe._keyType != NativeTypes::Int))
                         return false;
                     toppe.data_row.emplace_back(toppe.key, (double) d);
+                } else  {
+                    auto f = toppe.entity_stack->find(toppe.key).value();
+                    auto result = retrieve(f->ext_namespace, f->ext_entity,
+                                           f->ext_field,std::to_string(d));
+                    toppe.containment.emplace_back(toppe.key, result);
                 }
-            } else if (!_isFirstPass) {
-                auto f = toppe.entity_stack->find(toppe.key).value();
-                auto result = retrieve(f->ext_namespace, f->ext_entity,
-                                                          f->ext_field,std::to_string(d));
-                toppe.containment.emplace_back(toppe.key, result);
             }
         }
         toppe.isThisScore = false;
@@ -508,12 +506,12 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
                     if ((toppe._keyType != NativeTypes::UInt) && (toppe._keyType != NativeTypes::Int))
                         return false;
                     toppe.data_row.emplace_back(toppe.key, (double) d);
+                } else  {
+                    auto f = toppe.entity_stack->find(toppe.key).value();
+                    auto result = retrieve(f->ext_namespace, f->ext_entity,
+                                           f->ext_field,std::to_string(d));
+                    toppe.containment.emplace_back(toppe.key, result);
                 }
-            } else if (!_isFirstPass) {
-                auto f = toppe.entity_stack->find(toppe.key).value();
-                auto result = retrieve(f->ext_namespace, f->ext_entity,
-                                                          f->ext_field,std::to_string(d));
-                toppe.containment.emplace_back(toppe.key, result);
             }
         }
         toppe.isThisScore=false;
@@ -532,12 +530,12 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
                     if ((toppe._keyType != NativeTypes::UInt) && (toppe._keyType != NativeTypes::Int))
                         return false;
                     toppe.data_row.emplace_back(toppe.key, (double) d);
+                } else {
+                    auto f = toppe.entity_stack->find(toppe.key).value();
+                    auto result = retrieve(f->ext_namespace, f->ext_entity,
+                                           f->ext_field,std::to_string(d));
+                    toppe.containment.emplace_back(toppe.key, result);
                 }
-            } else if (!_isFirstPass) {
-                auto f = toppe.entity_stack->find(toppe.key).value();
-                auto result = retrieve(f->ext_namespace, f->ext_entity,
-                                                          f->ext_field,std::to_string(d));
-                toppe.containment.emplace_back(toppe.key, result);
             }
         }
         toppe.isThisScore = false;
@@ -557,12 +555,12 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
                         return false;
 
                     toppe.data_row.emplace_back(toppe.key, (double) d);
+                } else {
+                    auto f = toppe.entity_stack->find(toppe.key).value();
+                    auto result = retrieve(f->ext_namespace, f->ext_entity,
+                                           f->ext_field,std::to_string(d));
+                    toppe.containment.emplace_back(toppe.key, result);
                 }
-            } else if (!_isFirstPass) {
-                auto f = toppe.entity_stack->find(toppe.key).value();
-                auto result = retrieve(f->ext_namespace, f->ext_entity,
-                                                          f->ext_field,std::to_string(d));
-                toppe.containment.emplace_back(toppe.key, result);
             }
         }
         toppe.isThisScore = false;
@@ -571,10 +569,13 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
     }
     bool Double(double d) {
         auto& toppe = *state_stack.rbegin();
+        auto key = toppe.entity_stack->find(toppe.key).value();
+        auto isId = key->is_id;
+        auto isExtRef = key->type == external_reference;
         if (!toppe.skipCurrentKey) {
             if (_isFirstPass) {
                 std::string val3=std::to_string(d);
-                if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
+                if ((isId)) {
                     update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
                 }
                 if (toppe._keyType != NativeTypes::Double)
@@ -583,12 +584,12 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
                     toppe.scores.emplace_back(d);
                 else
                     toppe.data_row.emplace_back(toppe.key, d);
-            }
-        } else if (!_isFirstPass) {
-            auto f = toppe.entity_stack->find(toppe.key).value();
-            auto result = retrieve(f->ext_namespace,f->ext_entity,f->ext_field,std::to_string(d));
+            } else  {
+                auto f = toppe.entity_stack->find(toppe.key).value();
+                auto result = retrieve(f->ext_namespace,f->ext_entity,f->ext_field,std::to_string(d));
 //            auto result = increasingIdCorrespondence[{f->ext_namespace,f->ext_entity,f->ext_field}][std::to_string(d)];
-            toppe.containment.emplace_back(toppe.key, result);
+                toppe.containment.emplace_back(toppe.key, result);
+            }
         }
         toppe.isThisScore = false;
         toppe.key.clear();
@@ -596,10 +597,13 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
     }
     bool RawNumber(const char* str, SizeType length, bool copy) {
         auto& toppe = *state_stack.rbegin();
+        auto key = toppe.entity_stack->find(toppe.key).value();
+        auto isId = key->is_id;
+        auto isExtRef = key->type == external_reference;
         if (!toppe.skipCurrentKey) {
             if (_isFirstPass) {
                 std::string val3(str, length);
-                if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
+                if ((isId)) {
                     update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
                 }
                 if (toppe._keyType == NativeTypes::String)
@@ -609,13 +613,19 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
                 else {
                     toppe.data_row.emplace_back(toppe.key,std::stod(std::string(str, length)));
                 }
-            }
-        } else if (!_isFirstPass) {
-            auto f = toppe.entity_stack->find(toppe.key).value();
-            auto result = retrieve(f->ext_namespace,f->ext_entity,f->ext_field, std::string(str, length));
+            } else {
+                auto f = toppe.entity_stack->find(toppe.key).value();
+                auto result = retrieve(f->ext_namespace,f->ext_entity,f->ext_field, std::string(str, length));
 //            auto result = increasingIdCorrespondence[{f->ext_namespace,f->ext_entity,f->ext_field}][std::string(str, length)];
-            toppe.containment.emplace_back(toppe.key, result);
+                toppe.containment.emplace_back(toppe.key, result);
+            }
         }
+//        else if ((!_isFirstPass) && (isExtRef)) {
+//            auto f = toppe.entity_stack->find(toppe.key).value();
+//            auto result = retrieve(f->ext_namespace,f->ext_entity,f->ext_field, std::string(str, length));
+////            auto result = increasingIdCorrespondence[{f->ext_namespace,f->ext_entity,f->ext_field}][std::string(str, length)];
+//            toppe.containment.emplace_back(toppe.key, result);
+//        }
         toppe.skipCurrentKey= false;
         toppe.key.clear();
         return true;
@@ -633,15 +643,15 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
                         toppe.data_row.emplace_back(toppe.key, std::stod(std::string(str, length)));
                     } else
                         toppe.data_row.emplace_back(toppe.key, std::string(str, length));
-                }
-            } else if (!_isFirstPass) {
-                auto f = toppe.entity_stack->find(toppe.key).value();
+                } else  {
+                    auto f = toppe.entity_stack->find(toppe.key).value();
 
-                auto result = retrieve(f->ext_namespace,f->ext_entity,f->ext_field, std::string(
-                        str, length));
+                    auto result = retrieve(f->ext_namespace,f->ext_entity,f->ext_field, std::string(
+                            str, length));
 //                auto result = increasingIdCorrespondence[{f->ext_namespace, f->ext_entity, f->ext_field}][std::string(
 //                        str, length)];
-                toppe.containment.emplace_back(toppe.key, result);
+                    toppe.containment.emplace_back(toppe.key, result);
+                }
             }
         }
         toppe.skipCurrentKey = false;
@@ -658,6 +668,8 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
         const auto& e = toppe.entity_stack;
         toppe.key = std::string(str, length);
         toppe.skipCurrentKey = !_isFirstPass;
+        if ((toppe.key == "TotalPrice") && (!_isFirstPass))
+            std::cerr << "HERE" << std::endl;
         auto itv2 = e->find(toppe.key);
 //        auto it = e->fields.find(toppe.key);
         if (itv2.has_value()) {
@@ -701,6 +713,9 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
         // TODO: serialize the object in the stack
         auto it = state_stack.rbegin();
         it->countAt++;
+//        if ((it->countAt == 0) || (it->countFor == 0)) {
+//            std::cout << "BUG" << std::endl;
+//        }
         if (it->countAt == it->countFor) {
             auto prev = it;
             prev++;
@@ -708,7 +723,9 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
             it->data_row.clear();
             it->containment.clear();
             it->scores.clear();
-            prev->containment.emplace_back(prev->key, globalObjectId);
+            if (it->countAt != 0)
+                prev->containment.emplace_back(prev->key, globalObjectId);
+            // TODO: else, we reached the end, so you can directly store this object within the database!
             globalObjectId++;
             state_stack.pop_back();
         } else {
@@ -865,6 +882,9 @@ struct DataLoaderFromSchema : schemaBaseVisitor {
                     if (it.has_value()) {
                         auto val = it.value();
                         if (isFirstPass && (val->is_id)) {
+                            if ((field == "17592186053220") && (e.name == "Person")) {
+                                std::cerr << "HERE" << std::endl;
+                            }
                             update(e.namespace_, e.name, val->field_name,field,globalObjectId);
                         }
                         auto type_ = val->native_field_type;

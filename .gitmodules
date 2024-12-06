@@ -19,6 +19,3 @@
 [submodule "submodules/rapidjson"]
 	path = submodules/rapidjson
 	url = https://github.com/Tencent/rapidjson
-[submodule "submodules/stxxl"]
-	path = submodules/stxxl
-	url = https://github.com/stxxl/stxxl
