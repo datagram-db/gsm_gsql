@@ -19,3 +19,9 @@
 [submodule "submodules/rapidjson"]
 	path = submodules/rapidjson
 	url = https://github.com/Tencent/rapidjson
+[submodule "submodules/capnproto"]
+	path = submodules/capnproto
+	url = https://github.com/capnproto/capnproto
+[submodule "submodules/cpp-lru-cache"]
+	path = submodules/cpp-lru-cache
+	url = https://github.com/lamerman/cpp-lru-cache

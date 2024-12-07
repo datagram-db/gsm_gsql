@@ -7,6 +7,11 @@ Generalised Semistructured Query Language, as well.
 
 Please read the Wiki for better documentation: https://github.com/datagram-db/gsm_gsql/wiki
 
+## Dependencies
+
+ * gcc and g++ version 14.2.0 (libstdc++6 14.2.0)
+ * clang-19 and clang++-19
+
 ## Authors
 
 * Giacomo Bergami (2023 - )

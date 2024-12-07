@@ -1,8 +1,19 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(gsm2)
 set(CMAKE_CXX_STANDARD 23)
+cmake_policy(SET CMP0067 NEW)
+add_subdirectory(submodules/capnproto)
+set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
+#set(USE_COROUTINES ON CACHE BOOL "" FORCE)
+#set(USE_FOLLY OFF CACHE BOOL "" FORCE)
 set(ANTLR_BUILD_CPP_TESTS OFF)
-
+find_package(Threads)
+set(CMAKE_C_COMPILER clang-19 CACHE INTERNAL "C compiler" )
+set(CMAKE_CXX_COMPILER clang++-19 CACHE INTERNAL "C++ compiler")
+set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES "/usr/local/gcc-14.2.0/include/")
+        #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
+SET(CMAKE_EXE_LINKER_FLAGS
+        "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath -Wl,/usr/local/gcc-14.2.0/lib/../lib64")
 find_package(LibXml2 REQUIRED)
 include_directories(${LIBXML2_INCLUDE_DIR})
 include_directories(submodules/easylogging/src)
@@ -146,16 +157,17 @@ add_executable(gsm2_server main.cpp src/queries/NestedResultTable.cpp include/qu
 target_link_libraries(gsm2_server  antlr4_static yaucl_structures roaring  yaucl_hashing yaucl_graph  gsm2 gsm_script)
 
 include_directories(submodules/yaucl/submodules/rocksdb/include)
+include_directories(submodules/cpp-lru-cache/include)
 
-
-add_executable(data_loader_test data.cpp)
+add_executable(data_loader_test data.cpp src/database/gsm_object_xi_content.cpp  src/database/gsm_object.cpp
+        src/database/ndp/ndp_batch.cpp)
 #sudo apt-get install libsnappy-dev libgflags-dev
 #target_link_libraries(data_loader_test snappy bz2  z rt ${ROCKSDB_STATIC_LIB} yaucl_ndp)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${STXXL_CXX_FLAGS}")
 
 # add STXXL includes path
 #include_directories(${STXXL_INCLUDE_DIRS})
-target_link_libraries(data_loader_test antlr4_static yaucl_structures roaring  yaucl_hashing yaucl_graph yaucl_data ${LIBXML2_LIBRARIES} snappy bz2  z rt rocksdb yaucl_ndp gsm_load)
+target_link_libraries(data_loader_test antlr4_static yaucl_structures roaring  yaucl_hashing yaucl_graph yaucl_data ${LIBXML2_LIBRARIES} snappy bz2  z rt rocksdb yaucl_ndp gsm_load CapnProto::kj CapnProto::capnp)
 
 #enable_testing ()
 #set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)

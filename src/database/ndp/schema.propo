@@ -1,0 +1,35 @@
+@0xdbb9ad1f14bf0b36;
+
+struct Map(Key, Value) {
+  entries @0 :List(Entry);
+  struct Entry {
+    key @0 :Key;
+    value @1 :Value;
+  }
+}
+
+struct Value {
+  val :union {
+    # We assume that a person is only one of these.
+    str @0 :Text;
+    flt @1 :Float64;
+    val @2 :Int64;
+    bol @3 :Bool;
+  }
+}
+
+struct GSMObjectContent {
+    id @0 :UInt64;
+    scores @1 :List(Float64);
+    origEdgeId @2 :UInt64;
+    pi @3 :Map(Text, Value);
+}
+
+struct GSMObject {
+    id @0 :UInt64;
+    ell @1 :List(Text);
+    xi @2 :List(Text);
+    scores @3 :List(Float64);
+    content @4 :Map(Text, List(GSMObjectContent));
+    pi @5 :Map(Text, Value);
+}
