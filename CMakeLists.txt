@@ -3,6 +3,7 @@ project(gsm2)
 set(CMAKE_CXX_STANDARD 23)
 cmake_policy(SET CMP0067 NEW)
 add_subdirectory(submodules/capnproto)
+include_directories(submodules/capnproto/c++/src/)
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 #set(USE_COROUTINES ON CACHE BOOL "" FORCE)
 #set(USE_FOLLY OFF CACHE BOOL "" FORCE)
@@ -128,7 +129,7 @@ add_library(yaucl_graph OBJECT
         )
 target_link_libraries(yaucl_graph  yaucl_hashing roaring)
 
-add_library(yaucl_ndp OBJECT submodules/yaucl/RocksDBMap.cpp submodules/yaucl/RocksDBMap.h)
+add_library(yaucl_ndp OBJECT submodules/yaucl/src/yaucl/data/RocksDBMap.cpp submodules/yaucl/include/yaucl/data/RocksDBMap.h)
 target_link_libraries(yaucl_ndp snappy bz2  z rt rocksdb)
 
 add_library(gsm_load OBJECT antlr4/schema_language/schemaBaseListener.cpp
@@ -150,24 +151,50 @@ target_link_libraries(gsm_script antlr4_static)
 add_library(gsm2 OBJECT antlr4/graph_grammar/simple_graph_grammarLexer.cpp antlr4/graph_grammar/simple_graph_grammarParser.cpp antlr4/graph_grammar/simple_graph_grammarListener.cpp  antlr4/graph_grammar/simple_graph_grammarVisitor.cpp src/database/PhiTable.cpp include/database/PhiTable.h src/database/AttributeTable.cpp include/database/AttributeTable.h src/database/SimplifiedFuzzyStringMatching.cpp include/database/SimplifiedFuzzyStringMatching.h src/database/LinearGSM.cpp include/database/LinearGSM.h src/database/ActivityTable.cpp include/database/ActivityTable.h src/result.cpp include/result.h src/database/gsm_indices.cpp include/database/gsm_indices.h src/queries/DataQuery.cpp include/queries/DataQuery.h src/database/gsm_object_xi_content.cpp include/database/gsm_object_xi_content.h include/simple_pair_hash.h src/queries/DataPredicate.cpp include/queries/DataPredicate.h
         #src/database/AtomizingPipeline2.cpp include/database/AtomizingPipeline2.h
         submodules/easylogging/src/easylogging++.cc submodules/easylogging/src/easylogging++.h
-        src/database/GSMPatternVisitor.cpp include/database/GSMPatternVisitor.h src/database/GraphEdgeMatchTable.cpp include/database/GraphEdgeMatchTable.h src/database/SimpleTable.cpp include/database/SimpleTable.h include/database/gsm_object.h src/database/gsm_object.cpp include/database/gsm_inmemory_db.h src/database/gsm_inmemory_db.cpp include/database/utility.h src/queries/preserve_results.cpp include/queries/preserve_results.h src/queries/delta_updates.cpp include/queries/delta_updates.h src/queries/closure.cpp include/queries/closure.h src/database/GSMIso.cpp include/database/GSMIso.h include/parsing.h include/configuration/base.h src/configuration/Serialisation.cpp include/configuration/Serialisation.h src/configuration/Configuration.cpp include/configuration/Configuration.h src/configuration/Environment.cpp include/configuration/Environment.h)
-target_link_libraries(gsm2 antlr4_static yaucl_structures roaring  yaucl_hashing yaucl_graph )
+        src/database/GSMPatternVisitor.cpp include/database/GSMPatternVisitor.h src/database/GraphEdgeMatchTable.cpp include/database/GraphEdgeMatchTable.h src/database/SimpleTable.cpp include/database/SimpleTable.h include/database/gsm_object.h src/database/gsm_object.cpp include/database/gsm_inmemory_db.h src/database/gsm_inmemory_db.cpp include/database/utility.h src/queries/preserve_results.cpp include/queries/preserve_results.h src/queries/delta_updates.cpp include/queries/delta_updates.h src/queries/closure.cpp include/queries/closure.h src/database/GSMIso.cpp include/database/GSMIso.h include/parsing.h include/configuration/base.h src/configuration/Serialisation.cpp include/configuration/Serialisation.h src/configuration/Configuration.cpp include/configuration/Configuration.h src/configuration/Environment.cpp include/configuration/Environment.h
+#        src/database/gsm_object_xi_content.cpp  src/database/gsm_object.cpp
+        src/database/ndp/ndp_batch.cpp
+        #        include/database/ndp/NDPDatagramDB.h
+        #        src/database/ndp/NDPDatagramDB.cpp
+        include/parser/schema.h
+        src/parser/schema.h
+        include/parser/schema/Field.h
+        include/parser/schema/Entity.h
+        include/parser/xml.h
+        src/parser/xml.cpp
+        include/parser/parser.h
+        src/parser/readers/GSMReader.cpp
+        include/parser/readers/GSMReader.h
+        include/parser/commons.h
+        include/parser/writer.h
+        include/parser/writers/GSMWriter.h
+        src/parser/writers/GSMWriter.cpp
+        include/parser/writers/PrimaryMemoryLoader.h
+        src/parser/writers/PrimaryMemoryLoader.cpp
+        include/parser/readers/SchemaReader.h
+        src/parser/readers/SchemaReader.cpp
+        include/parser/schema/NestingState.h
+        src/database/SchemaIndexer.cpp include/database/SchemaIndexer.h
+        src/parser/schema/NestingState.cpp
+        src/parser/schema/DataLoaderFromSchema.cpp
+        include/parser/schema/DataLoaderFromSchema.h)
+target_link_libraries(gsm2 antlr4_static gsm_load gsm_script yaucl_structures roaring  yaucl_hashing yaucl_graph )
 
-add_executable(gsm2_server main.cpp src/queries/NestedResultTable.cpp include/queries/NestedResultTable.h src/database/SchemaIndexer.cpp include/database/SchemaIndexer.h)
+add_executable(gsm2_server main.cpp src/queries/NestedResultTable.cpp include/queries/NestedResultTable.h)
 target_link_libraries(gsm2_server  antlr4_static yaucl_structures roaring  yaucl_hashing yaucl_graph  gsm2 gsm_script)
 
 include_directories(submodules/yaucl/submodules/rocksdb/include)
 include_directories(submodules/cpp-lru-cache/include)
 
-add_executable(data_loader_test data.cpp src/database/gsm_object_xi_content.cpp  src/database/gsm_object.cpp
-        src/database/ndp/ndp_batch.cpp)
+add_executable(data_loader_test data.cpp
+)
 #sudo apt-get install libsnappy-dev libgflags-dev
 #target_link_libraries(data_loader_test snappy bz2  z rt ${ROCKSDB_STATIC_LIB} yaucl_ndp)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${STXXL_CXX_FLAGS}")
 
 # add STXXL includes path
 #include_directories(${STXXL_INCLUDE_DIRS})
-target_link_libraries(data_loader_test antlr4_static yaucl_structures roaring  yaucl_hashing yaucl_graph yaucl_data ${LIBXML2_LIBRARIES} snappy bz2  z rt rocksdb yaucl_ndp gsm_load CapnProto::kj CapnProto::capnp)
+target_link_libraries(data_loader_test antlr4_static yaucl_structures roaring  yaucl_hashing yaucl_graph  gsm2  gsm_script antlr4_static yaucl_structures roaring  yaucl_hashing yaucl_graph yaucl_data ${LIBXML2_LIBRARIES} snappy bz2  z rt rocksdb yaucl_ndp gsm_load CapnProto::kj CapnProto::capnp)
 
 #enable_testing ()
 #set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)

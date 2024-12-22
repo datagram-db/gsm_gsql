@@ -83,4 +83,6 @@ struct Environment {
 
 };
 
+
+
 #endif //GSM2_ENVIRONMENT_H

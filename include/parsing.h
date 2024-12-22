@@ -87,4 +87,15 @@ static inline char* skipSpaces(char*buf, size_t* len ) {
     return buf;
 }
 
+static inline
+std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
+    //https://stackoverflow.com/a/24315631/1376095
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+    }
+    return str;
+}
+
 #endif //GSM2_PARSING_H

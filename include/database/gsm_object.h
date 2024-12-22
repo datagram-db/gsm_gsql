@@ -52,7 +52,12 @@ struct gsm_object  {
     std::unordered_map<std::string, std::vector<gsm_object_xi_content>> phi;
     std::unordered_map<std::string, union_minimal> content;
 
-
+    inline void clear() {
+        phi.clear();
+        content.clear();
+        ell.clear();
+        xi.clear();
+    }
 
     /**
      * Updating the current object with the values from the old one, if it does not exist (rough implementation,

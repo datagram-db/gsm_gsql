@@ -78,3 +78,7 @@ question_mark.xml
 /DatagramDB/.venv/
 /DatagramDB/.idea/
 /visualizer/python/data/
+scalability.csv
+scalability_dist.csv
+simple.csv
+my.log

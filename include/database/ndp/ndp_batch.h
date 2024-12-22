@@ -20,20 +20,11 @@ extern "C" {
 #include <filesystem>
 #include "lrucache.hpp"
 
-
-size_t filesize(const std::filesystem::path& filename)
-{
-    if (std::filesystem::exists(filename)) {
-        return std::filesystem::file_size(filename);
-    }
-    return 0;
-}
-
 #include <mutex>
 #include <fstream>
 
 struct mapping {
-    mapping(const std::string& filename, size_t cache_size);
+    mapping(const std::string& filename, size_t cache_size = 1024);
     std::pair<bool,size_t> serialize(const gsm_object& object);
 
     inline ssize_t getGreatestObjectId() const {
@@ -42,6 +33,9 @@ struct mapping {
 
     gsm_object retrieve(size_t id);
     void close();
+    virtual ~mapping() {
+        close();
+    }
 
 private:
     std::ofstream mapping_file;

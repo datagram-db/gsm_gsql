@@ -5,28 +5,8 @@
 #include "configuration/Environment.h"
 #include "easylogging++.h"
 
-#include "magic_enum.hpp"
 
-static inline void parse_schema_map(std::istream& stream,
-                                    std::unordered_map<std::string, gsm2::tables::AttributeTableType>& result) {
-    std::string line;
-    size_t count = 0;
-    std::string field_name;
-    gsm2::tables::AttributeTableType field_type = gsm2::tables::AttributeTableType::StringAtt;
-    while (std::getline(stream, line)) {
-        count++;
-        if (count == 1)
-            field_name = line;
-        else {
-            auto val = magic_enum::enum_cast<gsm2::tables::AttributeTableType>(line);
-            if (val)
-                field_type = val.value();
-            else
-                field_type = gsm2::tables::AttributeTableType::StringAtt;
-            result[field_name] = field_type;
-        }
-    }
-}
+
 
 Environment::Environment(const Configuration &conf) : conf{conf} {
     // Binding the query results for the script evaluator

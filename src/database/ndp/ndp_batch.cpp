@@ -234,7 +234,7 @@ mapping::mapping(const std::string& filename, size_t cache_size) : cache(cache_s
                     metObjectIds.emplace(key, value);
                 }
             }
-            tmpsize = filesize(filename);
+            tmpsize = std::filesystem::file_size(filename);
 
         }
     }
