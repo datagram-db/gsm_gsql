@@ -31,7 +31,6 @@ void BulkWriter::close() {
         delete this->writer;
         this->writer= nullptr;
     }
-    this->path = "";
     this->dbCounter = -1;
 }
 
@@ -40,4 +39,12 @@ void BulkWriter::writeObject(const gsm_object &object,
     if (this->writer) {
         this->writer->serialize(object);
     }
+}
+
+#include <parser/readers/BulkReader.h>
+
+DataReader* BulkWriter::asReader() {
+    auto* reader = new BulkReader();
+    reader->readFromPath(this->path);
+    return reader;
 }

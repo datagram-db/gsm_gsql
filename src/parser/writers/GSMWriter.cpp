@@ -4,8 +4,9 @@
 
 #include <parser/writers/GSMWriter.h>
 
-void GSMWriter::writeToPath(const std::string& path) {
+void GSMWriter::writeToPath(const std::string& p) {
     start = true;
+    this->path = p;
     b.open(path);
 };
 
@@ -17,6 +18,7 @@ void GSMWriter::initDatabase() {
 };
 
 #include <parsing.h>
+#include "parser/readers/GSMReader.h"
 
 void GSMWriter::writeObject(const gsm_object& object,  const std::unordered_map<std::string, gsm2::tables::AttributeTableType>& propertyname_to_type) {
     b << "id:" << object.id << "\n";
@@ -58,4 +60,11 @@ void GSMWriter::writeObject(const gsm_object& object,  const std::unordered_map<
 
 void GSMWriter::close() {
     b.close();
+};
+
+
+DataReader* GSMWriter::asReader() {
+    auto* data = new GSMReader();
+    data->readFromPath(this->path);
+    return data;
 };

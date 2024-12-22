@@ -47,3 +47,11 @@
         forloading.nGraphs = graphId_eventId.first+1;
         forloading.index();
     };
+
+
+#include <parser/readers/PrimaryMemoryReader.h>
+
+DataReader*  PrimaryMemoryLoader::asReader()  {
+    auto* r = new PrimaryMemoryReader(this->forloading);
+    return r;
+}

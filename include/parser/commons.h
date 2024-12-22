@@ -17,5 +17,14 @@ enum DataFormat {
 #include <string>
 
 #include <database/gsm_object.h>
+struct DataReader;
+
+struct DataFormatHandler {
+
+    DataReader* current_reader;
+    DataFormatHandler() : current_reader{nullptr} {}
+
+
+};
 
 #endif //GSM2_COMMONS_H
