@@ -51,7 +51,8 @@
 
 #include <parser/readers/PrimaryMemoryReader.h>
 
-DataReader*  PrimaryMemoryLoader::asReader()  {
+DataReader*  PrimaryMemoryLoader::asReader(DataWriter* ptr)  {
     auto* r = new PrimaryMemoryReader(this->forloading);
+    r->setWriter(ptr);
     return r;
 }

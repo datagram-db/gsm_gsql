@@ -669,7 +669,7 @@ static inline bool parse(char* string,
         ell.clear();
         if (!(string = haspos(string, (char*)ID, 0, &len)))
             return false;
-        if (sscanf(string, "%lu%n", &graphId_eventId.second, &scanSkip)==EOF)
+        if (sscanf(string, "%lu%n", &graphId_eventId.second, &scanSkip)==(-1))
             return false;
         forloading.nodesInGraph[graphId_eventId.first] = std::max(forloading.nodesInGraph[graphId_eventId.first],graphId_eventId.second);
         len-=scanSkip;
@@ -761,7 +761,7 @@ static inline bool parse(char* string,
             if (!(string = skipSpaces(string, &len)))
                 return false;
             while (*string != ';') {
-                if (sscanf(string, "%lf\t%lu%n", &weight, &content,&scanSkip)==EOF)
+                if (sscanf(string, "%lf\t%lu%n", &weight, &content,&scanSkip)==(-1))
                     return false;
                 len-=scanSkip;
                 string+=scanSkip;
@@ -831,7 +831,7 @@ static inline bool parse(char* string,
         current.xi.clear();
         current.content.clear();
         current.phi.clear();
-        if (sscanf(string, "%lu%n", &current.id, &scanSkip)==EOF)  return false;
+        if (sscanf(string, "%lu%n", &current.id, &scanSkip)==-1)  return false;
 //        forloading.nodesInGraph[graphId_eventId.first] = std::max(forloading.nodesInGraph[graphId_eventId.first],graphId_eventId.second);
         len-=scanSkip;
         string+=scanSkip;
@@ -903,7 +903,7 @@ static inline bool parse(char* string,
             string =beforeReturn;
             if (!(string = skipSpaces(string, &len)))  return false;
             while (*string != ';') {
-                if (sscanf(string, "%lf\t%lu%n", &weight, &content,&scanSkip)==EOF)  return false;
+                if (sscanf(string, "%lf\t%lu%n", &weight, &content,&scanSkip)==-1)  return false;
                 len-=scanSkip;
                 string+=scanSkip;
                 // Setting up the containment associated to the node

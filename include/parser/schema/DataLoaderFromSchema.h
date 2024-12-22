@@ -58,6 +58,19 @@ struct SchemaReader : public schemaBaseVisitor, public DataReader {
     yaucl::structures::any_to_uint_bimap<std::string> entities_idx;
     yaucl::structures::any_to_uint_bimap<std::string> fields_idx;
 
+    const Field* resolve(const std::string& namespace_, const std::string& entity_, const std::string& field_) const {
+        auto it1 = loading_with_scheme.find(namespace_);
+        if (it1 == loading_with_scheme.end())
+            return nullptr;
+        auto it2 = it1->second.find(entity_);
+        if (it2 == it1->second.end())
+            return nullptr;
+        auto it3 = it2->second.find(field_);
+        if (!it3.has_value())
+        return nullptr;
+        return it3.value();
+    }
+
     inline void update(const std::string& ns, const std::string& e, const std::string& f, const std::string& value, size_t set) {
         std::tuple<size_t, size_t, size_t> s{namespace_idx.put(ns).first,entities_idx.put(e).first,fields_idx.put(f).first};
         (mampa[s]).put(value,set);

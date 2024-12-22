@@ -15,7 +15,7 @@ struct GSMWriter : public DataWriter {
     void initDatabase() override;
     void writeObject(const gsm_object& object,  const std::unordered_map<std::string, gsm2::tables::AttributeTableType>& propertyname_to_type) override;
     void close() override;
-    DataReader* asReader() override;
+    DataReader* asReader(DataWriter*) override;
 
     std::ofstream b;
     std::string path;

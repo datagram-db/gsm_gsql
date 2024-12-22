@@ -47,6 +47,10 @@ struct Field {
     std::string ext_entity;
     std::string ext_field;
 
+    inline bool asks_for_reference() const {
+        return (!ext_namespace.empty()) && (!ext_entity.empty()) && (!ext_field.empty());
+    }
+
     Field() = default;
     Field(const Field&) = default;
     Field(Field&&) = default;

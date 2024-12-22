@@ -63,8 +63,13 @@ void GSMWriter::close() {
 };
 
 
-DataReader* GSMWriter::asReader() {
-    auto* data = new GSMReader();
-    data->readFromPath(this->path);
-    return data;
+DataReader* GSMWriter::asReader(DataWriter* ptr) {
+    auto* reader = new GSMReader();
+    reader->setWriter(ptr);
+    bool status = reader->readFromPath(this->path);
+    if (!status) {
+        delete reader;
+        reader = nullptr;
+    }
+    return reader;
 };

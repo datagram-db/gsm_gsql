@@ -43,8 +43,13 @@ void BulkWriter::writeObject(const gsm_object &object,
 
 #include <parser/readers/BulkReader.h>
 
-DataReader* BulkWriter::asReader() {
+DataReader* BulkWriter::asReader(DataWriter* ptr) {
     auto* reader = new BulkReader();
-    reader->readFromPath(this->path);
+    reader->setWriter(ptr);
+    bool status = reader->readFromPath(this->path);
+    if (!status) {
+        delete reader;
+        reader = nullptr;
+    }
     return reader;
 }

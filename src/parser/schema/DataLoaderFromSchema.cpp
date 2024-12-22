@@ -114,7 +114,9 @@ std::any SchemaReader::visitEntity_declaration(schemaParser::Entity_declarationC
             }
             loading_filename = UNESCAPE(file->EscapedString()->getText());
             auto e = std::any_cast<Entity>(visitLocal_entity_declaration(context->local_entity_declaration()));
-            loading_with_scheme[namespace_][e.name] = std::move(e);
+            auto& nss = loading_with_scheme[namespace_];
+            if (!nss.contains(e.name))
+                nss[e.name] = std::move(e);
         }
     }
     return {};
@@ -151,6 +153,9 @@ std::any SchemaReader::visitEntity_declaration(schemaParser::Entity_declarationC
             e.type = type;
             e.has_csv_header = has_csv_header;
             e.sep = sep;
+            auto& nss = loading_with_scheme[namespace_];
+            if (!nss.contains(e.name))
+                nss[e.name] = e;
             return e;
         }
         return {};
@@ -331,8 +336,8 @@ bool SchemaReader::load_csv(const Entity& e, bool isFirstPass) {
 
         size_t idx = 0;
         gsm_object current;
+        current.id = globalObjectId;
         for (auto &field : row) {
-            current.clear();
             auto offset = header_mapping.empty() ? idx : header_mapping[idx];
             if ((!field.empty()) && (offset != -1)) {
                 auto it = e.find(e.fields_order[offset]);
@@ -348,16 +353,14 @@ bool SchemaReader::load_csv(const Entity& e, bool isFirstPass) {
                                 break;
                             case external_reference:
                             {
-                                auto it1 = loading_with_scheme.find(val->ext_namespace);
-                                if (it1 == loading_with_scheme.end())
+
+                                auto it3 = this->resolve(val->ext_namespace,
+                                                                     val->ext_entity,
+                                                                     val->ext_field);
+                                if (!it3)
                                     return false;
-                                auto it2 = it1->second.find(val->ext_entity);
-                                if (it2 == it1->second.end())
-                                    return false;
-                                auto it3 = it2->second.find(val->ext_field);
-                                if (!it3.has_value())
-                                    return false;
-                                if ((!isFirstPass) && (it3.value()->is_id)) {
+
+                                if ((!isFirstPass) && (it3->is_id)) {
                                     type_ = Skip;
 
                                     auto result = retrieve(val->ext_namespace,val->ext_entity,val->ext_field, field);
@@ -365,7 +368,7 @@ bool SchemaReader::load_csv(const Entity& e, bool isFirstPass) {
 //                                    cc.emplace_back(headers.empty() ? val->field_name : headers.at(idx), result);
                                     current.phi[headers.empty() ? val->field_name : headers.at(idx)].emplace_back(result);
                                 } else
-                                    type_ = it3.value()->native_field_type;
+                                    type_ = it3->native_field_type;
                             }
                                 break;
                             case local_nested_entity_list:
@@ -472,172 +475,319 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
 }
 
     bool SchemaReader::Null() {  return true; }
-    bool SchemaReader::Bool(bool b) {
+    bool SchemaReader::Bool(bool val) {
         auto& toppe = *state_stack.rbegin();
-        if (!toppe.isThisScore) {
-            std::string val3=b ? "true" : "false";
-            if (!toppe.skipCurrentKey) {
-                if (_isFirstPass) {
-                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
-                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
-                    }
+        std::string val3=val ? "true" : "false";
+        const auto& field_key = toppe.key;
+        auto val2 = toppe.entity_stack->find(field_key).value();
+        if (_isFirstPass) {
+            if ((val2->is_id)) {
+                update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
+            }
+        } else {
+            if (val2->asks_for_reference()) {
+                auto result = retrieve(val2->ext_namespace, val2->ext_entity, val2->ext_field, val3);
+                toppe.object.phi[field_key].emplace_back(result);
+            } else {
+                if (toppe.isThisScore) {
+                    toppe.object.scores.emplace_back(val ? 1.0 : 0.0);
+                } else if (toppe._keyType == NativeTypes::String) {
+                    toppe.object.content.emplace(field_key, val3);
                 } else {
-                    auto f = toppe.entity_stack->find(toppe.key).value();
-                    auto result = retrieve(f->ext_namespace, f->ext_entity, f->ext_field, b ? "true"
-                                                                                            : "false");
-//                auto result = increasingIdCorrespondence[{f->ext_namespace, f->ext_entity, f->ext_field}][(b ? "true"
-//                                                                                                             : "false")];
-//                    toppe.containment.emplace_back(toppe.key, result);
-                    toppe.object.phi[toppe.key].emplace_back(result);
+                    toppe.object.content.emplace(field_key, val ? 1.0 : 0.0);
                 }
-            } else if (!_isFirstPass) {
-                if (toppe._keyType == NativeTypes::String)
-                    toppe.object.content.emplace(toppe.key, b ? "true" : "false");
-                else
-                    toppe.object.content.emplace(toppe.key, b ? 1.0 : 0.0);
             }
-        } else if (!_isFirstPass) {
-            toppe.object.scores.emplace_back(b ? 1.0 : 0.0);
         }
+        if (!toppe.key.empty())
+            toppe.key.clear();
+
+//        if (!toppe.isThisScore) {
+//            std::string val3=b ? "true" : "false";
+//            if (!toppe.skipCurrentKey) {
+//                if (_isFirstPass) {
+//                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
+//                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
+//                    }
+//                } else {
+//                    auto f = toppe.entity_stack->find(toppe.key).value();
+//                    auto result = retrieve(f->ext_namespace, f->ext_entity, f->ext_field, b ? "true"
+//                                                                                            : "false");
+////                auto result = increasingIdCorrespondence[{f->ext_namespace, f->ext_entity, f->ext_field}][(b ? "true"
+////                                                                                                             : "false")];
+////                    toppe.containment.emplace_back(toppe.key, result);
+//                    toppe.object.phi[toppe.key].emplace_back(result);
+//                }
+//            } else if (!_isFirstPass) {
+//                if (toppe._keyType == NativeTypes::String)
+//                    toppe.object.content.emplace(toppe.key, b ? "true" : "false");
+//                else
+//                    toppe.object.content.emplace(toppe.key, b ? 1.0 : 0.0);
+//            }
+//        } else if (!_isFirstPass) {
+//            toppe.object.scores.emplace_back(b ? 1.0 : 0.0);
+//        }
         toppe.isThisScore = false;
         toppe.key.clear();
         return true;
     }
-    bool SchemaReader::Int(int d) {
+    bool SchemaReader::Int(int val) {
         auto& toppe = *state_stack.rbegin();
-        if (!toppe.isThisScore) {
-            std::string val3=std::to_string(d);
-            if (!toppe.skipCurrentKey) {
-                if (_isFirstPass) {
-                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
-                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
-                    }
 
-                } else  {
-                    auto f = toppe.entity_stack->find(toppe.key).value();
-                    auto result = retrieve(f->ext_namespace, f->ext_entity,
-                                           f->ext_field,std::to_string(d));
-                    toppe.object.phi[toppe.key].emplace_back(result);
-                }
-            } else if (!_isFirstPass) {
-                if ((toppe._keyType != NativeTypes::Int))
-                    return false;
-                toppe.object.content.emplace(toppe.key, (double) d);
+        std::string val3=std::to_string(val);
+        const auto& field_key = toppe.key;
+        auto val2 = toppe.entity_stack->find(field_key).value();
+        if (_isFirstPass) {
+            if ((val2->is_id)) {
+                update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
             }
-        } else if (!_isFirstPass)  {
-            toppe.object.scores.emplace_back(d);
+        } else {
+            if (val2->asks_for_reference()) {
+                auto result = retrieve(val2->ext_namespace, val2->ext_entity, val2->ext_field, val3);
+                toppe.object.phi[field_key].emplace_back(result);
+            } else {
+                if (toppe.isThisScore)
+                    toppe.object.scores.emplace_back(val);
+                else if (toppe._keyType == NativeTypes::String) {
+                    toppe.object.content.emplace(field_key, val3);
+                } else {
+                    toppe.object.content.emplace(field_key, (double)val);
+                }
+            }
         }
+        if (!toppe.key.empty())
+            toppe.key.clear();
+
+//        if (!toppe.isThisScore) {
+//            std::string val3=std::to_string(d);
+//
+//            auto field_retrieve = toppe.entity_stack->find(toppe.key).value();
+//            auto is_id = field_retrieve->is_id;
+//            /// TODO: Change
+//
+//            if (!toppe.skipCurrentKey) {
+//                if (_isFirstPass) {
+//                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
+//                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
+//                    }
+//
+//                } else  {
+//                    auto f = toppe.entity_stack->find(toppe.key).value();
+//                    auto result = retrieve(f->ext_namespace, f->ext_entity,
+//                                           f->ext_field,std::to_string(d));
+//                    toppe.object.phi[toppe.key].emplace_back(result);
+//                }
+//            } else if (!_isFirstPass) {
+//                if ((toppe._keyType != NativeTypes::Int))
+//                    return false;
+//                toppe.object.content.emplace(toppe.key, (double) d);
+//            }
+//
+//        } else if (!_isFirstPass)  {
+//            toppe.object.scores.emplace_back(d);
+//        }
         toppe.isThisScore = false;
         toppe.key.clear();
         return true;
     }
-    bool SchemaReader::Uint(unsigned d) {
+    bool SchemaReader::Uint(unsigned val) {
         auto& toppe =*state_stack.rbegin();
-        if (!toppe.isThisScore) {
-            std::string val3=std::to_string(d);
-            if (!toppe.skipCurrentKey) {
-                if (_isFirstPass) {
-                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
-                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
-                    }
-
-                } else  {
-                    auto f = toppe.entity_stack->find(toppe.key).value();
-                    auto result = retrieve(f->ext_namespace, f->ext_entity,
-                                           f->ext_field,std::to_string(d));
-                    toppe.object.phi[toppe.key].emplace_back( result);
-                }
-            } else if (!_isFirstPass) {
-                if ((toppe._keyType != NativeTypes::UInt) && (toppe._keyType != NativeTypes::Int))
-                    return false;
-                toppe.object.content.emplace(toppe.key, (double) d);
+        std::string val3=std::to_string(val);
+        const auto& field_key = toppe.key;
+        auto val2 = toppe.entity_stack->find(field_key).value();
+        if (_isFirstPass) {
+            if ((val2->is_id)) {
+                update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
             }
-        } else if (!_isFirstPass)  {
-            toppe.object.scores.emplace_back(d);
+        } else {
+            if (val2->asks_for_reference()) {
+                auto result = retrieve(val2->ext_namespace, val2->ext_entity, val2->ext_field, val3);
+                toppe.object.phi[field_key].emplace_back(result);
+            } else {
+                if (toppe.isThisScore)
+                    toppe.object.scores.emplace_back(val);
+                else if (toppe._keyType == NativeTypes::String) {
+                    toppe.object.content.emplace(field_key, val3);
+                } else {
+                    toppe.object.content.emplace(field_key, (double)val);
+                }
+            }
         }
+        if (!toppe.key.empty())
+            toppe.key.clear();
+//        if (!toppe.isThisScore) {
+//            std::string val3=std::to_string(d);
+//            if (!toppe.skipCurrentKey) {
+//                if (_isFirstPass) {
+//                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
+//                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
+//                    }
+//
+//                } else  {
+//                    auto f = toppe.entity_stack->find(toppe.key).value();
+//                    auto result = retrieve(f->ext_namespace, f->ext_entity,
+//                                           f->ext_field,std::to_string(d));
+//                    toppe.object.phi[toppe.key].emplace_back( result);
+//                }
+//            } else if (!_isFirstPass) {
+//                if ((toppe._keyType != NativeTypes::UInt) && (toppe._keyType != NativeTypes::Int))
+//                    return false;
+//                toppe.object.content.emplace(toppe.key, (double) d);
+//            }
+//        } else if (!_isFirstPass)  {
+//            toppe.object.scores.emplace_back(d);
+//        }
         toppe.isThisScore=false;
         toppe.key.clear();
         return true;
     }
-    bool SchemaReader::Int64(int64_t d) {
+    bool SchemaReader::Int64(int64_t val) {
         auto& toppe = *state_stack.rbegin();
-        if (!toppe.isThisScore) {
-            std::string val3=std::to_string(d);
-            if (!toppe.skipCurrentKey) {
-                if (_isFirstPass) {
-                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
-                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
-                    }
-                } else {
-                    auto f = toppe.entity_stack->find(toppe.key).value();
-                    auto result = retrieve(f->ext_namespace, f->ext_entity,
-                                           f->ext_field,std::to_string(d));
-                    toppe.object.phi[toppe.key].emplace_back( result);
-                }
-            } else if (!_isFirstPass) {
-                if ((toppe._keyType != NativeTypes::UInt) && (toppe._keyType != NativeTypes::Int))
-                    return false;
-                toppe.object.content.emplace(toppe.key, (double) d);
+        std::string val3=std::to_string(val);
+        const auto& field_key = toppe.key;
+        auto val2 = toppe.entity_stack->find(field_key).value();
+        if (_isFirstPass) {
+            if ((val2->is_id)) {
+                update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
             }
-        }else if (!_isFirstPass) {
-            toppe.object.scores.emplace_back(d);
+        } else {
+            if (val2->asks_for_reference()) {
+                auto result = retrieve(val2->ext_namespace, val2->ext_entity, val2->ext_field, val3);
+                toppe.object.phi[field_key].emplace_back(result);
+            } else {
+                if (toppe.isThisScore)
+                    toppe.object.scores.emplace_back(val);
+                else if (toppe._keyType == NativeTypes::String) {
+                    toppe.object.content.emplace(field_key, val3);
+                } else {
+                    toppe.object.content.emplace(field_key, (double)val);
+                }
+            }
         }
+        if (!toppe.key.empty())
+            toppe.key.clear();
+//        if (!toppe.isThisScore) {
+//            std::string val3=std::to_string(d);
+//            if (!toppe.skipCurrentKey) {
+//                if (_isFirstPass) {
+//                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
+//                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
+//                    }
+//                } else {
+//                    auto f = toppe.entity_stack->find(toppe.key).value();
+//                    auto result = retrieve(f->ext_namespace, f->ext_entity,
+//                                           f->ext_field,std::to_string(d));
+//                    toppe.object.phi[toppe.key].emplace_back( result);
+//                }
+//            } else if (!_isFirstPass) {
+//                if ((toppe._keyType != NativeTypes::UInt) && (toppe._keyType != NativeTypes::Int))
+//                    return false;
+//                toppe.object.content.emplace(toppe.key, (double) d);
+//            }
+//        }else if (!_isFirstPass) {
+//            toppe.object.scores.emplace_back(d);
+//        }
         toppe.isThisScore = false;
         toppe.key.clear();
         return true;
     }
-    bool SchemaReader::Uint64(uint64_t d) {
+    bool SchemaReader::Uint64(uint64_t val) {
         auto& toppe = *state_stack.rbegin();
-        if (!toppe.isThisScore) {
-            std::string val3=std::to_string(d);
-            if ((!toppe.skipCurrentKey)) {
-                if (_isFirstPass) {
-                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
-                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
-                    }
-                } else {
-                    auto f = toppe.entity_stack->find(toppe.key).value();
-                    auto result = retrieve(f->ext_namespace, f->ext_entity,
-                                           f->ext_field,std::to_string(d));
-                    toppe.object.phi[toppe.key].emplace_back( result);
-                }
-            } else if (!_isFirstPass) {
-                if ((toppe._keyType != NativeTypes::UInt) && (toppe._keyType != NativeTypes::Int))
-                    return false;
-                toppe.object.phi[toppe.key].emplace_back((double) d);
+        std::string val3=std::to_string(val);
+        const auto& field_key = toppe.key;
+        auto val2 = toppe.entity_stack->find(field_key).value();
+        if (_isFirstPass) {
+            if ((val2->is_id)) {
+                update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
             }
-        } else if (!_isFirstPass) {
-            toppe.object.scores.emplace_back(d);
+        } else {
+            if (val2->asks_for_reference()) {
+                auto result = retrieve(val2->ext_namespace, val2->ext_entity, val2->ext_field, val3);
+                toppe.object.phi[field_key].emplace_back(result);
+            } else {
+                if (toppe.isThisScore)
+                    toppe.object.scores.emplace_back(val);
+                else if (toppe._keyType == NativeTypes::String) {
+                    toppe.object.content.emplace(field_key, val3);
+                } else {
+                    toppe.object.content.emplace(field_key, (double)val);
+                }
+            }
         }
+        if (!toppe.key.empty())
+            toppe.key.clear();
+//        if (!toppe.isThisScore) {
+//            std::string val3=std::to_string(d);
+//            if ((!toppe.skipCurrentKey)) {
+//                if (_isFirstPass) {
+//                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
+//                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
+//                    }
+//                } else {
+//                    auto f = toppe.entity_stack->find(toppe.key).value();
+//                    auto result = retrieve(f->ext_namespace, f->ext_entity,
+//                                           f->ext_field,std::to_string(d));
+//                    toppe.object.phi[toppe.key].emplace_back( result);
+//                }
+//            } else if (!_isFirstPass) {
+//                if ((toppe._keyType != NativeTypes::UInt) && (toppe._keyType != NativeTypes::Int))
+//                    return false;
+//                toppe.object.phi[toppe.key].emplace_back((double) d);
+//            }
+//        } else if (!_isFirstPass) {
+//            toppe.object.scores.emplace_back(d);
+//        }
         toppe.isThisScore = false;
         toppe.key.clear();
         return true;
     }
-    bool SchemaReader::Double(double d) {
+    bool SchemaReader::Double(double val) {
         auto& toppe = *state_stack.rbegin();
-        auto key = toppe.entity_stack->find(toppe.key).value();
-        auto isId = key->is_id;
-        auto isExtRef = key->type == external_reference;
-        if (!toppe.skipCurrentKey) {
-            if (_isFirstPass) {
-                std::string val3=std::to_string(d);
-                if ((isId)) {
-                    update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
-                }
-            } else  {
-                auto f = toppe.entity_stack->find(toppe.key).value();
-                auto result = retrieve(f->ext_namespace,f->ext_entity,f->ext_field,std::to_string(d));
-//            auto result = increasingIdCorrespondence[{f->ext_namespace,f->ext_entity,f->ext_field}][std::to_string(d)];
-                toppe.object.phi[toppe.key].emplace_back( result);
+        std::string val3=std::to_string(val);
+        const auto& field_key = toppe.key;
+        auto val2 = toppe.entity_stack->find(field_key).value();
+        if (_isFirstPass) {
+            if ((val2->is_id)) {
+                update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
             }
-        } else if (!_isFirstPass) {
-            if (toppe._keyType != NativeTypes::Double)
-                return false;
-            if (toppe.isThisScore)
-                toppe.object.scores.emplace_back(d);
-            else
-                toppe.object.content.emplace(toppe.key, d);
+        } else {
+            if (val2->asks_for_reference()) {
+                auto result = retrieve(val2->ext_namespace, val2->ext_entity, val2->ext_field, val3);
+                toppe.object.phi[field_key].emplace_back(result);
+            } else {
+                if (toppe.isThisScore)
+                    toppe.object.scores.emplace_back(val);
+                else if (toppe._keyType == NativeTypes::String) {
+                    toppe.object.content.emplace(field_key, val3);
+                } else {
+                    toppe.object.content.emplace(field_key, val);
+                }
+            }
         }
+        if (!toppe.key.empty())
+            toppe.key.clear();
+//        auto key = toppe.entity_stack->find(toppe.key).value();
+//        auto isId = key->is_id;
+//        auto isExtRef = key->type == external_reference;
+//        if (!toppe.skipCurrentKey) {
+//            if (_isFirstPass) {
+//                std::string val3=std::to_string(d);
+//                if ((isId)) {
+//                    update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
+//                }
+//            } else  {
+//                auto f = toppe.entity_stack->find(toppe.key).value();
+//                auto result = retrieve(f->ext_namespace,f->ext_entity,f->ext_field,std::to_string(d));
+////            auto result = increasingIdCorrespondence[{f->ext_namespace,f->ext_entity,f->ext_field}][std::to_string(d)];
+//                toppe.object.phi[toppe.key].emplace_back( result);
+//            }
+//        } else if (!_isFirstPass) {
+//            if (toppe._keyType != NativeTypes::Double)
+//                return false;
+//            if (toppe.isThisScore)
+//                toppe.object.scores.emplace_back(d);
+//            else
+//                toppe.object.content.emplace(toppe.key, d);
+//        }
         toppe.isThisScore = false;
         toppe.key.clear();
         return true;
@@ -647,34 +797,58 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         auto key = toppe.entity_stack->find(toppe.key).value();
         auto isId = key->is_id;
         auto isExtRef = key->type == external_reference;
-        auto stri = std::string(str, length);
-        auto number = std::stod(stri);
-        if (!toppe.isThisScore) {
-            if (!toppe.skipCurrentKey) {
-                if (_isFirstPass) {
-                    if ((isId)) {
-                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key, stri,
-                               globalObjectId);
-                    }
+        auto val3 = std::string(str, length);
+        auto number = std::stod(val3);
 
+        const auto& field_key = toppe.key;
+        auto val2 = toppe.entity_stack->find(field_key).value();
+        if (_isFirstPass) {
+            if ((val2->is_id)) {
+                update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
+            }
+        } else {
+            if (val2->asks_for_reference()) {
+                auto result = retrieve(val2->ext_namespace, val2->ext_entity, val2->ext_field, val3);
+                toppe.object.phi[field_key].emplace_back(result);
+            } else {
+                if (toppe.isThisScore)
+                    toppe.object.scores.emplace_back(number);
+                else if (toppe._keyType == NativeTypes::String) {
+                    toppe.object.content.emplace(field_key, val3);
                 } else {
-                    auto f = toppe.entity_stack->find(toppe.key).value();
-                    auto result = retrieve(f->ext_namespace, f->ext_entity, f->ext_field, std::string(str, length));
-//            auto result = increasingIdCorrespondence[{f->ext_namespace,f->ext_entity,f->ext_field}][std::string(str, length)];
-                    toppe.object.phi[toppe.key].emplace_back(result);
-                }
-            } else if (!_isFirstPass) {
-                if (toppe._keyType == NativeTypes::String)
-                    toppe.object.content.emplace(toppe.key, stri);
-//                else if (toppe.isThisScore)
-//                    toppe.scores.emplace_back(number);
-                else {
-                    toppe.object.content.emplace(toppe.key, number);
+                    toppe.object.content.emplace(field_key, (double)number);
                 }
             }
-        } else if (!_isFirstPass) {
-            toppe.object.scores.emplace_back(number);
         }
+        if (!toppe.key.empty())
+            toppe.key.clear();
+
+//        if (!toppe.isThisScore) {
+//            if (!toppe.skipCurrentKey) {
+//                if (_isFirstPass) {
+//                    if ((isId)) {
+//                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key, stri,
+//                               globalObjectId);
+//                    }
+//
+//                } else {
+//                    auto f = toppe.entity_stack->find(toppe.key).value();
+//                    auto result = retrieve(f->ext_namespace, f->ext_entity, f->ext_field, std::string(str, length));
+////            auto result = increasingIdCorrespondence[{f->ext_namespace,f->ext_entity,f->ext_field}][std::string(str, length)];
+//                    toppe.object.phi[toppe.key].emplace_back(result);
+//                }
+//            } else if (!_isFirstPass) {
+//                if (toppe._keyType == NativeTypes::String)
+//                    toppe.object.content.emplace(toppe.key, stri);
+////                else if (toppe.isThisScore)
+////                    toppe.scores.emplace_back(number);
+//                else {
+//                    toppe.object.content.emplace(toppe.key, number);
+//                }
+//            }
+//        } else if (!_isFirstPass) {
+//            toppe.object.scores.emplace_back(number);
+//        }
 //        else if ((!_isFirstPass) && (isExtRef)) {
 //            auto f = toppe.entity_stack->find(toppe.key).value();
 //            auto result = retrieve(f->ext_namespace,f->ext_entity,f->ext_field, std::string(str, length));
@@ -687,30 +861,53 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
     }
     bool SchemaReader::String(const char* str, rapidjson::SizeType length, bool copy) {
         auto& toppe = *state_stack.rbegin();
-        {
-            std::string val3(str, length);
-            if (!toppe.skipCurrentKey) {
-                if (_isFirstPass) {
-                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
-                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
-                    }
-
-                } else  {
-                    auto f = toppe.entity_stack->find(toppe.key).value();
-
-                    auto result = retrieve(f->ext_namespace,f->ext_entity,f->ext_field, std::string(
-                            str, length));
-//                auto result = increasingIdCorrespondence[{f->ext_namespace, f->ext_entity, f->ext_field}][std::string(
-//                        str, length)];
-                    toppe.object.phi[toppe.key].emplace_back( result);
+        std::string val3(str, length);
+        const auto& field_key = toppe.key;
+        auto val2 = toppe.entity_stack->find(field_key).value();
+        if (_isFirstPass) {
+            if ((val2->is_id)) {
+                update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
+            }
+        } else {
+            if (val2->asks_for_reference()) {
+                auto result = retrieve(val2->ext_namespace, val2->ext_entity, val2->ext_field, val3);
+                toppe.object.phi[field_key].emplace_back(result);
+            } else {
+                if (toppe.isThisScore)
+                    toppe.object.scores.emplace_back(std::stod(val3));
+                else if (toppe._keyType == NativeTypes::String) {
+                    toppe.object.content.emplace(field_key, val3);
+                } else {
+                    toppe.object.content.emplace(field_key, std::stod(val3));
                 }
-            } else if (!_isFirstPass) {
-                if (toppe._keyType != NativeTypes::String) {
-                    toppe.object.content.emplace(toppe.key, std::stod(std::string(str, length)));
-                } else
-                    toppe.object.content.emplace(toppe.key, std::string(str, length));
             }
         }
+        if (!toppe.key.empty())
+            toppe.key.clear();
+//        {
+//            std::string val3(str, length);
+//            if (!toppe.skipCurrentKey) {
+//                if (_isFirstPass) {
+//                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
+//                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
+//                    }
+//
+//                } else  {
+//                    auto f = toppe.entity_stack->find(toppe.key).value();
+//
+//                    auto result = retrieve(f->ext_namespace,f->ext_entity,f->ext_field, std::string(
+//                            str, length));
+////                auto result = increasingIdCorrespondence[{f->ext_namespace, f->ext_entity, f->ext_field}][std::string(
+////                        str, length)];
+//                    toppe.object.phi[toppe.key].emplace_back( result);
+//                }
+//            } else if (!_isFirstPass) {
+//                if (toppe._keyType != NativeTypes::String) {
+//                    toppe.object.content.emplace(toppe.key, std::stod(std::string(str, length)));
+//                } else
+//                    toppe.object.content.emplace(toppe.key, std::string(str, length));
+//            }
+//        }
         toppe.skipCurrentKey = false;
         toppe.key.clear();
         return true;
@@ -725,8 +922,8 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         const auto& e = toppe.entity_stack;
         toppe.key = std::string(str, length);
         toppe.skipCurrentKey = !_isFirstPass;
-        if ((toppe.key == "TotalPrice") && (!_isFirstPass))
-            std::cerr << "HERE" << std::endl;
+//        if ((toppe.key == "TotalPrice") && (!_isFirstPass))
+//            std::cerr << "HERE" << std::endl;
         auto itv2 = e->find(toppe.key);
 //        auto it = e->fields.find(toppe.key);
         if (itv2.has_value()) {
@@ -778,6 +975,7 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
             prev++;
             // TODO: associate it->data_row (first) or it-> containment to globalObjectId;
             it->object.id = globalObjectId;
+            if (!this->_isFirstPass)
             this->writer->writeObject(it->object, {});
             it->object.clear();
             if (it->countAt != 0)

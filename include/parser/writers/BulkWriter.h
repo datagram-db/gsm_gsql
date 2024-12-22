@@ -16,7 +16,7 @@ struct BulkWriter : public DataWriter {
     void writeObject(const gsm_object& object,  const std::unordered_map<std::string, gsm2::tables::AttributeTableType>& propertyname_to_type) override;
     void close() override;
 
-    virtual DataReader* asReader() override;
+    virtual DataReader* asReader(DataWriter*) override;
 
     std::filesystem::path path;
     size_t dbCounter;

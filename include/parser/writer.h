@@ -17,7 +17,7 @@ struct DataWriter {
     virtual void initDatabase() = 0;
     virtual void writeObject(const gsm_object& object, const std::unordered_map<std::string, gsm2::tables::AttributeTableType>& propertyname_to_type) = 0;
     virtual void close() = 0;
-    virtual DataReader* asReader() = 0;
+    virtual DataReader* asReader(DataWriter*) = 0;
 
 };
 
