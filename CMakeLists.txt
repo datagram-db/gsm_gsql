@@ -177,7 +177,11 @@ add_library(gsm2 OBJECT antlr4/graph_grammar/simple_graph_grammarLexer.cpp antlr
         src/database/SchemaIndexer.cpp include/database/SchemaIndexer.h
         src/parser/schema/NestingState.cpp
         src/parser/schema/DataLoaderFromSchema.cpp
-        include/parser/schema/DataLoaderFromSchema.h)
+        include/parser/schema/DataLoaderFromSchema.h
+        include/parser/readers/BulkReader.h
+        src/parser/readers/BulkReader.cpp
+        include/parser/writers/BulkWriter.h
+        src/parser/writers/BulkWriter.cpp)
 target_link_libraries(gsm2 antlr4_static gsm_load gsm_script yaucl_structures roaring  yaucl_hashing yaucl_graph )
 
 add_executable(gsm2_server main.cpp src/queries/NestedResultTable.cpp include/queries/NestedResultTable.h)
