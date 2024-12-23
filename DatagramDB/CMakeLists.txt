@@ -29,8 +29,8 @@ include_directories(../submodules/easylogging/src)
 #add_subdirectory(../submodules/easylogging binbuild/easylogging)
 
 set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES "/usr/local/gcc-14.2.0/include/")
-SET(CMAKE_EXE_LINKER_FLAGS
-        "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath -Wl,/usr/local/gcc-14.2.0/lib/../lib64")
+#SET(CMAKE_EXE_LINKER_FLAGS
+#        "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath -Wl,/usr/local/gcc-14.2.0/lib/../lib64")
 Include(FetchContent)
 include(CTest)
 
@@ -176,6 +176,22 @@ add_library(gsm_load OBJECT ../antlr4/schema_language/schemaBaseListener.cpp
         ../antlr4/schema_language/schemaVisitor.cpp)
 
 add_library(gsm2 OBJECT
+        ../submodules/yaucl/src/yaucl/data/csv/csv.cpp
+        ../submodules/yaucl/src/yaucl/data/new_iovec.cpp
+        ../submodules/yaucl/src/yaucl/data/MemoryMappingFile.cpp
+        ../submodules/yaucl/src/yaucl/data/mmapFile.cpp
+        ../submodules/yaucl/src/yaucl/data/VariadicSizeArrayElements.cpp
+        ../submodules/yaucl/src/yaucl/data/VarSizeNDPSorter.cpp
+        ../submodules/yaucl/src/yaucl/data/xml.cpp
+        ../submodules/yaucl/include/yaucl/data/json.h
+        ../submodules/yaucl/src/yaucl/data/VarSizeNDPSorter.cpp
+        ../submodules/yaucl/src/yaucl/data/malloc_freelist.c
+        ../submodules/yaucl/src/yaucl/data/SecondaryMemoryMalloc.cpp
+        ../submodules/yaucl/include/yaucl/data/SecondaryMemoryMalloc.h
+        ../submodules/yaucl/include/yaucl/data/smart_malloc.h
+        ../submodules/yaucl/src/yaucl/data/smart_malloc.cpp
+        ../submodules/yaucl/include/yaucl/data/smart_index_pointer.h
+        ../submodules/yaucl/src/yaucl/data/smart_index_pointer.cpp
         ../submodules/easylogging/src/easylogging++.cc
         ../antlr4/graph_grammar/simple_graph_grammarLexer.cpp
         ../antlr4/graph_grammar/simple_graph_grammarParser.cpp
