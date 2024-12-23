@@ -9,8 +9,7 @@
 
 struct BulkReader : public DataReader {
     virtual ~BulkReader() {}
-    virtual bool readFromPath(const std::string& path) override;
-
+    bool readFromPath(const std::string& path) override;
 };
 
 #endif //GSM2_BULKREADER_H

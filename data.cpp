@@ -38,7 +38,7 @@ int main(void) {
 //    dl.readFromPath("/home/giacomo/Scaricati/Unibench-0.2/Dataset/Schema.txt");
 //    std::cout << "Hello world!" << std::endl;
     DataFormatHandler dfh;
-    dfh.data_to_format("/home/giacomo/projects/DATA_IDEAS2021/Schema.txt",
+    dfh.data_converter("/home/giacomo/projects/DATA_IDEAS2021/Schema.txt",
                        DataFormat::Schema,
                        "/home/giacomo/projects/DATA_IDEAS2021/gsm.txt",
                        DataFormat::GSM);

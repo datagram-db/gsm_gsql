@@ -15,6 +15,7 @@
 #include <string>
 #include <iostream>
 #include <configuration/Environment.h>
+#include <parser/commons.h>
 
 #include <easylogging++.h>
 INITIALIZE_EASYLOGGINGPP
@@ -93,6 +94,14 @@ py::class_<ConfigurationArguments>(m, "ConfigurationArguments")
 .def_readwrite("load_value", &ConfigurationArguments::load_value)
 .def_readwrite("file_or_string_otherwise", &ConfigurationArguments::file_or_string_otherwise);
 
+py::enum_<DataFormat>(m, "DataFormat", py::arithmetic())
+.value("NoDataFormat", NoDataFormat)
+.value("PrimaryMemoryDB", PrimaryMemoryDB)
+.value("Schema", Schema)
+.value("GSM", GSM)
+.value("BulkFolder", BulkFolder)
+.export_values();
+
 py::enum_<SerialisationType>(m, "SerialisationType", py::arithmetic())
 .value("INPUT_DATA", INPUT_DATA)
 .value("OUTPUT_DATA", OUTPUT_DATA)
@@ -134,6 +143,23 @@ py::class_<Configuration>(m, "Configuration")
 py::class_<Environment>(m, "Environment")
         .def(py::init<Configuration>())
         .def("run", &Environment::run);
+
+py::class_<RandomAccessReader>(m, "RandomAccessReader")
+.def(py::init<Configuration>())
+.def("count_databases", &RandomAccessReader::count_databases)
+.def("database_size", &RandomAccessReader::database_size)
+.def("retrieve", &RandomAccessReader::retrieve);
+
+py::class_<DataFormatHandler>(m, "DataFormatHandler")
+.def(py::init<DataFormatHandler>())
+.def("data_converter", &DataFormatHandler::data_converter)
+.def("read_from_bulk_data", &DataFormatHandler::read_from_bulk_data)
+.def("load_to_primary_memory", &DataFormatHandler::load_to_primary_memory)
+.def("callback_reader", &DataFormatHandler::callback_reader)
+.def("open_data_writer", &DataFormatHandler::open_data_writer)
+.def("newDB", &DataFormatHandler::newDB)
+.def("writeObject", &DataFormatHandler::writeObject)
+.def("close_writer", &DataFormatHandler::close_writer);
 
 //py::class_<gsm_object>(m, "gsm_object")
 //.def(py::init<ConfigurationArguments,

@@ -104,6 +104,36 @@ namespace gsm2 {
                 return &containment_tables.at(it->second).table.at(k-it->first);
             }
 
+            std::optional<gsm_object> resolve_object(size_t graph_id, size_t object_id) const {
+                if (nodesInGraph.size() >= graph_id)
+                    return {};
+                if (nodesInGraph[graph_id] >= object_id)
+                    return {};
+                gsm_object result;
+                result.id = object_id;
+                std::pair<size_t, size_t> cp{graph_id, object_id};
+                result.xi = xi_values.resolve_object_id(cp);
+                result.ell = ell_values.resolve_object_id(cp);
+                for (const auto& [keyAttribute, Table] : KeyValueProperties) {
+                    auto it3= Table.secondary_index2.find(cp);
+                    if (it3 !=Table.secondary_index2.end() ) {
+                        result.content[keyAttribute] = resolveUnionMinimal(Table, Table.table.at(it3->second));
+                    }
+                }
+                for (const auto& [edgeLabel, outEdges] : containment_tables) {
+                    auto it3 = outEdges.secondary_index.find(graph_id);
+                    if (it3 == outEdges.secondary_index.end())
+                        continue;
+                    auto it2 = it3->second.find(object_id);
+                    if (it2 == it3->second.end())
+                        continue;
+                    else for (const auto& record : it2->second) {
+                            result.phi[edgeLabel].emplace_back(record->id_contained, record->w_contained);
+                        }
+                }
+                return {result};
+            }
+
             void asObjects(std::vector<std::vector<gsm_object>> &simpleGraphs) const {
                 simpleGraphs.clear();
                 simpleGraphs.resize(all_indices.size());

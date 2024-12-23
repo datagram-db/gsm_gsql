@@ -10,14 +10,11 @@
 #include "parser/writers/PrimaryMemoryLoader.h"
 #include "parser/writers/GSMWriter.h"
 #include "parser/writers/BulkWriter.h"
+#include "parser/writers/CallBackWriter.h"
 
-
-bool DataFormatHandler::data_to_format(const std::string& inPath,
-                    DataFormat input,
-                    const std::string& outPath,
-                    DataFormat output) {
-    std::pair<DataReader*, DataWriter*> cp{nullptr, nullptr};
-    bool status=false;
+static inline
+void
+loadInput(const DataFormat &input, std::pair<DataReader *, DataWriter *> &cp)  {
     switch (input) {
         case NoDataFormat:
             cp.first = nullptr;
@@ -36,61 +33,38 @@ bool DataFormatHandler::data_to_format(const std::string& inPath,
             cp.first = new BulkReader();
             break;
     }
+}
 
-    switch (output) {
-        case NoDataFormat:
-            cp.second = nullptr;
-            break;
-        case PrimaryMemoryDB:
-            cp.second = new PrimaryMemoryLoader();
-            break;
-        case Schema:
-            std::cerr << "ERROR: cannot write to a schema (yet)!" << std::endl;
-            cp.second = nullptr;
-            break;
-        case GSM:
-            cp.second = new GSMWriter();
-            break;
-        case BulkFolder:
-            cp.second = new BulkWriter();
-            break;
-    }
+static inline
+bool runReadWrite(const std::string &inPath, const std::string &outPath,
+                                     std::pair<DataReader *, DataWriter *> &cp)  {
+    bool status = false;
     if (cp.second) {
         cp.second->writeToPath(outPath);
         if (cp.first) {
             cp.first->setWriter(cp.second);
         }
     }
-    if ((!cp.first) || (!cp.second)) {
-        delete cp.first;
-        delete cp.second;
-    } else {
+    if ((cp.first) && (cp.second)) {
         if (cp.first->readFromPath(inPath)) {
-            this->memory.emplace(cp);
             status = true;
-        } else {
-            delete cp.first;
-            delete cp.second;
         }
     }
     return status;
 }
 
 
-bool DataFormatHandler::write_from_reader(const std::string& outPath,
-                       DataFormat output) {
+bool DataFormatHandler::data_converter(const std::string& inPath,
+                                       DataFormat input,
+                                       const std::string& outPath,
+                                       DataFormat output) {
     std::pair<DataReader*, DataWriter*> cp{nullptr, nullptr};
-    if (memory.empty())
-        return false;
-    auto& top = memory.top();
-    if (!top.second)
-        return false;
+    loadInput(input, cp);
+
     switch (output) {
         case NoDataFormat:
-            cp.second = nullptr;
-            break;
         case PrimaryMemoryDB:
-            cp.second = new PrimaryMemoryLoader();
+            cp.second = nullptr;
             break;
         case Schema:
             std::cerr << "ERROR: cannot write to a schema (yet)!" << std::endl;
@@ -103,16 +77,90 @@ bool DataFormatHandler::write_from_reader(const std::string& outPath,
             cp.second = new BulkWriter();
             break;
     }
-    if (cp.second) {
-        cp.second->writeToPath(outPath);
-        cp.first = top.second->asReader(cp.second);
-    }
-    if ((!cp.first) || (!cp.second)) {
-        delete cp.first;
-        delete cp.second;
+
+    auto status = runReadWrite(inPath, outPath, cp);
+    delete cp.first;
+    delete cp.second;
+    return status;
+}
+
+
+
+bool DataFormatHandler::callback_reader(const std::string& inPath,
+                     DataFormat input,
+                     std::function<void(const gsm_object&)> callback) {
+    std::pair<DataReader*, DataWriter*> cp{nullptr, nullptr};
+    loadInput(input, cp);
+    if (!cp.first) {
         return false;
-    } else {
-        this->memory.emplace(cp);
-        return true;
     }
+    cp.second = new CallBackWriter(callback);
+    cp.first->setWriter(cp.second);
+    auto status = cp.first->readFromPath(inPath);
+    delete cp.first;
+    delete cp.second;
+    return status;
+}
+
+bool DataFormatHandler::open_data_writer(const std::string& outPath,
+                       DataFormat output) {
+    if (writer)
+        return false;
+//    std::pair<DataReader*, DataWriter*> cp{nullptr, nullptr};
+//    if (memory.empty())
+//        return false;
+//    auto& top = memory.top();
+//    if (!top.second)
+//        return false;
+    switch (output) {
+        case NoDataFormat:
+            writer = nullptr;
+            break;
+        case PrimaryMemoryDB:
+            writer = new PrimaryMemoryLoader();
+            break;
+        case Schema:
+            std::cerr << "ERROR: cannot write to a schema (yet)!" << std::endl;
+            writer = nullptr;
+            break;
+        case GSM:
+            writer = new GSMWriter();
+            break;
+        case BulkFolder:
+            writer = new BulkWriter();
+            break;
+    }
+    if (writer) {
+        writer->writeToPath(outPath);
+    }
+
+    return (writer);
+}
+
+#include <parser/ra_readers/RandomAccessBulkReader.h>
+#include <parser/ra_readers/RandomAccessGSMReader.h>
+
+std::shared_ptr<RandomAccessReader> DataFormatHandler::read_from_bulk_data(const std::string& path) {
+    if (std::filesystem::is_directory(path))
+        return std::make_shared<RandomAccessBulkReader>(path);
+    else
+        return {nullptr};
+}
+
+
+std::shared_ptr<RandomAccessReader> DataFormatHandler::load_to_primary_memory(const std::string& inPath,
+                                                           DataFormat input) {
+    std::pair<DataReader*, DataWriter*> cp{nullptr, nullptr};
+    auto ptr = std::make_shared<RandomAccessGSMReader>();
+    cp.second = ptr->getWriter();
+    loadInput(input, cp);
+    if (!cp.first) {
+        return {nullptr};
+    }
+    cp.first->setWriter(cp.second);
+    if (!cp.first->readFromPath(inPath)) {
+        delete cp.first;
+        return {nullptr};
+    }
+    return ptr;
 }

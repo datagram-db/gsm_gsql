@@ -19,6 +19,8 @@ struct DataReader {
     };
     virtual bool readFromPath(const std::string& path) = 0;
 
+
+
 };
 
 #endif //GSM2_PARSER_H

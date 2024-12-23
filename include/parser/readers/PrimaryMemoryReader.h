@@ -13,7 +13,6 @@ struct PrimaryMemoryReader : public DataReader {
     PrimaryMemoryReader(gsm2::tables::LinearGSM& memory) : memory{memory} {}
     virtual ~PrimaryMemoryReader() {}
     bool readFromPath(const std::string& path) override ;
-
 };
 
 #endif //GSM2_PRIMARYMEMORYREADER_H

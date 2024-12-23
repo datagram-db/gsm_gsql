@@ -184,7 +184,14 @@ add_library(gsm2 OBJECT antlr4/graph_grammar/simple_graph_grammarLexer.cpp antlr
         src/parser/writers/BulkWriter.cpp
         src/parser/commons.cpp
         include/parser/readers/PrimaryMemoryReader.h
-        src/parser/readers/PrimaryMemoryReader.cpp)
+        src/parser/readers/PrimaryMemoryReader.cpp
+        include/parser/writers/CallBackWriter.h
+        src/parser/writers/CallBackWriter.cpp
+        include/parser/RandomAccessReader.h
+        src/parser/ra_readers/RandomAccessBulkreader.cpp
+        include/parser/ra_readers/RandomAccessGSMReader.h
+        src/parser/ra_readers/RandomAccessGSMReader.cpp
+)
 target_link_libraries(gsm2 antlr4_static gsm_load gsm_script yaucl_structures roaring  yaucl_hashing yaucl_graph )
 
 add_executable(gsm2_server main.cpp src/queries/NestedResultTable.cpp include/queries/NestedResultTable.h)
@@ -194,6 +201,7 @@ include_directories(submodules/yaucl/submodules/rocksdb/include)
 include_directories(submodules/cpp-lru-cache/include)
 
 add_executable(data_loader_test data.cpp
+        include/parser/RandomAccessReader.h
 )
 #sudo apt-get install libsnappy-dev libgflags-dev
 #target_link_libraries(data_loader_test snappy bz2  z rt ${ROCKSDB_STATIC_LIB} yaucl_ndp)

@@ -7,6 +7,23 @@
 #include <parser/writer.h>
 #include <filesystem>
 
+
+//std::optional<gsm_object> BulkReader::resolve(const std::string& path, size_t graph_id, size_t object_id) const {
+//    std::filesystem::path p = path;
+//    if (is_directory(p)) {
+//        auto f = p / std::to_string(graph_id);
+//        auto str = f.string();
+//        if (is_regular_file(p)) {
+//            std::filesystem::path has_map{str+ "_map.tab"};
+//            if (is_regular_file(has_map)) {
+//                // Check if this is not a map object, and if this is associated with a map object
+//                candidate_paths.emplace_back(std::stoull(str));
+//            }
+//        }
+//    }
+//    return {};
+//}
+
 bool BulkReader::readFromPath(const std::string& path) {
     std::filesystem::path p = path;
     if (is_directory(p)) {
