@@ -10,11 +10,11 @@
 #include <parser/RandomAccessReader.h>
 #include <filesystem>
 
-struct RandomAccessGSMReader : public RandomAccessReader {
-
-    size_t count_databases() override;
-    ssize_t database_size(size_t graph_id) override;
-    std::optional <gsm_object> retrieve(size_t graph_id, size_t id) override;
+struct RandomAccessGSMReader  {
+    ~RandomAccessGSMReader() {}
+    size_t count_databases() ;
+    ssize_t database_size(size_t graph_id) ;
+    std::optional <gsm_object> retrieve(size_t graph_id, size_t id) ;
     DataWriter* getWriter() {
         return &db;
     }

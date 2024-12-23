@@ -177,7 +177,7 @@ void readEntry(int fd,  gsm_object& result) {
                         loc.id = x.getId();
                         loc.orig_edge_id = x.getOrigEdgeId();
 
-                        loc.score; //.clear();
+//                        loc.score; //.clear();
                         if (x.hasScores()) {
                             auto scores2 = x.getScores();
 //                            loc.score.reserve(scores2.size());
@@ -191,7 +191,7 @@ void readEntry(int fd,  gsm_object& result) {
                             auto final = x.getPi();
                             if (final.hasEntries()) {
                                 auto e = final.getEntries();
-                                loc.property_values; //.reserve(e.size());
+//                                loc.property_values; //.reserve(e.size());
                                 for (const auto& obj : e) {
                                     if (obj.hasKey() && obj.hasValue()) {
                                         auto val = obj.getValue().getVal();

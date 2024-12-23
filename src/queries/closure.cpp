@@ -774,7 +774,7 @@ static inline bool var_extractor(const test_pred& ptr,
         if (offsetForValue != (size_t)-1)
             break;
     }
-    if ((offsetForValue == (size_t)-1)) {
+    if (offsetForValue == ((size_t)-1)) {
         if (offsetForStar == -1) {
             for (size_t i = 0, N = table.datum.at(0).size(); i<N; i++) {
                 if (table.datum.at(0).at(i).isNested) {
@@ -783,7 +783,7 @@ static inline bool var_extractor(const test_pred& ptr,
                 }
             }
         }
-        if ((offsetForStar==-1))
+        if (offsetForStar==(-1))
             return false;
         DEBUG_ASSERT(!table.datum.empty());
         DEBUG_ASSERT(table.datum.at(0).at(offsetForStar).isNested);

@@ -140,7 +140,7 @@ bool DataFormatHandler::open_data_writer(const std::string& outPath,
 #include <parser/ra_readers/RandomAccessBulkReader.h>
 #include <parser/ra_readers/RandomAccessGSMReader.h>
 
-std::shared_ptr<RandomAccessReader> DataFormatHandler::read_from_bulk_data(const std::string& path) {
+std::shared_ptr<RandomAccessBulkReader> DataFormatHandler::read_from_bulk_data(const std::string& path) {
     if (std::filesystem::is_directory(path))
         return std::make_shared<RandomAccessBulkReader>(path);
     else
@@ -148,7 +148,7 @@ std::shared_ptr<RandomAccessReader> DataFormatHandler::read_from_bulk_data(const
 }
 
 
-std::shared_ptr<RandomAccessReader> DataFormatHandler::load_to_primary_memory(const std::string& inPath,
+std::shared_ptr<RandomAccessGSMReader> DataFormatHandler::load_to_primary_memory(const std::string& inPath,
                                                            DataFormat input) {
     std::pair<DataReader*, DataWriter*> cp{nullptr, nullptr};
     auto ptr = std::make_shared<RandomAccessGSMReader>();

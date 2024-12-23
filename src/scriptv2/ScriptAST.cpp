@@ -437,7 +437,9 @@ StringMap<DPtr<script::structures::ScriptAST>> script::structures::ScriptAST::to
 
         case String: {
             for (size_t i = 0, N = string.size(); i<N; i++) {
-                result[std::to_string(i)] = string_(""+string.at(i));
+                std::string e;
+                e += string.at(i);
+                result[std::to_string(i)] = string_(e);
             }
             break;
         }

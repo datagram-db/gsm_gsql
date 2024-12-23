@@ -19,7 +19,10 @@ enum DataFormat {
 #include <database/gsm_object.h>
 #include <stack>
 #include "writer.h"
-#include "RandomAccessReader.h"
+//#include "RandomAccessReader.h"
+
+#include <parser/ra_readers/RandomAccessBulkReader.h>
+#include <parser/ra_readers/RandomAccessGSMReader.h>
 
 struct DataReader;
 
@@ -43,7 +46,7 @@ struct DataFormatHandler {
      * @param path Directory path
      * @return      A pointer to the bulk insertion reader on disk
      */
-    std::shared_ptr<RandomAccessReader> read_from_bulk_data(const std::string& path);
+    std::shared_ptr<RandomAccessBulkReader> read_from_bulk_data(const std::string& path);
 
     /**
      * Provides a data reader from a primary-memory loaded instance of the directory
@@ -51,7 +54,7 @@ struct DataFormatHandler {
      * @param input  conversion format for loading the path
      * @return       The pointer to the primary-loaded database
      */
-    std::shared_ptr<RandomAccessReader> load_to_primary_memory(const std::string& inPath,
+    std::shared_ptr<RandomAccessGSMReader> load_to_primary_memory(const std::string& inPath,
                                                                DataFormat input);
 
     /**

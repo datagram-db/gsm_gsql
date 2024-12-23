@@ -65,7 +65,7 @@ DataPredicate::DataPredicate(const std::string &var, numeric_atom_cases casusu, 
 
 #include <cassert>
 #include <yaucl/functional/assert.h>
-
+#include <iostream>
 
 std::ostream &operator<<(std::ostream &os, const DataPredicate &predicate) {
     if ((predicate.casusu == TTRUE) ) {
@@ -124,6 +124,9 @@ std::ostream &operator<<(std::ostream &os, const DataPredicate &predicate) {
                 os << " = "; break;
             case NEQ:
                 os << " != "; break;
+            default:
+                std::cerr << "ERROR: unexpected case" << std::endl;
+                exit(1);
         }
         if (!predicate.varRHS.empty())
             os << predicate.labelRHS << '.' << predicate.varRHS;
@@ -301,6 +304,7 @@ bool DataPredicate::intersect_with(const DataPredicate& predicate) {
                     break;
 
                 case INTERVAL:// (1)
+                {
                     value = std::max(value, predicate.value);
                     value_upper_bound = std::min(value_upper_bound, predicate.value_upper_bound);
                     if (value > value_upper_bound) {
@@ -317,7 +321,12 @@ bool DataPredicate::intersect_with(const DataPredicate& predicate) {
                             S.insert(x);
                     }
                     exceptions = S;
+                }
                     break;
+
+                default:
+                    std::cerr << "ERROR: unexpected case" << std::endl;
+                    exit(1);
             }
             return true;
         } else {
@@ -378,6 +387,10 @@ void DataPredicate::asInterval() {
             value = min;
             value_upper_bound = max;
             break;
+
+        default:
+            std::cerr << "ERROR: unexpected case" << std::endl;
+            exit(1);
     }
     if (value > value_upper_bound) {
         std::cerr << "Critical issue" << std::endl;

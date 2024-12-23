@@ -10,14 +10,14 @@
 #include <filesystem>
 #include <database/ndp/ndp_batch.h>
 
-struct RandomAccessBulkReader : public RandomAccessReader {
-    RandomAccessBulkReader(const std::string& path) : p{path} {
+struct RandomAccessBulkReader  {
+    explicit RandomAccessBulkReader(const std::string& path) : p{path} {
         auto end = std::chrono::system_clock::now();
         time = std::chrono::system_clock::to_time_t(end);
     }
-    size_t count_databases() override;
-    ssize_t database_size(size_t graph_id) override;
-    std::optional<gsm_object> retrieve(size_t graph_id, size_t id)  override;
+    size_t count_databases() ;
+    ssize_t database_size(size_t graph_id) ;
+    std::optional<gsm_object> retrieve(size_t graph_id, size_t id)  ;
 
 private:
     std::filesystem::path p;

@@ -9,13 +9,16 @@
 #include <database/gsm_object.h>
 
 struct RandomAccessReader {
+    virtual ~RandomAccessReader() {}
     virtual size_t count_databases() {
         return 0;
     }
     virtual ssize_t database_size(size_t graph_id) {
         return -1;
     }
-    virtual std::optional<gsm_object> retrieve(size_t graph_id, size_t id)  = 0;
+    virtual std::optional<gsm_object> retrieve(size_t graph_id, size_t id) {
+        return {};
+    };
 };
 
 #endif //GSM2_RANDOMACCESSREADER_H

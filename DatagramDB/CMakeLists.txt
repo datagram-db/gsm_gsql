@@ -19,8 +19,7 @@ include_directories(../submodules/rapidjson/include)
 include_directories(../submodules/cpp-lru-cache/include)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(PYBIND11_NEWPYTHON ON)
-set(PYBIND11_PYTHON_VERSION 3.8 CACHE STRING "")
-set(PYBIND11_PYTHON_VERSION 3)
+set(PYBIND11_PYTHON_VERSION 3.12.3 CACHE STRING "")
 set(PYBIND11_FINDPYTHON ON)
 find_package(PythonInterp REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
@@ -236,6 +235,45 @@ add_library(gsm2 OBJECT
         ../include/queries/NestedResultTable.h
         ../src/database/SchemaIndexer.cpp
         ../include/database/SchemaIndexer.h
+        ../src/database/ndp/ndp_batch.cpp
+#        ../include/database/ndp/NDPDatagramDB.h
+#        ../src/database/ndp/NDPDatagramDB.cpp
+        ../include/parser/schema.h
+        ../src/parser/schema.h
+        ../include/parser/schema/Field.h
+        ../include/parser/schema/Entity.h
+        ../include/parser/xml.h
+        ../src/parser/xml.cpp
+        ../include/parser/parser.h
+        ../src/parser/readers/GSMReader.cpp
+        ../include/parser/readers/GSMReader.h
+        ../include/parser/commons.h
+        ../include/parser/writer.h
+        ../include/parser/writers/GSMWriter.h
+        ../src/parser/writers/GSMWriter.cpp
+        ../include/parser/writers/PrimaryMemoryLoader.h
+        ../src/parser/writers/PrimaryMemoryLoader.cpp
+        ../include/parser/readers/SchemaReader.h
+        ../src/parser/readers/SchemaReader.cpp
+        ../include/parser/schema/NestingState.h
+        ../src/database/SchemaIndexer.cpp
+        ../include/database/SchemaIndexer.h
+        ../src/parser/schema/NestingState.cpp
+        ../src/parser/schema/DataLoaderFromSchema.cpp
+        ../include/parser/schema/DataLoaderFromSchema.h
+        ../include/parser/readers/BulkReader.h
+        ../src/parser/readers/BulkReader.cpp
+        ../include/parser/writers/BulkWriter.h
+        ../src/parser/writers/BulkWriter.cpp
+        ../src/parser/commons.cpp
+        ../include/parser/readers/PrimaryMemoryReader.h
+        ../src/parser/readers/PrimaryMemoryReader.cpp
+        ../include/parser/writers/CallBackWriter.h
+        ../src/parser/writers/CallBackWriter.cpp
+        ../include/parser/RandomAccessReader.h
+        ../src/parser/ra_readers/RandomAccessBulkreader.cpp
+        ../include/parser/ra_readers/RandomAccessGSMReader.h
+        ../src/parser/ra_readers/RandomAccessGSMReader.cpp
        )
 target_link_libraries(gsm2 antlr4_static yaucl_structures roaring  yaucl_hashing yaucl_graph ${LIBXML2_LIBRARIES} snappy bz2  z rt yaucl_ndp gsm_load kj capnp)
 
