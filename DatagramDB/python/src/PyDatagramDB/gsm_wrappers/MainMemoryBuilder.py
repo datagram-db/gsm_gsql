@@ -38,6 +38,6 @@ class MainMemoryDBBuilder:
             return None
         if self.dblist[dbId]<=objId:
             return None
-        from PyDatagramDB.gsm_wrappers.GSMObject import gsm_object
-        return gsm_object(dbId, objId, self.db)
+        from PyDatagramDB.gsm_wrappers.GSMObject import GSMObject
+        return GSMObject(dbId, objId, self.db)
 

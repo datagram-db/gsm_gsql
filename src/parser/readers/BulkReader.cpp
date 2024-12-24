@@ -30,23 +30,26 @@ bool BulkReader::readFromPath(const std::string& path) {
         std::vector<size_t> candidate_paths;
         for (const auto& f : std::filesystem::directory_iterator(p)) {
             auto str = f.path().string();
-            if (f.is_regular_file() && (!str.ends_with("_map.tab")) && std::all_of(str.begin(), str.end(),::isdigit)) {
+            auto name = f.path().filename().string();
+            if (f.is_regular_file() && (!str.ends_with("_map.tab")) && std::all_of(name.begin(), name.end(),::isdigit)) {
                 std::filesystem::path has_map{str+ "_map.tab"};
                 if (is_regular_file(has_map)) {
                     // Check if this is not a map object, and if this is associated with a map object
-                    candidate_paths.emplace_back(std::stoull(str));
+                    candidate_paths.emplace_back(std::stoull(name));
                 }
             }
         }
         std::sort(candidate_paths.begin(), candidate_paths.end());
         for (const auto& id : candidate_paths) {
             this->writer->initDatabase();
-            mapping reader(std::to_string(id));
+            std::filesystem::path reader2 = p / std::to_string(id);
+            mapping reader(reader2);
             for (size_t i = 0, N = reader.getGreatestObjectId(); i<=N; i++) {
                 this->writer->writeObject(reader.retrieve(i), {});
             }
         }
         this->writer->close();
+        return true;
     } else if (is_regular_file(p)) {
         mapping reader(path);
         this->writer->initDatabase();

@@ -7,6 +7,7 @@
 #include <pybind11/complex.h>
 #include <pybind11/functional.h>
 #include <pybind11/chrono.h>
+#include <pybind11/stl/filesystem.h>
 
 #include <vector>
 #include "database/GSMIso.h"
@@ -20,30 +21,6 @@
 #include <easylogging++.h>
 INITIALIZE_EASYLOGGINGPP
 
-/*struct ConfigurationArguments {
-    std::string load_value{""};
-    bool        file_or_string_otherwise{false};
-
-    ConfigurationArguments() = default;
-    ConfigurationArguments(const ConfigurationArguments&) = default;
-    ConfigurationArguments(ConfigurationArguments&&) = default;
-    ConfigurationArguments& operator=(const ConfigurationArguments&) = default;
-    ConfigurationArguments& operator=(ConfigurationArguments&&) = default;
-};
-
-
-struct Configuration {
-    ConfigurationArguments                                            data;
-    std::optional<ConfigurationArguments>                             query;
-    std::string                                                       opt_data_schema;
-    std::string                                                       output_folder;
-    ssize_t                                                           run_script_over_graph{-1};
-
-    bool                            full_server_output;
-    std::string                     benchmark_log;
-
-    std::vector<Serialisation>      conf;
-};*/
 namespace py = pybind11;
 
 PYBIND11_MODULE(pydatagramdb, m) {
@@ -144,10 +121,9 @@ PYBIND11_MODULE(pydatagramdb, m) {
     .def(py::init<Configuration>())
     .def("run", &Environment::run);
 
-//    py::class_<RandomAccessReader>(m, "RandomAccessReader");
-
     py::class_<RandomAccessBulkReader>(m, "RandomAccessBulkReader")
     .def(py::init<std::string>())
+    .def("get_path", &RandomAccessBulkReader::get_path)
     .def("count_databases", &RandomAccessBulkReader::count_databases)
     .def("database_size", &RandomAccessBulkReader::database_size)
     .def("retrieve", &RandomAccessBulkReader::retrieve);
@@ -169,5 +145,9 @@ py::class_<DataFormatHandler>(m, "DataFormatHandler")
     .def("open_data_writer", &DataFormatHandler::open_data_writer)
     .def("newDB", &DataFormatHandler::newDB)
     .def("writeObject", &DataFormatHandler::writeObject)
-    .def("close_writer", &DataFormatHandler::close_writer);
+    .def("close_writer", &DataFormatHandler::close_writer)
+    .def("close", &DataFormatHandler::close)
+    .def("count_databases", &DataFormatHandler::count_databases)
+    .def("database_size", &DataFormatHandler::database_size)
+    .def("retrieve", &DataFormatHandler::retrieve);
 }

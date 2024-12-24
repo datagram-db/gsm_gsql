@@ -8,19 +8,35 @@
 #include <string>
 #include <parser/RandomAccessReader.h>
 #include <filesystem>
+#include <iostream>
 #include <database/ndp/ndp_batch.h>
 
 struct RandomAccessBulkReader  {
-    explicit RandomAccessBulkReader(const std::string& path) : p{path} {
+    RandomAccessBulkReader(const RandomAccessBulkReader&) = default;
+    RandomAccessBulkReader& operator=(const RandomAccessBulkReader&) = default;
+    RandomAccessBulkReader(RandomAccessBulkReader&&) = delete;
+    RandomAccessBulkReader& operator=(RandomAccessBulkReader&&) = delete;
+    explicit RandomAccessBulkReader(const std::string& path) : p{path}, p2{path} {
+//    std::cout << path << std::endl;
+//     std::cout << p << std::endl;
         auto end = std::chrono::system_clock::now();
         time = std::chrono::system_clock::to_time_t(end);
     }
     size_t count_databases() ;
     ssize_t database_size(size_t graph_id) ;
     std::optional<gsm_object> retrieve(size_t graph_id, size_t id)  ;
-
+    ~RandomAccessBulkReader() {
+        for (auto& ref : reader_cache) {
+            delete ref.second.second;
+        }
+    }
+    std::string get_path() const {
+//    	std::cout << p2 << std::endl;
+    	return p2;
+    }
 private:
     std::filesystem::path p;
+    std::string p2;
     std::time_t time;
     std::unordered_map<size_t, std::pair<double,mapping*>> reader_cache;
 

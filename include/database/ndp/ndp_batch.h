@@ -47,7 +47,7 @@ private:
     int fd;
 //    size_t file_size_count;
     std::string filename;
-    ssize_t greatestObjectId = -1;
+    ssize_t greatestObjectId = 0;
 };
 
 

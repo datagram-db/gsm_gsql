@@ -46,7 +46,7 @@ struct DataFormatHandler {
      * @param path Directory path
      * @return      A pointer to the bulk insertion reader on disk
      */
-    std::shared_ptr<RandomAccessBulkReader> read_from_bulk_data(const std::string& path);
+    RandomAccessBulkReader read_from_bulk_data(const std::string& path);
 
     /**
      * Provides a data reader from a primary-memory loaded instance of the directory
@@ -54,7 +54,7 @@ struct DataFormatHandler {
      * @param input  conversion format for loading the path
      * @return       The pointer to the primary-loaded database
      */
-    std::shared_ptr<RandomAccessGSMReader> load_to_primary_memory(const std::string& inPath,
+    void load_to_primary_memory(const std::string& inPath,
                                                                DataFormat input);
 
     /**
@@ -108,14 +108,36 @@ struct DataFormatHandler {
      */
     inline bool close_writer() {
         if (writer) {
+            writer->close();
+            delete writer;
             writer = nullptr;
             return true;
         } else
             return false;
     }
 
+    size_t count_databases() {
+        return init ? lineargsm.count_databases() : 0;
+    };
+    ssize_t database_size(size_t graph_id)  {
+        return init ? lineargsm.database_size(graph_id) : 0;
+    }
+    std::optional <gsm_object> retrieve(size_t graph_id, size_t id) {
+        std::optional <gsm_object> e;
+        return init ? lineargsm.retrieve(graph_id, id): e;
+    }
+
+    void close() {
+        close_writer();
+        if (init) {
+            init=false;
+        }
+    }
+
 private:
     DataWriter* writer{nullptr};
+    bool init{false};
+    RandomAccessGSMReader lineargsm;
 };
 
 #endif //GSM2_COMMONS_H

@@ -8,7 +8,7 @@ size_t RandomAccessGSMReader::count_databases() {
     return db.forloading.nGraphs;
 };
 ssize_t RandomAccessGSMReader::database_size(size_t graph_id) {
-    if (db.forloading.nodesInGraph.size() >= graph_id)
+    if (db.forloading.nodesInGraph.size() <= graph_id)
         return -1;
     return db.forloading.nodesInGraph[graph_id];
 }

@@ -140,27 +140,25 @@ bool DataFormatHandler::open_data_writer(const std::string& outPath,
 #include <parser/ra_readers/RandomAccessBulkReader.h>
 #include <parser/ra_readers/RandomAccessGSMReader.h>
 
-std::shared_ptr<RandomAccessBulkReader> DataFormatHandler::read_from_bulk_data(const std::string& path) {
-    if (std::filesystem::is_directory(path))
-        return std::make_shared<RandomAccessBulkReader>(path);
-    else
-        return {nullptr};
+RandomAccessBulkReader DataFormatHandler::read_from_bulk_data(const std::string& path) {
+    return RandomAccessBulkReader{path};
 }
 
 
-std::shared_ptr<RandomAccessGSMReader> DataFormatHandler::load_to_primary_memory(const std::string& inPath,
+void DataFormatHandler::load_to_primary_memory(const std::string& inPath,
                                                            DataFormat input) {
     std::pair<DataReader*, DataWriter*> cp{nullptr, nullptr};
-    auto ptr = std::make_shared<RandomAccessGSMReader>();
-    cp.second = ptr->getWriter();
+    cp.second = this->lineargsm.getWriter();
     loadInput(input, cp);
     if (!cp.first) {
-        return {nullptr};
+        init=false;
+        return;
     }
     cp.first->setWriter(cp.second);
     if (!cp.first->readFromPath(inPath)) {
         delete cp.first;
-        return {nullptr};
+        init=false;
+        return;
     }
-    return ptr;
+    init=true;
 }

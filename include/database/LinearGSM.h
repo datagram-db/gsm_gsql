@@ -105,9 +105,9 @@ namespace gsm2 {
             }
 
             std::optional<gsm_object> resolve_object(size_t graph_id, size_t object_id) const {
-                if (nodesInGraph.size() >= graph_id)
+                if (nodesInGraph.size() <= graph_id)
                     return {};
-                if (nodesInGraph[graph_id] >= object_id)
+                if (nodesInGraph[graph_id] <= object_id)
                     return {};
                 gsm_object result;
                 result.id = object_id;

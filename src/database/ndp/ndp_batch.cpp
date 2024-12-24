@@ -217,7 +217,9 @@ void readEntry(int fd,  gsm_object& result) {
 
 mapping::mapping(const std::string& filename, size_t cache_size) : cache(cache_size), filename{filename}, moved_for_read{false}  {
     size_t tmpsize = 0;
+    int oflag;
     if (std::filesystem::exists(filename)) {
+        oflag = O_RDWR;
         std::ifstream infile(filename+"_map.tab");
         std::string line;
         while (std::getline(infile, line))
@@ -237,13 +239,14 @@ mapping::mapping(const std::string& filename, size_t cache_size) : cache(cache_s
             tmpsize = std::filesystem::file_size(filename);
 
         }
-    }
-    fd=open(filename.c_str(), O_CREAT|O_RDWR|O_TRUNC, 0600);
+    } else
+        oflag = O_CREAT|O_RDWR|O_TRUNC;
+    fd=open(filename.c_str(), oflag, 0600);
     if (tmpsize>0)
         lseek(fd, tmpsize, SEEK_SET);
     empty_object.id = -1;
     empty_object.scores.emplace_back(-1);
-    mapping_file.open(filename+"_map.tab");
+    mapping_file.open(filename+"_map.tab", std::ios_base::app);
 }
 
 

@@ -163,6 +163,7 @@ bool GSMReader::readFromPath(const std::string& path)  {
             if (!(string = skipSpaces(string, &len)))  return false;
         }
     }
+    this->writer->close();
     return true;
 //    maxGraphId = graphId_eventId.first;
 }
