@@ -744,7 +744,9 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         return true;
     }
     bool SchemaReader::StartObject() {
-        state_stack.rbegin()->countAt--;
+        auto it = state_stack.rbegin();
+        it->countAt--;
+        it->object.id = globalObjectId;
         return true;
     }
 
@@ -799,6 +801,15 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         // TODO: serialize the object in the stack
         auto it = state_stack.rbegin();
         it->countAt++;
+        it->object.id = globalObjectId;
+        it->object.ell = {it->entity_stack->name};
+        if (!this->_isFirstPass) {
+            this->writer->writeObject(it->object, {});
+            it->object.clear();
+        }
+//        if ((it->entity_stack->name == "OrderLine") || (it->entity_stack->name == "Orderline")) {
+//            std::cerr << "member" << std::endl;
+//        }
 //        if ((it->countAt == 0) || (it->countFor == 0)) {
 //            std::cout << "BUG" << std::endl;
 //        }
@@ -806,21 +817,17 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
             auto prev = it;
             prev++;
             // TODO: associate it->data_row (first) or it-> containment to globalObjectId;
-            it->object.id = globalObjectId;
-            it->object.ell = {it->entity_stack->name};\
-            if (!this->_isFirstPass)
-            this->writer->writeObject(it->object, {});
+
             it->object.clear();
             if (it->countAt != 0)
                 prev->object.phi[prev->key].emplace_back(globalObjectId);
             // TODO: else, we reached the end, so you can directly store this object within the database!
-            globalObjectId++;
             state_stack.pop_back();
         } else {
             // associate it->data_row (first) or it-> containment to globalObjectId;
             it->objects.emplace_back(globalObjectId);
-            globalObjectId++;
         }
+        globalObjectId++;
         return true;
     }
     bool SchemaReader::StartArray() {

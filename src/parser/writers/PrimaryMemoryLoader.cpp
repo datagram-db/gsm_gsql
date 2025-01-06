@@ -26,16 +26,18 @@
 //        if (graphId_eventId.first > 0)
 //            std::cerr << "WARNING: this is something should not happen when loading Schema" << std::endl;
         if (graphId_eventId.second != object.id) {
-            queued_objects[object.id] = object;
+            DEBUG_ASSERT(false);
+//            queued_objects[object.id] = object;
         } else {
             actual_writeObject(object, map_for_types);
-            for (auto it = queued_objects.begin(); it != queued_objects.end(); ) {
-                if (it->first == graphId_eventId.second) {
-                    actual_writeObject(it->second, map_for_types);
-                    it = queued_objects.erase(it);
-                } else
-                    break;
-            }
+            DEBUG_ASSERT(queued_objects.empty());
+//            for (auto it = queued_objects.begin(); it != queued_objects.end(); ) {
+//                if (it->first == graphId_eventId.second) {
+//                    actual_writeObject(it->second, map_for_types);
+//                    it = queued_objects.erase(it);
+//                } else
+//                    break;
+//            }
         }
     }
 
