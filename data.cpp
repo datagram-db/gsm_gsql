@@ -49,7 +49,7 @@ int main(void) {
 //    dfh.writeObject({1, {"commiato"}, {"arrivederci"}, {1.0}, {{"instances", {{0}}}}});
 //    dfh.close_writer();
 
-    dfh.load_to_primary_memory("/home/giacomo/writing_test.gsm.txt", DataFormat::GSM);
+    dfh.load_to_primary_memory("/home/giacomo/Scaricati/Unibench-0.2/Dataset/Schema.txt", DataFormat::Schema);
     std::cout << dfh.count_databases() << std::endl;
 //    std::cout << dfh.retrieve(1,1).value().xi[0] << std::endl;
 

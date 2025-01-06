@@ -16,7 +16,8 @@ bool SchemaReader::readFromPath(const std::string &path) {
     schemaParser parser(&tokens);
 
     this->writer->initDatabase();
-    bool result = std::any_cast<bool>(visitLanguage(parser.language()));
+    auto outcomeForVisiting = visitLanguage(parser.language());
+    bool result = std::any_cast<bool>(outcomeForVisiting);
     this->writer->close();
     return result;
 }
@@ -153,9 +154,9 @@ std::any SchemaReader::visitEntity_declaration(schemaParser::Entity_declarationC
             e.type = type;
             e.has_csv_header = has_csv_header;
             e.sep = sep;
-            auto& nss = loading_with_scheme[namespace_];
-            if (!nss.contains(e.name))
-                nss[e.name] = e;
+//            auto& nss = loading_with_scheme[namespace_];
+//            if (!nss.contains(e.name))
+//                nss[e.name] = e;
             return e;
         }
         return {};
@@ -281,6 +282,7 @@ std::any SchemaReader::visitEntity_declaration(schemaParser::Entity_declarationC
 #include <yaucl/data/csv/csv.h>
 
 bool SchemaReader::load_csv(const Entity& e, bool isFirstPass) {
+    std::cerr << "Loading CSV " << e.loading_filename << " of '" << e.name << "' with pass " << isFirstPass << std::endl;
     // TODO: loader
 //    gsm_object object;
 //        std::vector<std::pair<std::string,union_minimal>> dr;
@@ -419,6 +421,7 @@ bool SchemaReader::load_csv(const Entity& e, bool isFirstPass) {
 #include <parser/xml.h>
 
 bool SchemaReader::load_xml(const Entity& e, bool isFirstPass) {
+    std::cerr << "Loading XML " << e.loading_filename << " of '" << e.name << "' with pass " << isFirstPass << std::endl;
     first_pass = true;
     state_stack.emplace_back(&e);
     _isFirstPass = isFirstPass;
@@ -454,14 +457,17 @@ bool SchemaReader::load_xml(const Entity& e, bool isFirstPass) {
 #include "rapidjson/reader.h"
 
 bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::string& json) {
+
     state_stack.emplace_back(&e);
     rapidjson::Reader reader;
     if (!json.empty()) {
+//    std::cerr << "Loading JSON DATA with pass " << isFirstPass << std::endl;
         rapidjson::StringStream ss{json.c_str()};
         _isFirstPass = isFirstPass;
         if (!reader.Parse(ss, *this))
             return false;
     } else {
+    std::cerr << "Loading JSON " << e.loading_filename << " of '" << e.name << "' with pass " << isFirstPass << std::endl;
         FILE *ff = fopen(e.loading_filename.c_str(), "r");
         char buffer[4096];
         rapidjson::FileReadStream ss{ff, buffer, sizeof(buffer)};
@@ -479,7 +485,9 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         auto& toppe = *state_stack.rbegin();
         std::string val3=val ? "true" : "false";
         const auto& field_key = toppe.key;
-        auto val2 = toppe.entity_stack->find(field_key).value();
+        const auto val2F = toppe.entity_stack->find(field_key);
+        DEBUG_ASSERT(val2F.has_value());
+        auto val2 = val2F.value();
         if (_isFirstPass) {
             if ((val2->is_id)) {
                 update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
@@ -500,32 +508,6 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         }
         if (!toppe.key.empty())
             toppe.key.clear();
-
-//        if (!toppe.isThisScore) {
-//            std::string val3=b ? "true" : "false";
-//            if (!toppe.skipCurrentKey) {
-//                if (_isFirstPass) {
-//                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
-//                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
-//                    }
-//                } else {
-//                    auto f = toppe.entity_stack->find(toppe.key).value();
-//                    auto result = retrieve(f->ext_namespace, f->ext_entity, f->ext_field, b ? "true"
-//                                                                                            : "false");
-////                auto result = increasingIdCorrespondence[{f->ext_namespace, f->ext_entity, f->ext_field}][(b ? "true"
-////                                                                                                             : "false")];
-////                    toppe.containment.emplace_back(toppe.key, result);
-//                    toppe.object.phi[toppe.key].emplace_back(result);
-//                }
-//            } else if (!_isFirstPass) {
-//                if (toppe._keyType == NativeTypes::String)
-//                    toppe.object.content.emplace(toppe.key, b ? "true" : "false");
-//                else
-//                    toppe.object.content.emplace(toppe.key, b ? 1.0 : 0.0);
-//            }
-//        } else if (!_isFirstPass) {
-//            toppe.object.scores.emplace_back(b ? 1.0 : 0.0);
-//        }
         toppe.isThisScore = false;
         toppe.key.clear();
         return true;
@@ -535,7 +517,9 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
 
         std::string val3=std::to_string(val);
         const auto& field_key = toppe.key;
-        auto val2 = toppe.entity_stack->find(field_key).value();
+        const auto val2F = toppe.entity_stack->find(field_key);
+        DEBUG_ASSERT(val2F.has_value());
+        auto val2 = val2F.value();
         if (_isFirstPass) {
             if ((val2->is_id)) {
                 update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
@@ -556,35 +540,6 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         }
         if (!toppe.key.empty())
             toppe.key.clear();
-
-//        if (!toppe.isThisScore) {
-//            std::string val3=std::to_string(d);
-//
-//            auto field_retrieve = toppe.entity_stack->find(toppe.key).value();
-//            auto is_id = field_retrieve->is_id;
-//            /// TODO: Change
-//
-//            if (!toppe.skipCurrentKey) {
-//                if (_isFirstPass) {
-//                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
-//                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
-//                    }
-//
-//                } else  {
-//                    auto f = toppe.entity_stack->find(toppe.key).value();
-//                    auto result = retrieve(f->ext_namespace, f->ext_entity,
-//                                           f->ext_field,std::to_string(d));
-//                    toppe.object.phi[toppe.key].emplace_back(result);
-//                }
-//            } else if (!_isFirstPass) {
-//                if ((toppe._keyType != NativeTypes::Int))
-//                    return false;
-//                toppe.object.content.emplace(toppe.key, (double) d);
-//            }
-//
-//        } else if (!_isFirstPass)  {
-//            toppe.object.scores.emplace_back(d);
-//        }
         toppe.isThisScore = false;
         toppe.key.clear();
         return true;
@@ -593,7 +548,9 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         auto& toppe =*state_stack.rbegin();
         std::string val3=std::to_string(val);
         const auto& field_key = toppe.key;
-        auto val2 = toppe.entity_stack->find(field_key).value();
+        const auto val2F = toppe.entity_stack->find(field_key);
+        DEBUG_ASSERT(val2F.has_value());
+        auto val2 = val2F.value();
         if (_isFirstPass) {
             if ((val2->is_id)) {
                 update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
@@ -614,28 +571,6 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         }
         if (!toppe.key.empty())
             toppe.key.clear();
-//        if (!toppe.isThisScore) {
-//            std::string val3=std::to_string(d);
-//            if (!toppe.skipCurrentKey) {
-//                if (_isFirstPass) {
-//                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
-//                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
-//                    }
-//
-//                } else  {
-//                    auto f = toppe.entity_stack->find(toppe.key).value();
-//                    auto result = retrieve(f->ext_namespace, f->ext_entity,
-//                                           f->ext_field,std::to_string(d));
-//                    toppe.object.phi[toppe.key].emplace_back( result);
-//                }
-//            } else if (!_isFirstPass) {
-//                if ((toppe._keyType != NativeTypes::UInt) && (toppe._keyType != NativeTypes::Int))
-//                    return false;
-//                toppe.object.content.emplace(toppe.key, (double) d);
-//            }
-//        } else if (!_isFirstPass)  {
-//            toppe.object.scores.emplace_back(d);
-//        }
         toppe.isThisScore=false;
         toppe.key.clear();
         return true;
@@ -644,7 +579,9 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         auto& toppe = *state_stack.rbegin();
         std::string val3=std::to_string(val);
         const auto& field_key = toppe.key;
-        auto val2 = toppe.entity_stack->find(field_key).value();
+        const auto val2F = toppe.entity_stack->find(field_key);
+        DEBUG_ASSERT(val2F.has_value());
+        auto val2 = val2F.value();
         if (_isFirstPass) {
             if ((val2->is_id)) {
                 update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
@@ -665,27 +602,6 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         }
         if (!toppe.key.empty())
             toppe.key.clear();
-//        if (!toppe.isThisScore) {
-//            std::string val3=std::to_string(d);
-//            if (!toppe.skipCurrentKey) {
-//                if (_isFirstPass) {
-//                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
-//                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
-//                    }
-//                } else {
-//                    auto f = toppe.entity_stack->find(toppe.key).value();
-//                    auto result = retrieve(f->ext_namespace, f->ext_entity,
-//                                           f->ext_field,std::to_string(d));
-//                    toppe.object.phi[toppe.key].emplace_back( result);
-//                }
-//            } else if (!_isFirstPass) {
-//                if ((toppe._keyType != NativeTypes::UInt) && (toppe._keyType != NativeTypes::Int))
-//                    return false;
-//                toppe.object.content.emplace(toppe.key, (double) d);
-//            }
-//        }else if (!_isFirstPass) {
-//            toppe.object.scores.emplace_back(d);
-//        }
         toppe.isThisScore = false;
         toppe.key.clear();
         return true;
@@ -694,7 +610,9 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         auto& toppe = *state_stack.rbegin();
         std::string val3=std::to_string(val);
         const auto& field_key = toppe.key;
-        auto val2 = toppe.entity_stack->find(field_key).value();
+        const auto val2F = toppe.entity_stack->find(field_key);
+        DEBUG_ASSERT(val2F.has_value());
+        auto val2 = val2F.value();
         if (_isFirstPass) {
             if ((val2->is_id)) {
                 update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
@@ -715,27 +633,6 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         }
         if (!toppe.key.empty())
             toppe.key.clear();
-//        if (!toppe.isThisScore) {
-//            std::string val3=std::to_string(d);
-//            if ((!toppe.skipCurrentKey)) {
-//                if (_isFirstPass) {
-//                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
-//                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
-//                    }
-//                } else {
-//                    auto f = toppe.entity_stack->find(toppe.key).value();
-//                    auto result = retrieve(f->ext_namespace, f->ext_entity,
-//                                           f->ext_field,std::to_string(d));
-//                    toppe.object.phi[toppe.key].emplace_back( result);
-//                }
-//            } else if (!_isFirstPass) {
-//                if ((toppe._keyType != NativeTypes::UInt) && (toppe._keyType != NativeTypes::Int))
-//                    return false;
-//                toppe.object.phi[toppe.key].emplace_back((double) d);
-//            }
-//        } else if (!_isFirstPass) {
-//            toppe.object.scores.emplace_back(d);
-//        }
         toppe.isThisScore = false;
         toppe.key.clear();
         return true;
@@ -744,7 +641,9 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         auto& toppe = *state_stack.rbegin();
         std::string val3=std::to_string(val);
         const auto& field_key = toppe.key;
-        auto val2 = toppe.entity_stack->find(field_key).value();
+        const auto val2F = toppe.entity_stack->find(field_key);
+        DEBUG_ASSERT(val2F.has_value());
+        auto val2 = val2F.value();
         if (_isFirstPass) {
             if ((val2->is_id)) {
                 update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
@@ -765,43 +664,25 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         }
         if (!toppe.key.empty())
             toppe.key.clear();
-//        auto key = toppe.entity_stack->find(toppe.key).value();
-//        auto isId = key->is_id;
-//        auto isExtRef = key->type == external_reference;
-//        if (!toppe.skipCurrentKey) {
-//            if (_isFirstPass) {
-//                std::string val3=std::to_string(d);
-//                if ((isId)) {
-//                    update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
-//                }
-//            } else  {
-//                auto f = toppe.entity_stack->find(toppe.key).value();
-//                auto result = retrieve(f->ext_namespace,f->ext_entity,f->ext_field,std::to_string(d));
-////            auto result = increasingIdCorrespondence[{f->ext_namespace,f->ext_entity,f->ext_field}][std::to_string(d)];
-//                toppe.object.phi[toppe.key].emplace_back( result);
-//            }
-//        } else if (!_isFirstPass) {
-//            if (toppe._keyType != NativeTypes::Double)
-//                return false;
-//            if (toppe.isThisScore)
-//                toppe.object.scores.emplace_back(d);
-//            else
-//                toppe.object.content.emplace(toppe.key, d);
-//        }
         toppe.isThisScore = false;
         toppe.key.clear();
         return true;
     }
     bool SchemaReader::RawNumber(const char* str, rapidjson::SizeType length, bool copy) {
         auto& toppe = *state_stack.rbegin();
-        auto key = toppe.entity_stack->find(toppe.key).value();
+        const auto val2K = toppe.entity_stack->find(toppe.key);
+        DEBUG_ASSERT(val2K.has_value());
+        auto key = val2K.value();
+//        auto key = toppe.entity_stack->find(toppe.key).value();
         auto isId = key->is_id;
         auto isExtRef = key->type == external_reference;
         auto val3 = std::string(str, length);
         auto number = std::stod(val3);
 
         const auto& field_key = toppe.key;
-        auto val2 = toppe.entity_stack->find(field_key).value();
+        const auto val2F = toppe.entity_stack->find(field_key);
+        DEBUG_ASSERT(val2F.has_value());
+        auto val2 = val2F.value();
         if (_isFirstPass) {
             if ((val2->is_id)) {
                 update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
@@ -822,39 +703,6 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         }
         if (!toppe.key.empty())
             toppe.key.clear();
-
-//        if (!toppe.isThisScore) {
-//            if (!toppe.skipCurrentKey) {
-//                if (_isFirstPass) {
-//                    if ((isId)) {
-//                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key, stri,
-//                               globalObjectId);
-//                    }
-//
-//                } else {
-//                    auto f = toppe.entity_stack->find(toppe.key).value();
-//                    auto result = retrieve(f->ext_namespace, f->ext_entity, f->ext_field, std::string(str, length));
-////            auto result = increasingIdCorrespondence[{f->ext_namespace,f->ext_entity,f->ext_field}][std::string(str, length)];
-//                    toppe.object.phi[toppe.key].emplace_back(result);
-//                }
-//            } else if (!_isFirstPass) {
-//                if (toppe._keyType == NativeTypes::String)
-//                    toppe.object.content.emplace(toppe.key, stri);
-////                else if (toppe.isThisScore)
-////                    toppe.scores.emplace_back(number);
-//                else {
-//                    toppe.object.content.emplace(toppe.key, number);
-//                }
-//            }
-//        } else if (!_isFirstPass) {
-//            toppe.object.scores.emplace_back(number);
-//        }
-//        else if ((!_isFirstPass) && (isExtRef)) {
-//            auto f = toppe.entity_stack->find(toppe.key).value();
-//            auto result = retrieve(f->ext_namespace,f->ext_entity,f->ext_field, std::string(str, length));
-////            auto result = increasingIdCorrespondence[{f->ext_namespace,f->ext_entity,f->ext_field}][std::string(str, length)];
-//            toppe.containment.emplace_back(toppe.key, result);
-//        }
         toppe.skipCurrentKey= false;
         toppe.key.clear();
         return true;
@@ -863,7 +711,9 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         auto& toppe = *state_stack.rbegin();
         std::string val3(str, length);
         const auto& field_key = toppe.key;
-        auto val2 = toppe.entity_stack->find(field_key).value();
+        const auto val2F = toppe.entity_stack->find(field_key);
+        DEBUG_ASSERT(val2F.has_value());
+        auto val2 = val2F.value();
         if (_isFirstPass) {
             if ((val2->is_id)) {
                 update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val3,globalObjectId);
@@ -884,30 +734,6 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
         }
         if (!toppe.key.empty())
             toppe.key.clear();
-//        {
-//            std::string val3(str, length);
-//            if (!toppe.skipCurrentKey) {
-//                if (_isFirstPass) {
-//                    if ((toppe.entity_stack->find(toppe.key).value()->is_id)) {
-//                        update(toppe.entity_stack->namespace_, toppe.entity_stack->name, toppe.key,val3,globalObjectId);
-//                    }
-//
-//                } else  {
-//                    auto f = toppe.entity_stack->find(toppe.key).value();
-//
-//                    auto result = retrieve(f->ext_namespace,f->ext_entity,f->ext_field, std::string(
-//                            str, length));
-////                auto result = increasingIdCorrespondence[{f->ext_namespace, f->ext_entity, f->ext_field}][std::string(
-////                        str, length)];
-//                    toppe.object.phi[toppe.key].emplace_back( result);
-//                }
-//            } else if (!_isFirstPass) {
-//                if (toppe._keyType != NativeTypes::String) {
-//                    toppe.object.content.emplace(toppe.key, std::stod(std::string(str, length)));
-//                } else
-//                    toppe.object.content.emplace(toppe.key, std::string(str, length));
-//            }
-//        }
         toppe.skipCurrentKey = false;
         toppe.key.clear();
         return true;
@@ -925,6 +751,7 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
 //        if ((toppe.key == "TotalPrice") && (!_isFirstPass))
 //            std::cerr << "HERE" << std::endl;
         auto itv2 = e->find(toppe.key);
+        DEBUG_ASSERT(itv2.has_value());
 //        auto it = e->fields.find(toppe.key);
         if (itv2.has_value()) {
             toppe._keyType = itv2.value()->native_field_type;

@@ -560,12 +560,19 @@ static inline void loadObjectProperty(gsm2::tables::LinearGSM &db,
                                       const std::pair<size_t, size_t> &graphId_eventId,
                                       const std::string &property_key,
                                       const std::string &property_value) {
+    bool holdsType = true;
+    if (!db.KeyValueProperties.contains(property_key)) {
+        holdsType = false;
+    }
     auto& table = db.KeyValueProperties[property_key];
-    auto it = property_to_type.find(property_key);
-    if (it != property_to_type.end())
-        table.type = it->second;
-    else
-        table.type = gsm2::tables::StringAtt;
+    table.attr_name = property_key;
+    if (!holdsType) {
+        auto it = property_to_type.find(property_key);
+        if (it != property_to_type.end())
+            table.type = it->second;
+        else
+            table.type = gsm2::tables::StringAtt;
+    }
     switch (table.type) {
         case gsm2::tables::DoubleAtt:
             table.record_load(act_id, std::stod(property_value), graphId_eventId.first, graphId_eventId.second);
@@ -591,12 +598,32 @@ static inline void loadObjectProperty(gsm2::tables::LinearGSM &db,
                                       const std::pair<size_t, size_t> &graphId_eventId,
                                       const std::string &property_key,
                                       const union_type &property_value) {
+    bool holdsType = true;
+    if (!db.KeyValueProperties.contains(property_key)) {
+        holdsType = false;
+    }
     auto& table = db.KeyValueProperties[property_key];
-    auto it = property_to_type.find(property_key);
-    if (it != property_to_type.end())
-        table.type = it->second;
-    else
-        table.type = gsm2::tables::StringAtt;
+    if (!holdsType) {
+        auto it = property_to_type.find(property_key);
+        if (it != property_to_type.end())
+            table.type = it->second;
+        else if (!holdsType) {
+            table.attr_name = property_key;
+            if (std::holds_alternative<std::string>(property_value)) {
+                table.type = gsm2::tables::StringAtt;
+            } else if (std::holds_alternative<double>(property_value)) {
+                table.type = gsm2::tables::DoubleAtt;
+            }else if (std::holds_alternative<long long>(property_value)) {
+                table.type = gsm2::tables::LongAtt;;
+            }else if (std::holds_alternative<size_t>(property_value)) {
+                table.type = gsm2::tables::SizeTAtt;;
+            } else if (std::holds_alternative<bool>(property_value)) {
+                table.type = gsm2::tables::BoolAtt;;
+            }
+        }
+    }
+
+//    else
     switch (table.type) {
         case gsm2::tables::DoubleAtt:
             if (std::holds_alternative<std::string>(property_value))

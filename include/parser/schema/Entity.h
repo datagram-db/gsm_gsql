@@ -32,7 +32,7 @@ struct Entity {
     bool has_csv_header;
     std::string sep;
 
-    const std::optional<const Field*> find(const std::string& field_name_to_resolve) const {
+    inline const std::optional<const Field*> find(const std::string& field_name_to_resolve) const {
         const auto& it1 = mapped_field_resolution.find(field_name_to_resolve);
         if (it1 != mapped_field_resolution.end()) {
             auto it2 =  fields.find(it1->second);

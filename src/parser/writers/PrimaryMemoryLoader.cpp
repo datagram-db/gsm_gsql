@@ -29,6 +29,8 @@
         registerObjectByFirstLabel(forloading, act_id, graphId_eventId);
         loadObjectXi2(forloading, object.xi, graphId_eventId);
         for (const auto& [k, v] : object.content) {
+//            if (k == "length")
+//                std::cerr << "HIS IS IT" << std::endl;
             if (std::holds_alternative<std::string>(v))
                 loadObjectProperty(forloading, map_for_types, act_id, graphId_eventId, k, std::get<std::string>(v));
             else

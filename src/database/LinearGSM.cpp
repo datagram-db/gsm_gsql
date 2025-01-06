@@ -168,15 +168,17 @@ namespace gsm2 {
                 minRecordToContaimentLabel.emplace(tables_start, key);
                 tables_start = table.index(tables_start);
             }
-            for (auto& [key, table] : KeyValueProperties)
+            for (auto& [key, table] : KeyValueProperties) {
+                DEBUG_ASSERT(key == table.attr_name);
                 table.index(main_registry, idx);
+            }
             main_registry.indexing2();
             main_registry.sanityCheck();
             result resolver{0,0,0};
             all_indices.insert(all_indices.begin(), nGraphs, {});
-            for (const auto& entry : main_registry.table) {
-                auto id = entry.event_id;
-            }
+//            for (const auto& entry : main_registry.table) {
+//                auto id = entry.event_id;
+//            }
             // Creating a gsm_index
             for (const auto& [k1,v] : containment_tables) {
                 for (const auto& record_obj : v.table) {

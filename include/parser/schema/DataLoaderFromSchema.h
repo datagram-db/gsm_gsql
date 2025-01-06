@@ -79,6 +79,7 @@ struct SchemaReader : public schemaBaseVisitor, public DataReader {
     inline size_t retrieve(const std::string& ns, const std::string& e, const std::string& f, const std::string& value) {
         std::tuple<size_t, size_t, size_t> s{namespace_idx.put(ns).first,entities_idx.put(e).first,fields_idx.put(f).first};
         auto result = (mampa[s]).get(value);
+        DEBUG_ASSERT(result.has_value());
         return result.value();
     }
 
@@ -91,6 +92,7 @@ struct SchemaReader : public schemaBaseVisitor, public DataReader {
 
     // JSON Parser
     bool load_ljson(const Entity& e, bool isFirstPass) {
+        std::cerr << "Loading LJSON " << e.loading_filename << " with pass " << isFirstPass << std::endl;
         std::string line;
         std::ifstream infile{e.loading_filename};
         while (std::getline(infile, line))

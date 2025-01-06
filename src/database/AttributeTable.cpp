@@ -94,8 +94,10 @@ namespace gsm2 {
                         std::sort(it->second.begin(), it->second.end());
                         size_t val = storeLoad(it->first);
                         std::string current_string;
-                        if (type == StringAtt)
+                        if (type == StringAtt) {
+                            DEBUG_ASSERT(std::holds_alternative<std::string>(it->first));
                             current_string = std::get<std::string>(it->first);
+                        }
                         for (const auto& refx : it->second) {
                             if (type == StringAtt)
                                 string_offset_mapping[current_string].emplace_back(table.size());
@@ -146,23 +148,29 @@ namespace gsm2 {
         size_t AttributeTable::storeLoad(const std::variant<double, size_t, long long int, std::string, bool> &x) {
             switch (type) {
                 case DoubleAtt: {
+                    DEBUG_ASSERT(std::holds_alternative<double>(x));
                     double tmp = std::get<double>(x);
                     return *(size_t*)(&tmp);
                 }
 
                 case LongAtt: {
+                    DEBUG_ASSERT(std::holds_alternative<long long>(x));
                     long long tmp = std::get<long long>(x);
                     return *(size_t*)(&tmp);
                 }
 
                 case StringAtt: {
+                    DEBUG_ASSERT(std::holds_alternative<std::string>(x));
                     std::string tmp = std::get<std::string>(x);
                     return ptr.put(tmp).first;
                 }
-                case BoolAtt:
+                case BoolAtt: {
+                    DEBUG_ASSERT(std::holds_alternative<bool>(x));
                     return std::get<bool>(x) ? 1 : 0;
+                }
                     //case SizeTAtt:
                 default:
+                    DEBUG_ASSERT(std::holds_alternative<size_t>(x));
                     // TODO: hierarchical types!, https://dl.acm.org/doi/10.1145/3410566.3410583
                     return std::get<size_t>(x);
             }

@@ -9,7 +9,9 @@
 static inline
 void load_attribute_value(SchemaReader *loader, NestingState &toppe, std::string &val, const std::string& key = "") {
     std::string field_key = key.empty() ? toppe.key : key;
-    auto val2 = toppe.entity_stack->find(field_key).value();
+    const auto ref = toppe.entity_stack->find(field_key);
+    DEBUG_ASSERT(ref.has_value());
+    auto val2 = ref.value();
     if (loader->_isFirstPass) {
         if ((val2->is_id)) {
             loader->update(toppe.entity_stack->namespace_, toppe.entity_stack->name, val2->field_name,val,loader->globalObjectId);
@@ -33,15 +35,12 @@ void load_attribute_value(SchemaReader *loader, NestingState &toppe, std::string
 void start_element_callback(void *ctx, const xmlChar *name, const xmlChar **attrs) {
     SchemaReader* loader = (SchemaReader*)ctx;
     std::string tag{(char*)name};
-//    printf("Beginning of element : %s \n", name);
-
-//    bool starting_tag = loader->state_stack.size() == 1;
     auto& toppe = *loader->state_stack.rbegin();
     const auto& e = toppe.entity_stack;
     toppe.key = tag;//std::string(str, length);
     toppe.skipCurrentKey = !loader->_isFirstPass;
     auto itv2 = e->find(toppe.key);
-//    auto it = e->fields.find(toppe.key);
+    DEBUG_ASSERT(itv2.has_value());
     if ( (itv2.has_value() && (itv2.value()->xml_tag))) {
         toppe._keyType = itv2.value()->native_field_type;
         auto root =  itv2.value()->type;
@@ -54,20 +53,6 @@ void start_element_callback(void *ctx, const xmlChar *name, const xmlChar **attr
                 return;
             case external_reference:
             {
-//                if (!loader->_isFirstPass) {
-//                    auto it1 = loader->loading_with_scheme.find(itv2.value()->ext_namespace);
-//                    if (it1 == loader->loading_with_scheme.end())
-//                        return;
-//                    auto it2 = it1->second.find(itv2.value()->ext_entity);
-//                    if (it2 == it1->second.end())
-//                        return;
-//                    auto it3 = it2->second.find(itv2.value()->ext_field);
-//                    if (!it3.has_value())
-//                        return;
-//                    toppe.skipCurrentKey = false;
-//                } else {
-//                    toppe.skipCurrentKey = true;
-//                }
             }
                 break;
             case local_nested_entity_list:
@@ -78,49 +63,20 @@ void start_element_callback(void *ctx, const xmlChar *name, const xmlChar **attr
                 while (NULL != attrs && NULL != attrs[0]) {
                     std::string key{(char*)attrs[0]};
                     auto dis = local_toppe.entity_stack->find(key);
+                    DEBUG_ASSERT(dis.has_value());
                     if ((dis.has_value()) && (dis.value()->xml_property)) {
                         std::string val{(char*)attrs[1]};
                         if (key == "ref"){
                             std::cerr << "HERE" << std::endl;
                         }
                         load_attribute_value(loader, local_toppe, val, key);
-//                        if (!toppe.skipCurrentKey) {
-//                            if (!loader->_isFirstPass) {
-//                                auto f = toppe.entity_stack->find(toppe.key).value();
-//
-//                                auto result = loader->retrieve(f->ext_namespace,f->ext_entity,f->ext_field, val);
-////                                auto result = loader->increasingIdCorrespondence[{f->ext_namespace,f->ext_entity,f->ext_field}][val];
-//                                toppe.object.phi[toppe.key].emplace_back( result);
-//                            }
-//                        } else if (!loader->_isFirstPass) {
-//                            if (toppe._keyType != NativeTypes::String) {
-//                                toppe.object.content.emplace(toppe.key,std::stod(val));
-//                            } else
-//                                toppe.object.content.emplace(toppe.key, val);
-//                        }
                     }
                     attrs = &attrs[2];
                 }
-//                if (!loader->first_pass)
-//                {
-//                    if ((itv2.value()->nested_decl.empty()))
-//                        return;
-////                    loader->state_stack.emplace_back(&itv2.value()->nested_decl[0]).current_tag_name = tag;
-//                }
-//                else {
-//                    loader->first_pass = false;
-//                }
-
-
-//                loader->state_stack.rbegin()->countFor = loader->state_stack.rbegin()->countAt = it->second.type == local_nested_entity ? 1 : 2;
             }
                 break;
         }
     }
-//    return true;
-
-//
-//    auto it = loader->state_stack.rbegin();
 
 }
 
