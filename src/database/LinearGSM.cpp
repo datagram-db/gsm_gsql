@@ -170,6 +170,8 @@ namespace gsm2 {
             }
             for (auto& [key, table] : KeyValueProperties) {
                 DEBUG_ASSERT(key == table.attr_name);
+//                if (key == "price")
+//                    std::cerr << key << std::endl;
                 table.index(main_registry, idx);
             }
             main_registry.indexing2();

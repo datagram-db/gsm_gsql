@@ -72,24 +72,33 @@ namespace gsm2 {
 //            DEBUG_ASSERT(assertVariant(val));
             while (elements.size() <= act_id)
                 elements.emplace_back();
+//            if (tid > 0)
+//                std::cerr << "WARNING: This is something should not happen in Schema loading" << std::endl;
             elements[act_id][val].emplace_back(tid, eid);
         }
 
 
         void AttributeTable::index(const ActivityTable& at, const std::vector<std::vector<size_t>> &trace_id_to_event_id_to_offset) {
+//            std::cerr << elements.size() << " for " << attr_name << std::endl;
             for (size_t act_id = 0, N = elements.size(); act_id < N; act_id++) {
                 auto& ref = elements[act_id];
                 size_t begin = table.size();
+//                if (act_id == 1)
+//                    std::cerr << "ref #" << act_id <<  std::endl;
                 if (!ref.empty()) {
                     std::map<union_type, std::vector<size_t>> valueToOffsetInTable;
                     for (const auto& val_offset : ref) {
                         for (const auto& traceid_eventid : val_offset.second) {
+                            DEBUG_ASSERT(traceid_eventid.first != (size_t)-1);
+                            DEBUG_ASSERT(traceid_eventid.second != (size_t)-1);
+
                             size_t offset =
                                     trace_id_to_event_id_to_offset.at(traceid_eventid.first).at(traceid_eventid.second);
-
+                            DEBUG_ASSERT(offset != (size_t)-1);
                             valueToOffsetInTable[val_offset.first].emplace_back(offset);
                         }
                     }
+//                    std::cerr << "valueToOffsetInTable #" << act_id << std::endl;
                     for (auto it = valueToOffsetInTable.begin(); it != valueToOffsetInTable.end(); it++) {
                         std::sort(it->second.begin(), it->second.end());
                         size_t val = storeLoad(it->first);
@@ -101,6 +110,7 @@ namespace gsm2 {
                         for (const auto& refx : it->second) {
                             if (type == StringAtt)
                                 string_offset_mapping[current_string].emplace_back(table.size());
+                            DEBUG_ASSERT(refx != (size_t)-1);
                             secondary_index[refx] =
                                     secondary_index2[{at.table.at(refx).graph_id, at.table.at(refx).event_id}] =
                                             table.size();

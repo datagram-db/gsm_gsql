@@ -69,7 +69,8 @@ struct gsm_object  {
 
     void out_json(std::ostream &os, bool inserted  = false) const;
 
-    gsm_object(uint_fast32_t id = 0, const std::vector<std::string> &ell = {}, const std::vector<std::string> &xi = {},
+    gsm_object() {}
+    gsm_object(uint_fast32_t id, const std::vector<std::string> &ell = {}, const std::vector<std::string> &xi = {},
                const std::vector<double> &scores = {}, const std::unordered_map<std::string, std::vector<gsm_object_xi_content>> &phi = {}, const std::unordered_map<std::string, union_minimal> &content = {});
     gsm_object(const gsm_object&) = default;
     gsm_object(gsm_object&&) = default;

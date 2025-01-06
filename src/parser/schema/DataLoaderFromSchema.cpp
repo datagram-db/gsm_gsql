@@ -8,6 +8,9 @@
 #include <schema_language/schemaParser.h>
 #include <parser/writer.h>
 
+
+#include "rocksdb/convenience.h"
+
 bool SchemaReader::readFromPath(const std::string &path) {
     std::ifstream data{path};
     antlr4::ANTLRInputStream input(data);
@@ -18,6 +21,8 @@ bool SchemaReader::readFromPath(const std::string &path) {
     this->writer->initDatabase();
     auto outcomeForVisiting = visitLanguage(parser.language());
     bool result = std::any_cast<bool>(outcomeForVisiting);
+    this->mampa.clear(); // killing all threads from rocksdb messing up the debugging
+
     this->writer->close();
     return result;
 }
@@ -802,6 +807,7 @@ bool SchemaReader::load_json(const Entity& e, bool isFirstPass, const std::strin
             prev++;
             // TODO: associate it->data_row (first) or it-> containment to globalObjectId;
             it->object.id = globalObjectId;
+            it->object.ell = {it->entity_stack->name};\
             if (!this->_isFirstPass)
             this->writer->writeObject(it->object, {});
             it->object.clear();

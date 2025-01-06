@@ -83,6 +83,8 @@ ActivityTable::record::record(size_t act, size_t id, size_t time, ActivityTable:
                     DEBUG_ASSERT(trace_length.size() > id);
                     trace_length[id]++;
                 }
+//                if (builder.trace_id_to_event_id_to_offset.size() == 2)
+//                    std::cerr << "ERROR: this should not happen when loading schema" << std::endl;
                 builder.trace_id_to_event_id_to_offset[builder.trace_id_to_event_id_to_offset.size()-1].emplace_back(time);
             }
         }

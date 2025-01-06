@@ -23,28 +23,22 @@
         }
     };
     void PrimaryMemoryLoader::writeObject(const gsm_object& object, const std::unordered_map<std::string, gsm2::tables::AttributeTableType>& map_for_types) {
-        graphId_eventId.second = object.id;
-        forloading.nodesInGraph[graphId_eventId.first] = std::max(forloading.nodesInGraph[graphId_eventId.first],object.id);
-        size_t act_id = loadObjectEll2(forloading, object.ell, noLabel, graphId_eventId);
-        registerObjectByFirstLabel(forloading, act_id, graphId_eventId);
-        loadObjectXi2(forloading, object.xi, graphId_eventId);
-        for (const auto& [k, v] : object.content) {
-//            if (k == "length")
-//                std::cerr << "HIS IS IT" << std::endl;
-            if (std::holds_alternative<std::string>(v))
-                loadObjectProperty(forloading, map_for_types, act_id, graphId_eventId, k, std::get<std::string>(v));
-            else
-                loadObjectProperty(forloading, map_for_types, act_id, graphId_eventId, k, std::get<double>(v));
-
-        }
-        for (const auto& [tmp, vaks] : object.phi) {
-            for (const auto& val : vaks) {
-                forloading.containment_tables[tmp].add(act_id, graphId_eventId, val.score, val.id);
-                forloading.containment_relationships.emplace(tmp);
+//        if (graphId_eventId.first > 0)
+//            std::cerr << "WARNING: this is something should not happen when loading Schema" << std::endl;
+        if (graphId_eventId.second != object.id) {
+            queued_objects[object.id] = object;
+        } else {
+            actual_writeObject(object, map_for_types);
+            for (auto it = queued_objects.begin(); it != queued_objects.end(); ) {
+                if (it->first == graphId_eventId.second) {
+                    actual_writeObject(it->second, map_for_types);
+                    it = queued_objects.erase(it);
+                } else
+                    break;
             }
         }
-        forloading.objectScoresLoading[graphId_eventId].emplace_back(1.0);
     }
+
     void PrimaryMemoryLoader::close() {
         forloading.nGraphs = graphId_eventId.first+1;
         forloading.index();
